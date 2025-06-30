@@ -1,0 +1,74 @@
+CMAKE_TOOLCHAIN_FILE_x86_64-unknown-linux-gnu = None
+CMAKE_TOOLCHAIN_FILE_x86_64_unknown_linux_gnu = None
+HOST_CMAKE_TOOLCHAIN_FILE = None
+CMAKE_TOOLCHAIN_FILE = None
+CMAKE_GENERATOR_x86_64-unknown-linux-gnu = None
+CMAKE_GENERATOR_x86_64_unknown_linux_gnu = None
+HOST_CMAKE_GENERATOR = None
+CMAKE_GENERATOR = None
+CMAKE_PREFIX_PATH_x86_64-unknown-linux-gnu = None
+CMAKE_PREFIX_PATH_x86_64_unknown_linux_gnu = None
+HOST_CMAKE_PREFIX_PATH = None
+CMAKE_PREFIX_PATH = None
+CMAKE_x86_64-unknown-linux-gnu = None
+CMAKE_x86_64_unknown_linux_gnu = None
+HOST_CMAKE = None
+CMAKE = None
+running: cd "/home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/build" && CMAKE_PREFIX_PATH="" LC_ALL="C" "cmake" "/home/oliver/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/glfw-sys-5.0.0+3.3.9/glfw" "-DGLFW_BUILD_EXAMPLES=OFF" "-DGLFW_BUILD_TESTS=OFF" "-DGLFW_BUILD_DOCS=OFF" "-DCMAKE_INSTALL_LIBDIR=lib" "-DGLFW_USE_WAYLAND=OFF" "-DCMAKE_INSTALL_PREFIX=/home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out" "-DCMAKE_C_FLAGS= -ffunction-sections -fdata-sections -fPIC -m64" "-DCMAKE_C_COMPILER=/nix/store/pbqah1qk4b5y14fqinr1h8zvhqy71v81-gcc-wrapper-14.3.0/bin/gcc" "-DCMAKE_CXX_FLAGS= -ffunction-sections -fdata-sections -fPIC -m64" "-DCMAKE_CXX_COMPILER=/nix/store/pbqah1qk4b5y14fqinr1h8zvhqy71v81-gcc-wrapper-14.3.0/bin/g++" "-DCMAKE_ASM_FLAGS= -ffunction-sections -fdata-sections -fPIC -m64" "-DCMAKE_ASM_COMPILER=/nix/store/pbqah1qk4b5y14fqinr1h8zvhqy71v81-gcc-wrapper-14.3.0/bin/gcc" "-DCMAKE_BUILD_TYPE=Debug"
+-- The C compiler identification is GNU 14.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /nix/store/pbqah1qk4b5y14fqinr1h8zvhqy71v81-gcc-wrapper-14.3.0/bin/gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- Using X11 for window creation
+-- Found X11: /nix/store/h2lzzms7vnqv9rv11wynjjd5sfnk0ijx-xorgproto-2024.1/include
+-- Looking for XOpenDisplay in /nix/store/26c0x3gh2g5dpczvjxgjzn0mc22zxpjz-libX11-1.8.12/lib/libX11.so;/nix/store/dsyfksqh9yymcp3j8d72yw6j960n7wpv-libXext-1.3.6/lib/libXext.so
+-- Looking for XOpenDisplay in /nix/store/26c0x3gh2g5dpczvjxgjzn0mc22zxpjz-libX11-1.8.12/lib/libX11.so;/nix/store/dsyfksqh9yymcp3j8d72yw6j960n7wpv-libXext-1.3.6/lib/libXext.so - found
+-- Looking for gethostbyname
+-- Looking for gethostbyname - found
+-- Looking for connect
+-- Looking for connect - found
+-- Looking for remove
+-- Looking for remove - found
+-- Looking for shmat
+-- Looking for shmat - found
+-- Configuring done (3.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/build
+running: cd "/home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/build" && LC_ALL="C" MAKEFLAGS="-j --jobserver-fds=9,10 --jobserver-auth=9,10" "cmake" "--build" "/home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/build" "--target" "install" "--config" "Debug"
+[  5%] Building C object src/CMakeFiles/glfw.dir/context.c.o
+[ 11%] Building C object src/CMakeFiles/glfw.dir/init.c.o
+[ 17%] Building C object src/CMakeFiles/glfw.dir/input.c.o
+[ 23%] Building C object src/CMakeFiles/glfw.dir/monitor.c.o
+[ 29%] Building C object src/CMakeFiles/glfw.dir/vulkan.c.o
+[ 35%] Building C object src/CMakeFiles/glfw.dir/window.c.o
+[ 41%] Building C object src/CMakeFiles/glfw.dir/x11_init.c.o
+[ 47%] Building C object src/CMakeFiles/glfw.dir/x11_monitor.c.o
+[ 52%] Building C object src/CMakeFiles/glfw.dir/x11_window.c.o
+[ 58%] Building C object src/CMakeFiles/glfw.dir/xkb_unicode.c.o
+[ 64%] Building C object src/CMakeFiles/glfw.dir/posix_time.c.o
+[ 70%] Building C object src/CMakeFiles/glfw.dir/posix_thread.c.o
+[ 76%] Building C object src/CMakeFiles/glfw.dir/glx_context.c.o
+[ 82%] Building C object src/CMakeFiles/glfw.dir/egl_context.c.o
+[ 88%] Building C object src/CMakeFiles/glfw.dir/osmesa_context.c.o
+[ 94%] Building C object src/CMakeFiles/glfw.dir/linux_joystick.c.o
+[100%] Linking C static library libglfw3.a
+[100%] Built target glfw
+Install the project...
+-- Install configuration: "Debug"
+-- Installing: /home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/lib/libglfw3.a
+-- Installing: /home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/include/GLFW
+-- Installing: /home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/include/GLFW/glfw3native.h
+-- Installing: /home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/include/GLFW/glfw3.h
+-- Installing: /home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/lib/cmake/glfw3/glfw3Config.cmake
+-- Installing: /home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/lib/cmake/glfw3/glfw3ConfigVersion.cmake
+-- Installing: /home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/lib/cmake/glfw3/glfw3Targets.cmake
+-- Installing: /home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/lib/cmake/glfw3/glfw3Targets-debug.cmake
+-- Installing: /home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/lib/pkgconfig/glfw3.pc
+cargo:root=/home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out
+cargo:rustc-link-search=native=/home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/lib
+cargo:rustc-link-lib=dylib=glfw3

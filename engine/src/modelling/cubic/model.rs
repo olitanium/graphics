@@ -1,0 +1,137 @@
+use std::path::Path;
+use std::rc::Rc;
+
+use linear_algebra::Matrix;
+
+use super::geometry::YieldsPose;
+use super::{import, Builder, Skeleton};
+use crate::buffers::framebuffer::{ActiveFramebuffer, FramebufferWithDepth};
+use crate::buffers::vertex_array::VertexArray;
+use super::SimpleVertex;
+use crate::shader_program::{ActiveShaderProgram, CullFace};
+use crate::texture::Material;
+use crate::{PostProcess, Result};
+
+#[derive(Debug, Clone)]
+pub struct Mesh {
+    pub vertex_array: Rc<VertexArray<SimpleVertex>>,
+    pub material: Rc<Material>,
+    pub bone: usize,
+}
+
+impl Mesh {
+    #[must_use]
+    #[inline]
+    pub fn new(
+        vertex_array: Rc<VertexArray<SimpleVertex>>,
+        material: Rc<Material>,
+        bone: usize,
+    ) -> Self {
+        Self {
+            vertex_array,
+            material,
+            bone,
+        }
+    }
+
+    pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
+        &'a self,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, (Cubic, L), D::Tex, OUT>,
+        active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
+        skeleton: &Skeleton,
+        relative: bool,
+        animation: usize,
+        time: f32,
+        scale: f32,
+    ) -> Result<()> {
+        self.material.register_to(active_shader, "material");
+
+        active_shader.set_uniform(
+            "model".into(),
+            skeleton
+                .get_pose((relative, self.bone, animation, time))
+                .as_matrix()
+                * Matrix::transform_scale(scale, scale, scale),
+        );
+
+        self.vertex_array.draw(active_shader, active_framebuffer)
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct Cubic {
+    pub(crate) meshes: Vec<Mesh>,
+    pub cull_face: CullFace,
+    // pub animation: Animation,
+    pub skeleton: Skeleton,
+    pub realtive: bool,
+    pub scale: f32,
+}
+
+impl Default for Cubic {
+    fn default() -> Self {
+        Self::cube(1.0, Rc::new(Material::blank())).build()
+    }
+}
+
+impl Cubic {
+    pub fn empty() -> Self {
+        Self::builder()
+            .push_mesh_from(Rc::new(VertexArray::empty()), Rc::new(Material::blank()), 0)
+            .build()
+    }
+
+    pub fn builder() -> Builder {
+        Builder::new()
+    }
+
+    pub fn cube(side_length: f32, material: Rc<Material>) -> Builder {
+        let vertex_array = Rc::new(VertexArray::cube(side_length));
+        Self::builder().push_mesh_from(vertex_array, material, 0)
+    }
+
+    #[inline]
+    pub fn temp_set_all_material(&mut self, mat: Rc<Material>) {
+        self.meshes
+            .iter_mut()
+            .for_each(|mesh| mesh.material = mat.clone());
+    }
+
+    // #[must_use]
+    // #[inline]
+    // pub fn model_matrix(&self, hint: <Animation as YieldsPose>::Hint) ->
+    // Matrix<4, 4> { self.animation.get_pose(hint).as_matrix()
+    // Matrix::transform_scale(self.scale, self.scale, self.scale)
+    // }
+
+    pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
+        &'a self,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, (Self, L), D::Tex, OUT>,
+        active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
+        animation: usize,
+        time: f32,
+    ) -> Result<()> {
+        // Ignore cull_face error
+        _ = active_shader.cull_face(self.cull_face);
+
+        // active_shader.set_uniform("model".to_string(), self.model_matrix(hint));
+
+        for mesh in &self.meshes {
+            mesh.draw(
+                active_shader,
+                active_framebuffer,
+                &self.skeleton,
+                self.realtive,
+                animation,
+                time,
+                self.scale,
+            )?;
+        }
+
+        Ok(())
+    }
+
+    pub fn import<PA: AsRef<Path>>(path: PA, post_process: Vec<PostProcess>) -> Result<Builder> {
+        import::import(path, post_process)
+    }
+}

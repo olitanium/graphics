@@ -1,0 +1,9 @@
+[package]
+name = "environment"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+glfw = "0.58"
+graphics = {path = "../graphics"}

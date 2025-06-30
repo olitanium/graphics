@@ -1,0 +1,8 @@
+/home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/lib/libglfw3.a
+/home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/include/GLFW/glfw3native.h
+/home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/include/GLFW/glfw3.h
+/home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/lib/cmake/glfw3/glfw3Config.cmake
+/home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/lib/cmake/glfw3/glfw3ConfigVersion.cmake
+/home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/lib/cmake/glfw3/glfw3Targets.cmake
+/home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/lib/cmake/glfw3/glfw3Targets-debug.cmake
+/home/oliver/Documents/programming/rust/projects/graphics/target/debug/build/glfw-sys-823d172847c40164/out/lib/pkgconfig/glfw3.pc
