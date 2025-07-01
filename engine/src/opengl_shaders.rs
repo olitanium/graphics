@@ -1,16 +1,16 @@
 use std::sync::LazyLock;
 
-use graphics::{CullFace, ShaderProgram};
+use graphics::shader_program::{CullFace, ShaderProgram};
 use crate::modelling::cubic::lighting::shadow::ShadowListLights;
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::{Cubic, Quad, SkyBox};
-use crate::texture::{CubeMap, FlatTexture};
+use graphics::texture::{CubeMap, FlatTexture};
 
 static ERROR_MESSAGE: &str = "Engine defined shader should exist and not have errors";
 
 macro_rules! make_included {
     ($(: ($first:ident $(, $others:ident )*) ,)? $typ:ty, $fn_name:ident, $vertex:literal, $fragment:literal $(, $geometry:literal)? $(, cull_face: $cull_face:path)? $(,)?) => {
-        impl$(<$first $(, $others )*>)? $typ {
+        //impl$(<$first $(, $others )*>)? $typ {
             pub fn $fn_name() -> &'static $typ {
                 static PROGRAM: LazyLock<$typ> = LazyLock::new(||
                     ShaderProgram::builder()
@@ -23,7 +23,7 @@ macro_rules! make_included {
 
                 &PROGRAM
             }
-        }
+        //}
     };
 }
 

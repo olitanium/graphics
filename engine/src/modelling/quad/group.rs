@@ -1,12 +1,12 @@
 use super::Quad;
-use crate::buffers::framebuffer::{
-    FramebufferContext,
+
+use graphics::buffers::fb_traits::{
     FramebufferInternals,
     FramebufferWithoutExtra,
 };
-use crate::modelling::draw::Draw;
-use crate::shader_program::{ShaderProgram, ShaderProgramContext};
-use crate::Result;
+use graphics::{Draw, FramebufferContext};
+use graphics::shader_program::{ShaderProgram, ShaderProgramContext};
+use graphics::Result;
 
 #[derive(Debug)]
 pub struct Group<'a, const N: usize, const OUT: usize, D: FramebufferInternals<OUT>> {

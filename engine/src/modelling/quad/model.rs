@@ -2,13 +2,16 @@ use std::array;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use graphics::buffers::VertexArray;
+
+use crate::modelling::test_models::vertex_array_quad;
+
 use super::Builder;
-use crate::buffers::framebuffer::{ActiveFramebuffer, FramebufferWithoutExtra};
-use crate::buffers::vertex_array::VertexArray;
+use graphics::buffers::{ActiveFramebuffer, fb_traits::FramebufferWithoutExtra};
 use super::QuadVertex;
-use crate::shader_program::ActiveShaderProgram;
-use crate::texture::{FlatTexture, Texture};
-use crate::Result;
+use graphics::shader_program::ActiveShaderProgram;
+use graphics::texture::{FlatTexture, Texture};
+use graphics::Result;
 
 #[derive(Debug)]
 pub struct Quad<const N: usize> {
@@ -29,7 +32,7 @@ impl<const N: usize> Quad<N> {
         texture: [Rc<RefCell<FlatTexture>>; N],
     ) -> Self {
         Self::builder()
-            .vertex_array(VertexArray::quad(left, right, bottom, top))
+            .vertex_array(vertex_array_quad(left, right, bottom, top))
             .texture(texture)
             .build()
     }

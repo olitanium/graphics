@@ -1,16 +1,17 @@
 use std::path::Path;
 use std::rc::Rc;
 
-use linear_algebra::Matrix;
+use graphics::linear_algebra::Matrix;
 
 use super::geometry::YieldsPose;
 use super::{import, Builder, Skeleton};
-use crate::buffers::framebuffer::{ActiveFramebuffer, FramebufferWithDepth};
-use crate::buffers::vertex_array::VertexArray;
-use super::SimpleVertex;
-use crate::shader_program::{ActiveShaderProgram, CullFace};
-use crate::texture::Material;
-use crate::{PostProcess, Result};
+use graphics::buffers::{ActiveFramebuffer, FramebufferWithDepth, VertexArray};
+use crate::modelling::simple_vertex::SimpleVertex;
+use crate::modelling::test_models::vertex_array_cube;
+use graphics::shader_program::{ActiveShaderProgram, CullFace};
+use super::material::Material;
+use crate::error::{Result};
+use russimp::scene::PostProcess;
 
 #[derive(Debug, Clone)]
 pub struct Mesh {
@@ -43,7 +44,7 @@ impl Mesh {
         animation: usize,
         time: f32,
         scale: f32,
-    ) -> Result<()> {
+    ) -> graphics::Result<()> {
         self.material.register_to(active_shader, "material");
 
         active_shader.set_uniform(
@@ -86,7 +87,7 @@ impl Cubic {
     }
 
     pub fn cube(side_length: f32, material: Rc<Material>) -> Builder {
-        let vertex_array = Rc::new(VertexArray::cube(side_length));
+        let vertex_array = Rc::new(vertex_array_cube(side_length));
         Self::builder().push_mesh_from(vertex_array, material, 0)
     }
 
@@ -110,7 +111,7 @@ impl Cubic {
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         animation: usize,
         time: f32,
-    ) -> Result<()> {
+    ) -> graphics::Result<()> {
         // Ignore cull_face error
         _ = active_shader.cull_face(self.cull_face);
 

@@ -1,19 +1,16 @@
 use std::collections::HashSet;
 
-use opengl::buffers::{DefaultFramebuffer, Framebuffer, WithDepth};
-use opengl::modelling::cubic::camera::{CameraPose, Projection};
-use opengl::environment::Event;
-use opengl::modelling::cubic::geometry::{Orientation, Pose, Slerp};
-use opengl::global_state::GlobalState;
-use opengl::modelling::cubic::lighting::shadow::ShadowListLights;
-use opengl::modelling::cubic::lighting::simple::ListLights;
-use opengl::linear_algebra::Vector;
-use opengl::modelling::{
+use engine::buffers::{DefaultFramebuffer, Framebuffer, WithDepth};
+use engine::modelling::cubic::camera::{CameraPose, Projection};
+use engine::modelling::cubic::geometry::{Orientation, Pose, Slerp};
+use engine::modelling::cubic::lighting::shadow::ShadowListLights;
+use engine::modelling::cubic::lighting::simple::ListLights;
+use engine::linear_algebra::Vector;
+use engine::modelling::{
     Bloom,
     BloomGroup,
     Cubic,
     CubicGroup,
-    Draw,
     Quad,
     QuadGroup,
     ShadowGroup,
@@ -21,10 +18,11 @@ use opengl::modelling::{
     SkyBoxGroup,
     SHADOW_SHADER_MAX_LIGHTS,
 };
-use opengl::shader_program::ShaderProgram;
-use opengl::types::TexDim;
-use opengl::{modelling::cubic::Camera, Error, Result};
-
+use engine::{Draw, Event};
+use engine::shader_program::ShaderProgram;
+use engine::types::TexDim;
+use engine::{modelling::cubic::Camera, Result};
+use engine::GlobalState;
 pub struct State {
     pub string: String,
     pub time: f32,
@@ -69,7 +67,7 @@ impl GlobalState for State {
 
         for event in events {
             match event {
-                Event::CriticalFault => return Err(Error::Close),
+                Event::CriticalFault => return Err(engine::Error::Close),
                 Event::FrameTime(ft) => frame_time = ft as f32,
                 Event::ActualTime(at) => self.time = at as f32,
                 Event::WindowResize(size) => {
@@ -165,7 +163,7 @@ impl State {
         ));
 
         out.push(SkyBoxGroup::new(
-            ShaderProgram::skybox_hdr(),
+            engine::opengl_shaders::skybox_hdr(),
             &self.hdr_fb,
             &self.skybox,
             &self.camera,
@@ -178,7 +176,7 @@ impl State {
         } else {
             // println!("bloom_off");
             out.push(QuadGroup::new(
-                ShaderProgram::quad(),
+                engine::opengl_shaders::quad(),
                 default_framebuffer,
                 vec![&self.quad_to_draw],
             ));

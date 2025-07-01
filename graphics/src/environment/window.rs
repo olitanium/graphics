@@ -1,19 +1,15 @@
 use glfw::{Context, Glfw, GlfwReceiver, PWindow, WindowEvent};
+use utils::{builder, new};
 
 use crate::buffers::DefaultFramebuffer;
-use crate::input::keyboard::Keyboard;
-use crate::input::mouse::{CursorMode, Mouse};
+use crate::environment::Error;
+use super::input::keyboard::Keyboard;
+use super::input::mouse::{CursorMode, Mouse};
 use crate::types::TexDim;
-use crate::{builder, error_boilerplate, new, Result};
+use crate::error::Result;
 
-#[derive(Debug, Clone)]
-pub enum Error {
-    GlfwWindowInit,
-}
-error_boilerplate!(Error: Window);
-
-#[derive(Debug)]
 #[expect(dead_code)]
+#[derive(Debug)]
 pub struct Window {
     glfw_window: PWindow,
     pub(crate) default_framebuffer: DefaultFramebuffer,
@@ -141,7 +137,7 @@ impl Builder<HasGlfw<'_>> {
                     todo!("Full Screen not yet supported")
                 },
             )
-            .ok_or_else(|| Error::GlfwWindowInit)?;
+            .ok_or_else(|| Error::GlfwWindowError)?;
 
         glfw_window.make_current();
         glfw_window.set_key_polling(true);
@@ -159,8 +155,10 @@ impl Builder<HasGlfw<'_>> {
 
         let keyboard = Keyboard::new(&mut glfw_window);
         let mouse = Mouse::new(&mut glfw_window, self.mouse_fix_to_centre);
-
-        let default_framebuffer = DefaultFramebuffer::new(&glfw_window);
+        
+        let size = glfw_window.get_framebuffer_size();
+        let size = (TexDim::new(size.0), TexDim::new(size.1));
+        let default_framebuffer = DefaultFramebuffer::new(size);
 
         Ok(Window {
             window_resized,

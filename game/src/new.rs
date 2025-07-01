@@ -1,24 +1,25 @@
 use std::iter;
 use std::rc::Rc;
 
-use opengl::array_vec::ArrayVec;
-use opengl::buffers::framebuffer_builder;
-use opengl::modelling::cubic::camera::CameraPose;
-use opengl::modelling::cubic::geometry::{Animation, Orientation, Pose, Slerp};
-use opengl::modelling::cubic::lighting::shadow::{
+use engine::array_vec::ArrayVec;
+use engine::buffers::framebuffer_builder;
+use engine::modelling::cubic::camera::CameraPose;
+use engine::modelling::cubic::geometry::{Animation, Orientation, Pose, Slerp};
+use engine::modelling::cubic::lighting::shadow::{
     ShadowFarLight,
     ShadowListLights,
     ShadowPointLight,
     ShadowSpotLight,
 };
-use opengl::modelling::cubic::lighting::simple::{FarLight, ListLights, PointLight, SpotLight};
-use opengl::linear_algebra::{UnitVector, Vector};
-use opengl::modelling::{Bloom, Bone, Cubic, Skeleton, SkyBox};
-use opengl::shader_program::CullFace;
-use opengl::texture::{CubeMap, FlatTexture, Material, TextureHasBuilder};
-use opengl::types::TexDim;
-use opengl::{ColourRGB, ColourRGBA, Result};
-use opengl::modelling::cubic::camera;
+use engine::modelling::cubic::lighting::simple::{FarLight, ListLights, PointLight, SpotLight};
+use engine::linear_algebra::{UnitVector, Vector};
+use engine::modelling::{Bloom, Bone, Cubic, Quad, Skeleton, SkyBox};
+use engine::shader_program::CullFace;
+use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
+use engine::modelling::cubic::material::Material;
+use engine::types::TexDim;
+use engine::{ColourRGB, ColourRGBA, Error, Result};
+use engine::modelling::cubic::camera;
 
 use crate::state::State;
 
@@ -74,7 +75,7 @@ impl State {
             .collect();
 
         const WHICH_MODEL: &str = "oliver";
-        use opengl::PostProcess as P;
+        use engine::PostProcess as P;
         let imported = match WHICH_MODEL {
             "morgan" => {
                 Cubic::import(
@@ -87,9 +88,9 @@ impl State {
                         P::OptimizeGraph,
                         P::OptimizeMeshes,
                     ],
-                )?
-                .scale(0.01)
-                .build()
+                ).map_err(|error| Error::Other(error.to_string()))?
+                    .scale(0.01)
+                    .build()
             }
             "backpack" => Cubic::import(
                 "assets/backpack/backpack.obj",
@@ -101,8 +102,8 @@ impl State {
                     P::OptimizeGraph,
                     P::OptimizeMeshes,
                 ],
-            )?
-            .build(),
+                ).map_err(|error| Error::Other(error.to_string()))?
+                .build(),
             "oliver" => {
                 let material = Rc::new(Material::builder().diffuse(FlatTexture::white()).build());
 
@@ -284,7 +285,7 @@ impl State {
 
         let slerp = Slerp::new(orientation1, orientation2, 10.0, true);
 
-        let quad_to_draw = hdr_fb.quad().downcast();
+        let quad_to_draw = Quad::screen(hdr_fb.get_all_colour()).downcast();
 
         let light_material = {
             let light_emission = FlatTexture::monochrome(light_colour.to_rgba_with(1.0));

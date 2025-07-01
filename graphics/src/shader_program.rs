@@ -4,5 +4,5 @@ pub use error::Error;
 mod program;
 mod shader;
 
-pub(crate) use program::{ActiveShaderProgram, ShaderProgramContext};
+pub use program::{ActiveShaderProgram, ShaderProgramContext};
 pub use program::{CullFace, ShaderProgram, Uniform};

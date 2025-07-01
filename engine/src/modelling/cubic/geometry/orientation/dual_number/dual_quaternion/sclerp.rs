@@ -1,4 +1,4 @@
-use linear_algebra::Vector;
+use graphics::linear_algebra::Vector;
 
 use super::DualQuaternion;
 use crate::modelling::cubic::geometry::{DualNumber, Pose, YieldsPose};

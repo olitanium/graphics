@@ -4,8 +4,8 @@ use super::super::shadow::ShadowListLights;
 use super::super::traits::ListLightCompatible;
 use super::{FarLight, PointLight, SpotLight};
 use crate::modelling::Cubic;
-use crate::shader_program::ActiveShaderProgram;
-use crate::texture::Texture;
+use graphics::shader_program::ActiveShaderProgram;
+use graphics::texture::Texture;
 
 #[derive(Clone, Debug, Default)]
 pub struct ListLights<const MAX: usize> {

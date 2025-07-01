@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
-use opengl::input::keyboard::Key;
-use opengl::{Error, Result};
+use engine::Key;
+use engine::{Error, Result};
 
 use crate::state::State;
 

@@ -1,7 +1,7 @@
 use crate::modelling::cubic::geometry::orientation::quaternion::Quaternion;
 
 mod unit_dual_quaternion;
-use linear_algebra::Vector;
+use graphics::linear_algebra::Vector;
 pub use unit_dual_quaternion::UnitDualQuaternion;
 
 mod sclerp;
@@ -66,7 +66,7 @@ impl DualQuaternion {
 
 #[cfg(test)]
 mod test {
-    use linear_algebra::Vector;
+    use graphics::linear_algebra::Vector;
 
     use super::*;
 

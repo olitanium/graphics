@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use glfw::PWindow;
 pub use glfw::{CursorMode, MouseButton as Button};
 
-use crate::input::Action;
+use super::Action;
 
 // First mouse means no movement this check
 // Upon change, set the change flag to true

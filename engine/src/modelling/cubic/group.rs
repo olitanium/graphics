@@ -2,11 +2,13 @@ use super::geometry::YieldsPose;
 use super::lighting::simple::ListLights;
 use super::model::Cubic;
 use super::Camera;
-use crate::buffers::framebuffer::{FramebufferContext, FramebufferWithDepth};
-use crate::linear_algebra::{Matrix, Vector};
-use crate::modelling::draw::Draw;
-use crate::shader_program::{ShaderProgram, ShaderProgramContext};
-use crate::texture::FlatTexture;
+use graphics::FramebufferContext;
+use graphics::buffers::fb_traits::FramebufferWithDepth;
+use graphics::linear_algebra::{Matrix, Vector};
+use graphics::Draw;
+use graphics::shader_program::{ShaderProgram, ShaderProgramContext};
+use graphics::texture::FlatTexture;
+use graphics::Result;
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
@@ -53,7 +55,7 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> crate::Result<()> {
+    ) -> Result<()> {
         let mut active_shader = self.shader.use_program(sp_context);
         let mut active_framebuffer = self.framebuffer.bind(fb_context);
 

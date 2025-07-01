@@ -5,3 +5,7 @@ edition = "2024"
 
 [dependencies]
 graphics = { path = "../graphics" }
+utils = {path = "../utils" }
+russimp = "3"
+infinite_window = {path = "/home/oliver/Documents/programming/rust/utilities/infinite_window" }
+array_vec = {path = "/home/oliver/sd/programming/rust/utilities/array_vec"}

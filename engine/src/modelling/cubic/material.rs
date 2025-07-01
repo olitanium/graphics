@@ -1,8 +1,10 @@
-use super::{FlatTexture, Texture};
-use colour::ColourRGBA;
+use graphics::texture::{FlatTexture, Texture};
+use graphics::colour::ColourRGBA;
 //use crate::modelling::Cubic;
-use crate::shader_program::ActiveShaderProgram;
+use graphics::shader_program::ActiveShaderProgram;
 use utils::{builder, new};
+
+use crate::modelling::Cubic;
 
 #[derive(Debug)]
 pub struct Material {

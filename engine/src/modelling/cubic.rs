@@ -19,5 +19,4 @@ pub mod geometry;
 
 pub mod lighting;
 
-mod simple_vertex;
-pub use simple_vertex::SimpleVertex;
+pub mod material;

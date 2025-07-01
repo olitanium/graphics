@@ -9,11 +9,9 @@ edition = "2024"
 
 linear_algebra = {path = "/home/oliver/sd/programming/rust/utilities/linear_algebra"}
 array_vec = {path = "/home/oliver/sd/programming/rust/utilities/array_vec"}
-infinite_window = {path = "/home/oliver/sd/programming/rust/utilities/infinite_window"}
 
+glfw = "*"
 gl = "0.14"
 image = "0.25"
-russimp = "3"
 utils = { path = "../utils" }
 colour = { path = "../colour" }
-#paste = "1"

@@ -2,7 +2,7 @@ use std::ops;
 
 pub use unit_quaternion::UnitQuaternion;
 
-use crate::linear_algebra::{UnitVector, Vector};
+use graphics::linear_algebra::{UnitVector, Vector};
 
 mod slerp;
 mod unit_quaternion;

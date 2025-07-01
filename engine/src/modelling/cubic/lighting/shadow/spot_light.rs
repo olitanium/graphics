@@ -1,14 +1,15 @@
-use crate::buffers::framebuffer::{self, Framebuffer, WithDepth};
-use crate::linear_algebra::{Matrix, UnitVector};
+use graphics::buffers::{Builder, WithDepth};
+use graphics::Framebuffer;
+use graphics::linear_algebra::{Matrix, UnitVector};
 use crate::modelling::cubic::camera::{self, Camera};
 use crate::modelling::cubic::geometry::{Orientation, Pose};
 use crate::modelling::cubic::lighting::simple::SpotLight;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
 use crate::modelling::Cubic;
-use crate::shader_program::ActiveShaderProgram;
-use crate::texture::{FlatTexture, Magnification, Texture, WrapType};
-use crate::types::TexDim;
-use crate::ColourRGBA;
+use graphics::shader_program::ActiveShaderProgram;
+use graphics::texture::{FlatTexture, Magnification, Texture, WrapType};
+use graphics::types::TexDim;
+use graphics::colour::ColourRGBA;
 
 #[derive(Debug)]
 pub struct ShadowSpotLight {
@@ -20,7 +21,7 @@ impl ShadowSpotLight {
     pub fn new(light: SpotLight, size: TexDim) -> Self {
         Self {
             light,
-            framebuffer: framebuffer::flat_builder()
+            framebuffer: Builder::new_flat()
                 .depth()
                 .size((size, size))
                 .map_attachment(|tex_builder| {

@@ -1,4 +1,4 @@
-use crate::linear_algebra::Matrix;
+use graphics::linear_algebra::Matrix;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Projection {

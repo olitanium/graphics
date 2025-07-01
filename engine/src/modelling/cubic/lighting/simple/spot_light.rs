@@ -1,9 +1,9 @@
 use super::super::traits::ListLightCompatible;
-use crate::colour::ColourRGB;
-use crate::linear_algebra::{UnitVector, Vector};
+use graphics::colour::ColourRGB;
+use graphics::linear_algebra::{UnitVector, Vector};
 use crate::modelling::Cubic;
-use crate::shader_program::ActiveShaderProgram;
-use crate::texture::Texture;
+use graphics::shader_program::ActiveShaderProgram;
+use graphics::texture::Texture;
 
 #[derive(Clone, Debug)]
 pub struct SpotLight {

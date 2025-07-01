@@ -1,6 +1,6 @@
 use super::{Camera, Projection};
 use crate::modelling::cubic::geometry::YieldsPose;
-use crate::{builder, new};
+use utils::{builder, new};
 
 #[derive(Debug, Default)]
 pub struct MissingPose;

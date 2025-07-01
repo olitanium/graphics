@@ -2,11 +2,12 @@ use std::rc::Rc;
 
 use super::model::Mesh;
 use super::{Cubic, Skeleton};
-use crate::buffers::vertex_array::VertexArray;
-use super::SimpleVertex;
-use crate::shader_program::CullFace;
-use crate::texture::Material;
-use crate::{builder, new};
+use graphics::buffers::VertexArray;
+use crate::modelling::test_models::vertex_array_cube;
+use crate::modelling::SimpleVertex;
+use graphics::shader_program::CullFace;
+use super::material::Material;
+use utils::{builder, new};
 
 #[derive(Debug, Default, Clone)]
 pub struct Builder {
@@ -36,7 +37,7 @@ impl Builder {
     }
 
     pub fn push_cube(self, material: Rc<Material>, side_length: f32, bone: usize) -> Self {
-        let cube = Rc::new(VertexArray::cube(side_length));
+        let cube = Rc::new(vertex_array_cube(side_length));
         self.push_mesh_from(cube, material, bone)
     }
 

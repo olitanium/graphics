@@ -1,7 +1,7 @@
 use builder::MissingPose;
 
 use super::geometry::{Orientation, YieldsPose};
-use crate::linear_algebra::{Matrix, UnitVector, Vector};
+use graphics::linear_algebra::{Matrix, UnitVector, Vector};
 
 mod builder;
 mod projection;

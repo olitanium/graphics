@@ -1,7 +1,7 @@
 use std::{iter, ptr};
 
 use builder::Builder;
-pub use builder::IncompleteSimpleVertex;
+pub use builder::IncompleteVertex;
 
 // pub use cubic_builder::CubicBuilder;
 // pub use quad_builder::QuadBuilder;
@@ -16,7 +16,7 @@ use crate::{gl_call, types, error::Result};
 // mod cubic_builder;
 // mod quad_builder;
 mod builder;
-mod test_models;
+//mod test_models;
 
 #[derive(Debug)]
 pub struct VertexArray<V: Vertex> {
@@ -82,7 +82,7 @@ where
                 gl::VertexAttribPointer(
                     index as types::GLuint,
                     count as types::GLint,
-                    type_of,
+                    type_of.get_enum(),
                     gl::FALSE,
                     V::stride() as i32,
                     (offset as *const ()).cast(),
@@ -138,7 +138,7 @@ where
         }
     }
 
-    pub(crate) fn draw<M, const OUT: usize, D: FramebufferInternals<OUT>>(
+    pub fn draw<M, const OUT: usize, D: FramebufferInternals<OUT>>(
         &self,
         active_shader_program: &ActiveShaderProgram<'_, '_, '_, M, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,

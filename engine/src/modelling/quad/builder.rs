@@ -2,11 +2,13 @@ use std::array;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use crate::modelling::test_models::vertex_array_quad;
+
 use super::Quad;
-use crate::buffers::vertex_array::VertexArray;
+use graphics::buffers::VertexArray;
 use super::QuadVertex;
-use crate::builder;
-use crate::texture::FlatTexture;
+use utils::builder;
+use graphics::texture::FlatTexture;
 
 #[derive(Debug, Default)]
 pub struct Builder<const N: usize> {
@@ -28,7 +30,7 @@ impl<const N: usize> Builder<N> {
         Quad {
             vertex_array: self
                 .vertex_array
-                .unwrap_or_else(|| VertexArray::quad(-1.0, 1.0, -1.0, 1.0)),
+                .unwrap_or_else(|| vertex_array_quad(-1.0, 1.0, -1.0, 1.0)),
             texture: self.texture.unwrap_or(array::from_fn(|_| {
                 Rc::new(RefCell::new(FlatTexture::default()))
             })),

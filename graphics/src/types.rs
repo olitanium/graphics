@@ -30,7 +30,7 @@ macro_rules! opaque {
         }
 
         impl $name {
-            pub(crate) fn new(value: gl::types::$type) -> Self {
+            pub fn new(value: gl::types::$type) -> Self {
                 Self(value)
             }
         }
@@ -51,6 +51,12 @@ macro_rules! nz_opaque {
         impl $name {
             pub(crate) fn new(value: gl::types::$type) -> Self {
                 $name(NonZero::new(value).unwrap())
+            }
+        }
+
+        impl $name {
+            pub fn try_new(value: gl::types::$type) -> Option<Self> {
+                NonZero::new(value).map($name)
             }
         }
 
@@ -95,5 +101,21 @@ impl Debug for GLError {
                 &error
             }
         })
+    }
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, Copy)]
+pub enum VertexAttrType {
+    f32,
+    i32,
+}
+
+impl VertexAttrType {
+    pub(crate) fn get_enum(self) -> gl::types::GLenum {
+        match self {
+            Self::f32 => gl::FLOAT,
+            Self::i32 => gl::INT,
+        }
     }
 }

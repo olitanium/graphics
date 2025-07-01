@@ -4,12 +4,15 @@ use super::camera::Camera;
 use super::geometry::YieldsPose;
 use super::lighting::shadow::ShadowListLights;
 use super::model::Cubic;
-use crate::buffers::framebuffer::{FramebufferContext, FramebufferWithDepth};
-use crate::linear_algebra::{Matrix, Vector};
-use crate::modelling::draw::Draw;
-use crate::shader_program::{ShaderProgram, ShaderProgramContext};
-use crate::texture::FlatTexture;
-use crate::Result;
+use graphics::FramebufferContext;
+use graphics::buffers::fb_traits::FramebufferWithDepth;
+use graphics::linear_algebra::{Matrix, Vector};
+use graphics::Draw;
+use graphics::ShaderProgramContext;
+use graphics::ShaderProgram;
+use graphics::texture::FlatTexture;
+use graphics::Result;
+use crate::opengl_shaders;
 
 pub const SHADOW_SHADER_MAX_LIGHTS: usize = 2;
 
@@ -61,7 +64,7 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw for Group<'a, X> {
 
         // At this point, all lights have their framebuffers filled with depth
         // information
-        let mut active_shadow_shader = ShaderProgram::shadow().use_program(sp_context);
+        let mut active_shadow_shader = opengl_shaders::shadow().use_program(sp_context);
         // SAFETY: because active_shadow_shader is dropped before the end of this
         // function, the references stored cannot leak
         unsafe {

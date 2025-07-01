@@ -2,7 +2,7 @@ pub mod demo;
 
 use super::pose::Pose;
 use super::Orientation;
-use crate::linear_algebra::Vector;
+use graphics::linear_algebra::Vector;
 
 pub trait YieldsPose {
     type Hint;

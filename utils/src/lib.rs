@@ -63,6 +63,21 @@ macro_rules! getter_mut {
 
 #[macro_export]
 macro_rules! builder {
+    ($name:ident, $optname:ident: Option<$typ:ty>) => {
+        #[must_use]
+        #[inline]
+        pub fn $name<X: Into<$typ>>(mut self, $name: X) -> Self {
+            self.$name = Some($name.into());
+            self
+        }
+
+        #[must_use]
+        #[inline]
+        pub fn $optname<X: Into<$typ>>(mut self, $optname: Option<X>) -> Self {
+            self.$name = $optname.map(Into::into);
+            self
+        }
+    };
 
     ($name:ident: Option<$typ:ty>) => {
         #[must_use]

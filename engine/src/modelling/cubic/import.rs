@@ -8,16 +8,18 @@ use russimp::node::Node;
 use russimp::scene::{PostProcess, Scene};
 
 use super::model::{Cubic, Mesh};
-use crate::buffers::vertex_array::{IncompleteSimpleVertex, VertexArray};
-use crate::linear_algebra::{UnitVector, Vector};
-use crate::texture::{FlatTexture, Material, TextureHasBuilder};
-use crate::types::{ElementArrayElem, ToPrimitive};
-use crate::Result;
+use graphics::buffers::IncompleteVertex as IncompleteSimpleVertex;
+use graphics::buffers::VertexArray;
+use graphics::linear_algebra::{UnitVector, Vector};
+use graphics::texture::{FlatTexture, TextureHasBuilder};
+use graphics::types::{ElementArrayElem, ToPrimitive};
+use crate::error::Result;
+use super::material::Material;
 
 mod error {
     use std::path::PathBuf;
 
-    use crate::error_boilerplate;
+    use utils::error_boilerplate;
 
     #[derive(Debug, Clone)]
     pub enum Error {
@@ -46,9 +48,24 @@ mod error {
             index_asked: usize,
             actual_len: usize,
         },
+        Graphics{
+            error: graphics::error::Error,
+        }
     }
 
-    error_boilerplate!(Error: Import);
+    error_boilerplate!(Error);
+
+    impl From<Error> for crate::error::Error {
+        fn from(value: Error) -> Self {
+            Self::Import(value)
+        }
+    }
+
+    impl From<graphics::error::Error> for Error {
+        fn from(value: graphics::error::Error) -> Self {
+            Self::Graphics { error: value }
+        }
+    }
 }
 
 pub use error::Error;
@@ -179,17 +196,14 @@ fn process_node(
                         is_no_vec_or_element_exists("tangent", &opt_tangent, index)?.copied();
                     // opt_tangent.and_then(|vec| vec.get(index.to_primitive() as usize).copied() );
 
-                    Result::Ok(IncompleteSimpleVertex {
-                        position: triangle_position,
-                        texture: triangle_texture,
-                        normal: triangle_normal,
-                        tangent: triangle_tangent,
-                    })
+                    Result::Ok(
+                        IncompleteSimpleVertex::new(triangle_position, triangle_texture).opt_normal(triangle_normal).opt_tangent(triangle_tangent)
+                    )
                 });
 
                 let transpose = incomplete_triangle.try_map(identity)?;
 
-                vertex_array_builder.push_incomplete_triangle(transpose);
+                vertex_array_builder.push_incomplete_triangle(&transpose);
             }
 
             let vertex_array = vertex_array_builder.build();
@@ -223,7 +237,7 @@ fn process_node(
     let child_meshes = children
         .iter()
         .map(|node| process_node(scene, node, dir, current_mat))
-        .try_collect::<Vec<_>>()?
+        .collect::<Result<Vec<_>>>()?
         .into_iter()
         .flatten();
 
@@ -231,7 +245,7 @@ fn process_node(
     Ok(curr_meshes)
 }
 
-fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<Rc<Material>> {
+fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<Rc<Material>, > {
     // get semantic -> key -> data
     let mut material_properties = HashMap::new();
 
@@ -254,7 +268,7 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
     {
         builder = builder.diffuse(
             FlatTexture::builder()
-                .srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())?
+                .srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>()).map_err(|error| Error::Graphics { error })?
                 .build(),
         );
     }
@@ -264,7 +278,7 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
     {
         builder = builder.specular(
             FlatTexture::builder()
-                .srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())?
+                .srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>()).map_err(|error| Error::Graphics { error })?
                 .build(),
         );
     }
@@ -274,7 +288,7 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
     {
         builder = builder.normal_map(
             FlatTexture::builder()
-                .rgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())?
+                .rgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>()).map_err(|error| Error::Graphics { error })?
                 .build(),
         );
     }

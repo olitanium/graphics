@@ -1,16 +1,26 @@
 use super::VertexArray;
 use crate::buffers::element_array_buffer::ElementArrayBuffer;
-use crate::buffers::vertex_buffer::{SimpleVertex, Vertex, VertexBuffer};
+use crate::buffers::vertex_buffer::{Vertex, VertexBuffer};
 use linear_algebra::{UnitVector, Vector};
 use crate::types::ElementArrayElem;
 use utils::{builder, new};
 
-#[derive(Debug, Clone, Copy)]
-pub struct IncompleteSimpleVertex {
+#[derive(Debug, Clone, Copy, Default)]
+#[non_exhaustive]
+pub struct IncompleteVertex {
     pub position: Vector<3>,
     pub texture: Vector<2>,
     pub normal: Option<UnitVector<3>>,
     pub tangent: Option<UnitVector<3>>,
+}
+
+impl IncompleteVertex {
+    pub fn new(position: Vector<3>, texture: Vector<2>) -> Self {
+        Self { position, texture, ..Default::default() }
+    }
+
+    builder!(normal, opt_normal: Option<UnitVector<3>>);
+    builder!(tangent, opt_tangent: Option<UnitVector<3>>);
 }
 
 #[derive(Debug, Clone)]
@@ -54,10 +64,11 @@ where
         let element_array_buffer = ElementArrayBuffer::new(&self.element_array);
         VertexArray::new(vertex_buffer, element_array_buffer)
     }
-}
 
-impl Builder<SimpleVertex> {
-    pub fn push_incomplete_triangle(&mut self, incomplete_triangle: [IncompleteSimpleVertex; 3]) {
+    pub fn push_incomplete_triangle(&mut self, incomplete_triangle: &[IncompleteVertex; 3]) {
+        let complete_triangle = V::from_incomplete_triangle(incomplete_triangle);
+        self.push_triangle(complete_triangle);
+        /*
         let new_normal = if incomplete_triangle.iter().all(|v| v.normal.is_none()) {
             let ab = incomplete_triangle[1].position - incomplete_triangle[0].position;
             let ac = incomplete_triangle[2].position - incomplete_triangle[0].position;
@@ -79,7 +90,7 @@ impl Builder<SimpleVertex> {
         };
 
         let complete_triangle = incomplete_triangle.map(
-            |IncompleteSimpleVertex {
+            |IncompleteVertex {
                  position,
                  texture,
                  normal,
@@ -92,6 +103,6 @@ impl Builder<SimpleVertex> {
             },
         );
 
-        self.push_triangle(complete_triangle)
+        self.push_triangle(complete_triangle)*/
     }
 }

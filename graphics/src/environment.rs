@@ -8,14 +8,17 @@ mod input;
 use glfw::fail_on_errors;
 
 use crate::buffers::framebuffer::FramebufferContext;
-use crate::global_state::GlobalState;
-use crate::input::keyboard::Key;
-use crate::input::mouse::Button;
-use crate::modelling::Draw;
+use crate::error::Result;
+pub use global_state::GlobalState;
+pub use input::keyboard::Key;
+pub use input::mouse::Button;
+pub use draw::Draw;
 use crate::shader_program::ShaderProgramContext;
 use crate::types::TexDim;
-use crate::window::Window;
-use crate::{error_boilerplate, gl_call, Result};
+use window::Window;
+use crate::{gl_call};
+use utils::error_boilerplate;
+
 
 #[derive(Debug, Clone)]
 pub enum Error {
@@ -24,7 +27,13 @@ pub enum Error {
     GlfwWindowError,
 }
 
-error_boilerplate!(Error: Environment);
+error_boilerplate!(Error);
+
+impl From<Error> for crate::error::Error {
+    fn from(value: Error) -> Self {
+        Self::Window(value)
+    }
+}
 
 use std::ffi::{c_void, CStr};
 use std::ptr;
@@ -251,7 +260,7 @@ impl<'env, G: GlobalState> FrameIter<'env, G> {
 
             match self.env.poll() {
                 Ok(vec) => Some(Ok(vec)),
-                Err(crate::Error::Close) => None,
+                Err(crate::error::Error::Close) => None,
                 Err(err) => Some(Err(err)),
             }
         } else {

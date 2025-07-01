@@ -11,7 +11,7 @@ use crate::{gl_call, error::Result};
 mod active_framebuffer;
 mod builder;
 mod size;
-mod traits;
+pub mod traits;
 
 pub use active_framebuffer::{ActiveFramebuffer, FramebufferContext};
 pub use builder::Builder;
@@ -197,7 +197,7 @@ impl<const N: usize, D: AttachmentWithDepth> Framebuffer<N, D> {
         self.stencil_or_depth.get_texture()
     }
 
-    pub(crate) unsafe fn get_attachment_ref(&self) -> &dyn Texture {
+    pub unsafe fn get_attachment_ref(&self) -> &dyn Texture {
         unsafe { self.stencil_or_depth.get_texture_ref() }
     }
 }

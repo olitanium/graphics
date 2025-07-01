@@ -1,5 +1,5 @@
 use super::quaternion::UnitQuaternion;
-use crate::linear_algebra::{Matrix, UnitVector, Vector};
+use graphics::linear_algebra::{Matrix, UnitVector, Vector};
 use crate::modelling::cubic::geometry::orientation::quaternion::Quaternion;
 
 #[derive(Debug, Clone, Copy, Default, PartialEq)]

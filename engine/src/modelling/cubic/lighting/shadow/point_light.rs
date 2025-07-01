@@ -1,14 +1,14 @@
-use crate::buffers::framebuffer::{self, CubeWithDepth};
-use crate::buffers::Framebuffer;
-use crate::linear_algebra::{Matrix, UnitVector, Vector};
+use graphics::buffers::{Builder, Framebuffer};
+use graphics::linear_algebra::{Matrix, UnitVector, Vector};
 use crate::modelling::cubic::camera;
 use crate::modelling::cubic::geometry::{Orientation, Pose};
 use crate::modelling::cubic::lighting::simple::PointLight;
 use crate::modelling::cubic::lighting::ShadowLightCompatible;
 use crate::modelling::Cubic;
-use crate::shader_program::ActiveShaderProgram;
-use crate::texture::{CubeMap, Texture};
-use crate::types::TexDim;
+use graphics::shader_program::ActiveShaderProgram;
+use graphics::texture::{CubeMap, Texture};
+use graphics::types::TexDim;
+use graphics::buffers::CubeWithDepth;
 
 #[derive(Debug)]
 pub struct ShadowPointLight {
@@ -18,7 +18,7 @@ pub struct ShadowPointLight {
 
 impl ShadowPointLight {
     pub fn new(light: PointLight, size: TexDim) -> Self {
-        let framebuffer = framebuffer::cubic_builder()
+        let framebuffer = Builder::new_cubic()
             .cubic_depth()
             .size((size, size))
             .build();

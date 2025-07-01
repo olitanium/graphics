@@ -1,4 +1,4 @@
-use crate::linear_algebra::{UnitVector, Vector};
+use graphics::linear_algebra::{UnitVector, Vector};
 use crate::modelling::cubic::geometry::{Orientation, Pose, YieldsPose};
 
 #[derive(Debug, Clone, Copy)]

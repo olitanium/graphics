@@ -1,7 +1,7 @@
-use linear_algebra::Matrix;
+use graphics::linear_algebra::Matrix;
 
 use super::{DualQuaternion, Orientation, Quaternion, UnitDualQuaternion, YieldsPose};
-use crate::linear_algebra::Vector;
+use graphics::linear_algebra::Vector;
 
 #[derive(Debug, Clone, Copy)]
 // #[non_exhaustive]

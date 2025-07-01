@@ -2,7 +2,7 @@ use std::cell::Cell;
 use std::rc::Rc;
 
 use super::Bone;
-use crate::builder;
+use utils::builder;
 use crate::modelling::cubic::geometry::{Animation, Pose};
 
 #[derive(Debug, Clone)]

@@ -1,4 +1,4 @@
-use opengl::environment::Environment;
+use engine::Environment;
 
 mod controls;
 mod new;

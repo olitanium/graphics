@@ -1,13 +1,14 @@
 use array_vec::ArrayVec;
 
 use super::{ShadowFarLight, ShadowPointLight, ShadowSpotLight};
-use crate::buffers::framebuffer::{FramebufferContext, FramebufferInternals};
-use crate::linear_algebra::Vector;
+use graphics::{FramebufferContext, buffers::fb_traits::FramebufferInternals};
+use graphics::linear_algebra::Vector;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
 use crate::modelling::Cubic;
-use crate::shader_program::{ActiveShaderProgram, ShaderProgram, ShaderProgramContext};
-use crate::texture::Texture;
-use crate::Result;
+use crate::opengl_shaders;
+use graphics::shader_program::{ActiveShaderProgram, ShaderProgram, ShaderProgramContext};
+use graphics::texture::Texture;
+use graphics::Result;
 
 #[derive(Debug, Default)]
 pub struct ShadowListLights<const MAX: usize> {
@@ -24,7 +25,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         complete_models: &[(&Cubic, usize /* animation */, f32 /* time */)],
         target_position: Vector<3>,
     ) -> Result<()> {
-        let mut active_depth_only_shader = ShaderProgram::far_light_depth().use_program(sp_context);
+        let mut active_depth_only_shader = opengl_shaders::far_light_depth().use_program(sp_context);
 
         // let cull_face_marker =
         // active_depth_only_shader.cull_face(CullFace::FrontFace);
@@ -50,7 +51,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         }
         drop(active_depth_only_shader);
 
-        let mut active_depth_only_shader = ShaderProgram::far_light_depth().use_program(sp_context);
+        let mut active_depth_only_shader = opengl_shaders::far_light_depth().use_program(sp_context);
 
         for light in &self.spot {
             // Draw the scene from the lights perspective, saving to the light's internal
@@ -72,7 +73,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         drop(active_depth_only_shader);
 
         let mut active_depth_only_shader_point =
-            ShaderProgram::point_depth().use_program(sp_context);
+            opengl_shaders::point_depth().use_program(sp_context);
 
         for light in &self.point {
             for (index, matrix) in light.get_look_at_matrices().into_iter().enumerate() {

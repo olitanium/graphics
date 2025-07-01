@@ -1,9 +1,10 @@
-use crate::buffers::framebuffer::{ActiveFramebuffer, FramebufferWithDepth};
-use crate::buffers::vertex_array::VertexArray;
-use crate::modelling::cubic::SimpleVertex;
-use crate::shader_program::{ActiveShaderProgram, CullFace};
-use crate::texture::{CubeMap, Texture};
-use crate::Result;
+use graphics::buffers::{ActiveFramebuffer, FramebufferWithDepth};
+use graphics::buffers::VertexArray;
+use crate::modelling::test_models::vertex_array_cube;
+use crate::modelling::SimpleVertex;
+use graphics::shader_program::{ActiveShaderProgram, CullFace};
+use graphics::texture::{CubeMap, Texture};
+use graphics::error::Result;
 
 #[derive(Debug)]
 pub struct SkyBox {
@@ -14,7 +15,7 @@ pub struct SkyBox {
 impl SkyBox {
     pub fn new(texture: CubeMap) -> Self {
         Self {
-            model: VertexArray::cube(1.0),
+            model: vertex_array_cube(1.0),
             texture,
         }
     }

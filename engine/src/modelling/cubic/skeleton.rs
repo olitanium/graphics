@@ -1,6 +1,6 @@
 mod bone;
 pub use bone::Bone;
-use linear_algebra::Matrix;
+use graphics::linear_algebra::Matrix;
 
 use super::geometry::{Pose, YieldsPose};
 
