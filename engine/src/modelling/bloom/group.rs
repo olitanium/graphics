@@ -1,7 +1,7 @@
 use graphics::error::Result;
 use graphics::framebuffer::traits::{FramebufferInternals, FramebufferWithoutExtra};
 use graphics::framebuffer::FramebufferContext;
-use graphics::shader_program::{ShaderProgram, ShaderProgramContext};
+use graphics::shader_program::ShaderProgramContext;
 use graphics::texture::FlatTexture;
 use graphics::Draw;
 

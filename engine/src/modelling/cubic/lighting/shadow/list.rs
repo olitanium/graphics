@@ -2,7 +2,7 @@ use array_vec::ArrayVec;
 use graphics::framebuffer::traits::FramebufferInternals;
 use graphics::framebuffer::FramebufferContext;
 use graphics::linear_algebra::Vector;
-use graphics::shader_program::{ActiveShaderProgram, ShaderProgram, ShaderProgramContext};
+use graphics::shader_program::{ActiveShaderProgram, ShaderProgramContext};
 use graphics::texture::Texture;
 use graphics::Result;
 

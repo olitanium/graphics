@@ -4,7 +4,7 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::framebuffer::FramebufferContext;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::texture::FlatTexture;
-use graphics::{Draw, Result, ShaderProgram, ShaderProgramContext};
+use graphics::{Draw, Result, ShaderProgramContext};
 
 use super::camera::Camera;
 use super::geometry::YieldsPose;

@@ -32,7 +32,7 @@ pub fn cubic_builder<const N: usize>() -> Builder<N, MissingSize, CubeWithoutExt
 }
 
 pub mod attachments;
-use attachments::{CubeWithDepth, CubeWithoutExtra, WithDepth, WithStencil, WithoutExtra};
+use attachments::{CubeWithDepth, CubeWithoutExtra, WithStencil, WithoutExtra};
 
 // A `Framebuffer` is a destination for drawing a scene, the default
 // Framebuffer is accessible after an `Environment` is initialzed and is for
