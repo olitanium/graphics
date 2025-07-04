@@ -4,7 +4,7 @@ use std::rc::Rc;
 use engine::array_vec::ArrayVec;
 use engine::buffers::framebuffer_builder;
 use engine::modelling::cubic::camera::CameraPose;
-use engine::modelling::cubic::geometry::{Animation, Orientation, Pose, Slerp};
+use engine::modelling::cubic::geometry::{Animation, Orientation, Pose, };
 use engine::modelling::cubic::lighting::shadow::{
     ShadowFarLight,
     ShadowListLights,
@@ -283,7 +283,6 @@ impl State {
             Vector::from([0.0, 1.0, 0.0]).normalize(),
         );
 
-        let slerp = Slerp::new(orientation1, orientation2, 10.0, true);
 
         let quad_to_draw = Quad::screen(hdr_fb.get_all_colour()).downcast();
 
@@ -314,7 +313,6 @@ impl State {
 
             imported,
             which_animation: 0,
-            slerp,
 
             hdr_fb,
             do_bloom: false,

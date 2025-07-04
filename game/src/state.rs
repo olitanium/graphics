@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use engine::buffers::{DefaultFramebuffer, Framebuffer, WithDepth};
 use engine::modelling::cubic::camera::{CameraPose, Projection};
-use engine::modelling::cubic::geometry::{Orientation, Pose, Slerp};
+use engine::modelling::cubic::geometry::{Orientation, Pose};
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::linear_algebra::Vector;
@@ -45,7 +45,6 @@ pub struct State {
     pub imported: Cubic,
     pub which_animation: usize,
 
-    pub slerp: Slerp,
 
     // pub player: Cubic,
     pub skybox: SkyBox,

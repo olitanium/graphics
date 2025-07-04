@@ -360,6 +360,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "dual_number"
+version = "0.1.0"
+dependencies = [
+ "linear_algebra",
+ "quaternion",
+]
+
+[[package]]
 name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -379,8 +387,10 @@ name = "engine"
 version = "0.1.0"
 dependencies = [
  "array_vec",
+ "dual_number",
  "graphics",
  "infinite_window",
+ "quaternion",
  "russimp",
  "utils",
 ]
@@ -1477,6 +1487,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f6d64c71eb498fe9eae14ce4ec935c555749aef511cca85b5568910d6e48001"
 dependencies = [
  "bytemuck",
+]
+
+[[package]]
+name = "quaternion"
+version = "0.1.0"
+dependencies = [
+ "linear_algebra",
 ]
 
 [[package]]

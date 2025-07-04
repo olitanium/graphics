@@ -1,5 +1,7 @@
+use crate::UnitQuaternion;
+
 use super::Quaternion;
-use crate::modelling::cubic::geometry::Orientation;
+
 
 #[derive(Debug, Clone, Copy)]
 pub struct Slerp {
@@ -11,9 +13,9 @@ pub struct Slerp {
 }
 
 impl Slerp {
-    pub fn new(from: Orientation, to: Orientation, duration: f32, long_way: bool) -> Self {
-        let from = from.into_quaternion().q();
-        let mut to = to.into_quaternion().q();
+    pub fn new(from: UnitQuaternion, to: UnitQuaternion, duration: f32, long_way: bool) -> Self {
+        let from = from.q();
+        let mut to = to.q();
         let mut dot = from.dot(to);
 
         if long_way {
@@ -40,9 +42,9 @@ impl Slerp {
         }
     }
 
-    pub fn get(self, time: f32) -> Orientation {
+    pub fn get(self, time: f32) -> UnitQuaternion {
         if self.from == self.to {
-            return Orientation::from_quaternion(self.from.normalize());
+            self.from.normalize();
         }
 
         let time = (time / self.duration) % 1.0;
@@ -54,6 +56,7 @@ impl Slerp {
         let term1 = s1 * self.from;
         let term2 = s2 * self.to;
         let quaternion = (term1 + term2).normalize();
-        Orientation::from_quaternion(quaternion)
+    
+        quaternion
     }
 }

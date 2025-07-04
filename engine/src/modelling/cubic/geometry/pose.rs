@@ -1,6 +1,10 @@
+use dual_number::{DualQuaternion, UnitDualQuaternion};
 use graphics::linear_algebra::Matrix;
+use quaternion::Quaternion;
 
-use super::{DualQuaternion, Orientation, Quaternion, UnitDualQuaternion, YieldsPose};
+mod posesclerp;
+pub use posesclerp::PoseSclerp;
+use super::{Orientation, YieldsPose};
 use graphics::linear_algebra::Vector;
 
 #[derive(Debug, Clone, Copy)]

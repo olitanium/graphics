@@ -5,5 +5,5 @@ members = [
     "engine",
     "utils",
     "game",
-    "graphics",
+    "graphics", "quaternion", "dual_number",
 ]

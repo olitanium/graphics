@@ -1,7 +1,8 @@
-use graphics::linear_algebra::Vector;
+use linear_algebra::Vector;
+
+use crate::{DualNumber, UnitDualQuaternion};
 
 use super::DualQuaternion;
-use crate::modelling::cubic::geometry::{DualNumber, Pose, YieldsPose};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Sclerp {
@@ -13,8 +14,8 @@ pub struct Sclerp {
 }
 
 impl Sclerp {
-    pub fn new(from: Pose, to: Pose, long_way: bool, duration: f32) -> Self {
-        let inv_a_times_b = from.into_inner().u().inverse() * to.into_inner().u();
+    pub fn new(from: UnitDualQuaternion, to: UnitDualQuaternion, duration: f32) -> Self {
+        let inv_a_times_b = from.u().inverse() * to.u();
 
         let int_real = inv_a_times_b.real;
         let int_dual = inv_a_times_b.dual;
@@ -31,14 +32,14 @@ impl Sclerp {
         let theta_f = DualNumber::new(theta, d);
 
         Self {
-            from: from.into_inner().u(),
+            from: from.u(),
             duration,
             v: v_f,
             theta: theta_f,
         }
     }
 
-    pub fn get(self, time: f32) -> Pose {
+    pub fn get(self, time: f32) -> UnitDualQuaternion {
         let time = time / self.duration;
 
         let second_part_scalar = (0.5 * time * self.theta).cos();
@@ -47,14 +48,6 @@ impl Sclerp {
         let dual_quaternion = DualQuaternion::new_transpose(second_part_scalar, second_part_vector);
         let output = (self.from * dual_quaternion).normalize();
 
-        Pose::new_from_dual(output)
-    }
-}
-
-impl YieldsPose for Sclerp {
-    type Hint = f32;
-
-    fn get_pose(&self, hint: Self::Hint) -> Pose {
-        self.get(hint)
+        output
     }
 }

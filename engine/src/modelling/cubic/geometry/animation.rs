@@ -1,7 +1,7 @@
 use infinite_window::InfiniteWindowIter;
 
 // use super::pose::PoseLerp;
-use super::{Pose, Sclerp, YieldsPose};
+use super::{Pose, PoseSclerp, YieldsPose};
 
 #[derive(Debug, Clone)]
 pub struct Animation {
@@ -84,7 +84,7 @@ impl YieldsPose for Animation {
 
                 end_time = if end_time == 0.0 { duration } else { end_time };
 
-                let lerp = Sclerp::new(start_pose, end_pose, false, end_time - start_time);
+                let lerp = PoseSclerp::new(start_pose, end_pose,  end_time - start_time);
                 lerp.get_pose(local_time - start_time)
             }
             (slice @ &[.., (_, final_pose)], None) => slice
@@ -93,7 +93,7 @@ impl YieldsPose for Animation {
                 .map_or(
                     final_pose,
                     |&[(start_time, start_pose), (end_time, end_pose)]| {
-                        let lerp = Sclerp::new(start_pose, end_pose, false, end_time - start_time);
+                        let lerp = PoseSclerp::new(start_pose, end_pose,  end_time - start_time);
                         lerp.get_pose(time - start_time)
                     },
                 ),
