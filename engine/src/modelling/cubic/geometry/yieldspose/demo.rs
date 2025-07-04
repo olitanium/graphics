@@ -1,5 +1,6 @@
-use super::YieldsPose;
 use graphics::linear_algebra::{UnitVector, Vector};
+
+use super::YieldsPose;
 use crate::modelling::cubic::geometry::{Orientation, Pose};
 
 #[derive(Debug, Copy, Clone)]

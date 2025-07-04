@@ -1,16 +1,17 @@
-use graphics::{buffers, Framebuffer};
-use graphics::buffers::WithDepth;
+use graphics::colour::ColourRGBA;
+use graphics::framebuffer::attachments::WithDepth;
+use graphics::framebuffer::{Builder, Framebuffer};
 use graphics::linear_algebra::{Matrix, UnitVector, Vector};
+use graphics::shader_program::ActiveShaderProgram;
+use graphics::texture::{FlatTexture, Magnification, Texture, WrapType};
+use graphics::types::TexDim;
+
 use crate::modelling::cubic::camera;
 use crate::modelling::cubic::camera::Camera;
 use crate::modelling::cubic::geometry::{Orientation, Pose};
 use crate::modelling::cubic::lighting::simple::FarLight;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
 use crate::modelling::Cubic;
-use graphics::shader_program::ActiveShaderProgram;
-use graphics::texture::{FlatTexture, Magnification, Texture, WrapType};
-use graphics::types::TexDim;
-use graphics::colour::ColourRGBA;
 
 #[derive(Debug)]
 pub struct ShadowFarLight {
@@ -22,7 +23,7 @@ impl ShadowFarLight {
     pub fn new(light: FarLight, size: (TexDim, TexDim)) -> Self {
         Self {
             light,
-            framebuffer: buffers::Builder::new_flat()
+            framebuffer: Builder::new_flat()
                 .depth()
                 .size(size)
                 .map_attachment(|tex_builder| {

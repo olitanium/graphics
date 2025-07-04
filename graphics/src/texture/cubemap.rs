@@ -1,11 +1,11 @@
 use std::sync::LazyLock;
 
 use builder::MissingData;
+use colour::ColourRGB;
 
 use super::{Texture, TextureHasBuilder};
-use crate::types::{TexDim, TexId, ToPrimitive};
 use crate::gl_call;
-use colour::ColourRGB;
+use crate::types::{TexDim, TexId, ToPrimitive};
 
 mod builder;
 pub use builder::{Builder as CubeMapBuilder, FramebufferAttachment as CubeFrameBufferAttachment};

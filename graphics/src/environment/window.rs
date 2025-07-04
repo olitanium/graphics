@@ -1,12 +1,12 @@
 use glfw::{Context, Glfw, GlfwReceiver, PWindow, WindowEvent};
 use utils::{builder, new};
 
-use crate::buffers::DefaultFramebuffer;
-use crate::environment::Error;
 use super::input::keyboard::Keyboard;
 use super::input::mouse::{CursorMode, Mouse};
-use crate::types::TexDim;
+use crate::environment::Error;
 use crate::error::Result;
+use crate::framebuffer::DefaultFramebuffer;
+use crate::types::TexDim;
 
 #[expect(dead_code)]
 #[derive(Debug)]
@@ -155,7 +155,7 @@ impl Builder<HasGlfw<'_>> {
 
         let keyboard = Keyboard::new(&mut glfw_window);
         let mouse = Mouse::new(&mut glfw_window, self.mouse_fix_to_centre);
-        
+
         let size = glfw_window.get_framebuffer_size();
         let size = (TexDim::new(size.0), TexDim::new(size.1));
         let default_framebuffer = DefaultFramebuffer::new(size);

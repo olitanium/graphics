@@ -1,9 +1,8 @@
 use std::mem;
 
-use graphics::buffers::IncompleteVertex;
-use graphics::types::VertexAttrType;
-use graphics::Vertex;
 use graphics::linear_algebra::Vector;
+use graphics::types::VertexAttrType;
+use graphics::vertex::{IncompleteVertex, Vertex};
 
 #[derive(Debug, Clone, Copy)]
 pub struct QuadVertex {
@@ -23,15 +22,19 @@ impl Vertex for QuadVertex {
 
     fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
         use VertexAttrType as V;
-        [
-            (V::f32, 2),
-            (V::f32, 2),
-        ]
+        [(V::f32, 2), (V::f32, 2)]
     }
 
-    fn from_incomplete_triangle(triangle: &[graphics::buffers::IncompleteVertex; 3]) -> [Self; 3] {
-        triangle.map(|IncompleteVertex {position, texture, ..}| {
-            Self { position: position.truncate(), tex_coordinate: texture }
-        } )
+    fn from_incomplete_triangle(triangle: &[IncompleteVertex; 3]) -> [Self; 3] {
+        triangle.map(
+            |IncompleteVertex {
+                 position, texture, ..
+             }| {
+                Self {
+                    position: position.truncate(),
+                    tex_coordinate: texture,
+                }
+            },
+        )
     }
 }

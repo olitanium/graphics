@@ -12,7 +12,7 @@ impl<const N: usize, D: Attachment> Framebuffer<N, D> {
     /// buffers i.e. `N == 0`
     pub fn size(&self) -> (TexDim, TexDim) {
         self.get_colour(0)
-            .map_or_else(|_| self.stencil_or_depth.size(), |tex| tex.borrow().size())
+            .map_or_else(|| self.stencil_or_depth.size(), |tex| tex.borrow().size())
     }
 
     /// Calculate the aspect ratio (x/y)

@@ -1,12 +1,13 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use graphics::Framebuffer;
-use graphics::buffers::WithoutExtra;
-use crate::modelling::quad::Quad;
+use graphics::framebuffer::attachments::WithoutExtra;
+pub use graphics::framebuffer::Builder;
+use graphics::framebuffer::Framebuffer;
 use graphics::texture::{FlatTexture, Texture};
 use graphics::types::TexDim;
-pub use graphics::buffers::Builder as FrameBufferBuilder;
+
+use crate::modelling::quad::Quad;
 #[derive(Debug)]
 /// A pseudo-quad which takes the output of a framebuffer and blurs.
 /// Works in conjuntion with the `BloomGroup` to take output from a
@@ -30,7 +31,7 @@ impl Bloom {
         // .expect(EXPECT_MESSAGE)
         // .build();
 
-        let framebuffer_x = FrameBufferBuilder::new_flat().size(size).build();
+        let framebuffer_x = Builder::new_flat().size(size).build();
 
         // let blur_y_merge = ShaderProgram::builder()
         // .vertex_shader_raw(include_bytes!(

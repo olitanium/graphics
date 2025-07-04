@@ -1,8 +1,9 @@
 use std::fmt::Debug;
 use std::sync::LazyLock;
 
-use super::{Texture, TextureHasBuilder};
 use colour::ColourRGBA;
+
+use super::{Texture, TextureHasBuilder};
 use crate::gl_call;
 use crate::types::{TexDim, TexId, ToPrimitive};
 

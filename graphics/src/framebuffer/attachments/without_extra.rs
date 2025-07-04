@@ -1,12 +1,10 @@
-use crate::buffers::framebuffer::traits::OptTexBuilderMap;
-use crate::buffers::framebuffer::{
-    self,
+use crate::framebuffer::traits::{
     Attachment,
+    AttachmentTextureInfo,
     AttachmentWithoutExtra,
-    Framebuffer,
-    FramebufferContext,
+    OptTexBuilderMap,
 };
-use crate::buffers::AttachmentTextureInfo;
+use crate::framebuffer::{self, Framebuffer, FramebufferContext};
 use crate::texture::FlatTexture;
 use crate::types::TexDim;
 

@@ -1,14 +1,14 @@
+use graphics::framebuffer::traits::FramebufferWithDepth;
+use graphics::framebuffer::FramebufferContext;
+use graphics::linear_algebra::{Matrix, Vector};
+use graphics::shader_program::{ShaderProgram, ShaderProgramContext};
+use graphics::texture::FlatTexture;
+use graphics::{Draw, Result};
+
 use super::geometry::YieldsPose;
 use super::lighting::simple::ListLights;
 use super::model::Cubic;
 use super::Camera;
-use graphics::FramebufferContext;
-use graphics::buffers::fb_traits::FramebufferWithDepth;
-use graphics::linear_algebra::{Matrix, Vector};
-use graphics::Draw;
-use graphics::shader_program::{ShaderProgram, ShaderProgramContext};
-use graphics::texture::FlatTexture;
-use graphics::Result;
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {

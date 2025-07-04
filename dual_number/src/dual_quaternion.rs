@@ -1,4 +1,3 @@
-
 mod unit_dual_quaternion;
 use linear_algebra::Vector;
 use quaternion::Quaternion;

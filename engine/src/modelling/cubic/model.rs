@@ -1,17 +1,19 @@
 use std::path::Path;
 use std::rc::Rc;
 
+use graphics::framebuffer::traits::FramebufferWithDepth;
+use graphics::framebuffer::ActiveFramebuffer;
 use graphics::linear_algebra::Matrix;
+use graphics::shader_program::{ActiveShaderProgram, CullFace};
+use graphics::vertex_array::VertexArray;
+use russimp::scene::PostProcess;
 
 use super::geometry::YieldsPose;
+use super::material::Material;
 use super::{import, Builder, Skeleton};
-use graphics::buffers::{ActiveFramebuffer, FramebufferWithDepth, VertexArray};
+use crate::error::Result;
 use crate::modelling::simple_vertex::SimpleVertex;
 use crate::modelling::test_models::vertex_array_cube;
-use graphics::shader_program::{ActiveShaderProgram, CullFace};
-use super::material::Material;
-use crate::error::{Result};
-use russimp::scene::PostProcess;
 
 #[derive(Debug, Clone)]
 pub struct Mesh {

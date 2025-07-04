@@ -1,9 +1,10 @@
-use super::super::traits::ListLightCompatible;
 use graphics::colour::ColourRGB;
 use graphics::linear_algebra::Vector;
-use crate::modelling::Cubic;
 use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::Texture;
+
+use super::super::traits::ListLightCompatible;
+use crate::modelling::Cubic;
 
 #[derive(Clone, Debug)]
 pub struct PointLight {

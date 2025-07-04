@@ -1,24 +1,23 @@
 use std::collections::HashSet;
 
 mod draw;
-mod window;
 mod global_state;
 mod input;
+mod window;
 
+pub use draw::Draw;
 use glfw::fail_on_errors;
-
-use crate::buffers::framebuffer::FramebufferContext;
-use crate::error::Result;
 pub use global_state::GlobalState;
 pub use input::keyboard::Key;
 pub use input::mouse::Button;
-pub use draw::Draw;
+use utils::error_boilerplate;
+use window::Window;
+
+use crate::error::Result;
+use crate::framebuffer::FramebufferContext;
+use crate::gl_call;
 use crate::shader_program::ShaderProgramContext;
 use crate::types::TexDim;
-use window::Window;
-use crate::{gl_call};
-use utils::error_boilerplate;
-
 
 #[derive(Debug, Clone)]
 pub enum Error {

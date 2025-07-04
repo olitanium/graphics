@@ -3,18 +3,18 @@ use std::convert::identity;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
+use graphics::linear_algebra::{UnitVector, Vector};
+use graphics::texture::{FlatTexture, TextureHasBuilder};
+use graphics::types::{ElementArrayElem, ToPrimitive};
+use graphics::vertex::IncompleteVertex;
+use graphics::vertex_array::VertexArray;
 use russimp::material::{PropertyTypeInfo, TextureType};
 use russimp::node::Node;
 use russimp::scene::{PostProcess, Scene};
 
-use super::model::{Cubic, Mesh};
-use graphics::buffers::IncompleteVertex as IncompleteSimpleVertex;
-use graphics::buffers::VertexArray;
-use graphics::linear_algebra::{UnitVector, Vector};
-use graphics::texture::{FlatTexture, TextureHasBuilder};
-use graphics::types::{ElementArrayElem, ToPrimitive};
-use crate::error::Result;
 use super::material::Material;
+use super::model::{Cubic, Mesh};
+use crate::error::Result;
 
 mod error {
     use std::path::PathBuf;
@@ -48,9 +48,9 @@ mod error {
             index_asked: usize,
             actual_len: usize,
         },
-        Graphics{
+        Graphics {
             error: graphics::error::Error,
-        }
+        },
     }
 
     error_boilerplate!(Error);
@@ -197,7 +197,9 @@ fn process_node(
                     // opt_tangent.and_then(|vec| vec.get(index.to_primitive() as usize).copied() );
 
                     Result::Ok(
-                        IncompleteSimpleVertex::new(triangle_position, triangle_texture).opt_normal(triangle_normal).opt_tangent(triangle_tangent)
+                        IncompleteVertex::new(triangle_position, triangle_texture)
+                            .opt_normal(triangle_normal)
+                            .opt_tangent(triangle_tangent),
                     )
                 });
 
@@ -245,7 +247,7 @@ fn process_node(
     Ok(curr_meshes)
 }
 
-fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<Rc<Material>, > {
+fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<Rc<Material>> {
     // get semantic -> key -> data
     let mut material_properties = HashMap::new();
 
@@ -268,7 +270,8 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
     {
         builder = builder.diffuse(
             FlatTexture::builder()
-                .srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>()).map_err(|error| Error::Graphics { error })?
+                .srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
+                .map_err(|error| Error::Graphics { error })?
                 .build(),
         );
     }
@@ -278,7 +281,8 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
     {
         builder = builder.specular(
             FlatTexture::builder()
-                .srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>()).map_err(|error| Error::Graphics { error })?
+                .srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
+                .map_err(|error| Error::Graphics { error })?
                 .build(),
         );
     }
@@ -288,7 +292,8 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
     {
         builder = builder.normal_map(
             FlatTexture::builder()
-                .rgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>()).map_err(|error| Error::Graphics { error })?
+                .rgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
+                .map_err(|error| Error::Graphics { error })?
                 .build(),
         );
     }

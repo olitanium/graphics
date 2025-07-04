@@ -2,13 +2,12 @@ use std::array;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use crate::modelling::test_models::vertex_array_quad;
-
-use super::Quad;
-use graphics::buffers::VertexArray;
-use super::QuadVertex;
-use utils::builder;
 use graphics::texture::FlatTexture;
+use graphics::vertex_array::VertexArray;
+use utils::builder;
+
+use super::{Quad, QuadVertex};
+use crate::modelling::test_models::vertex_array_quad;
 
 #[derive(Debug, Default)]
 pub struct Builder<const N: usize> {

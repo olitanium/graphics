@@ -3,9 +3,10 @@ use graphics::linear_algebra::Matrix;
 use quaternion::Quaternion;
 
 mod posesclerp;
-pub use posesclerp::PoseSclerp;
-use super::{Orientation, YieldsPose};
 use graphics::linear_algebra::Vector;
+pub use posesclerp::PoseSclerp;
+
+use super::{Orientation, YieldsPose};
 
 #[derive(Debug, Clone, Copy)]
 // #[non_exhaustive]

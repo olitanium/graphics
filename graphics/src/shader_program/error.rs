@@ -1,8 +1,9 @@
 use std::ffi::CString;
 use std::path::PathBuf;
 
-use super::CullFace;
 use utils::error_boilerplate;
+
+use super::CullFace;
 
 #[derive(Debug, Clone)]
 pub enum Error {

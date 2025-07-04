@@ -1,17 +1,15 @@
 use std::iter;
 
+use graphics::framebuffer::traits::FramebufferWithDepth;
+use graphics::framebuffer::FramebufferContext;
+use graphics::linear_algebra::{Matrix, Vector};
+use graphics::texture::FlatTexture;
+use graphics::{Draw, Result, ShaderProgram, ShaderProgramContext};
+
 use super::camera::Camera;
 use super::geometry::YieldsPose;
 use super::lighting::shadow::ShadowListLights;
 use super::model::Cubic;
-use graphics::FramebufferContext;
-use graphics::buffers::fb_traits::FramebufferWithDepth;
-use graphics::linear_algebra::{Matrix, Vector};
-use graphics::Draw;
-use graphics::ShaderProgramContext;
-use graphics::ShaderProgram;
-use graphics::texture::FlatTexture;
-use graphics::Result;
 use crate::opengl_shaders;
 
 pub const SHADOW_SHADER_MAX_LIGHTS: usize = 2;

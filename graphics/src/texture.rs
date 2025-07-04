@@ -4,13 +4,13 @@ mod cubemap;
 mod error;
 pub use error::Error;
 mod flat_texture;
-//mod material;
+// mod material;
 
 pub use cubemap::CubeMap;
 pub(crate) use cubemap::{CubeFrameBufferAttachment, CubeMapBuilder};
 pub use flat_texture::FlatTexture;
 pub(crate) use flat_texture::{FlatTextureBuilder, FramebufferAttachment};
-//pub use material::Material;
+// pub use material::Material;
 mod parameters;
 pub use parameters::{Magnification, Minification, MipMapInfo, WrapType};
 

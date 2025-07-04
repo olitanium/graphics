@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 
-use engine::Key;
-use engine::{Error, Result};
+use engine::{Error, Key, Result};
 
 use crate::state::State;
 

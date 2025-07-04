@@ -1,10 +1,11 @@
 use std::sync::LazyLock;
 
 use graphics::shader_program::{CullFace, ShaderProgram};
+use graphics::texture::{CubeMap, FlatTexture};
+
 use crate::modelling::cubic::lighting::shadow::ShadowListLights;
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::{Cubic, Quad, SkyBox};
-use graphics::texture::{CubeMap, FlatTexture};
 
 static ERROR_MESSAGE: &str = "Engine defined shader should exist and not have errors";
 

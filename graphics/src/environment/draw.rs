@@ -1,6 +1,6 @@
-use crate::buffers::framebuffer::FramebufferContext;
-use crate::shader_program::ShaderProgramContext;
 use crate::error::Result;
+use crate::framebuffer::FramebufferContext;
+use crate::shader_program::ShaderProgramContext;
 
 pub trait Draw {
     fn draw(

@@ -1,9 +1,9 @@
 use std::iter;
 
-use graphics::buffers::IncompleteVertex;
-use graphics::buffers::VertexArray;
 use graphics::linear_algebra::Vector;
 use graphics::types::ElementArrayElem;
+use graphics::vertex::IncompleteVertex;
+use graphics::vertex_array::VertexArray;
 
 use crate::modelling::quad::QuadVertex;
 use crate::modelling::SimpleVertex;
@@ -60,8 +60,12 @@ pub fn vertex_array_cube(side_length: f32) -> VertexArray<SimpleVertex> {
     vertex_array_builder.build()
 }
 
-
-pub fn vertex_array_quad(lower_x: f32, upper_x: f32, lower_y: f32, upper_y: f32) -> VertexArray<QuadVertex> {
+pub fn vertex_array_quad(
+    lower_x: f32,
+    upper_x: f32,
+    lower_y: f32,
+    upper_y: f32,
+) -> VertexArray<QuadVertex> {
     let quad_vertices = [
         QuadVertex {
             position: Vector::new([lower_x, lower_y]),

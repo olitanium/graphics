@@ -1,8 +1,7 @@
 use std::ops;
 
-pub use unit_quaternion::UnitQuaternion;
-
 use linear_algebra::{UnitVector, Vector};
+pub use unit_quaternion::UnitQuaternion;
 
 mod slerp;
 mod unit_quaternion;

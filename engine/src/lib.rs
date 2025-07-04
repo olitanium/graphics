@@ -5,14 +5,12 @@
 #![feature(array_chunks)]
 #![feature(array_try_map)]
 
+mod error;
 pub mod modelling;
 pub mod opengl_shaders;
-mod error;
 
-pub use graphics::colour::{ ColourRGB, ColourRGBA };
 pub use array_vec;
-pub use graphics::buffers::Builder as FrameBufferBuilder;
-pub use graphics::types;
-pub use graphics::*;
+pub use graphics::colour::{ColourRGB, ColourRGBA};
+pub use graphics::framebuffer::Builder as FrameBufferBuilder;
+pub use graphics::{types, *};
 pub use russimp::scene::PostProcess;
-

@@ -1,12 +1,9 @@
-use super::Quad;
-
-use graphics::buffers::fb_traits::{
-    FramebufferInternals,
-    FramebufferWithoutExtra,
-};
-use graphics::{Draw, FramebufferContext};
+use graphics::framebuffer::traits::{FramebufferInternals, FramebufferWithoutExtra};
+use graphics::framebuffer::FramebufferContext;
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext};
-use graphics::Result;
+use graphics::{Draw, Result};
+
+use super::Quad;
 
 #[derive(Debug)]
 pub struct Group<'a, const N: usize, const OUT: usize, D: FramebufferInternals<OUT>> {

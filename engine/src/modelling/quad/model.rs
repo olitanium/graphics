@@ -2,16 +2,15 @@ use std::array;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use graphics::buffers::VertexArray;
-
-use crate::modelling::test_models::vertex_array_quad;
-
-use super::Builder;
-use graphics::buffers::{ActiveFramebuffer, fb_traits::FramebufferWithoutExtra};
-use super::QuadVertex;
+use graphics::framebuffer::traits::FramebufferWithoutExtra;
+use graphics::framebuffer::ActiveFramebuffer;
 use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{FlatTexture, Texture};
+use graphics::vertex_array::VertexArray;
 use graphics::Result;
+
+use super::{Builder, QuadVertex};
+use crate::modelling::test_models::vertex_array_quad;
 
 #[derive(Debug)]
 pub struct Quad<const N: usize> {

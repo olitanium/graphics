@@ -1,8 +1,7 @@
 mod error;
 pub use error::Error;
-//mod included;
+// mod included;
 mod program;
 mod shader;
 
-pub use program::{ActiveShaderProgram, ShaderProgramContext};
-pub use program::{CullFace, ShaderProgram, Uniform};
+pub use program::{ActiveShaderProgram, CullFace, ShaderProgram, ShaderProgramContext, Uniform};

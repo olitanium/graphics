@@ -3,13 +3,13 @@ use std::fmt::Debug;
 use std::rc::Rc;
 
 use super::WithDepth;
-use crate::buffers::framebuffer::traits::{
+use crate::framebuffer::traits::{
+    AttachmentTextureInfo,
     AttachmentWithDepth,
     AttachmentWithoutExtra,
     OptTexBuilderMap,
 };
-use crate::buffers::framebuffer::{self, Attachment, FramebufferContext};
-use crate::buffers::{AttachmentTextureInfo, Framebuffer};
+use crate::framebuffer::{self, Attachment, Framebuffer, FramebufferContext};
 use crate::texture::{
     CubeFrameBufferAttachment,
     CubeMap,

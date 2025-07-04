@@ -1,5 +1,6 @@
-use crate::types::GLint;
 use colour::ColourRGBA;
+
+use crate::types::GLint;
 
 #[derive(Debug, Default)]
 pub enum WrapType {

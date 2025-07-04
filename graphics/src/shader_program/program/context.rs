@@ -1,9 +1,10 @@
 use std::sync::Mutex;
 
 use super::{CullFace, Error, ShaderProgram};
+use crate::error::Result;
+use crate::gl_call;
 use crate::texture::Texture;
 use crate::types::ToPrimitive;
-use crate::{gl_call, error::Result};
 
 #[derive(Debug)]
 pub struct ShaderProgramContext {

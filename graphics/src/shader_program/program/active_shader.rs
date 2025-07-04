@@ -6,10 +6,10 @@ use std::{iter, ptr};
 
 use super::uniform::Uniform;
 use super::{CullFace, Error, ShaderProgram, ShaderProgramContext};
+use crate::error::Result;
+use crate::gl_call;
 use crate::texture::{self, Texture};
 use crate::types::{self, ToPrimitive, UniformLocation};
-use crate::{gl_call};
-use crate::error::Result;
 
 pub struct ActiveShaderProgram<'a, 'b, 'c, M, T: Texture, const OUT: usize> {
     shader_program: &'a ShaderProgram<M, OUT, T>,

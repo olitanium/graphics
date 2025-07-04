@@ -1,17 +1,13 @@
-use crate::modelling::Quad;
-use crate::opengl_shaders;
-
-use super::Bloom;
-use graphics::{
-    FramebufferContext,
-    };
-use graphics::buffers::fb_traits::{FramebufferInternals,
-    FramebufferWithoutExtra,
-};
-use graphics::Draw;
+use graphics::error::Result;
+use graphics::framebuffer::traits::{FramebufferInternals, FramebufferWithoutExtra};
+use graphics::framebuffer::FramebufferContext;
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext};
 use graphics::texture::FlatTexture;
-use graphics::error::Result;
+use graphics::Draw;
+
+use super::Bloom;
+use crate::modelling::Quad;
+use crate::opengl_shaders;
 
 #[derive(Debug)]
 pub struct Group<'a, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> {
@@ -41,7 +37,7 @@ impl<'a, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> Draw for Group<'a, X>
 
         let mut active_output_fb = output_fb.bind(register);
         let active_blur_y = opengl_shaders::bloom_y().use_program(marker);
-        
+
         Quad::screen(bloom.framebuffer_x.get_all_colour())
             .draw(active_blur_y, &mut active_output_fb)?;
 

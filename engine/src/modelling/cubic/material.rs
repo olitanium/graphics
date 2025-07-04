@@ -1,7 +1,7 @@
-use graphics::texture::{FlatTexture, Texture};
 use graphics::colour::ColourRGBA;
-//use crate::modelling::Cubic;
+// use crate::modelling::Cubic;
 use graphics::shader_program::ActiveShaderProgram;
+use graphics::texture::{FlatTexture, Texture};
 use utils::{builder, new};
 
 use crate::modelling::Cubic;

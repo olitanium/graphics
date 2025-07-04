@@ -1,8 +1,7 @@
 use linear_algebra::Vector;
 
-use crate::{DualNumber, UnitDualQuaternion};
-
 use super::DualQuaternion;
+use crate::{DualNumber, UnitDualQuaternion};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Sclerp {

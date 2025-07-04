@@ -1,18 +1,19 @@
+use core::ptr;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::path::Path;
-use core::ptr;
 
+use colour::ColourRGB;
 use image::DynamicImage;
+use utils::{builder, new};
 
 use super::CubeMap;
-use crate::buffers::framebuffer::{Attachment, CubeWithDepth};
-use crate::{gl_call, types};
+use crate::error::Result;
+use crate::framebuffer::attachments::CubeWithDepth;
+use crate::framebuffer::traits::Attachment;
 use crate::texture::{Error, Magnification, Minification, TexBuilder, TexBuilderCanBuild};
 use crate::types::{TexDim, TexId, ToPrimitive};
-use utils::{builder, new};
-use colour::ColourRGB;
-use crate::error::Result;
+use crate::{gl_call, types};
 
 #[derive(Debug, Default)]
 pub struct MissingData;
@@ -56,17 +57,13 @@ impl TexBuilder for Builder<MissingData> {
 }
 
 fn load_image<P: AsRef<Path>>(path: P) -> Result<DynamicImage> {
-    let image  =image::ImageReader::open(&path)
-        .map_err(|_| {
-            Error::OpeningTexture {
-                path: path.as_ref().into(),
-            }
+    let image = image::ImageReader::open(&path)
+        .map_err(|_| Error::OpeningTexture {
+            path: path.as_ref().into(),
         })?
         .decode()
-        .map_err(|_| {
-            Error::ParsingTextureImage {
-                path: path.as_ref().into(),
-            }
+        .map_err(|_| Error::ParsingTextureImage {
+            path: path.as_ref().into(),
         })?;
 
     Ok(image)

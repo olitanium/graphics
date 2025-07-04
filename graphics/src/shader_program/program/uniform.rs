@@ -1,9 +1,10 @@
-use super::ActiveShaderProgram;
+use colour::{ColourRGB, ColourRGBA};
 use linear_algebra::{Matrix, UnitVector, Vector};
+
+use super::ActiveShaderProgram;
+use crate::gl_call;
 use crate::texture::Texture;
 use crate::types::ToPrimitive;
-use crate::gl_call;
-use colour::{ColourRGB, ColourRGBA};
 
 pub trait Uniform {
     fn set_uniform<M, T: Texture, const OUT: usize>(

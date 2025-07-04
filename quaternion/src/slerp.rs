@@ -1,7 +1,5 @@
-use crate::UnitQuaternion;
-
 use super::Quaternion;
-
+use crate::UnitQuaternion;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Slerp {
@@ -56,7 +54,7 @@ impl Slerp {
         let term1 = s1 * self.from;
         let term2 = s2 * self.to;
         let quaternion = (term1 + term2).normalize();
-    
+
         quaternion
     }
 }

@@ -7,32 +7,21 @@
 #![feature(box_as_ptr)]
 #![feature(lazy_type_alias)]
 
-pub mod texture;
-pub mod buffers;
-pub mod types;
-pub mod shader_program;
-pub mod error;
 mod environment;
+pub mod error;
+pub mod shader_program;
+pub mod texture;
+pub mod types;
 
-
-pub use buffers::Framebuffer;
-pub use buffers::DefaultFramebuffer;
-pub use buffers::framebuffer_builder;
-pub use buffers::framebuffer::FramebufferContext;
-pub use shader_program::ShaderProgram;
-pub use shader_program::ActiveShaderProgram;
-pub use shader_program::ShaderProgramContext;
-pub use environment::Environment;
-pub use environment::Draw;
-pub use environment::GlobalState;
-pub use environment::Event;
-pub use environment::Key;
-pub use buffers::vertex_buffer::Vertex;
-pub use error::Result;
-pub use error::Error;
-
-pub use linear_algebra;
-pub use colour;
+pub mod element_array_buffer;
+pub mod framebuffer;
+pub mod vertex;
+pub mod vertex_array;
+pub mod vertex_buffer;
+pub use environment::{Draw, Environment, Event, GlobalState, Key};
+pub use error::{Error, Result};
+pub use shader_program::{ActiveShaderProgram, ShaderProgram, ShaderProgramContext};
+pub use {colour, linear_algebra};
 #[macro_export]
 macro_rules! gl_call {
     ($input:stmt) => {{

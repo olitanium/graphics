@@ -1,8 +1,9 @@
 use std::cell::Cell;
 use std::rc::Rc;
 
-use super::Bone;
 use utils::builder;
+
+use super::Bone;
 use crate::modelling::cubic::geometry::{Animation, Pose};
 
 #[derive(Debug, Clone)]

@@ -1,7 +1,8 @@
 use std::ops;
 
-use super::Quaternion;
 use linear_algebra::Matrix;
+
+use super::Quaternion;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct UnitQuaternion(Quaternion);

@@ -1,11 +1,13 @@
 use std::collections::HashSet;
 
-use engine::buffers::{DefaultFramebuffer, Framebuffer, WithDepth};
+use engine::framebuffer::attachments::WithDepth;
+use engine::framebuffer::{DefaultFramebuffer, Framebuffer};
+use engine::linear_algebra::Vector;
 use engine::modelling::cubic::camera::{CameraPose, Projection};
 use engine::modelling::cubic::geometry::{Orientation, Pose};
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
 use engine::modelling::cubic::lighting::simple::ListLights;
-use engine::linear_algebra::Vector;
+use engine::modelling::cubic::Camera;
 use engine::modelling::{
     Bloom,
     BloomGroup,
@@ -18,11 +20,9 @@ use engine::modelling::{
     SkyBoxGroup,
     SHADOW_SHADER_MAX_LIGHTS,
 };
-use engine::{Draw, Event};
 use engine::shader_program::ShaderProgram;
 use engine::types::TexDim;
-use engine::{modelling::cubic::Camera, Result};
-use engine::GlobalState;
+use engine::{Draw, Event, GlobalState, Result};
 pub struct State {
     pub string: String,
     pub time: f32,
@@ -44,7 +44,6 @@ pub struct State {
     pub containers: Vec<Cubic>,
     pub imported: Cubic,
     pub which_animation: usize,
-
 
     // pub player: Cubic,
     pub skybox: SkyBox,

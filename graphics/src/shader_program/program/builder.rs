@@ -1,13 +1,14 @@
 use std::marker::PhantomData;
 use std::path::Path;
 
+use utils::{builder, new};
+
 use super::{CullFace, ShaderProgram};
+use crate::error::Result;
+use crate::gl_call;
 use crate::shader_program::shader::Shader;
 use crate::texture::Texture;
 use crate::types::{self, ShaderProgramId, ToPrimitive};
-use utils::{builder, new};
-use crate::gl_call;
-use crate::error::Result;
 
 #[derive(Debug)]
 pub struct VertexShader(Shader);

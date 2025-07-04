@@ -2,9 +2,11 @@ use std::iter;
 use std::rc::Rc;
 
 use engine::array_vec::ArrayVec;
-use engine::buffers::framebuffer_builder;
+use engine::framebuffer::Builder;
+use engine::linear_algebra::{UnitVector, Vector};
+use engine::modelling::cubic::camera;
 use engine::modelling::cubic::camera::CameraPose;
-use engine::modelling::cubic::geometry::{Animation, Orientation, Pose, };
+use engine::modelling::cubic::geometry::{Animation, Orientation, Pose};
 use engine::modelling::cubic::lighting::shadow::{
     ShadowFarLight,
     ShadowListLights,
@@ -12,14 +14,12 @@ use engine::modelling::cubic::lighting::shadow::{
     ShadowSpotLight,
 };
 use engine::modelling::cubic::lighting::simple::{FarLight, ListLights, PointLight, SpotLight};
-use engine::linear_algebra::{UnitVector, Vector};
+use engine::modelling::cubic::material::Material;
 use engine::modelling::{Bloom, Bone, Cubic, Quad, Skeleton, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
-use engine::modelling::cubic::material::Material;
 use engine::types::TexDim;
 use engine::{ColourRGB, ColourRGBA, Error, Result};
-use engine::modelling::cubic::camera;
 
 use crate::state::State;
 
@@ -32,7 +32,7 @@ impl State {
 
         let sensitivity = 0.001;
 
-        let hdr_fb = framebuffer_builder().depth().size(screen_dims).build();
+        let hdr_fb = Builder::new_flat().depth().size(screen_dims).build();
 
         let skybox = SkyBox::new(
             CubeMap::builder()
@@ -88,9 +88,10 @@ impl State {
                         P::OptimizeGraph,
                         P::OptimizeMeshes,
                     ],
-                ).map_err(|error| Error::Other(error.to_string()))?
-                    .scale(0.01)
-                    .build()
+                )
+                .map_err(|error| Error::Other(error.to_string()))?
+                .scale(0.01)
+                .build()
             }
             "backpack" => Cubic::import(
                 "assets/backpack/backpack.obj",
@@ -102,8 +103,9 @@ impl State {
                     P::OptimizeGraph,
                     P::OptimizeMeshes,
                 ],
-                ).map_err(|error| Error::Other(error.to_string()))?
-                .build(),
+            )
+            .map_err(|error| Error::Other(error.to_string()))?
+            .build(),
             "oliver" => {
                 let material = Rc::new(Material::builder().diffuse(FlatTexture::white()).build());
 
@@ -282,7 +284,6 @@ impl State {
             [0.01, 0.0, -1.0].into(),
             Vector::from([0.0, 1.0, 0.0]).normalize(),
         );
-
 
         let quad_to_draw = Quad::screen(hdr_fb.get_all_colour()).downcast();
 

@@ -1,10 +1,8 @@
 use std::mem;
 
-use graphics::buffers::IncompleteVertex;
 use graphics::linear_algebra::{UnitVector, Vector};
-
 use graphics::types::VertexAttrType;
-use graphics::Vertex;
+use graphics::vertex::{IncompleteVertex, Vertex};
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
@@ -33,16 +31,10 @@ impl Vertex for SimpleVertex {
 
     fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
         use VertexAttrType as V;
-        [
-            (V::f32, 3),
-            (V::f32, 2),
-            (V::f32, 3),
-            (V::f32, 3),
-        ]
+        [(V::f32, 3), (V::f32, 2), (V::f32, 3), (V::f32, 3)]
     }
-    
+
     fn from_incomplete_triangle(incomplete_triangle: &[IncompleteVertex; 3]) -> [Self; 3] {
-        
         let new_normal = if incomplete_triangle.iter().all(|v| v.normal.is_none()) {
             let ab = incomplete_triangle[1].position - incomplete_triangle[0].position;
             let ac = incomplete_triangle[2].position - incomplete_triangle[0].position;
@@ -81,4 +73,3 @@ impl Vertex for SimpleVertex {
         complete_triangle
     }
 }
-

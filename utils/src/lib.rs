@@ -34,8 +34,8 @@
 #![expect(clippy::single_call_fn)]
 
 mod error;
-//pub use error::Error;
-//pub use error::Result;
+// pub use error::Error;
+// pub use error::Result;
 
 #[macro_export]
 macro_rules! getter {
@@ -63,7 +63,7 @@ macro_rules! getter_mut {
 
 #[macro_export]
 macro_rules! builder {
-    ($name:ident, $optname:ident: Option<$typ:ty>) => {
+    ($name:ident, $optname:ident : Option < $typ:ty >) => {
         #[must_use]
         #[inline]
         pub fn $name<X: Into<$typ>>(mut self, $name: X) -> Self {
@@ -79,7 +79,7 @@ macro_rules! builder {
         }
     };
 
-    ($name:ident: Option<$typ:ty>) => {
+    ($name:ident : Option < $typ:ty >) => {
         #[must_use]
         #[inline]
         pub fn $name<X: Into<$typ>>(mut self, $name: X) -> Self {
@@ -88,7 +88,7 @@ macro_rules! builder {
         }
     };
 
-    ($name:ident: $typ:ty) => {
+    ($name:ident : $typ:ty) => {
         #[must_use]
         #[inline]
         pub fn $name<X: Into<$typ>>(mut self, $name: X) -> Self {
@@ -107,40 +107,39 @@ macro_rules! new {
     };
 }
 
-/*#[macro_export]
-macro_rules! gl_call {
-    ($input:stmt) => {{
-        // eprintln!(stringify!($input));
-        // Skip all previous errors which have been ignored
-        while unsafe { gl::GetError() } != gl::NO_ERROR {}
-        // perform the expression
-        let output = unsafe { $input };
-        // read through errors, returning Err if there are many.
-        let errors: Vec<$crate::types::GLError> =
-            std::iter::repeat_with(|| $crate::types::GLError(unsafe { gl::GetError() }))
-                .take_while(|error| error.0 != gl::NO_ERROR)
-                .collect();
-        if errors.is_empty() {
-            output
-        } else {
-            panic!("{:?}", errors)
-        }
-    }};
-
-    ($input:stmt;) => {{
-        // eprintln!(stringify!($input));
-        // Skip all previous errors which have been ignored
-        while unsafe { gl::GetError() } != gl::NO_ERROR {}
-        // perform the expression
-        unsafe { $input };
-        // read through errors, returning Err if there are many.
-        let errors: Vec<$crate::types::GLError> =
-            std::iter::repeat_with(|| $crate::types::GLError(unsafe { gl::GetError() }))
-                .take_while(|error| error.0 != gl::NO_ERROR)
-                .collect();
-        if !errors.is_empty() {
-            panic!("{:?}", errors);
-        };
-    }};
-}
-*/
+// #[macro_export]
+// macro_rules! gl_call {
+// ($input:stmt) => {{
+// eprintln!(stringify!($input));
+// Skip all previous errors which have been ignored
+// while unsafe { gl::GetError() } != gl::NO_ERROR {}
+// perform the expression
+// let output = unsafe { $input };
+// read through errors, returning Err if there are many.
+// let errors: Vec<$crate::types::GLError> =
+// std::iter::repeat_with(|| $crate::types::GLError(unsafe { gl::GetError() }))
+// .take_while(|error| error.0 != gl::NO_ERROR)
+// .collect();
+// if errors.is_empty() {
+// output
+// } else {
+// panic!("{:?}", errors)
+// }
+// }};
+//
+// ($input:stmt;) => {{
+// eprintln!(stringify!($input));
+// Skip all previous errors which have been ignored
+// while unsafe { gl::GetError() } != gl::NO_ERROR {}
+// perform the expression
+// unsafe { $input };
+// read through errors, returning Err if there are many.
+// let errors: Vec<$crate::types::GLError> =
+// std::iter::repeat_with(|| $crate::types::GLError(unsafe { gl::GetError() }))
+// .take_while(|error| error.0 != gl::NO_ERROR)
+// .collect();
+// if !errors.is_empty() {
+// panic!("{:?}", errors);
+// };
+// }};
+// }

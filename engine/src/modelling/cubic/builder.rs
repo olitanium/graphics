@@ -1,13 +1,14 @@
 use std::rc::Rc;
 
+use graphics::shader_program::CullFace;
+use graphics::vertex_array::VertexArray;
+use utils::{builder, new};
+
+use super::material::Material;
 use super::model::Mesh;
 use super::{Cubic, Skeleton};
-use graphics::buffers::VertexArray;
 use crate::modelling::test_models::vertex_array_cube;
 use crate::modelling::SimpleVertex;
-use graphics::shader_program::CullFace;
-use super::material::Material;
-use utils::{builder, new};
 
 #[derive(Debug, Default, Clone)]
 pub struct Builder {

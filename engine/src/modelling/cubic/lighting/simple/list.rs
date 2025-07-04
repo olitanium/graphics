@@ -1,11 +1,11 @@
 use array_vec::ArrayVec;
+use graphics::shader_program::ActiveShaderProgram;
+use graphics::texture::Texture;
 
 use super::super::shadow::ShadowListLights;
 use super::super::traits::ListLightCompatible;
 use super::{FarLight, PointLight, SpotLight};
 use crate::modelling::Cubic;
-use graphics::shader_program::ActiveShaderProgram;
-use graphics::texture::Texture;
 
 #[derive(Clone, Debug, Default)]
 pub struct ListLights<const MAX: usize> {

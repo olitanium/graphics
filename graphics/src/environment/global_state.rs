@@ -1,10 +1,8 @@
-pub use glfw::Action::*;
-
-use crate::buffers::DefaultFramebuffer;
-use crate::environment::Event;
 use super::Draw;
-use crate::types::TexDim;
+use crate::environment::Event;
 use crate::error::Result;
+use crate::framebuffer::DefaultFramebuffer;
+use crate::types::TexDim;
 
 pub trait GlobalState: Sized {
     fn poll<'a>(

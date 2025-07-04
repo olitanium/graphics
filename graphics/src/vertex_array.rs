@@ -1,22 +1,23 @@
 use std::{iter, ptr};
 
 use builder::Builder;
-pub use builder::IncompleteVertex;
 
 // pub use cubic_builder::CubicBuilder;
 // pub use quad_builder::QuadBuilder;
-use super::framebuffer::{ActiveFramebuffer, FramebufferInternals};
-use super::vertex_buffer::Vertex;
-use crate::buffers::element_array_buffer::ElementArrayBuffer;
-use crate::buffers::vertex_buffer::VertexBuffer;
+use super::framebuffer::ActiveFramebuffer;
+use crate::element_array_buffer::ElementArrayBuffer;
+use crate::error::Result;
+use crate::framebuffer::traits::FramebufferInternals;
 use crate::shader_program::ActiveShaderProgram;
 use crate::types::{ToPrimitive, VertexArrayId};
-use crate::{gl_call, types, error::Result};
+use crate::vertex::Vertex;
+use crate::vertex_buffer::VertexBuffer;
+use crate::{gl_call, types};
 
 // mod cubic_builder;
 // mod quad_builder;
 mod builder;
-//mod test_models;
+// mod test_models;
 
 #[derive(Debug)]
 pub struct VertexArray<V: Vertex> {

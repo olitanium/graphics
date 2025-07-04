@@ -1,15 +1,16 @@
-use graphics::buffers::{Builder, WithDepth};
-use graphics::Framebuffer;
+use graphics::colour::ColourRGBA;
+use graphics::framebuffer::attachments::WithDepth;
+use graphics::framebuffer::{Builder, Framebuffer};
 use graphics::linear_algebra::{Matrix, UnitVector};
+use graphics::shader_program::ActiveShaderProgram;
+use graphics::texture::{FlatTexture, Magnification, Texture, WrapType};
+use graphics::types::TexDim;
+
 use crate::modelling::cubic::camera::{self, Camera};
 use crate::modelling::cubic::geometry::{Orientation, Pose};
 use crate::modelling::cubic::lighting::simple::SpotLight;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
 use crate::modelling::Cubic;
-use graphics::shader_program::ActiveShaderProgram;
-use graphics::texture::{FlatTexture, Magnification, Texture, WrapType};
-use graphics::types::TexDim;
-use graphics::colour::ColourRGBA;
 
 #[derive(Debug)]
 pub struct ShadowSpotLight {

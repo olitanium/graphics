@@ -1,4 +1,4 @@
-use crate::{buffers, environment, shader_program, texture};
+use crate::{environment, shader_program, texture};
 
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -6,7 +6,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub enum Error {
     Texture(texture::Error),
     Shader(shader_program::Error),
-    Buffer(buffers::Error),
+    // Buffer(buffers::Error),
     Window(environment::Error),
     Other(String),
     Close,

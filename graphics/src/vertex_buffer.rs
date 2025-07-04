@@ -2,10 +2,8 @@ use std::marker::PhantomData;
 use std::mem;
 
 use crate::types::{ToPrimitive, VertexBufferId};
+use crate::vertex::Vertex;
 use crate::{gl_call, types};
-
-mod vertex;
-pub use vertex::Vertex;
 
 #[derive(Debug)] // No Clone
 pub struct VertexBuffer<V: Vertex> {

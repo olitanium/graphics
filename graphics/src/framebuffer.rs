@@ -1,12 +1,19 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-
-use super::error::Error;
-//use crate::modelling::Quad;
+use crate::framebuffer::traits::{
+    Attachment,
+    AttachmentWithDepth,
+    AttachmentWithStencil,
+    AttachmentWithoutExtra,
+    FramebufferInternals,
+    FramebufferWithDepth,
+    FramebufferWithStencil,
+    FramebufferWithoutExtra,
+};
+use crate::gl_call;
 use crate::texture::{FlatTexture, Texture};
 use crate::types::{FrameBufferId, TexDim, ToPrimitive};
-use crate::{gl_call, error::Result};
 
 mod active_framebuffer;
 mod builder;
@@ -24,20 +31,8 @@ pub fn cubic_builder<const N: usize>() -> Builder<N, MissingSize, CubeWithoutExt
     Builder::new_cubic()
 }
 
-pub use traits::{
-    Attachment,
-    AttachmentTextureInfo,
-    AttachmentWithDepth,
-    AttachmentWithStencil,
-    AttachmentWithoutExtra,
-    FramebufferInternals,
-    FramebufferWithDepth,
-    FramebufferWithStencil,
-    FramebufferWithoutExtra,
-};
-
-mod attachments;
-pub use attachments::{CubeWithDepth, CubeWithoutExtra, WithDepth, WithStencil, WithoutExtra};
+pub mod attachments;
+use attachments::{CubeWithDepth, CubeWithoutExtra, WithDepth, WithStencil, WithoutExtra};
 
 // A `Framebuffer` is a destination for drawing a scene, the default
 // Framebuffer is accessible after an `Environment` is initialzed and is for
@@ -146,10 +141,10 @@ impl<const OUT: usize, X: AttachmentWithStencil> FramebufferWithStencil<OUT>
 
 impl DefaultFramebuffer {
     /// Internal function to generate the default (screen) `FrameBuffer`
-    //pub(crate) fn new(window: &Window) -> Self {
+    // pub(crate) fn new(window: &Window) -> Self {
     pub(crate) fn new(size: (TexDim, TexDim)) -> Self {
-        //let size = window.get_framebuffer_size();
-        //let size = (TexDim::new(size.0), TexDim::new(size.1));
+        // let size = window.get_framebuffer_size();
+        // let size = (TexDim::new(size.0), TexDim::new(size.1));
 
         Self { size }
     }
@@ -168,16 +163,8 @@ impl<const N: usize, X: Attachment> Framebuffer<N, X> {
     ///
     /// # Errors
     /// Returns Error if `index` >= `N` i.e. out of bounds
-    pub fn get_colour(&self, index: usize) -> Result<Rc<RefCell<X::Tex>>> {
-        let texture = self.textures.get(index).ok_or_else(
-            || {
-                Error::FrameBufferColourOutOfBounds {
-                    requested: index,
-                    maximum: N,
-                }
-            },
-        )?;
-        Ok(Rc::clone(texture))
+    pub fn get_colour(&self, index: usize) -> Option<Rc<RefCell<X::Tex>>> {
+        self.textures.get(index).cloned()
     }
 
     /// Return all textures, in order, of the Framebuffer.
@@ -186,11 +173,11 @@ impl<const N: usize, X: Attachment> Framebuffer<N, X> {
     }
 }
 
-/*impl<const N: usize, X: Attachment<Tex = FlatTexture>> Framebuffer<N, X> {
-    pub fn quad(&self) -> Quad<N> {
-        Quad::screen(self.get_all_colour())
-    }
-}*/
+// impl<const N: usize, X: Attachment<Tex = FlatTexture>> Framebuffer<N, X> {
+// pub fn quad(&self) -> Quad<N> {
+// Quad::screen(self.get_all_colour())
+// }
+// }
 
 impl<const N: usize, D: AttachmentWithDepth> Framebuffer<N, D> {
     pub fn get_attachment_texture(&self) -> Rc<RefCell<D::Tex>> {

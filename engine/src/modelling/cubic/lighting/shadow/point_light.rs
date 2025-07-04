@@ -1,14 +1,15 @@
-use graphics::buffers::{Builder, Framebuffer};
+use graphics::framebuffer::attachments::CubeWithDepth;
+use graphics::framebuffer::{Builder, Framebuffer};
 use graphics::linear_algebra::{Matrix, UnitVector, Vector};
+use graphics::shader_program::ActiveShaderProgram;
+use graphics::texture::{CubeMap, Texture};
+use graphics::types::TexDim;
+
 use crate::modelling::cubic::camera;
 use crate::modelling::cubic::geometry::{Orientation, Pose};
 use crate::modelling::cubic::lighting::simple::PointLight;
 use crate::modelling::cubic::lighting::ShadowLightCompatible;
 use crate::modelling::Cubic;
-use graphics::shader_program::ActiveShaderProgram;
-use graphics::texture::{CubeMap, Texture};
-use graphics::types::TexDim;
-use graphics::buffers::CubeWithDepth;
 
 #[derive(Debug)]
 pub struct ShadowPointLight {

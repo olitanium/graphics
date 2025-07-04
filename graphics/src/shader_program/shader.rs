@@ -2,8 +2,9 @@ use std::fs;
 use std::path::Path;
 
 use super::error::Error;
+use crate::error::Result;
+use crate::gl_call;
 use crate::types::{GLenum, ShaderId, ToPrimitive};
-use crate::{gl_call, error::Result};
 
 #[derive(Debug)]
 pub struct Shader {

@@ -1,7 +1,12 @@
 use super::WithoutExtra;
-use crate::buffers::framebuffer::traits::{AttachmentWithoutExtra, OptTexBuilderMap};
-use crate::buffers::framebuffer::{self, Attachment, FramebufferContext};
-use crate::buffers::{AttachmentTextureInfo, Framebuffer};
+use crate::framebuffer::traits::{AttachmentTextureInfo, OptTexBuilderMap};
+use crate::framebuffer::{
+    self,
+    Attachment,
+    AttachmentWithoutExtra,
+    Framebuffer,
+    FramebufferContext,
+};
 use crate::texture::{CubeFrameBufferAttachment, CubeMap, CubeMapBuilder};
 use crate::types::TexDim;
 

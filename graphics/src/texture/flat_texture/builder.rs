@@ -3,17 +3,17 @@ use std::marker::PhantomData;
 use std::path::Path;
 use std::ptr;
 
+use colour::ColourRGBA;
 use image::Rgba32FImage;
+use utils::{builder, new};
 
 use super::FlatTexture;
-use crate::buffers::framebuffer::Attachment;
-use crate::buffers::{WithDepth, WithStencil, WithoutExtra};
+use crate::error::Result;
+use crate::framebuffer::attachments::{WithDepth, WithStencil, WithoutExtra};
+use crate::framebuffer::traits::Attachment;
+use crate::gl_call;
 use crate::texture::{Magnification, Minification, TexBuilder, TexBuilderCanBuild, WrapType};
 use crate::types::{self, GLint, GLsizei, TexDim, TexId, ToPrimitive};
-use utils::{builder, new};
-use crate::error::Result;
-use crate::gl_call;
-use colour::ColourRGBA;
 
 #[derive(Default, Debug)]
 pub struct Builder<T> {

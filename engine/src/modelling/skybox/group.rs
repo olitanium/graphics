@@ -1,13 +1,14 @@
-use super::SkyBox;
-use graphics::buffers::{FramebufferWithDepth};
 use graphics::error::Result;
-use graphics::FramebufferContext;
+use graphics::framebuffer::traits::FramebufferWithDepth;
+use graphics::framebuffer::FramebufferContext;
 use graphics::linear_algebra::Matrix;
+use graphics::shader_program::{ShaderProgram, ShaderProgramContext};
+use graphics::Draw;
+
+use super::SkyBox;
 use crate::modelling::cubic::geometry::YieldsPose;
 use crate::modelling::cubic::Camera;
-use graphics::Draw;
-use graphics::shader_program::{ShaderProgram, ShaderProgramContext};
-//use crate::error::Result;
+// use crate::error::Result;
 
 #[derive(Debug)]
 pub struct Group<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> {

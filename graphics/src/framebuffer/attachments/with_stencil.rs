@@ -2,8 +2,8 @@ use std::cell::RefCell;
 use std::fmt;
 use std::rc::Rc;
 
-use crate::buffers::framebuffer::traits::{AttachmentTextureInfo, OptTexBuilderMap};
-use crate::buffers::framebuffer::{
+use crate::framebuffer::traits::{AttachmentTextureInfo, OptTexBuilderMap};
+use crate::framebuffer::{
     self,
     Attachment,
     AttachmentWithDepth,
