@@ -1,7 +1,7 @@
 use std::iter;
 
-use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::framebuffer::FramebufferContext;
+use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::texture::FlatTexture;
 use graphics::{Draw, Result, ShaderProgramContext};

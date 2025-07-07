@@ -2,12 +2,12 @@ use std::array;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use graphics::framebuffer::traits::FramebufferWithoutExtra;
+use graphics::Result;
 use graphics::framebuffer::ActiveFramebuffer;
+use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{FlatTexture, Texture};
 use graphics::vertex_array::VertexArray;
-use graphics::Result;
 
 use super::{Builder, QuadVertex};
 use crate::modelling::test_models::vertex_array_quad;
@@ -59,7 +59,7 @@ impl<const N: usize> Quad<N> {
             .iter()
             .map(|tex| /*SAFETY: ref only lives for this function call*/ unsafe { tex.try_borrow_unguarded().expect("the only borrow") as &dyn Texture} ) 
             .enumerate()
-            .map(|(index, tex)| (format!("in_texture{}", index), tex));
+            .map(|(index, tex)| (format!("in_texture{index}"), tex));
 
         active_shader.register_texture(input);
 

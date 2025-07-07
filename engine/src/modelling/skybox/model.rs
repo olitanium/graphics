@@ -1,12 +1,12 @@
 use graphics::error::Result;
-use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::framebuffer::ActiveFramebuffer;
+use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::shader_program::{ActiveShaderProgram, CullFace};
 use graphics::texture::{CubeMap, Texture};
 use graphics::vertex_array::VertexArray;
 
-use crate::modelling::test_models::vertex_array_cube;
 use crate::modelling::SimpleVertex;
+use crate::modelling::test_models::vertex_array_cube;
 
 #[derive(Debug)]
 pub struct SkyBox {

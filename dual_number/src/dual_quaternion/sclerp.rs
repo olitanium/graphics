@@ -45,8 +45,6 @@ impl Sclerp {
         let second_part_vector = self.v * (0.5 * time * self.theta).sin();
 
         let dual_quaternion = DualQuaternion::new_transpose(second_part_scalar, second_part_vector);
-        let output = (self.from * dual_quaternion).normalize();
-
-        output
+        (self.from * dual_quaternion).normalize()
     }
 }

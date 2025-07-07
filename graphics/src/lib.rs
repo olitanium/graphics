@@ -6,6 +6,7 @@
 #![feature(type_changing_struct_update)]
 #![feature(box_as_ptr)]
 #![feature(lazy_type_alias)]
+#![feature(inherent_associated_types)]
 
 mod environment;
 pub mod error;
@@ -22,6 +23,7 @@ pub use environment::{Draw, Environment, Event, GlobalState, Key};
 pub use error::{Error, Result};
 pub use shader_program::{ActiveShaderProgram, ShaderProgram, ShaderProgramContext};
 pub use {colour, linear_algebra};
+
 #[macro_export]
 macro_rules! gl_call {
     ($input:stmt) => {{
@@ -29,7 +31,10 @@ macro_rules! gl_call {
         // Skip all previous errors which have been ignored
         while unsafe { gl::GetError() } != gl::NO_ERROR {}
         // perform the expression
-        let output = unsafe { $input };
+        let output = unsafe {
+            //#[expect(clippy::macro_metavars_in_unsafe)]
+            $input
+        };
         // read through errors, returning Err if there are many.
         let errors: Vec<$crate::types::GLError> =
             std::iter::repeat_with(|| $crate::types::GLError(unsafe { gl::GetError() }))
@@ -47,7 +52,10 @@ macro_rules! gl_call {
         // Skip all previous errors which have been ignored
         while unsafe { gl::GetError() } != gl::NO_ERROR {}
         // perform the expression
-        unsafe { $input };
+        unsafe {
+            //#[expect(clippy::macro_metavars_in_unsafe)]
+            $input
+        };
         // read through errors, returning Err if there are many.
         let errors: Vec<$crate::types::GLError> =
             std::iter::repeat_with(|| $crate::types::GLError(unsafe { gl::GetError() }))

@@ -9,7 +9,7 @@ use super::traits::OptTexBuilderMap;
 use super::{Attachment, CubeWithDepth, Framebuffer};
 use crate::gl_call;
 use crate::texture::{TexBuilder, TexBuilderCanBuild, Texture, TextureHasBuilder};
-use crate::types::{self, FrameBufferId, TexDim, ToPrimitive};
+use crate::types::{self, FrameBufferId, TexDim};
 
 #[derive(Debug, Default)]
 pub struct MissingSize;
@@ -25,7 +25,6 @@ pub struct Builder<const N: usize, S, B: Attachment> {
     size: S,
     /// What type of internal
     _phantom_buffer: PhantomData<B>,
-    ///
     map_attachment: OptTexBuilderMap<B>,
 }
 

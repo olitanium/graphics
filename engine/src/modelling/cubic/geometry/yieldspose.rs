@@ -2,8 +2,8 @@ pub mod demo;
 
 use graphics::linear_algebra::Vector;
 
-use super::pose::Pose;
 use super::Orientation;
+use super::pose::Pose;
 
 pub trait YieldsPose {
     type Hint;

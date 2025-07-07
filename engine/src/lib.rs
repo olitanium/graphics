@@ -11,9 +11,8 @@ mod error;
 pub mod modelling;
 pub mod opengl_shaders;
 
-pub use graphics::colour::{ ColourRGB, ColourRGBA };
 pub use array_vec;
+pub use graphics::colour::{ColourRGB, ColourRGBA};
 pub use graphics::framebuffer::Builder as FrameBufferBuilder;
-pub use graphics::types;
-pub use graphics::*;
+pub use graphics::{types, *};
 pub use russimp::scene::PostProcess;

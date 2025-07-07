@@ -5,7 +5,7 @@ use colour::ColourRGB;
 
 use super::{Texture, TextureHasBuilder};
 use crate::gl_call;
-use crate::types::{TexDim, TexId, ToPrimitive};
+use crate::types::{TexDim, TexId, };
 
 mod builder;
 pub use builder::{Builder as CubeMapBuilder, FramebufferAttachment as CubeFrameBufferAttachment};
@@ -56,7 +56,7 @@ impl Texture for CubeMap {
     }
 
     fn dyn_blank() -> &'static dyn Texture {
-        static DEFAULT_CUBEMAP: LazyLock<CubeMap> = LazyLock::new(|| CubeMap::default());
+        static DEFAULT_CUBEMAP: LazyLock<CubeMap> = LazyLock::new(CubeMap::default);
 
         &*DEFAULT_CUBEMAP
     }

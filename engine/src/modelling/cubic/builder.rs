@@ -7,8 +7,8 @@ use utils::{builder, new};
 use super::material::Material;
 use super::model::Mesh;
 use super::{Cubic, Skeleton};
-use crate::modelling::test_models::vertex_array_cube;
 use crate::modelling::SimpleVertex;
+use crate::modelling::test_models::vertex_array_cube;
 
 #[derive(Debug, Default, Clone)]
 pub struct Builder {

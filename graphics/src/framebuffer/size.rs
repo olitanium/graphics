@@ -3,7 +3,7 @@ use std::{iter, mem};
 use super::traits::Attachment;
 use super::{DefaultFramebuffer, Framebuffer};
 use crate::texture::Texture;
-use crate::types::{TexDim, ToPrimitive};
+use crate::types::{TexDim, };
 
 impl<const N: usize, D: Attachment> Framebuffer<N, D> {
     /// Get the size of the framebuffer

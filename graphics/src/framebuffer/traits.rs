@@ -5,7 +5,7 @@ use std::rc::Rc;
 /// framebuffer's which are missing particular attachments
 use super::{ActiveFramebuffer, Framebuffer, FramebufferContext};
 use crate::texture::{Texture, TextureHasBuilder};
-use crate::types::{self, FrameBufferId, TexDim, ToPrimitive};
+use crate::types::{self, FrameBufferId, TexDim, };
 
 #[derive(Debug)]
 pub struct AttachmentTextureInfo {
@@ -47,6 +47,9 @@ pub trait AttachmentWithoutExtra: Attachment {}
 /// Marker trait for attachments which provide a depth buffer
 pub trait AttachmentWithDepth: AttachmentWithoutExtra {
     fn get_texture(&self) -> Rc<RefCell<Self::Tex>>;
+    /// # Safety
+    /// This method's reference must not live long enough that the texture can be mutably borrowed by the
+    /// underlying RefCell
     unsafe fn get_texture_ref(&self) -> &Self::Tex;
 
     fn depth_testing(depth_testing: bool, context: &mut FramebufferContext) {
@@ -69,7 +72,7 @@ pub trait FramebufferInternals<const OUT: usize>: Sized {
         let (x, y) = self.size();
         x.to_primitive() as f32 / y.to_primitive() as f32
     }
-    fn id(&self) -> <FrameBufferId as ToPrimitive>::Primitive;
+    fn id(&self) -> &FrameBufferId;
 
     fn enables(context: &mut FramebufferContext);
 

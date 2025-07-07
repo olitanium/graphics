@@ -6,12 +6,12 @@ use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{FlatTexture, Magnification, Texture, WrapType};
 use graphics::types::TexDim;
 
+use crate::modelling::Cubic;
 use crate::modelling::cubic::camera;
 use crate::modelling::cubic::camera::Camera;
 use crate::modelling::cubic::geometry::{Orientation, Pose};
 use crate::modelling::cubic::lighting::simple::FarLight;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
-use crate::modelling::Cubic;
 
 #[derive(Debug)]
 pub struct ShadowFarLight {

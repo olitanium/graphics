@@ -1,8 +1,8 @@
 use std::path::Path;
 use std::rc::Rc;
 
-use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::framebuffer::ActiveFramebuffer;
+use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Matrix;
 use graphics::shader_program::{ActiveShaderProgram, CullFace};
 use graphics::vertex_array::VertexArray;
@@ -10,7 +10,7 @@ use russimp::scene::PostProcess;
 
 use super::geometry::YieldsPose;
 use super::material::Material;
-use super::{import, Builder, Skeleton};
+use super::{Builder, Skeleton, import};
 use crate::error::Result;
 use crate::modelling::simple_vertex::SimpleVertex;
 use crate::modelling::test_models::vertex_array_cube;
@@ -23,8 +23,6 @@ pub struct Mesh {
 }
 
 impl Mesh {
-    #[must_use]
-    #[inline]
     pub fn new(
         vertex_array: Rc<VertexArray<SimpleVertex>>,
         material: Rc<Material>,
@@ -93,19 +91,11 @@ impl Cubic {
         Self::builder().push_mesh_from(vertex_array, material, 0)
     }
 
-    #[inline]
     pub fn temp_set_all_material(&mut self, mat: Rc<Material>) {
         self.meshes
             .iter_mut()
             .for_each(|mesh| mesh.material = mat.clone());
     }
-
-    // #[must_use]
-    // #[inline]
-    // pub fn model_matrix(&self, hint: <Animation as YieldsPose>::Hint) ->
-    // Matrix<4, 4> { self.animation.get_pose(hint).as_matrix()
-    // Matrix::transform_scale(self.scale, self.scale, self.scale)
-    // }
 
     pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,

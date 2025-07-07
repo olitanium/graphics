@@ -13,7 +13,7 @@ use crate::framebuffer::attachments::{WithDepth, WithStencil, WithoutExtra};
 use crate::framebuffer::traits::Attachment;
 use crate::gl_call;
 use crate::texture::{Magnification, Minification, TexBuilder, TexBuilderCanBuild, WrapType};
-use crate::types::{self, GLint, GLsizei, TexDim, TexId, ToPrimitive};
+use crate::types::{self, GLint, GLsizei, TexDim, TexId, };
 
 #[derive(Default, Debug)]
 pub struct Builder<T> {
@@ -31,9 +31,9 @@ pub struct Dimensions((TexDim, TexDim));
 
 #[derive(Debug)]
 pub enum ImageType {
-    SrgbaImage(image::FlatSamples<Vec<u8>>),
-    RgbaImage(image::FlatSamples<Vec<u8>>),
-    RgbaFloatImage(image::FlatSamples<Vec<f32>>),
+    Srgba(image::FlatSamples<Vec<u8>>),
+    Rgba(image::FlatSamples<Vec<u8>>),
+    RgbaFloat(image::FlatSamples<Vec<f32>>),
 }
 
 #[derive(Debug)]
@@ -86,11 +86,11 @@ impl<T> Builder<T> {
 
     builder!(mag_filter: Magnification);
 
-    add_image!(SrgbaImage => srgba_image, into_rgba8);
+    add_image!(Srgba => srgba_image, into_rgba8);
 
-    add_image!(RgbaImage => rgba_image, into_rgba8);
+    add_image!(Rgba => rgba_image, into_rgba8);
 
-    add_image!(RgbaFloatImage => rgba_float_image, into_rgba32f);
+    add_image!(RgbaFloat => rgba_float_image, into_rgba32f);
 
     pub fn withoutextra_attachment(
         self,
@@ -128,12 +128,10 @@ impl<T> Builder<T> {
         Builder { image, ..self }
     }
 
-    #[must_use]
-    #[inline]
     pub fn monochrome(self, colour: ColourRGBA) -> Builder<ImageType> {
         let mut image = Rgba32FImage::new(1, 1);
         image.get_pixel_mut(0, 0).0 = colour.as_array();
-        let image = ImageType::RgbaFloatImage(image.into_flat_samples());
+        let image = ImageType::RgbaFloat(image.into_flat_samples());
 
         Builder { image, ..self }
     }
@@ -188,21 +186,21 @@ impl Builder<ImageType> {
         let id = gen_tex_set_parameters(&self);
 
         let (internalformat, width, height, type_, pixels) = match &self.image {
-            ImageType::RgbaImage(samples) => (
+            ImageType::Rgba(samples) => (
                 gl::RGBA as GLint,
                 TexDim::new(samples.layout.width as GLsizei),
                 TexDim::new(samples.layout.height as GLsizei),
                 gl::UNSIGNED_BYTE,
                 samples.samples.as_ptr().cast(),
             ),
-            ImageType::SrgbaImage(samples) => (
+            ImageType::Srgba(samples) => (
                 gl::SRGB_ALPHA as GLint,
                 TexDim::new(samples.layout.width as GLsizei),
                 TexDim::new(samples.layout.height as GLsizei),
                 gl::UNSIGNED_BYTE,
                 samples.samples.as_ptr().cast(),
             ),
-            ImageType::RgbaFloatImage(samples) => (
+            ImageType::RgbaFloat(samples) => (
                 gl::RGBA16F as GLint,
                 TexDim::new(samples.layout.width as GLsizei),
                 TexDim::new(samples.layout.height as GLsizei),
@@ -225,13 +223,10 @@ impl Builder<ImageType> {
             );
         }
 
-        match self.min_filter {
-            Minification::MipMap { .. } => {
-                gl_call! {
-                    gl::GenerateMipmap(gl::TEXTURE_2D);
-                }
+        if let Minification::MipMap { .. } = self.min_filter {
+            gl_call! {
+                gl::GenerateMipmap(gl::TEXTURE_2D);
             }
-            _ => {}
         }
 
         FlatTexture {

@@ -20,14 +20,10 @@ pub struct Window {
 }
 
 impl Window {
-    #[must_use]
-    #[inline]
     pub fn builder() -> Builder<MissingGlfw> {
         Builder::new()
     }
 
-    #[must_use]
-    #[inline]
     pub(crate) fn get_framebuffer_size(&self) -> (TexDim, TexDim) {
         let (width, height) = self.glfw_window.get_framebuffer_size();
         (TexDim::new(width), TexDim::new(height))
@@ -53,18 +49,14 @@ impl Window {
         *self.window_resized
     }
 
-    #[must_use]
-    #[inline]
     pub(crate) fn should_close(&self) -> bool {
         self.glfw_window.should_close()
     }
 
-    #[inline]
     pub(crate) fn swap_buffers(&mut self) {
         self.glfw_window.swap_buffers();
     }
 
-    #[inline]
     pub fn set_cursor_mode(&mut self, mode: CursorMode) {
         self.glfw_window.set_cursor_mode(mode);
     }
@@ -137,7 +129,7 @@ impl Builder<HasGlfw<'_>> {
                     todo!("Full Screen not yet supported")
                 },
             )
-            .ok_or_else(|| Error::GlfwWindowError)?;
+            .ok_or(Error::GlfwWindow)?;
 
         glfw_window.make_current();
         glfw_window.set_key_polling(true);

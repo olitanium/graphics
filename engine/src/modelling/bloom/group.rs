@@ -1,9 +1,9 @@
+use graphics::Draw;
 use graphics::error::Result;
-use graphics::framebuffer::traits::{FramebufferInternals, FramebufferWithoutExtra};
 use graphics::framebuffer::FramebufferContext;
+use graphics::framebuffer::traits::{FramebufferInternals, FramebufferWithoutExtra};
 use graphics::shader_program::ShaderProgramContext;
 use graphics::texture::FlatTexture;
-use graphics::Draw;
 
 use super::Bloom;
 use crate::modelling::Quad;

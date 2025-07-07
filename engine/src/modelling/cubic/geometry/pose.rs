@@ -56,9 +56,7 @@ impl Pose {
         let minus_new = translation_quaternion.vector();
         // HACK: WHY IS THIS SO? https://cs.gmu.edu/~jmlien/teaching/cs451/uploads/Main/dual-quaternion.pdf
         // says that there need be no minus
-        let new = -minus_new;
-
-        new
+        -minus_new
     }
 
     pub fn orientation(self) -> Orientation {

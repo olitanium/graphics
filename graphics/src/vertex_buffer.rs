@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 use std::mem;
 
-use crate::types::{ToPrimitive, VertexBufferId};
+use crate::types::{VertexBufferId};
 use crate::vertex::Vertex;
 use crate::{gl_call, types};
 
@@ -12,30 +12,6 @@ pub struct VertexBuffer<V: Vertex> {
 }
 
 impl<V: Vertex> VertexBuffer<V> {
-    // #[deprecated]
-    // pub fn new_fromstream(contents: &[f32]) -> Self {
-    // let id = {
-    // let mut id = 0;
-    // gl_call! {
-    // gl::GenBuffers(1, &raw mut id);
-    // }
-    // VertexBufferId::new(id)
-    // };
-    //
-    // gl_call! {
-    // gl::BindBuffer(gl::ARRAY_BUFFER, id.to_primitive());
-    // }
-    //
-    // gl_call! { gl::BufferData(
-    // gl::ARRAY_BUFFER,
-    // mem::size_of_val(contents) as types::GLsizeiptr,
-    // contents.as_ptr().cast(),
-    // gl::STATIC_DRAW,
-    // ); };
-    //
-    // Self { id, _phantom: PhantomData }
-    // }
-
     pub fn new(contents: &[V]) -> Self {
         let id = {
             let mut id = 0;

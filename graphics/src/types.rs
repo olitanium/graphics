@@ -4,33 +4,31 @@ use std::num::NonZero;
 
 pub(crate) use gl::types::*;
 
-pub trait ToPrimitive {
-    type Primitive;
-
-    fn to_primitive(&self) -> Self::Primitive;
-}
-
 macro_rules! opaque {
     ($name:ident : $type:ident $(, $derives: ident)* $(,)?) => {
         #[derive(Debug, Hash, PartialEq, Eq $(, $derives)*)]
         pub struct $name(gl::types::$type);
 
-        impl Into<$name> for gl::types::$type {
-            fn into(self) -> $name {
-                $name(self)
+        impl From<gl::types::$type> for $name {
+            fn from(value: gl::types::$type) -> Self {
+                Self::new(value)
             }
-        }
+        } 
 
-        impl ToPrimitive for $name {
-            type Primitive = gl::types::$type;
+        impl $name {
+            #[allow(dead_code)]
+            pub(crate) type Primitive = gl::types::$type;
 
-            fn to_primitive(&self) -> Self::Primitive {
+            // TODO: make the return type of this `Self::Primitive`
+
+            #[allow(dead_code)]
+            pub(crate) fn to_primitive(&self) -> gl::types::$type {
                 self.0
             }
         }
 
         impl $name {
-            pub fn new(value: gl::types::$type) -> Self {
+            pub const fn new(value: gl::types::$type) -> Self {
                 Self(value)
             }
         }
@@ -42,12 +40,12 @@ macro_rules! nz_opaque {
         #[derive(Debug, Hash, PartialEq, Eq $(, $derives)*)]
         pub struct $name(NonZero<gl::types::$type>);
 
-        impl Into<$name> for gl::types::$type {
-            fn into(self) -> $name {
-                $name::new(self)
+        impl From<gl::types::$type> for $name {
+            fn from(value: gl::types::$type) -> Self {
+                Self::new(value)
             }
-        }
-
+        } 
+        
         impl $name {
             pub(crate) fn new(value: gl::types::$type) -> Self {
                 $name(NonZero::new(value).unwrap())
@@ -60,10 +58,12 @@ macro_rules! nz_opaque {
             }
         }
 
-        impl ToPrimitive for $name {
-            type Primitive = gl::types::$type;
+        impl $name {
+            #[expect(dead_code)]
+            pub(crate) type Primitive = gl::types::$type;
 
-            fn to_primitive(&self) -> Self::Primitive {
+            // TODO: make the return type of this `Self::Primitive`
+            pub(crate) fn to_primitive(&self) -> gl::types::$type {
                 self.0.get()
             }
         }
@@ -72,10 +72,16 @@ macro_rules! nz_opaque {
 
 nz_opaque!(TexDim: GLsizei, Clone, Copy);
 nz_opaque!(TexId: GLuint);
-nz_opaque!(FrameBufferId: GLuint);
+opaque!(FrameBufferId: GLuint);
 nz_opaque!(VertexArrayId: GLuint);
 nz_opaque!(ElementArrayId: GLuint);
 opaque!(ElementArrayElem: GLuint, Clone, Copy);
+
+impl ElementArrayElem {
+    pub fn as_usize(self) -> usize {
+        self.0 as usize
+    }
+}
 opaque!(ElementArrayLen: GLsizei, Clone, Copy);
 nz_opaque!(VertexBufferId: GLuint);
 opaque!(UniformLocation: GLint);

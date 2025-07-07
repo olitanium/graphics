@@ -3,7 +3,6 @@ pub struct ColourRGBA([f32; 4]);
 
 macro_rules! get_colour {
     ($letter:ident, $index:literal) => {
-        #[inline]
         pub const fn $letter(self) -> f32 {
             self.0[$index]
         }
@@ -19,19 +18,20 @@ impl ColourRGBA {
 
     get_colour!(a, 3);
 
-    #[inline]
     pub const fn new(input: [f32; 4]) -> Self {
         Self(input)
     }
 
-    #[inline]
     pub const fn new_from_arr_alpha(input: [f32; 3], alpha: f32) -> Self {
         Self([input[0], input[1], input[2], alpha])
     }
 
-    #[inline]
     pub const fn as_array(self) -> [f32; 4] {
         self.0
+    }
+
+    pub fn as_ref(&self) -> &[f32; 4] {
+        &self.0
     }
 }
 
@@ -40,7 +40,6 @@ pub struct ColourRGB([f32; 3]);
 
 macro_rules! get_colour {
     ($letter:ident, $index:literal) => {
-        #[inline]
         pub fn $letter(self) -> f32 {
             self.0[$index]
         }
@@ -54,14 +53,16 @@ impl ColourRGB {
 
     get_colour!(b, 2);
 
-    #[inline]
     pub const fn new(input: [f32; 3]) -> Self {
         Self(input)
     }
 
-    #[inline]
-    pub const fn as_array(&self) -> [f32; 3] {
+    pub const fn as_array(self) -> [f32; 3] {
         self.0
+    }
+
+    pub fn as_ref(&self) -> &[f32; 3] {
+        &self.0
     }
 
     pub const fn to_rgba_with(&self, alpha: f32) -> ColourRGBA {

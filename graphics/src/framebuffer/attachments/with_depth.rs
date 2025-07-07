@@ -94,10 +94,3 @@ impl AttachmentWithDepth for WithDepth {
         unsafe { self.texture.try_borrow_unguarded() }.unwrap()
     }
 }
-
-// TODO: Check whether these Into are needed
-impl Into<WithoutExtra> for WithDepth {
-    fn into(self) -> WithoutExtra {
-        unimplemented!()
-    }
-}

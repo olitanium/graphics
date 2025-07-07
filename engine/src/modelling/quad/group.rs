@@ -1,5 +1,5 @@
-use graphics::framebuffer::traits::{FramebufferInternals, FramebufferWithoutExtra};
 use graphics::framebuffer::FramebufferContext;
+use graphics::framebuffer::traits::{FramebufferInternals, FramebufferWithoutExtra};
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext};
 use graphics::{Draw, Result};
 
@@ -31,10 +31,10 @@ impl<'a, const N: usize, const OUT: usize, X: FramebufferWithoutExtra<OUT>> Grou
 impl<'a, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> Draw
     for Group<'a, N, OUT, D>
 {
-    fn draw<'b, 'c>(
+    fn draw(
         self: Box<Self>,
-        register: &'b mut FramebufferContext,
-        marker: &'c mut ShaderProgramContext,
+        register: &mut FramebufferContext,
+        marker: &mut ShaderProgramContext,
     ) -> Result<()> {
         let mut active_framebuffer = self.framebuffer.bind(register);
 

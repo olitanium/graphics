@@ -1,9 +1,9 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use graphics::framebuffer::attachments::WithoutExtra;
 pub use graphics::framebuffer::Builder;
 use graphics::framebuffer::Framebuffer;
+use graphics::framebuffer::attachments::WithoutExtra;
 use graphics::texture::{FlatTexture, Texture};
 use graphics::types::TexDim;
 

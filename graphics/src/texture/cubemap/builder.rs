@@ -12,7 +12,7 @@ use crate::error::Result;
 use crate::framebuffer::attachments::CubeWithDepth;
 use crate::framebuffer::traits::Attachment;
 use crate::texture::{Error, Magnification, Minification, TexBuilder, TexBuilderCanBuild};
-use crate::types::{TexDim, TexId, ToPrimitive};
+use crate::types::{TexDim, TexId};
 use crate::{gl_call, types};
 
 #[derive(Debug, Default)]
@@ -146,7 +146,6 @@ fn make_tex_set_parameters<T>(build: &Builder<T>) -> TexId {
         gl::TexParameteri(
             gl::TEXTURE_CUBE_MAP,
             gl::TEXTURE_WRAP_S,
-            #[expect(clippy::cast_possible_wrap)]
             gl::CLAMP_TO_EDGE as types::GLint,
         );
     }
@@ -154,7 +153,6 @@ fn make_tex_set_parameters<T>(build: &Builder<T>) -> TexId {
         gl::TexParameteri(
             gl::TEXTURE_CUBE_MAP,
             gl::TEXTURE_WRAP_T,
-            #[expect(clippy::cast_possible_wrap)]
             gl::CLAMP_TO_EDGE as types::GLint,
         );
     }
@@ -162,7 +160,6 @@ fn make_tex_set_parameters<T>(build: &Builder<T>) -> TexId {
         gl::TexParameteri(
             gl::TEXTURE_CUBE_MAP,
             gl::TEXTURE_WRAP_R,
-            #[expect(clippy::cast_possible_wrap)]
             gl::CLAMP_TO_EDGE as types::GLint,
         );
     }

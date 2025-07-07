@@ -9,7 +9,7 @@ use crate::element_array_buffer::ElementArrayBuffer;
 use crate::error::Result;
 use crate::framebuffer::traits::FramebufferInternals;
 use crate::shader_program::ActiveShaderProgram;
-use crate::types::{ToPrimitive, VertexArrayId};
+use crate::types::{VertexArrayId};
 use crate::vertex::Vertex;
 use crate::vertex_buffer::VertexBuffer;
 use crate::{gl_call, types};
@@ -27,7 +27,6 @@ pub struct VertexArray<V: Vertex> {
 }
 
 impl<V: Vertex> Drop for VertexArray<V> {
-    #[inline]
     fn drop(&mut self) {
         let primitive = self.id.to_primitive();
         gl_call! {
@@ -56,7 +55,6 @@ where
         Builder::new()
     }
 
-    // TODO: inline this call
     fn new(vertex_buffer: VertexBuffer<V>, element_array_buffer: ElementArrayBuffer) -> Self {
         let id = {
             let mut id = 0;
@@ -69,12 +67,9 @@ where
         gl_call! {
             gl::BindVertexArray(id.to_primitive());
         }
+
         vertex_buffer.bind();
         element_array_buffer.bind();
-
-        // Configure strides
-        // let vbo_stride = (mem::size_of::<f32>() * offsets.iter().sum::<usize>()) as
-        // types::GLsizei;
 
         for (index, (offset, (type_of, count))) in
             iter::zip(V::offsets(), V::types_of()).enumerate()

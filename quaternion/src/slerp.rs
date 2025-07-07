@@ -16,16 +16,9 @@ impl Slerp {
         let mut to = to.q();
         let mut dot = from.dot(to);
 
-        if long_way {
-            if dot.is_sign_positive() {
+        if ( long_way && dot.is_sign_positive() ) || dot.is_sign_negative() {
                 to = -to;
                 dot = -dot;
-            }
-        } else {
-            if dot.is_sign_negative() {
-                to = -to;
-                dot = -dot;
-            }
         }
 
         let omega = dot.acos();
@@ -53,8 +46,7 @@ impl Slerp {
 
         let term1 = s1 * self.from;
         let term2 = s2 * self.to;
-        let quaternion = (term1 + term2).normalize();
 
-        quaternion
+        (term1 + term2).normalize()
     }
 }

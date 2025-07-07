@@ -3,217 +3,77 @@ use linear_algebra::{Matrix, UnitVector, Vector};
 
 use super::ActiveShaderProgram;
 use crate::gl_call;
+use crate::shader_program::program::active_shader::IsActiveShaderProgram;
 use crate::texture::Texture;
-use crate::types::ToPrimitive;
+use crate::types::{UniformLocation};
 
 pub trait Uniform {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
+    fn set_uniform_ref(
+        &self,
+        location: UniformLocation,
+        shader_program: &dyn IsActiveShaderProgram,
+    );
+
+    fn set_uniform(
         self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
+        location: UniformLocation,
+        shader_program: &dyn IsActiveShaderProgram,
     );
 }
 
-impl Uniform for i32 {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        let uniform_location = shader_program.get_uniform_location(name);
-        gl_call! { gl::Uniform1i(uniform_location.to_primitive(), self); }
-    }
+macro_rules! define_uniform {
+    ($typ:ty => |$self:ident, $loc:ident, $shader:ident| $out:expr ) => {
+        impl Uniform for $typ {
+            fn set_uniform_ref(&self, location: UniformLocation, shader_program: &dyn IsActiveShaderProgram) {
+                //let location = location.to_primitive();
+                //use $crate::types::ToPrimitive;
+                ( |$self: &Self, $loc: UniformLocation, $shader| $out )(self, location, shader_program)
+            }
+
+            fn set_uniform(self, location: UniformLocation, shader_program: &dyn IsActiveShaderProgram) {
+                self.set_uniform_ref(location, shader_program)
+            }
+        }
+    };
 }
 
-impl Uniform for f32 {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        let uniform_location = shader_program.get_uniform_location(name);
-        gl_call! { gl::Uniform1f(uniform_location.to_primitive(), self); }
-    }
+define_uniform!(i32 => |value, location, _s| { gl_call!{ gl::Uniform1i(location.to_primitive(), *value) } } );
+define_uniform!(f32 => |value, location, _s| { gl_call!{ gl::Uniform1f(location.to_primitive(), *value) } } );
+define_uniform!([i32; 1] => |value, location, s| value[0].set_uniform_ref(location, s));
+define_uniform!([f32; 1] => |value, location, s| value[0].set_uniform_ref(location, s));
+define_uniform!([i32; 2] => |value, location, _s| gl_call! { gl::Uniform2i(location.to_primitive(), value[0], value[1]); });
+define_uniform!([f32; 2] => |value, location, _s| gl_call! { gl::Uniform2f(location.to_primitive(), value[0], value[1]); });
+define_uniform!([i32; 3] => |value, location, _s| gl_call! { gl::Uniform3i(location.to_primitive(), value[0], value[1], value[2]); });
+define_uniform!([f32; 3] => |value, location, _s| gl_call! { gl::Uniform3f(location.to_primitive(), value[0], value[1], value[2]); });
+define_uniform!([i32; 4] => |value, location, _s| gl_call! { gl::Uniform4i(location.to_primitive(), value[0], value[1], value[2], value[3]); });
+define_uniform!([f32; 4] => |value, location, _s| gl_call! { gl::Uniform4f(location.to_primitive(), value[0], value[1], value[2], value[3]); });
+
+macro_rules! vectors {
+    ($($num:literal),*) => {
+        $(
+define_uniform!(Vector<$num> => |value, location, s| value.inner().set_uniform_ref(location, s));
+define_uniform!(UnitVector<$num> => |value, location, s| value.v().inner().set_uniform_ref(location, s));
+        )*
+    };
 }
 
-impl Uniform for [i32; 1] {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        self[0].set_uniform(name, shader_program)
-    }
+vectors!(1,2,3,4);
+
+macro_rules! matrix {
+    ($row:literal, $col:literal => $func:ident) => {
+define_uniform!(Matrix<$row,$col> => |value, location, _s| gl_call! { gl::$func(location.to_primitive(), 1, gl::FALSE, value.col_major().as_ptr()); });
+    };
 }
 
-impl Uniform for [f32; 1] {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        self[0].set_uniform(name, shader_program)
-    }
-}
+matrix!(2,2 => UniformMatrix2fv);
+matrix!(2,3 => UniformMatrix3x2fv);
+matrix!(2,4 => UniformMatrix4x2fv);
+matrix!(3,2 => UniformMatrix2x3fv);
+matrix!(3,3 => UniformMatrix3fv);
+matrix!(3,4 => UniformMatrix4x3fv);
+matrix!(4,2 => UniformMatrix2x4fv);
+matrix!(4,3 => UniformMatrix3x4fv);
+matrix!(4,4 => UniformMatrix4fv);
 
-impl Uniform for [i32; 2] {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        let uniform_location = shader_program.get_uniform_location(name);
-        gl_call! { gl::Uniform2i(uniform_location.to_primitive(), self[0], self[1]); }
-    }
-}
-
-impl Uniform for [f32; 2] {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        let uniform_location = shader_program.get_uniform_location(name);
-        gl_call! { gl::Uniform2f(uniform_location.to_primitive(), self[0], self[1]); }
-    }
-}
-
-impl Uniform for [i32; 3] {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        let uniform_location = shader_program.get_uniform_location(name);
-        gl_call! { gl::Uniform3i(uniform_location.to_primitive(), self[0], self[1], self[2]); }
-    }
-}
-
-impl Uniform for [f32; 3] {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        let uniform_location = shader_program.get_uniform_location(name);
-        gl_call! { gl::Uniform3f(uniform_location.to_primitive(), self[0], self[1], self[2]); }
-    }
-}
-
-impl Uniform for [i32; 4] {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        let uniform_location = shader_program.get_uniform_location(name);
-        gl_call! { gl::Uniform4i(uniform_location.to_primitive(), self[0], self[1], self[2], self[3]); }
-    }
-}
-
-impl Uniform for [f32; 4] {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        let uniform_location = shader_program.get_uniform_location(name);
-        gl_call! { gl::Uniform4f(uniform_location.to_primitive(), self[0], self[1], self[2], self[3]); }
-    }
-}
-
-impl Uniform for &Matrix<4, 4> {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        let uniform_location = shader_program.get_uniform_location(name);
-        gl_call! { gl::UniformMatrix4fv(
-            uniform_location.to_primitive(),
-            1,
-            gl::FALSE,
-            self.col_major().as_ptr().cast(),
-        ); }
-    }
-}
-
-impl Uniform for Matrix<4, 4> {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        (&self).set_uniform(name, shader_program);
-    }
-}
-
-impl Uniform for Vector<1> {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        self.into_inner().set_uniform(name, shader_program);
-    }
-}
-
-impl Uniform for Vector<2> {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        self.into_inner().set_uniform(name, shader_program);
-    }
-}
-
-impl Uniform for Vector<3> {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        self.into_inner().set_uniform(name, shader_program);
-    }
-}
-
-impl Uniform for UnitVector<3> {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        self.v().set_uniform(name, shader_program);
-    }
-}
-
-impl Uniform for Vector<4> {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        self.into_inner().set_uniform(name, shader_program);
-    }
-}
-
-impl Uniform for ColourRGB {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        self.as_array().set_uniform(name, shader_program);
-    }
-}
-
-impl Uniform for ColourRGBA {
-    fn set_uniform<M, T: Texture, const OUT: usize>(
-        self,
-        name: String,
-        shader_program: &ActiveShaderProgram<'_, '_, '_, M, T, OUT>,
-    ) {
-        self.as_array().set_uniform(name, shader_program);
-    }
-}
+define_uniform!(ColourRGB => |value, location, s| value.as_ref().set_uniform_ref(location, s));
+define_uniform!(ColourRGBA => |value, location, s| value.as_ref().set_uniform_ref(location, s));

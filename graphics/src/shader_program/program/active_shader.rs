@@ -9,7 +9,7 @@ use super::{CullFace, Error, ShaderProgram, ShaderProgramContext};
 use crate::error::Result;
 use crate::gl_call;
 use crate::texture::{self, Texture};
-use crate::types::{self, ToPrimitive, UniformLocation};
+use crate::types::{self, UniformLocation};
 
 pub struct ActiveShaderProgram<'a, 'b, 'c, M, T: Texture, const OUT: usize> {
     shader_program: &'a ShaderProgram<M, OUT, T>,
@@ -51,7 +51,7 @@ impl<'a, 'b, M, T: Texture, const OUT: usize> ActiveShaderProgram<'a, 'b, '_, M,
 
 impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, OUT> {
     pub fn context(&self) -> &ShaderProgramContext {
-        &self.context
+        self.context
     }
 
     pub fn register_texture<L: IntoIterator<Item = (String, &'c dyn Texture)>>(
@@ -87,8 +87,6 @@ impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, 
         }
     }
 
-    /// # Errors
-    #[inline]
     pub fn bind_textures(&self) -> Result<()> {
         static MAX_TEX_UNITS: LazyLock<usize> = LazyLock::new(|| {
             let mut out = 0;
@@ -114,10 +112,18 @@ impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, 
     }
 
     pub fn set_uniform<U: Uniform>(&self, name: String, value: U) {
-        value.set_uniform(name, self);
+        if let Some(location) = self.get_uniform_location(name) {
+            value.set_uniform(location, self);
+        }
     }
 
-    pub fn get_uniform_location(&self, name: String) -> UniformLocation {
+    pub fn set_uniform_ref<U: Uniform>(&self, name: String, value: &U) {
+        if let Some(location) = self.get_uniform_location(name) {
+            value.set_uniform_ref(location, self);
+        }
+    }
+
+    pub fn get_uniform_location(&self, name: String) -> Option<UniformLocation> {
         self.shader_program.get_uniform_location(name)
     }
 
@@ -129,3 +135,7 @@ impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, 
         self.context.drawing_skybox(drawing_skybox);
     }
 }
+
+pub trait IsActiveShaderProgram {}
+
+impl<'a, 'b, 'c, M, T: Texture, const OUT: usize> IsActiveShaderProgram for ActiveShaderProgram<'a, 'b, 'c, M, T, OUT> {}

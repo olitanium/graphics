@@ -55,7 +55,7 @@ impl Vertex for SimpleVertex {
             UnitVector::new_unchecked([0.0, 0.0, 1.0])
         };
 
-        let complete_triangle = incomplete_triangle.map(
+        incomplete_triangle.map(
             |IncompleteVertex {
                  position,
                  texture,
@@ -68,8 +68,6 @@ impl Vertex for SimpleVertex {
                 normal: normal.unwrap_or(new_normal),
                 tangent: tangent.unwrap_or(new_tangent),
             },
-        );
-
-        complete_triangle
+        )
     }
 }

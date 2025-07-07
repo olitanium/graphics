@@ -6,7 +6,7 @@ use std::marker::PhantomData;
 pub use super::Error;
 use crate::gl_call;
 use crate::texture::Texture;
-use crate::types::{ShaderProgramId, ToPrimitive, UniformLocation};
+use crate::types::{ShaderProgramId, UniformLocation};
 
 mod active_shader;
 mod utils;
@@ -47,7 +47,6 @@ impl<M, const OUT: usize, T: Texture> ShaderProgram<M, OUT, T> {
         &self.id
     }
 
-    #[inline]
     pub fn use_program<'a, 'b, 'c>(
         &'a self,
         marker: &'b mut ShaderProgramContext,
@@ -56,15 +55,13 @@ impl<M, const OUT: usize, T: Texture> ShaderProgram<M, OUT, T> {
             gl::UseProgram(self.id.to_primitive());
         }
 
-        marker.force_cull_face(self.force_cull_face.clone());
+        marker.force_cull_face(self.force_cull_face);
 
         ActiveShaderProgram::new(self, marker)
     }
 
-    /// # Panics
-    /// Panics on `NUL` in String.
-    pub(crate) fn get_uniform_location(&self, name: String) -> UniformLocation {
-        let c_name = CString::new(name).unwrap();
+    pub(crate) fn get_uniform_location(&self, name: String) -> Option<UniformLocation> {
+        let c_name = CString::new(name).ok()?;
 
         let out = *self
             .uniform_locations
@@ -73,13 +70,16 @@ impl<M, const OUT: usize, T: Texture> ShaderProgram<M, OUT, T> {
             .or_insert_with_key(|c_name| {
                 gl_call! { gl::GetUniformLocation(self.id.to_primitive(), c_name.as_ptr()) }
             });
-
-        UniformLocation::new(out)
+        
+        if out != -1 {
+            Some(UniformLocation::new(out))
+        } else {
+            None
+        }
     }
 }
 
 impl<M, T: Texture, const OUT: usize> Drop for ShaderProgram<M, OUT, T> {
-    #[inline]
     fn drop(&mut self) {
         gl_call! {
             gl::DeleteProgram(self.id.to_primitive());

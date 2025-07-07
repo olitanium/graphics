@@ -5,7 +5,7 @@ use std::rc::Rc;
 
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::texture::{FlatTexture, TextureHasBuilder};
-use graphics::types::{ElementArrayElem, ToPrimitive};
+use graphics::types::{ElementArrayElem};
 use graphics::vertex::IncompleteVertex;
 use graphics::vertex_array::VertexArray;
 use russimp::material::{PropertyTypeInfo, TextureType};
@@ -72,7 +72,6 @@ pub use error::Error;
 
 use super::Builder;
 
-#[inline(always)]
 pub(super) fn import<P: AsRef<Path>>(path: P, post_process: Vec<PostProcess>) -> Result<Builder> {
     let path = path.as_ref();
 
@@ -176,7 +175,7 @@ fn process_node(
 
             for triangle in element_buffer.array_chunks() {
                 let incomplete_triangle = triangle.map(|index| {
-                    let index = index.to_primitive() as usize;
+                    let index = index.as_usize();
                     let triangle_position =
                         *positions.get(index).ok_or(Error::ElementArrayOverflow {
                             which: "position",
@@ -230,8 +229,8 @@ fn process_node(
                 .clone()?;
 
             Result::Ok(Mesh::new(Rc::new(vertex_array), mat, 0)) // TODO: bone
-                                                                 // set to 0 for
-                                                                 // debug
+            // set to 0 for
+            // debug
         })
         .collect::<Result<Vec<_>>>()?;
 
@@ -266,7 +265,7 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
 
     if let Some(Some(PropertyTypeInfo::String(filepath))) = material_properties
         .get(&TextureType::Diffuse)
-        .map(|x| x.get("$tex.file".into()))
+        .map(|x| x.get("$tex.file"))
     {
         builder = builder.diffuse(
             FlatTexture::builder()
@@ -277,7 +276,7 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
     }
     if let Some(Some(PropertyTypeInfo::String(filepath))) = material_properties
         .get(&TextureType::Specular)
-        .map(|x| x.get("$tex.file".into()))
+        .map(|x| x.get("$tex.file"))
     {
         builder = builder.specular(
             FlatTexture::builder()
@@ -288,7 +287,7 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
     }
     if let Some(Some(PropertyTypeInfo::String(filepath))) = material_properties
         .get(&TextureType::Height)
-        .map(|x| x.get("$tex.file".into()))
+        .map(|x| x.get("$tex.file"))
     {
         builder = builder.normal_map(
             FlatTexture::builder()
@@ -299,11 +298,9 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
     }
     if let Some(Some(PropertyTypeInfo::FloatArray(arr))) = material_properties
         .get(&TextureType::None)
-        .map(|x| x.get("$mat.shininess".into()))
-    {
-        if let Some(number) = arr.first() {
+        .map(|x| x.get("$mat.shininess"))
+        && let Some(number) = arr.first() {
             builder = builder.shininess(*number);
-        }
     }
 
     Ok(Rc::new(builder.build()))

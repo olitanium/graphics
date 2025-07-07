@@ -29,14 +29,14 @@ impl Default for Projection {
 
 impl Projection {
     pub fn as_matrix(&self) -> Matrix<4, 4> {
-        match self {
-            &Projection::Orthographic {
+        match *self {
+            Projection::Orthographic {
                 width,
                 height,
                 near,
                 far,
             } => Matrix::transform_orthogonal(width, height, near, far),
-            &Projection::Perspective {
+            Projection::Perspective {
                 fov,
                 aspect,
                 near,

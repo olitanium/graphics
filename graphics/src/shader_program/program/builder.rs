@@ -8,7 +8,7 @@ use crate::error::Result;
 use crate::gl_call;
 use crate::shader_program::shader::Shader;
 use crate::texture::Texture;
-use crate::types::{self, ShaderProgramId, ToPrimitive};
+use crate::types::{self, ShaderProgramId};
 
 #[derive(Debug)]
 pub struct VertexShader(Shader);
@@ -54,7 +54,6 @@ impl<M, T: Texture, const OUT: usize>
 impl<M, T: Texture, const OUT: usize, V, F> Builder<M, T, OUT, V, F> {
     builder!(force_cull_face: Option<CullFace>);
 
-    #[inline]
     pub fn vertex_shader<P: AsRef<Path>>(
         self,
         source: P,
@@ -65,7 +64,6 @@ impl<M, T: Texture, const OUT: usize, V, F> Builder<M, T, OUT, V, F> {
         })
     }
 
-    #[inline]
     pub fn vertex_shader_raw(self, source: &[u8]) -> Result<Builder<M, T, OUT, VertexShader, F>> {
         Shader::new_from_slice(gl::VERTEX_SHADER, source).map(|shader| Builder {
             vertex_shader: VertexShader(shader),
@@ -73,7 +71,6 @@ impl<M, T: Texture, const OUT: usize, V, F> Builder<M, T, OUT, V, F> {
         })
     }
 
-    #[inline]
     pub fn fragment_shader<P: AsRef<Path>>(
         self,
         source: P,
@@ -84,7 +81,6 @@ impl<M, T: Texture, const OUT: usize, V, F> Builder<M, T, OUT, V, F> {
         })
     }
 
-    #[inline]
     pub fn fragment_shader_raw(
         self,
         source: &[u8],
@@ -110,7 +106,6 @@ impl<M, T: Texture, const OUT: usize, V, F> Builder<M, T, OUT, V, F> {
     }
 }
 impl<M, T: Texture, const OUT: usize> Builder<M, T, OUT, VertexShader, FragmentShader> {
-    #[inline]
     pub fn build(self) -> ShaderProgram<M, OUT, T> {
         let program_id = gl_call! { ShaderProgramId::new(gl::CreateProgram()) };
 

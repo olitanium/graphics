@@ -4,9 +4,9 @@ pub use cubic::{
     Cubic,
     CubicGroup,
     ImportError,
+    SHADOW_SHADER_MAX_LIGHTS,
     ShadowGroup,
     Skeleton,
-    SHADOW_SHADER_MAX_LIGHTS,
 };
 
 mod quad;

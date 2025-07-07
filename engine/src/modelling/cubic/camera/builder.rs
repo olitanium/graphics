@@ -24,7 +24,6 @@ impl<P> Builder<P> {
         Builder { pose, ..self }
     }
 
-    #[inline]
     pub fn perspective(mut self, fov: f32, aspect: f32, near: f32, far: f32) -> Self {
         self.projection = Some(Projection::Perspective {
             fov,

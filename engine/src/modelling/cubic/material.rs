@@ -18,14 +18,10 @@ pub struct Material {
 }
 
 impl Material {
-    #[must_use]
-    #[inline]
     pub fn builder() -> Builder {
         Builder::new()
     }
 
-    #[must_use]
-    #[inline]
     pub fn blank() -> Self {
         Self::builder().build()
     }
@@ -36,8 +32,6 @@ impl Material {
             .build()
     }
 
-    /// # Errors
-    #[inline]
     pub fn register_to<'a, 'b, 'c, const N: usize, L, T: Texture>(
         &'c self,
         shader: &mut ActiveShaderProgram<'a, 'b, 'c, (Cubic, L), T, N>,
@@ -88,7 +82,6 @@ impl Builder {
 }
 
 impl Builder {
-    #[inline]
     pub fn build(self) -> Material {
         Material {
             _translucent: self.translucent,
@@ -96,7 +89,6 @@ impl Builder {
             diffuse: self.diffuse.unwrap_or_default(),
             specular_map: self.specular.unwrap_or_default(),
             emission: self.emission.unwrap_or_default(),
-            // emission_map: self.emission_map.unwrap_or_else(Texture::zeroes),
             normal_map: self
                 .normal_map
                 .unwrap_or_else(|| FlatTexture::monochrome(ColourRGBA::new([0.5, 0.5, 1.0, 1.0]))),

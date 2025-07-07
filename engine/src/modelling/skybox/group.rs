@@ -1,13 +1,13 @@
+use graphics::Draw;
 use graphics::error::Result;
-use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::framebuffer::FramebufferContext;
+use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Matrix;
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext};
-use graphics::Draw;
 
 use super::SkyBox;
-use crate::modelling::cubic::geometry::YieldsPose;
 use crate::modelling::cubic::Camera;
+use crate::modelling::cubic::geometry::YieldsPose;
 // use crate::error::Result;
 
 #[derive(Debug)]
@@ -56,7 +56,7 @@ impl<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw for Group<'a, OUT,
         let mut active_shader = self.shader.use_program(marker);
 
         active_shader.drawing_skybox(true);
-        active_shader.set_uniform("projtimesview".to_string(), &self.look_at);
+        active_shader.set_uniform("projtimesview".to_string(), self.look_at);
 
         self.skybox
             .draw(&mut active_shader, &mut active_framebuffer)?;

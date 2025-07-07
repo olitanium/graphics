@@ -3,11 +3,11 @@ use std::collections::HashSet;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::{DefaultFramebuffer, Framebuffer};
 use engine::linear_algebra::Vector;
+use engine::modelling::cubic::Camera;
 use engine::modelling::cubic::camera::{CameraPose, Projection};
 use engine::modelling::cubic::geometry::{Orientation, Pose};
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
 use engine::modelling::cubic::lighting::simple::ListLights;
-use engine::modelling::cubic::Camera;
 use engine::modelling::{
     Bloom,
     BloomGroup,
@@ -15,10 +15,10 @@ use engine::modelling::{
     CubicGroup,
     Quad,
     QuadGroup,
+    SHADOW_SHADER_MAX_LIGHTS,
     ShadowGroup,
     SkyBox,
     SkyBoxGroup,
-    SHADOW_SHADER_MAX_LIGHTS,
 };
 use engine::shader_program::ShaderProgram;
 use engine::types::TexDim;
@@ -94,7 +94,7 @@ impl GlobalState for State {
 
         self.string.push_str(&typing_string);
 
-        self.controls(mouse_delta, keyboard, typing_string, frame_time as f32)?;
+        self.controls(mouse_delta, keyboard, typing_string, frame_time)?;
 
         self.physics(frame_time);
 

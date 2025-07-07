@@ -66,7 +66,8 @@ impl UnitQuaternion {
         let i = m02 + m20;
         let j = m12 + m21;
         let k = t1 - t0;
-        return Quaternion::new(real, i, j, k).normalize();
+
+        Quaternion::new(real, i, j, k).normalize()
     }
 }
 

@@ -5,7 +5,7 @@ use colour::ColourRGBA;
 
 use super::{Texture, TextureHasBuilder};
 use crate::gl_call;
-use crate::types::{TexDim, TexId, ToPrimitive};
+use crate::types::{TexDim, TexId, };
 
 mod builder;
 use builder::MissingData;
@@ -59,7 +59,7 @@ impl TextureHasBuilder for FlatTexture {
 impl Texture for FlatTexture {
     fn dyn_blank() -> &'static dyn Texture {
         static DEFAULT_FLAT_TEXTURE: LazyLock<FlatTexture> =
-            LazyLock::new(|| FlatTexture::default());
+            LazyLock::new(FlatTexture::default);
 
         &*DEFAULT_FLAT_TEXTURE
     }

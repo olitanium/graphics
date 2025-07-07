@@ -4,11 +4,11 @@ use std::sync::Mutex;
 
 use super::{FramebufferInternals, FramebufferWithDepth, FramebufferWithStencil};
 use crate::gl_call;
-use crate::types::{FrameBufferId, ToPrimitive};
+use crate::types::{FrameBufferId};
 
 #[derive(Debug)]
 pub struct FramebufferContext {
-    cleared: HashSet<<FrameBufferId as ToPrimitive>::Primitive>,
+    cleared: HashSet<gl::types::GLuint>,
 }
 static IS_INIT: Mutex<bool> = Mutex::new(false);
 
@@ -47,7 +47,7 @@ impl FramebufferContext {
         &'b mut self,
         framebuffer: &'a D,
     ) -> ActiveFramebuffer<'a, 'b, OUT, D> {
-        if self.cleared.insert(framebuffer.id()) {
+        if self.cleared.insert(framebuffer.id().to_primitive()) {
             let mut active = ActiveFramebuffer::new(framebuffer, self);
             active.clear();
             active
@@ -79,7 +79,7 @@ impl<'a, 'b, const OUT: usize, D: FramebufferInternals<OUT>> ActiveFramebuffer<'
         let (width, height) = framebuffer.size();
 
         gl_call! {
-            gl::BindFramebuffer(gl::FRAMEBUFFER, framebuffer.id());
+            gl::BindFramebuffer(gl::FRAMEBUFFER, framebuffer.id().to_primitive());
         }
         gl_call! {
             gl::Viewport(0, 0, width.to_primitive(), height.to_primitive());
@@ -101,12 +101,12 @@ impl<'a, 'b, const OUT: usize, D: FramebufferInternals<OUT>> ActiveFramebuffer<'
 
 impl<const OUT: usize, X: FramebufferWithDepth<OUT>> ActiveFramebuffer<'_, '_, OUT, X> {
     pub fn depth_testing(&mut self, depth_testing: bool) {
-        X::depth_testing(depth_testing, &mut self.context);
+        X::depth_testing(depth_testing, self.context);
     }
 }
 
 impl<const OUT: usize, X: FramebufferWithStencil<OUT>> ActiveFramebuffer<'_, '_, OUT, X> {
     pub fn stencil_testing(&mut self, stencil_testing: bool) {
-        X::stencil_testing(stencil_testing, &mut self.context);
+        X::stencil_testing(stencil_testing, self.context);
     }
 }

@@ -5,11 +5,11 @@ use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{CubeMap, Texture};
 use graphics::types::TexDim;
 
+use crate::modelling::Cubic;
 use crate::modelling::cubic::camera;
 use crate::modelling::cubic::geometry::{Orientation, Pose};
-use crate::modelling::cubic::lighting::simple::PointLight;
 use crate::modelling::cubic::lighting::ShadowLightCompatible;
-use crate::modelling::Cubic;
+use crate::modelling::cubic::lighting::simple::PointLight;
 
 #[derive(Debug)]
 pub struct ShadowPointLight {

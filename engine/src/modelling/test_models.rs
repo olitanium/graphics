@@ -5,8 +5,8 @@ use graphics::types::ElementArrayElem;
 use graphics::vertex::IncompleteVertex;
 use graphics::vertex_array::VertexArray;
 
-use crate::modelling::quad::QuadVertex;
 use crate::modelling::SimpleVertex;
+use crate::modelling::quad::QuadVertex;
 
 pub fn vertex_array_cube(side_length: f32) -> VertexArray<SimpleVertex> {
     let vertex_positions = [

@@ -45,7 +45,6 @@ impl Default for Inner {
 pub struct Mouse(Box<Inner>);
 
 impl Mouse {
-    #[inline]
     pub(crate) fn new(window: &mut PWindow, fix_to_centre: bool) -> Self {
         let mut out = Mouse(Box::default());
 
@@ -54,7 +53,8 @@ impl Mouse {
         window.set_cursor_pos_callback(move |_, x, y| {
             let y = -y;
             // SAFETY: unsure
-            unsafe { state_ptr.as_mut() }.map(|data| {
+            if let Some(data) = unsafe { state_ptr.as_mut() } {
+                // TODO: as method on MouseState
                 *data = match *data {
                     MouseState::FirstMouse => MouseState::Stationary {
                         current_location: (x, y),
@@ -74,8 +74,9 @@ impl Mouse {
                         ),
                     },
                 }
-            });
+            }
         });
+
 
         let buttons_ptr = &raw mut out.0.buttons;
 

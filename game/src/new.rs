@@ -104,8 +104,8 @@ impl State {
                     P::OptimizeMeshes,
                 ],
             )
-                .map_err(|error| Error::Other(error.to_string()))?
-                .build(),
+            .map_err(|error| Error::Other(error.to_string()))?
+            .build(),
             "oliver" => {
                 let material = Rc::new(Material::builder().diffuse(FlatTexture::white()).build());
 

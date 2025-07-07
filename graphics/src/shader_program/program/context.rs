@@ -4,7 +4,6 @@ use super::{CullFace, Error, ShaderProgram};
 use crate::error::Result;
 use crate::gl_call;
 use crate::texture::Texture;
-use crate::types::ToPrimitive;
 
 #[derive(Debug)]
 pub struct ShaderProgramContext {
@@ -70,14 +69,14 @@ impl ShaderProgramContext {
     }
 
     pub fn cull_face(&mut self, cull_face: CullFace) -> Result<()> {
-        match &self.forced_cull_face {
+        match self.forced_cull_face {
             None => {
                 self.cull_face_after_check(cull_face);
 
                 Ok(())
             }
             Some(forced) => Err(Error::TriedToCullFaceWhenFaceCullingForcedByProgram {
-                forced: forced.clone(),
+                forced,
                 attempted: cull_face,
             }
             .into()),

@@ -9,8 +9,7 @@ use crate::types::{
     ElementArrayLen,
     GLsizei,
     GLsizeiptr,
-    ToPrimitive,
-};
+    };
 
 /// Tells OpenGL in which order the vertices of the VertexBuffer should be
 /// drawn. Internally (inside GPU memory) is an array of ElementArrayElem.

@@ -24,13 +24,9 @@ impl Skeleton {
 
     /// Returns the index of that bone, or `None` if the parent does not exist.
     pub fn push_bone(&mut self, bone: Bone) -> Option<usize> {
-        let Some(parent) = bone.parent else {
-            return None;
-        };
+        let parent = bone.parent?;
 
-        if self.values.get(parent).is_none() {
-            return None;
-        }
+        self.values.get(parent)?;
 
         self.values.push(bone);
 
@@ -45,7 +41,8 @@ impl Skeleton {
         let Some(bone) = self.get_bone_mut(index) else {
             return Err(pose);
         };
-        Ok(bone.set(pose))
+        bone.set(pose);
+        Ok(())
     }
 
     pub fn get_all_bones(&self, animation: usize, time: f32) -> Vec<Matrix<4, 4>> {

@@ -23,7 +23,7 @@ use crate::types::TexDim;
 pub enum Error {
     ScreenDimsStaticPosion,
     GlfwInit { glfw_error: glfw::InitError },
-    GlfwWindowError,
+    GlfwWindow,
 }
 
 error_boilerplate!(Error);
@@ -34,7 +34,7 @@ impl From<Error> for crate::error::Error {
     }
 }
 
-use std::ffi::{c_void, CStr};
+use std::ffi::{CStr, c_void};
 use std::ptr;
 #[expect(unused_variables)]
 extern "system" fn debug_callback(
@@ -236,7 +236,6 @@ impl<G: GlobalState> Environment<G> {
     }
 
     #[expect(clippy::iter_not_returning_iterator)]
-    #[inline]
     fn iter(&mut self) -> FrameIter<G> {
         FrameIter::new(self)
     }

@@ -44,12 +44,10 @@ impl<P: YieldsPose> Camera<P> {
         }
     }
 
-    #[inline]
     pub fn direction(&self, hint: P::Hint) -> UnitVector<3> {
         self.orientation(hint).view_forward()
     }
 
-    #[inline]
     pub fn radius_out(&mut self, distance: f32) -> f32 {
         self.radius += distance;
         if self.radius < 0.0 {
@@ -58,7 +56,6 @@ impl<P: YieldsPose> Camera<P> {
         self.radius
     }
 
-    #[inline]
     pub fn look_at(&self, hint: P::Hint) -> Matrix<4, 4> {
         self.projection.as_matrix() * self.view(hint)
     }

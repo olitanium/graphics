@@ -1,14 +1,14 @@
 use array_vec::ArrayVec;
-use graphics::framebuffer::traits::FramebufferInternals;
+use graphics::Result;
 use graphics::framebuffer::FramebufferContext;
+use graphics::framebuffer::traits::FramebufferInternals;
 use graphics::linear_algebra::Vector;
 use graphics::shader_program::{ActiveShaderProgram, ShaderProgramContext};
 use graphics::texture::Texture;
-use graphics::Result;
 
 use super::{ShadowFarLight, ShadowPointLight, ShadowSpotLight};
-use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
 use crate::modelling::Cubic;
+use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
 use crate::opengl_shaders;
 
 #[derive(Debug, Default)]

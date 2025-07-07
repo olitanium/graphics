@@ -13,7 +13,7 @@ use crate::framebuffer::traits::{
 };
 use crate::gl_call;
 use crate::texture::{FlatTexture, Texture};
-use crate::types::{FrameBufferId, TexDim, ToPrimitive};
+use crate::types::{FrameBufferId, TexDim, };
 
 mod active_framebuffer;
 mod builder;
@@ -46,6 +46,8 @@ pub struct DefaultFramebuffer {
     size: (TexDim, TexDim),
 }
 
+pub static DEFAULT_FB_ID: FrameBufferId = FrameBufferId::new(0);
+
 impl Drop for DefaultFramebuffer {
     fn drop(&mut self) {}
 }
@@ -53,8 +55,8 @@ impl Drop for DefaultFramebuffer {
 impl FramebufferInternals<1> for DefaultFramebuffer {
     type Tex = FlatTexture;
 
-    fn id(&self) -> <FrameBufferId as ToPrimitive>::Primitive {
-        0
+    fn id(&self) -> &FrameBufferId {
+        &DEFAULT_FB_ID
     }
 
     fn size(&self) -> (TexDim, TexDim) {
@@ -98,8 +100,9 @@ pub struct Framebuffer<const OUT: usize, X: Attachment> {
 
 impl<const OUT: usize, X: Attachment> Drop for Framebuffer<OUT, X> {
     fn drop(&mut self) {
+        let id = self.id().to_primitive();
         gl_call! {
-            gl::DeleteFramebuffers(1, &self.id());
+            gl::DeleteFramebuffers(1, &raw const id);
         }
     }
 }
@@ -107,13 +110,13 @@ impl<const OUT: usize, X: Attachment> Drop for Framebuffer<OUT, X> {
 impl<const OUT: usize, X: Attachment> FramebufferInternals<OUT> for Framebuffer<OUT, X> {
     type Tex = X::Tex;
 
-    fn id(&self) -> <FrameBufferId as ToPrimitive>::Primitive {
-        self.id.to_primitive()
+    fn id(&self) -> &FrameBufferId {
+        &self.id
     }
 
     fn size(&self) -> (TexDim, TexDim) {
         self.textures
-            .get(0)
+            .first()
             .map_or_else(|| self.stencil_or_depth.size(), |tex| tex.borrow().size())
     }
 
@@ -184,7 +187,10 @@ impl<const N: usize, D: AttachmentWithDepth> Framebuffer<N, D> {
         self.stencil_or_depth.get_texture()
     }
 
+    /// # Safety
+    /// User must not let reference live long enough to allow mutable borrowing via the Texture refcell
     pub unsafe fn get_attachment_ref(&self) -> &dyn Texture {
+        // SAFETY: to be upheld by caller
         unsafe { self.stencil_or_depth.get_texture_ref() }
     }
 }

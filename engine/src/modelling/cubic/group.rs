@@ -1,14 +1,14 @@
-use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::framebuffer::FramebufferContext;
+use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext};
 use graphics::texture::FlatTexture;
 use graphics::{Draw, Result};
 
+use super::Camera;
 use super::geometry::YieldsPose;
 use super::lighting::simple::ListLights;
 use super::model::Cubic;
-use super::Camera;
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
@@ -62,7 +62,7 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
         self.lights.bind(&active_shader);
         let camera_pos = self.camera_pos;
 
-        active_shader.set_uniform("projtimesview".to_string(), &self.camera_look_at);
+        active_shader.set_uniform("projtimesview".to_string(), self.camera_look_at);
         active_shader.set_uniform("camera_postion".to_string(), camera_pos.homogeneous());
 
         for (model, animation, time) in self.opaque {
