@@ -77,10 +77,6 @@ impl Mouse {
             }
         });
 
-<<<<<<< HEAD
-
-=======
->>>>>>> master
         let buttons_ptr = &raw mut out.0.buttons;
 
         window.set_mouse_button_callback(move |_, mouse_button, action, _| match action {

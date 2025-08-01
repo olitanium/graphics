@@ -93,11 +93,7 @@ impl Default for Builder<MissingGlfw> {
 impl Builder<MissingGlfw> {
     new!();
 
-<<<<<<< HEAD
-    pub fn glfw(self, glfw: &mut Glfw) -> Builder<HasGlfw> {
-=======
     pub fn glfw(self, glfw: &mut Glfw) -> Builder<HasGlfw<'_>> {
->>>>>>> master
         Builder {
             glfw: HasGlfw(glfw),
             ..self
