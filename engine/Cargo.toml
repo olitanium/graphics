@@ -1,0 +1,13 @@
+[package]
+name = "engine"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+graphics = { path = "../graphics" }
+utils = {path = "../utils" }
+russimp = "3"
+infinite_window = {path = "../infinite_window" }
+array_vec = {path = "../array_vec"}
+quaternion = {path = "../quaternion"}
+dual_number = {path = "../dual_number"}
