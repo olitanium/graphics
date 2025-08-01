@@ -7,11 +7,20 @@ edition = "2024"
 
 [dependencies]
 
+<<<<<<< HEAD
 linear_algebra = {path = "/home/oliver/sd/programming/rust/utilities/linear_algebra"}
 array_vec = {path = "/home/oliver/sd/programming/rust/utilities/array_vec"}
 
+=======
+linear_algebra = {path = "../linear_algebra"}
+array_vec = {path = "../array_vec"}
+>>>>>>> master
 glfw = "*"
 gl = "0.14"
 image = "0.25"
 utils = { path = "../utils" }
+<<<<<<< HEAD
 colour = { path = "../colour" }
+=======
+colour = { path = "../colour" }
+>>>>>>> master

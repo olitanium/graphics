@@ -22,14 +22,21 @@ pub struct SpotLight {
 
 impl SpotLight {
     pub(crate) fn bind_to<
+<<<<<<< HEAD
         'a,
+=======
+>>>>>>> master
         const N: usize,
         const MAX: usize,
         L: ListLightCompatible<MAX>,
         T: Texture,
     >(
         &self,
+<<<<<<< HEAD
         shader: &ActiveShaderProgram<'_, '_, 'a, (Cubic, L), T, N>,
+=======
+        shader: &mut ActiveShaderProgram<'_, '_, '_, (Cubic, L), T, N>,
+>>>>>>> master
         name: &str,
         index: usize,
     ) {

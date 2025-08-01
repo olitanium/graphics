@@ -24,11 +24,27 @@ impl Keyboard {
 
         window.set_key_callback(move |_, key, _, action, _| {
             match action {
+<<<<<<< HEAD
                 //Action::Press => unsafe { key_ptr.as_mut() }.map(|x| x.insert(key)),
                 Action::Press => if let Some(hashset) = unsafe { key_ptr.as_mut() } { hashset.insert(key); },
                 //Action::Release => unsafe { key_ptr.as_mut() }.map(|x| x.remove(&key)),
                 Action::Release => if let Some(hashset) = unsafe { key_ptr.as_mut() } { hashset.remove(&key); },
                 _ => {},
+=======
+                // Action::Press => unsafe { key_ptr.as_mut() }.map(|x| x.insert(key)),
+                Action::Press => {
+                    if let Some(hashset) = unsafe { key_ptr.as_mut() } {
+                        hashset.insert(key);
+                    }
+                }
+                // Action::Release => unsafe { key_ptr.as_mut() }.map(|x| x.remove(&key)),
+                Action::Release => {
+                    if let Some(hashset) = unsafe { key_ptr.as_mut() } {
+                        hashset.remove(&key);
+                    }
+                }
+                _ => {}
+>>>>>>> master
             };
 
             match (key, action) {
@@ -36,12 +52,27 @@ impl Keyboard {
                 (_, Action::Release) => {}
                 // Perfom on Press or Repeat
                 (Key::Backspace, _) => {
+<<<<<<< HEAD
                     if let Some(refcell) = unsafe { backspace_ptr.as_ref() } { refcell.borrow_mut().pop(); }
                     //unsafe { backspace_ptr.as_ref() }.map(|x| x.borrow_mut().pop());
                 }
                 (Key::Enter, _) => {
                     if let Some(refcell) = unsafe { backspace_ptr.as_ref() } { refcell.borrow_mut().push('\n'); }
                     //unsafe { backspace_ptr.as_ref() }.map(|x| x.borrow_mut().push('\n'));
+=======
+                    if let Some(refcell) = unsafe { backspace_ptr.as_ref() } {
+                        refcell.borrow_mut().pop();
+                    }
+                    // unsafe { backspace_ptr.as_ref() }.map(|x|
+                    // x.borrow_mut().pop());
+                }
+                (Key::Enter, _) => {
+                    if let Some(refcell) = unsafe { backspace_ptr.as_ref() } {
+                        refcell.borrow_mut().push('\n');
+                    }
+                    // unsafe { backspace_ptr.as_ref() }.map(|x|
+                    // x.borrow_mut().push('\n'));
+>>>>>>> master
                 }
                 // Do not act on other keys
                 _ => {}
@@ -49,10 +80,22 @@ impl Keyboard {
         });
 
         window.set_char_callback(move |_, char| {
+<<<<<<< HEAD
             if let Some(refcell) = unsafe { buffer_ptr.as_ref() } { refcell.borrow_mut().push(char) };
             //unsafe { buffer_ptr.as_ref() }.map(|x| x.borrow_mut().push(char));
             if let Some(refcell) = unsafe { buffer_ptr.as_ref() } { eprintln!("{}", refcell.borrow_mut()) };
             //unsafe { buffer_ptr.as_ref() }.map(|x| eprintln!("{}", x.borrow_mut()));
+=======
+            if let Some(refcell) = unsafe { buffer_ptr.as_ref() } {
+                refcell.borrow_mut().push(char)
+            };
+            // unsafe { buffer_ptr.as_ref() }.map(|x| x.borrow_mut().push(char));
+            if let Some(refcell) = unsafe { buffer_ptr.as_ref() } {
+                eprintln!("{}", refcell.borrow_mut())
+            };
+            // unsafe { buffer_ptr.as_ref() }.map(|x| eprintln!("{}",
+            // x.borrow_mut()));
+>>>>>>> master
         });
 
         out

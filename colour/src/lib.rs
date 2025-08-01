@@ -1,3 +1,6 @@
+mod iter;
+pub use iter::RGBAIntoIter;
+
 #[derive(Debug, Clone, Copy)]
 pub struct ColourRGBA([f32; 4]);
 

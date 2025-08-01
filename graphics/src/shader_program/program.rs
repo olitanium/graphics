@@ -70,7 +70,11 @@ impl<M, const OUT: usize, T: Texture> ShaderProgram<M, OUT, T> {
             .or_insert_with_key(|c_name| {
                 gl_call! { gl::GetUniformLocation(self.id.to_primitive(), c_name.as_ptr()) }
             });
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> master
         if out != -1 {
             Some(UniformLocation::new(out))
         } else {

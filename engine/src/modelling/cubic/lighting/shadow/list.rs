@@ -3,7 +3,7 @@ use graphics::Result;
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferInternals;
 use graphics::linear_algebra::Vector;
-use graphics::shader_program::{ActiveShaderProgram, ShaderProgramContext};
+use graphics::shader_program::{ActiveShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::Texture;
 
 use super::{ShadowFarLight, ShadowPointLight, ShadowSpotLight};
@@ -25,12 +25,11 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         fb_context: &mut FramebufferContext,
         complete_models: &[(&Cubic, usize /* animation */, f32 /* time */)],
         target_position: Vector<3>,
+        uniforms: Vec<(String, &dyn Uniform)>,
     ) -> Result<()> {
         let mut active_depth_only_shader =
             opengl_shaders::far_light_depth().use_program(sp_context);
-
-        // let cull_face_marker =
-        // active_depth_only_shader.cull_face(CullFace::FrontFace);
+        active_depth_only_shader.set_uniform_dyn(uniforms.clone());
 
         for light in &self.far {
             // Draw the scene from the lights perspective, saving to the light's internal
@@ -55,6 +54,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
 
         let mut active_depth_only_shader =
             opengl_shaders::far_light_depth().use_program(sp_context);
+        active_depth_only_shader.set_uniform_dyn(uniforms.clone());
 
         for light in &self.spot {
             // Draw the scene from the lights perspective, saving to the light's internal
@@ -77,6 +77,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
 
         let mut active_depth_only_shader_point =
             opengl_shaders::point_depth().use_program(sp_context);
+        active_depth_only_shader_point.set_uniform_dyn(uniforms.clone());
 
         for light in &self.point {
             for (index, matrix) in light.get_look_at_matrices().into_iter().enumerate() {

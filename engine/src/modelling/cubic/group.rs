@@ -1,7 +1,7 @@
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
-use graphics::shader_program::{ShaderProgram, ShaderProgramContext};
+use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
 use graphics::{Draw, Result};
 
@@ -20,6 +20,8 @@ pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth
 
     lights: &'a ListLights<MAX>,
     opaque: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
+
+    uniforms: Vec<(String, &'a dyn Uniform)>,
 }
 
 impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = FlatTexture>>
@@ -33,6 +35,8 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
         hint: O::Hint,
         lights: &'a ListLights<MAX>,
         opaque: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
+
+        uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Box<Self>
     where
         O::Hint: Clone,
@@ -44,6 +48,7 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
             camera_look_at: camera.look_at(hint),
             lights,
             opaque,
+            uniforms,
         })
     }
 }
@@ -59,11 +64,13 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
         let mut active_shader = self.shader.use_program(sp_context);
         let mut active_framebuffer = self.framebuffer.bind(fb_context);
 
-        self.lights.bind(&active_shader);
+        self.lights.bind(&mut active_shader);
         let camera_pos = self.camera_pos;
 
         active_shader.set_uniform("projtimesview".to_string(), self.camera_look_at);
         active_shader.set_uniform("camera_postion".to_string(), camera_pos.homogeneous());
+
+        active_shader.set_uniform_dyn(self.uniforms);
 
         for (model, animation, time) in self.opaque {
             model.draw(&mut active_shader, &mut active_framebuffer, animation, time)?;

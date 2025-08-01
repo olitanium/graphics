@@ -3,7 +3,6 @@
 #![feature(type_changing_struct_update)]
 #![expect(incomplete_features)]
 #![feature(generic_const_exprs)]
-#![feature(array_chunks)]
 #![feature(array_try_map)]
 
 #[expect(hidden_glob_reexports)]

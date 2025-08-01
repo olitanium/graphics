@@ -4,7 +4,10 @@ use std::sync::Mutex;
 
 use super::{FramebufferInternals, FramebufferWithDepth, FramebufferWithStencil};
 use crate::gl_call;
+<<<<<<< HEAD
 use crate::types::{FrameBufferId};
+=======
+>>>>>>> master
 
 #[derive(Debug)]
 pub struct FramebufferContext {

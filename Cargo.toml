@@ -5,5 +5,10 @@ members = [
     "engine",
     "utils",
     "game",
-    "graphics", "quaternion", "dual_number",
+    "graphics",
+    "quaternion",
+    "dual_number",
+    "linear_algebra",
+    "multi_zip",
+    "infinite_window"
 ]

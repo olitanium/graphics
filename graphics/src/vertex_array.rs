@@ -9,7 +9,11 @@ use crate::element_array_buffer::ElementArrayBuffer;
 use crate::error::Result;
 use crate::framebuffer::traits::FramebufferInternals;
 use crate::shader_program::ActiveShaderProgram;
+<<<<<<< HEAD
 use crate::types::{VertexArrayId};
+=======
+use crate::types::VertexArrayId;
+>>>>>>> master
 use crate::vertex::Vertex;
 use crate::vertex_buffer::VertexBuffer;
 use crate::{gl_call, types};
@@ -136,7 +140,11 @@ where
 
     pub fn draw<M, const OUT: usize, D: FramebufferInternals<OUT>>(
         &self,
+<<<<<<< HEAD
         active_shader_program: &ActiveShaderProgram<'_, '_, '_, M, D::Tex, OUT>,
+=======
+        active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, D::Tex, OUT>,
+>>>>>>> master
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
     ) -> Result<()> {
         self.bind();

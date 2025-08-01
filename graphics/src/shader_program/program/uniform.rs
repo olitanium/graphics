@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 use colour::{ColourRGB, ColourRGBA};
 use linear_algebra::{Matrix, UnitVector, Vector};
 
@@ -8,12 +9,25 @@ use crate::texture::Texture;
 use crate::types::{UniformLocation};
 
 pub trait Uniform {
+=======
+use std::fmt::Debug;
+
+use colour::{ColourRGB, ColourRGBA};
+use linear_algebra::{Matrix, UnitVector, Vector};
+
+use crate::gl_call;
+use crate::shader_program::program::active_shader::IsActiveShaderProgram;
+use crate::types::UniformLocation;
+
+pub trait Uniform: Debug {
+>>>>>>> master
     fn set_uniform_ref(
         &self,
         location: UniformLocation,
         shader_program: &dyn IsActiveShaderProgram,
     );
 
+<<<<<<< HEAD
     fn set_uniform(
         self,
         location: UniformLocation,
@@ -31,6 +45,31 @@ macro_rules! define_uniform {
             }
 
             fn set_uniform(self, location: UniformLocation, shader_program: &dyn IsActiveShaderProgram) {
+=======
+    fn set_uniform(self, location: UniformLocation, shader_program: &dyn IsActiveShaderProgram);
+}
+
+macro_rules! define_uniform {
+    ($typ:ty => | $self:ident, $loc:ident, $shader:ident | $out:expr) => {
+        impl Uniform for $typ {
+            fn set_uniform_ref(
+                &self,
+                location: UniformLocation,
+                shader_program: &dyn IsActiveShaderProgram,
+            ) {
+                (|$self: &Self, $loc: UniformLocation, $shader| $out)(
+                    self,
+                    location,
+                    shader_program,
+                )
+            }
+
+            fn set_uniform(
+                self,
+                location: UniformLocation,
+                shader_program: &dyn IsActiveShaderProgram,
+            ) {
+>>>>>>> master
                 self.set_uniform_ref(location, shader_program)
             }
         }
@@ -57,7 +96,11 @@ define_uniform!(UnitVector<$num> => |value, location, s| value.v().inner().set_u
     };
 }
 
+<<<<<<< HEAD
 vectors!(1,2,3,4);
+=======
+vectors!(1, 2, 3, 4);
+>>>>>>> master
 
 macro_rules! matrix {
     ($row:literal, $col:literal => $func:ident) => {
@@ -76,4 +119,8 @@ matrix!(4,3 => UniformMatrix3x4fv);
 matrix!(4,4 => UniformMatrix4fv);
 
 define_uniform!(ColourRGB => |value, location, s| value.as_ref().set_uniform_ref(location, s));
+<<<<<<< HEAD
 define_uniform!(ColourRGBA => |value, location, s| value.as_ref().set_uniform_ref(location, s));
+=======
+define_uniform!(ColourRGBA => |value, location, s| value.as_ref().set_uniform_ref(location, s));
+>>>>>>> master

@@ -12,7 +12,6 @@ use engine::modelling::{
     Bloom,
     BloomGroup,
     Cubic,
-    CubicGroup,
     Quad,
     QuadGroup,
     SHADOW_SHADER_MAX_LIGHTS,
@@ -20,7 +19,6 @@ use engine::modelling::{
     SkyBox,
     SkyBoxGroup,
 };
-use engine::shader_program::ShaderProgram;
 use engine::types::TexDim;
 use engine::{Draw, Event, GlobalState, Result};
 pub struct State {
@@ -144,7 +142,7 @@ impl State {
         let all_models = {
             let mut all_models = vec![(&self.imported, self.which_animation, time)];
 
-            // all_models.extend(self.containers.iter().map(|x| (x, time)));
+            all_models.extend(self.containers.iter().map(|x| (x, 0, time)));
 
             all_models
         };
@@ -158,6 +156,7 @@ impl State {
             all_models,
             transparent_models,
             &self.hdr_fb,
+            vec![],
         ));
 
         out.push(SkyBoxGroup::new(
@@ -166,6 +165,7 @@ impl State {
             &self.skybox,
             &self.camera,
             (),
+            vec![],
         ));
 
         if self.do_bloom {
@@ -174,9 +174,10 @@ impl State {
         } else {
             // println!("bloom_off");
             out.push(QuadGroup::new(
-                engine::opengl_shaders::quad(),
+                engine::opengl_shaders::exposure(),
                 default_framebuffer,
                 vec![&self.quad_to_draw],
+                vec![(String::from("exposure"), &self.exposure)],
             ));
         }
 

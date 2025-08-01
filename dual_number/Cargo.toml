@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-linear_algebra = {path = "/home/oliver/sd/programming/rust/utilities/linear_algebra"}
+linear_algebra = {path = "../linear_algebra"}
 quaternion = {path = "../quaternion"}

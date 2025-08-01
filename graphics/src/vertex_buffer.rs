@@ -1,7 +1,11 @@
 use std::marker::PhantomData;
 use std::mem;
 
+<<<<<<< HEAD
 use crate::types::{VertexBufferId};
+=======
+use crate::types::VertexBufferId;
+>>>>>>> master
 use crate::vertex::Vertex;
 use crate::{gl_call, types};
 

@@ -98,7 +98,9 @@ impl CameraPose {
     }
 
     pub fn roll_ccw(&mut self, angle: f32) {
-        if let Self::Flexible { orientation, .. } = self { orientation.roll_ccw(angle); }
+        if let Self::Flexible { orientation, .. } = self {
+            orientation.roll_ccw(angle);
+        }
     }
 
     pub fn new_fixed_up_from_to(position: Vector<3>, to: Vector<3>, up: UnitVector<3>) -> Self {

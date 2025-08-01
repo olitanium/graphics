@@ -74,7 +74,11 @@ impl State {
             })
             .collect();
 
+<<<<<<< HEAD
         const WHICH_MODEL: &str = "oliver";
+=======
+        const WHICH_MODEL: &str = "backpack";
+>>>>>>> master
         use engine::PostProcess as P;
         let imported = match WHICH_MODEL {
             "morgan" => {

@@ -3,6 +3,7 @@ use std::iter;
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
+use graphics::shader_program::Uniform;
 use graphics::texture::FlatTexture;
 use graphics::{Draw, Result, ShaderProgramContext};
 
@@ -25,6 +26,8 @@ pub struct Group<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> {
 
     opaque: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
     transparent: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
+
+    uniforms: Vec<(String, &'a dyn Uniform)>
 }
 
 impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
@@ -35,6 +38,7 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
         opaque: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
         transparent: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
         output_framebuffer: &'a X,
+        uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Box<Self>
     where
         O::Hint: Clone,
@@ -47,6 +51,7 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
             output_framebuffer,
             opaque,
             transparent,
+            uniforms,
         })
     }
 }
@@ -58,7 +63,11 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw for Group<'a, X> {
         sp_context: &mut ShaderProgramContext,
     ) -> Result<()> {
         self.list_light
+<<<<<<< HEAD
             .gen_depth(sp_context, fb_context, &self.opaque, self.position)?;
+=======
+            .gen_depth(sp_context, fb_context, &self.opaque, self.position, self.uniforms.clone())?;
+>>>>>>> master
 
         // At this point, all lights have their framebuffers filled with depth
         // information
@@ -72,6 +81,10 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw for Group<'a, X> {
 
         active_shadow_shader.set_uniform("projtimesview".to_string(), self.look_at);
         active_shadow_shader.set_uniform("camera_postion".to_string(), self.position.homogeneous());
+<<<<<<< HEAD
+=======
+        active_shadow_shader.set_uniform_dyn(self.uniforms);
+>>>>>>> master
 
         let mut active_output_framebuffer = self.output_framebuffer.bind(fb_context);
         for (model, animation, time) in iter::chain(self.opaque, self.transparent) {

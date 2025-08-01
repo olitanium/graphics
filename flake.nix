@@ -23,7 +23,8 @@
       openssl
       pkg-config
 
-      glfw
+      #glfw
+      glfw-wayland
       cmake
       xorg.libX11
       xorg.libXrandr

@@ -87,7 +87,11 @@ impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, 
         }
     }
 
+<<<<<<< HEAD
     pub fn bind_textures(&self) -> Result<()> {
+=======
+    pub fn bind_textures(&mut self) -> Result<()> {
+>>>>>>> master
         static MAX_TEX_UNITS: LazyLock<usize> = LazyLock::new(|| {
             let mut out = 0;
             gl_call! {
@@ -97,9 +101,15 @@ impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, 
         });
 
         if self.texture_list.len() <= *MAX_TEX_UNITS {
+<<<<<<< HEAD
             for (index, (name, tex)) in self.texture_list.iter().enumerate() {
                 tex.bind_to(index as u32);
                 self.set_uniform(name.clone(), index as i32);
+=======
+            for (index, (name, tex)) in self.texture_list.clone().into_iter().enumerate() {
+                tex.bind_to(index as u32);
+                self.set_uniform(name, index as i32);
+>>>>>>> master
             }
             Ok(())
         } else {
@@ -111,18 +121,36 @@ impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, 
         }
     }
 
+<<<<<<< HEAD
     pub fn set_uniform<U: Uniform>(&self, name: String, value: U) {
+=======
+    pub fn set_uniform<U: Uniform>(&mut self, name: String, value: U) {
+>>>>>>> master
         if let Some(location) = self.get_uniform_location(name) {
             value.set_uniform(location, self);
         }
     }
 
+<<<<<<< HEAD
     pub fn set_uniform_ref<U: Uniform>(&self, name: String, value: &U) {
+=======
+    pub fn set_uniform_ref<U: Uniform>(&mut self, name: String, value: &U) {
+>>>>>>> master
         if let Some(location) = self.get_uniform_location(name) {
             value.set_uniform_ref(location, self);
         }
     }
 
+<<<<<<< HEAD
+=======
+    pub fn set_uniform_dyn(&mut self, values: Vec<(String, &dyn Uniform)>) {
+        for (name, value) in values {
+            if let Some(location) = self.get_uniform_location(name) {
+            value.set_uniform_ref(location, self);
+        }}
+    }
+
+>>>>>>> master
     pub fn get_uniform_location(&self, name: String) -> Option<UniformLocation> {
         self.shader_program.get_uniform_location(name)
     }

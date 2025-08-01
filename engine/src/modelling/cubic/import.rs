@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use graphics::linear_algebra::{UnitVector, Vector};
-use graphics::texture::{FlatTexture, TextureHasBuilder};
-use graphics::types::{ElementArrayElem};
+use graphics::texture::{FlatTexture, Image, TextureHasBuilder};
+use graphics::types::ElementArrayElem;
 use graphics::vertex::IncompleteVertex;
 use graphics::vertex_array::VertexArray;
 use russimp::material::{PropertyTypeInfo, TextureType};
@@ -173,7 +173,7 @@ fn process_node(
                 }
             }
 
-            for triangle in element_buffer.array_chunks() {
+            for triangle in element_buffer.as_chunks().0 {
                 let incomplete_triangle = triangle.map(|index| {
                     let index = index.as_usize();
                     let triangle_position =
@@ -269,8 +269,9 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
     {
         builder = builder.diffuse(
             FlatTexture::builder()
-                .srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
-                .map_err(|error| Error::Graphics { error })?
+                .image(Image::new_from_srgba([dir, filepath.as_ref()].into_iter().collect::<PathBuf>()).map_err(|error| Error::Graphics { error })?)
+                //.srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
+                
                 .build(),
         );
     }
@@ -280,8 +281,9 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
     {
         builder = builder.specular(
             FlatTexture::builder()
-                .srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
-                .map_err(|error| Error::Graphics { error })?
+                //.srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
+                //.map_err(|error| Error::Graphics { error })?
+                .image(Image::new_from_srgba([dir, filepath.as_ref()].into_iter().collect::<PathBuf>()).map_err(|error| Error::Graphics { error })?)
                 .build(),
         );
     }
@@ -291,16 +293,18 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
     {
         builder = builder.normal_map(
             FlatTexture::builder()
-                .rgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
-                .map_err(|error| Error::Graphics { error })?
+                .image(Image::new_from_rgba([dir, filepath.as_ref()].into_iter().collect::<PathBuf>()).map_err(|error| Error::Graphics { error })?)
+                //.rgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
+                //.map_err(|error| Error::Graphics { error })?
                 .build(),
         );
     }
     if let Some(Some(PropertyTypeInfo::FloatArray(arr))) = material_properties
         .get(&TextureType::None)
         .map(|x| x.get("$mat.shininess"))
-        && let Some(number) = arr.first() {
-            builder = builder.shininess(*number);
+        && let Some(number) = arr.first()
+    {
+        builder = builder.shininess(*number);
     }
 
     Ok(Rc::new(builder.build()))

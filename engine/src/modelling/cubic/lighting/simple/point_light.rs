@@ -19,16 +19,23 @@ pub struct PointLight {
 
 impl PointLight {
     pub(crate) fn bind_to<
+<<<<<<< HEAD
         'a,
         'b,
         'c,
+=======
+>>>>>>> master
         const N: usize,
         const MAX: usize,
         L: ListLightCompatible<MAX>,
         T: Texture,
     >(
         &self,
+<<<<<<< HEAD
         shader: &ActiveShaderProgram<'a, 'b, 'c, (Cubic, L), T, N>,
+=======
+        shader: &mut ActiveShaderProgram<'_, '_, '_, (Cubic, L), T, N>,
+>>>>>>> master
         name: &str,
         index: usize,
     ) {

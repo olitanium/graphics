@@ -5,7 +5,11 @@ use colour::ColourRGBA;
 
 use super::{Texture, TextureHasBuilder};
 use crate::gl_call;
+<<<<<<< HEAD
 use crate::types::{TexDim, TexId, };
+=======
+use crate::types::{TexDim, TexId};
+>>>>>>> master
 
 mod builder;
 use builder::MissingData;
@@ -51,15 +55,24 @@ impl Default for FlatTexture {
 impl TextureHasBuilder for FlatTexture {
     type Builder = FlatTextureBuilder<MissingData>;
 
+<<<<<<< HEAD
     fn builder() -> Self::Builder {
         Self::Builder::new()
+=======
+    fn builder() -> <Self as TextureHasBuilder>::Builder {
+        <Self as TextureHasBuilder>::Builder::new()
+>>>>>>> master
     }
 }
 
 impl Texture for FlatTexture {
     fn dyn_blank() -> &'static dyn Texture {
+<<<<<<< HEAD
         static DEFAULT_FLAT_TEXTURE: LazyLock<FlatTexture> =
             LazyLock::new(FlatTexture::default);
+=======
+        static DEFAULT_FLAT_TEXTURE: LazyLock<FlatTexture> = LazyLock::new(FlatTexture::default);
+>>>>>>> master
 
         &*DEFAULT_FLAT_TEXTURE
     }

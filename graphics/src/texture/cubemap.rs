@@ -5,7 +5,11 @@ use colour::ColourRGB;
 
 use super::{Texture, TextureHasBuilder};
 use crate::gl_call;
+<<<<<<< HEAD
 use crate::types::{TexDim, TexId, };
+=======
+use crate::types::{TexDim, TexId};
+>>>>>>> master
 
 mod builder;
 pub use builder::{Builder as CubeMapBuilder, FramebufferAttachment as CubeFrameBufferAttachment};
@@ -43,8 +47,13 @@ impl Default for CubeMap {
 impl TextureHasBuilder for CubeMap {
     type Builder = CubeMapBuilder<MissingData>;
 
+<<<<<<< HEAD
     fn builder() -> Self::Builder {
         Self::Builder::new()
+=======
+    fn builder() -> <Self as TextureHasBuilder>::Builder {
+        <Self as TextureHasBuilder>::Builder::new()
+>>>>>>> master
     }
 }
 

@@ -16,9 +16,9 @@ impl Slerp {
         let mut to = to.q();
         let mut dot = from.dot(to);
 
-        if ( long_way && dot.is_sign_positive() ) || dot.is_sign_negative() {
-                to = -to;
-                dot = -dot;
+        if (long_way && dot.is_sign_positive()) || dot.is_sign_negative() {
+            to = -to;
+            dot = -dot;
         }
 
         let omega = dot.acos();

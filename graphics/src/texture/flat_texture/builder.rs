@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 use std::marker::PhantomData;
+<<<<<<< HEAD
 use std::path::Path;
 use std::ptr;
 
@@ -14,6 +15,20 @@ use crate::framebuffer::traits::Attachment;
 use crate::gl_call;
 use crate::texture::{Magnification, Minification, TexBuilder, TexBuilderCanBuild, WrapType};
 use crate::types::{self, GLint, GLsizei, TexDim, TexId, };
+=======
+use std::ptr;
+
+use colour::ColourRGBA;
+use utils::{builder, new};
+
+use super::FlatTexture;
+use crate::framebuffer::attachments::{WithDepth, WithStencil, WithoutExtra};
+use crate::framebuffer::traits::Attachment;
+use crate::gl_call;
+use crate::texture::image::TexInternalFormat;
+use crate::texture::{Image, Magnification, Minification, TexBuilder, TexBuilderCanBuild, WrapType};
+use crate::types::{self, GLint,  TexDim, TexId};
+>>>>>>> master
 
 #[derive(Default, Debug)]
 pub struct Builder<T> {
@@ -29,12 +44,15 @@ pub struct MissingData;
 #[derive(Debug)]
 pub struct Dimensions((TexDim, TexDim));
 
+<<<<<<< HEAD
 #[derive(Debug)]
 pub enum ImageType {
     Srgba(image::FlatSamples<Vec<u8>>),
     Rgba(image::FlatSamples<Vec<u8>>),
     RgbaFloat(image::FlatSamples<Vec<f32>>),
 }
+=======
+>>>>>>> master
 
 #[derive(Debug)]
 pub struct FramebufferAttachment<X: Attachment> {
@@ -42,6 +60,7 @@ pub struct FramebufferAttachment<X: Attachment> {
     _att_type: PhantomData<X>,
 }
 
+<<<<<<< HEAD
 macro_rules! add_image {
     ($image_type:ident => $fn_name:ident, $into_func:ident) => {
         pub fn $fn_name<P: AsRef<Path> + Debug>(self, path: P) -> Result<Builder<ImageType>> {
@@ -64,6 +83,8 @@ macro_rules! add_image {
     };
 }
 
+=======
+>>>>>>> master
 impl Builder<MissingData> {
     new!();
 }
@@ -72,7 +93,11 @@ impl TexBuilder for Builder<MissingData> {
     type ExpectedFinal = FlatTexture;
     type ReadyToBuild = Builder<Dimensions>;
 
+<<<<<<< HEAD
     fn size(self, dims: (TexDim, TexDim)) -> Self::ReadyToBuild {
+=======
+    fn size(self, dims: (TexDim, TexDim)) -> <Self as TexBuilder>::ReadyToBuild {
+>>>>>>> master
         let image = Dimensions(dims);
 
         Builder { image, ..self }
@@ -86,11 +111,20 @@ impl<T> Builder<T> {
 
     builder!(mag_filter: Magnification);
 
+<<<<<<< HEAD
     add_image!(Srgba => srgba_image, into_rgba8);
 
     add_image!(Rgba => rgba_image, into_rgba8);
 
     add_image!(RgbaFloat => rgba_float_image, into_rgba32f);
+=======
+    pub fn image(self, image: Image) -> Builder<Image> {
+        Builder {
+            image,
+            ..self
+        }
+    }
+>>>>>>> master
 
     pub fn withoutextra_attachment(
         self,
@@ -128,12 +162,22 @@ impl<T> Builder<T> {
         Builder { image, ..self }
     }
 
+<<<<<<< HEAD
     pub fn monochrome(self, colour: ColourRGBA) -> Builder<ImageType> {
         let mut image = Rgba32FImage::new(1, 1);
         image.get_pixel_mut(0, 0).0 = colour.as_array();
         let image = ImageType::RgbaFloat(image.into_flat_samples());
 
         Builder { image, ..self }
+=======
+    pub fn monochrome(self, colour: ColourRGBA) -> Builder<Image> {
+        /*let mut image = Rgba32FImage::new(1, 1);
+        image.get_pixel_mut(0, 0).0 = colour.as_array();
+        let image = ImageType::RgbaFloat(image.into_flat_samples());
+        */
+
+        Builder { image: Image::new_monochrome(colour), ..self }
+>>>>>>> master
     }
 }
 
@@ -181,11 +225,18 @@ fn gen_tex_set_parameters<T>(builder: &Builder<T>) -> TexId {
     id
 }
 
+<<<<<<< HEAD
 impl Builder<ImageType> {
     pub fn build(self) -> FlatTexture {
         let id = gen_tex_set_parameters(&self);
 
         let (internalformat, width, height, type_, pixels) = match &self.image {
+=======
+impl Builder<Image> {
+    pub fn build(self) -> FlatTexture {
+        let id = gen_tex_set_parameters(&self);
+        /*let (internalformat, width, height, type_, pixels) = match &self.image {
+>>>>>>> master
             ImageType::Rgba(samples) => (
                 gl::RGBA as GLint,
                 TexDim::new(samples.layout.width as GLsizei),
@@ -207,19 +258,32 @@ impl Builder<ImageType> {
                 gl::FLOAT,
                 samples.samples.as_ptr().cast(),
             ),
+<<<<<<< HEAD
         };
+=======
+        };*/
+        let TexInternalFormat { internal_format, size: (width, height), type_, slice} = self.image.get_opengl_params();
+>>>>>>> master
 
         gl_call! {
             gl::TexImage2D(
                 gl::TEXTURE_2D,
                 0,
+<<<<<<< HEAD
                 internalformat,
+=======
+                internal_format,
+>>>>>>> master
                 width.to_primitive(),
                 height.to_primitive(),
                 0,
                 gl::RGBA,
                 type_,
+<<<<<<< HEAD
                 pixels,
+=======
+                slice.as_ptr().cast(),
+>>>>>>> master
             );
         }
 
@@ -239,7 +303,11 @@ impl Builder<ImageType> {
 impl TexBuilderCanBuild for Builder<Dimensions> {
     type Output = FlatTexture;
 
+<<<<<<< HEAD
     fn build(self) -> Self::Output {
+=======
+    fn build(self) -> <Self as TexBuilderCanBuild>::Output {
+>>>>>>> master
         let id = gen_tex_set_parameters(&self);
 
         gl_call! {
