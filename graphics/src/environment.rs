@@ -236,11 +236,7 @@ impl<G: GlobalState> Environment<G> {
     }
 
     #[expect(clippy::iter_not_returning_iterator)]
-<<<<<<< HEAD
-    fn iter(&mut self) -> FrameIter<G> {
-=======
     fn iter(&mut self) -> FrameIter<'_, G> {
->>>>>>> master
         FrameIter::new(self)
     }
 }

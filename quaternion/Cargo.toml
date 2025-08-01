@@ -5,8 +5,4 @@ edition = "2024"
 
 [dependencies]
 
-<<<<<<< HEAD
-linear_algebra = {path = "/home/oliver/sd/programming/rust/utilities/linear_algebra"}
-=======
 linear_algebra = {path = "../linear_algebra"}
->>>>>>> master

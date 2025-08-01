@@ -13,11 +13,7 @@ use crate::framebuffer::traits::{
 };
 use crate::gl_call;
 use crate::texture::{FlatTexture, Texture};
-<<<<<<< HEAD
-use crate::types::{FrameBufferId, TexDim, };
-=======
 use crate::types::{FrameBufferId, TexDim};
->>>>>>> master
 
 mod active_framebuffer;
 mod builder;
@@ -192,12 +188,8 @@ impl<const N: usize, D: AttachmentWithDepth> Framebuffer<N, D> {
     }
 
     /// # Safety
-<<<<<<< HEAD
-    /// User must not let reference live long enough to allow mutable borrowing via the Texture refcell
-=======
     /// User must not let reference live long enough to allow mutable borrowing
     /// via the Texture refcell
->>>>>>> master
     pub unsafe fn get_attachment_ref(&self) -> &dyn Texture {
         // SAFETY: to be upheld by caller
         unsafe { self.stencil_or_depth.get_texture_ref() }

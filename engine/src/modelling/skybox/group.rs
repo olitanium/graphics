@@ -3,11 +3,7 @@ use graphics::error::Result;
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Matrix;
-<<<<<<< HEAD
-use graphics::shader_program::{ShaderProgram, ShaderProgramContext};
-=======
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
->>>>>>> master
 
 use super::SkyBox;
 use crate::modelling::cubic::Camera;
@@ -21,10 +17,7 @@ pub struct Group<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> {
 
     skybox: &'a SkyBox,
     look_at: Matrix<4, 4>,
-<<<<<<< HEAD
-=======
     uniforms: Vec<(String, &'a dyn Uniform)>,
->>>>>>> master
 }
 
 impl<'a, const OUT: usize, X: FramebufferWithDepth<OUT>> Group<'a, OUT, X> {
@@ -34,10 +27,7 @@ impl<'a, const OUT: usize, X: FramebufferWithDepth<OUT>> Group<'a, OUT, X> {
         skybox: &'a SkyBox,
         camera: &Camera<O>,
         camera_hint: O::Hint,
-<<<<<<< HEAD
-=======
         uniforms: Vec<(String, &'a dyn Uniform)>,
->>>>>>> master
     ) -> Box<Self> {
         let proj = camera.projection;
         let view = {
@@ -54,10 +44,7 @@ impl<'a, const OUT: usize, X: FramebufferWithDepth<OUT>> Group<'a, OUT, X> {
             framebuffer,
             skybox,
             look_at,
-<<<<<<< HEAD
-=======
             uniforms,
->>>>>>> master
         })
     }
 }
@@ -74,11 +61,8 @@ impl<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw for Group<'a, OUT,
         active_shader.drawing_skybox(true);
         active_shader.set_uniform("projtimesview".to_string(), self.look_at);
 
-<<<<<<< HEAD
-=======
         active_shader.set_uniform_dyn(self.uniforms);
 
->>>>>>> master
         self.skybox
             .draw(&mut active_shader, &mut active_framebuffer)?;
 

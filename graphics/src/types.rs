@@ -13,11 +13,7 @@ macro_rules! opaque {
             fn from(value: gl::types::$type) -> Self {
                 Self::new(value)
             }
-<<<<<<< HEAD
-        } 
-=======
         }
->>>>>>> master
 
         impl $name {
             #[allow(dead_code)]
@@ -48,13 +44,8 @@ macro_rules! nz_opaque {
             fn from(value: gl::types::$type) -> Self {
                 Self::new(value)
             }
-<<<<<<< HEAD
-        } 
-        
-=======
         }
 
->>>>>>> master
         impl $name {
             pub(crate) fn new(value: gl::types::$type) -> Self {
                 $name(NonZero::new(value).unwrap())

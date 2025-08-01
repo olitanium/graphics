@@ -52,11 +52,7 @@ impl<const N: usize> Quad<N> {
 
     pub(crate) fn draw<'a, const OUT: usize, I: FramebufferWithoutExtra<OUT>>(
         &'a self,
-<<<<<<< HEAD
-        mut active_shader: ActiveShaderProgram<'_, '_, 'a, Self, I::Tex, OUT>,
-=======
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, I::Tex, OUT>,
->>>>>>> master
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, I>,
     ) -> Result<()> {
         let input = self.texture
@@ -67,10 +63,6 @@ impl<const N: usize> Quad<N> {
 
         active_shader.register_texture(input);
 
-<<<<<<< HEAD
-        self.vertex_array.draw(&active_shader, active_framebuffer)
-=======
         self.vertex_array.draw(active_shader, active_framebuffer)
->>>>>>> master
     }
 }

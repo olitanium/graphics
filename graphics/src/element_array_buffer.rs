@@ -3,17 +3,7 @@ use std::mem;
 use utils::getter;
 
 use crate::gl_call;
-<<<<<<< HEAD
-use crate::types::{
-    ElementArrayElem,
-    ElementArrayId,
-    ElementArrayLen,
-    GLsizei,
-    GLsizeiptr,
-    };
-=======
 use crate::types::{ElementArrayElem, ElementArrayId, ElementArrayLen, GLsizei, GLsizeiptr};
->>>>>>> master
 
 /// Tells OpenGL in which order the vertices of the VertexBuffer should be
 /// drawn. Internally (inside GPU memory) is an array of ElementArrayElem.

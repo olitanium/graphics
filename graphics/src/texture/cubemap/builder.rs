@@ -48,13 +48,8 @@ impl TexBuilder for Builder<MissingData> {
     type ExpectedFinal = CubeMap;
     type ReadyToBuild = Builder<Dimensions>;
 
-<<<<<<< HEAD
-    fn size(self, size: (TexDim, TexDim)) -> Self::ReadyToBuild {
-        Self::ReadyToBuild {
-=======
     fn size(self, size: (TexDim, TexDim)) -> <Self as TexBuilder>::ReadyToBuild {
         Builder {
->>>>>>> master
             data: Dimensions(size.0),
             ..self
         }
@@ -189,11 +184,7 @@ fn make_tex_set_parameters<T>(build: &Builder<T>) -> TexId {
 impl TexBuilderCanBuild for Builder<Dimensions> {
     type Output = CubeMap;
 
-<<<<<<< HEAD
-    fn build(self) -> Self::Output {
-=======
     fn build(self) -> <Self as TexBuilderCanBuild>::Output {
->>>>>>> master
         let id = make_tex_set_parameters(&self);
 
         let size = self.data.0;
@@ -221,11 +212,7 @@ impl TexBuilderCanBuild for Builder<Dimensions> {
             }
         }
 
-<<<<<<< HEAD
-        Self::Output { id, size }
-=======
         CubeMap { id, size }
->>>>>>> master
     }
 }
 

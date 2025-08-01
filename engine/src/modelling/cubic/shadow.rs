@@ -63,11 +63,7 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw for Group<'a, X> {
         sp_context: &mut ShaderProgramContext,
     ) -> Result<()> {
         self.list_light
-<<<<<<< HEAD
-            .gen_depth(sp_context, fb_context, &self.opaque, self.position)?;
-=======
             .gen_depth(sp_context, fb_context, &self.opaque, self.position, self.uniforms.clone())?;
->>>>>>> master
 
         // At this point, all lights have their framebuffers filled with depth
         // information
@@ -81,10 +77,7 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw for Group<'a, X> {
 
         active_shadow_shader.set_uniform("projtimesview".to_string(), self.look_at);
         active_shadow_shader.set_uniform("camera_postion".to_string(), self.position.homogeneous());
-<<<<<<< HEAD
-=======
         active_shadow_shader.set_uniform_dyn(self.uniforms);
->>>>>>> master
 
         let mut active_output_framebuffer = self.output_framebuffer.bind(fb_context);
         for (model, animation, time) in iter::chain(self.opaque, self.transparent) {

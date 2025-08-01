@@ -13,11 +13,8 @@ pub(crate) use flat_texture::{FlatTextureBuilder, FramebufferAttachment};
 // pub use material::Material;
 mod parameters;
 pub use parameters::{Magnification, Minification, MipMapInfo, WrapType};
-<<<<<<< HEAD
-=======
 mod image;
 pub use image::Image;
->>>>>>> master
 
 pub trait Texture {
     fn dyn_blank() -> &'static dyn Texture

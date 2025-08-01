@@ -2,10 +2,6 @@ use core::fmt;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-<<<<<<< HEAD
-use super::WithoutExtra;
-=======
->>>>>>> master
 use crate::framebuffer::traits::{AttachmentTextureInfo, OptTexBuilderMap};
 use crate::framebuffer::{
     self,
@@ -96,8 +92,4 @@ impl AttachmentWithDepth for WithDepth {
     unsafe fn get_texture_ref(&self) -> &FlatTexture {
         unsafe { self.texture.try_borrow_unguarded() }.unwrap()
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> master
