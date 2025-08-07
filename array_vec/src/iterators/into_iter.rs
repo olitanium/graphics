@@ -1,4 +1,5 @@
-use std::{iter::FusedIterator, mem::{self, MaybeUninit}};
+use std::iter::FusedIterator;
+use std::mem::{self, MaybeUninit};
 
 use crate::ArrayVec;
 
@@ -8,8 +9,8 @@ pub struct IntoIter<T, const N: usize> {
 }
 
 impl<T, const N: usize> IntoIterator for ArrayVec<T, N> {
-    type Item = T;
     type IntoIter = IntoIter<T, N>;
+    type Item = T;
 
     fn into_iter(self) -> Self::IntoIter {
         IntoIter {
@@ -37,7 +38,6 @@ impl<T, const N: usize> Iterator for IntoIter<T, N> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-
         // 0123456789
         // xx!2345678
 

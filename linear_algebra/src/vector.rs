@@ -1,9 +1,7 @@
 mod array_maths;
 
-use core::{
-    array,
-    ops::{Index, IndexMut},
-};
+use core::array;
+use core::ops::{Index, IndexMut};
 use std::ops::{AddAssign, Mul, SubAssign};
 
 use super::matrix::Matrix;
@@ -39,7 +37,8 @@ impl<const N: usize> Vector<N> {
 
     /// # Safety
     ///
-    /// The vector must be have a magnitude of 1.0, or this may break future optimisations
+    /// The vector must be have a magnitude of 1.0, or this may break future
+    /// optimisations
     #[must_use]
     #[inline]
     pub const unsafe fn new_normal_unchecked(input: [f32; N]) -> UnitVector<N> {
@@ -161,26 +160,29 @@ impl Vector<3> {
 }
 
 macro_rules! impl_ops {
-    ($trait:ident::$fn:ident) => {
+    ($trait:ident:: $fn:ident) => {
         use self::array_maths::$fn;
         impl<const N: usize> core::ops::$trait for Vector<N> {
             type Output = Self;
+
             #[inline]
             fn $fn(self, rhs: Self) -> Self::Output {
                 Self::new($fn(self.into_inner(), rhs.into_inner()))
             }
         }
-    
+
         impl<const N: usize> core::ops::$trait<UnitVector<N>> for Vector<N> {
             type Output = Self;
+
             #[inline]
             fn $fn(self, rhs: UnitVector<N>) -> Self::Output {
                 Self::Output::new($fn(self.into_inner(), rhs.0.into_inner()))
             }
         }
-    
+
         impl<const N: usize> core::ops::$trait<Vector<N>> for UnitVector<N> {
             type Output = Vector<N>;
+
             #[inline]
             fn $fn(self, rhs: Vector<N>) -> Vector<N> {
                 Vector::new($fn(self.0.into_inner(), rhs.into_inner()))
@@ -206,6 +208,7 @@ impl<const N: usize> SubAssign for Vector<N> {
 
 impl<const N: usize> Mul<f32> for Vector<N> {
     type Output = Self;
+
     fn mul(self, rhs: f32) -> Self::Output {
         self.scale(rhs)
     }
@@ -213,6 +216,7 @@ impl<const N: usize> Mul<f32> for Vector<N> {
 
 impl<const N: usize> Mul<Vector<N>> for f32 {
     type Output = Vector<N>;
+
     fn mul(self, rhs: Vector<N>) -> Self::Output {
         rhs * self
     }
@@ -307,8 +311,8 @@ impl<const N: usize> IndexMut<usize> for Vector<N> {
 }
 
 impl<const N: usize> IntoIterator for Vector<N> {
-    type Item = f32;
     type IntoIter = array::IntoIter<Self::Item, N>;
+    type Item = f32;
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
@@ -318,6 +322,7 @@ impl<const N: usize> IntoIterator for Vector<N> {
 
 impl<const N: usize> core::ops::Neg for Vector<N> {
     type Output = Self;
+
     #[inline]
     fn neg(self) -> Self::Output {
         self.flip()
@@ -392,8 +397,8 @@ impl<const N: usize> Index<usize> for UnitVector<N> {
 }
 
 impl<const N: usize> IntoIterator for UnitVector<N> {
-    type Item = f32;
     type IntoIter = array::IntoIter<Self::Item, N>;
+    type Item = f32;
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {

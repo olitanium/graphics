@@ -3,11 +3,13 @@ use std::array;
 use crate::{ColourRGB, ColourRGBA};
 
 impl IntoIterator for ColourRGBA {
-    type Item = f32;
     type IntoIter = RGBAIntoIter;
+    type Item = f32;
 
     fn into_iter(self) -> Self::IntoIter {
-        RGBAIntoIter { inner: self.0.into_iter() }
+        RGBAIntoIter {
+            inner: self.0.into_iter(),
+        }
     }
 }
 
@@ -24,11 +26,13 @@ impl Iterator for RGBAIntoIter {
 }
 
 impl IntoIterator for ColourRGB {
-    type Item = f32;
     type IntoIter = RGBIntoIter;
+    type Item = f32;
 
     fn into_iter(self) -> Self::IntoIter {
-        RGBIntoIter { inner: self.0.into_iter() }
+        RGBIntoIter {
+            inner: self.0.into_iter(),
+        }
     }
 }
 

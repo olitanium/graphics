@@ -269,9 +269,13 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
     {
         builder = builder.diffuse(
             FlatTexture::builder()
-                .image(Image::new_from_srgba([dir, filepath.as_ref()].into_iter().collect::<PathBuf>()).map_err(|error| Error::Graphics { error })?)
+                .image(
+                    Image::new_from_srgba(
+                        [dir, filepath.as_ref()].into_iter().collect::<PathBuf>(),
+                    )
+                    .map_err(|error| Error::Graphics { error })?,
+                )
                 //.srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
-                
                 .build(),
         );
     }
@@ -283,7 +287,12 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
             FlatTexture::builder()
                 //.srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
                 //.map_err(|error| Error::Graphics { error })?
-                .image(Image::new_from_srgba([dir, filepath.as_ref()].into_iter().collect::<PathBuf>()).map_err(|error| Error::Graphics { error })?)
+                .image(
+                    Image::new_from_srgba(
+                        [dir, filepath.as_ref()].into_iter().collect::<PathBuf>(),
+                    )
+                    .map_err(|error| Error::Graphics { error })?,
+                )
                 .build(),
         );
     }
@@ -293,7 +302,10 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
     {
         builder = builder.normal_map(
             FlatTexture::builder()
-                .image(Image::new_from_rgba([dir, filepath.as_ref()].into_iter().collect::<PathBuf>()).map_err(|error| Error::Graphics { error })?)
+                .image(
+                    Image::new_from_rgba([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
+                        .map_err(|error| Error::Graphics { error })?,
+                )
                 //.rgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
                 //.map_err(|error| Error::Graphics { error })?
                 .build(),

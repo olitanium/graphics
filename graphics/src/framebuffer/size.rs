@@ -6,21 +6,6 @@ use crate::texture::Texture;
 use crate::types::TexDim;
 
 impl<const N: usize, D: Attachment> Framebuffer<N, D> {
-    /// Get the size of the framebuffer
-    /// # Panics
-    /// Panics when attachement is `WithoutExtra` and there are zero colour
-    /// buffers i.e. `N == 0`
-    pub fn size(&self) -> (TexDim, TexDim) {
-        self.get_colour(0)
-            .map_or_else(|| self.stencil_or_depth.size(), |tex| tex.borrow().size())
-    }
-
-    /// Calculate the aspect ratio (x/y)
-    pub fn aspect_ratio(&self) -> f32 {
-        let (x, y) = self.size();
-        x.to_primitive() as f32 / y.to_primitive() as f32
-    }
-
     /// Resize the colour and optional attachements to new size
     // TODO: enable destructive use of `self.data.stencil_or_depth`
     pub fn resize(&mut self, size: (TexDim, TexDim)) {
@@ -37,18 +22,5 @@ impl<const N: usize, D: Attachment> Framebuffer<N, D> {
         }
 
         mem::swap(self, &mut new);
-    }
-}
-
-impl DefaultFramebuffer {
-    /// Get the size of the framebuffer
-    pub fn size(&self) -> (TexDim, TexDim) {
-        self.size
-    }
-
-    /// Calculate the aspect ratio (x/y)
-    pub fn aspect_ratio(&self) -> f32 {
-        let (x, y) = self.size();
-        x.to_primitive() as f32 / y.to_primitive() as f32
     }
 }

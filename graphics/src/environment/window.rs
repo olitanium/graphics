@@ -1,3 +1,7 @@
+use std::cell::Cell;
+use std::mem::ManuallyDrop;
+use std::ptr;
+
 use glfw::{Context, Glfw, GlfwReceiver, PWindow, WindowEvent};
 use utils::{builder, new};
 
@@ -5,18 +9,21 @@ use super::input::keyboard::Keyboard;
 use super::input::mouse::{CursorMode, Mouse};
 use crate::environment::Error;
 use crate::error::Result;
-use crate::framebuffer::DefaultFramebuffer;
+use crate::framebuffer::attachments::{WithStencil, WithoutExtra};
+use crate::framebuffer::traits::AttachmentWithStencil;
+use crate::framebuffer::{self, DefaultFramebuffer, Framebuffer};
 use crate::types::TexDim;
+use crate::{Event, gl_call};
 
 #[expect(dead_code)]
 #[derive(Debug)]
 pub struct Window {
-    glfw_window: PWindow,
-    pub(crate) default_framebuffer: DefaultFramebuffer,
+    glfw_window: PWindow, // DefaultFramebuffer,
+    default_framebuffer: DefaultFramebuffer,
     events: GlfwReceiver<(f64, WindowEvent)>,
-    window_resized: Box<bool>,
-    keyboard: Keyboard,
-    mouse: Mouse,
+    pub(crate) window_resized: Box<Cell<bool>>,
+    pub(crate) keyboard: Keyboard,
+    pub(crate) mouse: Mouse,
 }
 
 impl Window {
@@ -29,24 +36,8 @@ impl Window {
         (TexDim::new(width), TexDim::new(height))
     }
 
-    pub(crate) fn mouse(&self) -> &Mouse {
-        &self.mouse
-    }
-
-    pub(crate) fn mouse_mut(&mut self) -> &mut Mouse {
-        &mut self.mouse
-    }
-
-    pub(crate) fn keyboard(&self) -> &Keyboard {
-        &self.keyboard
-    }
-
-    pub(crate) fn keyboard_mut(&mut self) -> &mut Keyboard {
-        &mut self.keyboard
-    }
-
     pub(crate) fn window_resized(&self) -> bool {
-        *self.window_resized
+        self.window_resized.get()
     }
 
     pub(crate) fn should_close(&self) -> bool {
@@ -57,8 +48,53 @@ impl Window {
         self.glfw_window.swap_buffers();
     }
 
+    pub(crate) fn poll_events(&mut self) -> Vec<Event<'_>> {
+        let mut event_buffer = vec![
+            Event::Keyboard(self.keyboard.get_depressed_keys()),
+            Event::Mouse {
+                buttons: self.mouse.get_buttons_depressed(),
+                position: self.mouse.get_position(),
+                delta: self.mouse.get_delta(),
+            },
+        ];
+
+        if self.window_resized() {
+            event_buffer.push(Event::WindowResize(self.get_framebuffer_size()));
+        }
+
+        let typing_buffer = self.keyboard.get_buffer();
+        event_buffer.push(Event::WindowBuffer(&self.default_framebuffer));
+        event_buffer.push(Event::TextBuffer(typing_buffer));
+
+        event_buffer
+    }
+
+    pub(crate) fn make_current(&mut self) {
+        self.glfw_window.make_current();
+    }
+
     pub fn set_cursor_mode(&mut self, mode: CursorMode) {
         self.glfw_window.set_cursor_mode(mode);
+    }
+
+    pub fn configure(&mut self) {
+        gl_call! {
+            gl::Enable(gl::BLEND);
+        }
+        gl_call! {
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+        }
+
+        gl_call! {
+            gl::Enable(gl::DEBUG_OUTPUT);
+        }
+        gl_call! {
+            gl::DebugMessageCallback(Some(crate::environment::debug_callback), ptr::null());
+        }
+
+        gl_call! {
+            gl::ClearColor(0.1, 0.0, 0.1, 1.0);
+        }
     }
 }
 
@@ -67,9 +103,12 @@ pub struct MissingGlfw;
 #[derive(Debug)]
 pub struct HasGlfw<'a>(&'a mut Glfw);
 
+pub struct FromOtherWindow<'a>(&'a mut Window);
+
 #[derive(Debug)]
 pub struct Builder<G> {
-    glfw: G,
+    maker: G,
+    suppress_config: bool,
     dims: (u32, u32),
     mouse_fix_to_centre: bool,
     title: String,
@@ -80,7 +119,8 @@ pub struct Builder<G> {
 impl Default for Builder<MissingGlfw> {
     fn default() -> Self {
         Self {
-            glfw: MissingGlfw,
+            maker: MissingGlfw,
+            suppress_config: false,
             dims: (480, 360),
             mouse_fix_to_centre: false,
             title: String::new(),
@@ -95,7 +135,14 @@ impl Builder<MissingGlfw> {
 
     pub fn glfw(self, glfw: &mut Glfw) -> Builder<HasGlfw<'_>> {
         Builder {
-            glfw: HasGlfw(glfw),
+            maker: HasGlfw(glfw),
+            ..self
+        }
+    }
+
+    pub fn share_with(self, window: &mut Window) -> Builder<FromOtherWindow<'_>> {
+        Builder {
+            maker: FromOtherWindow(window),
             ..self
         }
     }
@@ -103,6 +150,8 @@ impl Builder<MissingGlfw> {
 
 impl<G> Builder<G> {
     builder!(mouse_fix_to_centre: bool);
+
+    builder!(suppress_config: bool);
 
     builder!(title: String);
 
@@ -116,8 +165,8 @@ impl<G> Builder<G> {
 impl Builder<HasGlfw<'_>> {
     pub(crate) fn build(self) -> Result<Window> {
         // Create a windowed mode window and its OpenGL context
-        let (mut glfw_window, events) = self
-            .glfw
+        let (glfw_window, events) = self
+            .maker
             .0
             .create_window(
                 self.dims.0,
@@ -130,35 +179,73 @@ impl Builder<HasGlfw<'_>> {
                 },
             )
             .ok_or(Error::GlfwWindow)?;
-
-        glfw_window.make_current();
-        glfw_window.set_key_polling(true);
-
-        let mut window_resized = Box::new(false);
-
-        let resized_ptr = Box::as_mut_ptr(&mut window_resized);
-        glfw_window.set_framebuffer_size_callback(move |_window, _width, _height| unsafe {
-            *resized_ptr = true
-        });
-
-        if self.glfw.0.supports_raw_motion() && self.raw_motion {
-            glfw_window.set_raw_mouse_motion(true);
-        }
-
-        let keyboard = Keyboard::new(&mut glfw_window);
-        let mouse = Mouse::new(&mut glfw_window, self.mouse_fix_to_centre);
-
-        let size = glfw_window.get_framebuffer_size();
-        let size = (TexDim::new(size.0), TexDim::new(size.1));
-        let default_framebuffer = DefaultFramebuffer::new(size);
-
-        Ok(Window {
-            window_resized,
-            default_framebuffer,
-            events,
-            glfw_window,
-            keyboard,
-            mouse,
-        })
+        Ok(make_window(self, glfw_window, events))
     }
+}
+
+impl Builder<FromOtherWindow<'_>> {
+    pub(crate) fn build(self) -> Result<Window> {
+        // Create a windowed mode window and its OpenGL context
+        let (glfw_window, events) = self
+            .maker
+            .0
+            .glfw_window
+            .create_shared(
+                self.dims.0,
+                self.dims.1,
+                &self.title,
+                if self.windowed {
+                    glfw::WindowMode::Windowed
+                } else {
+                    todo!("fullscreen not supported");
+                },
+            )
+            .ok_or(Error::GlfwWindow)?;
+
+        self.maker.0.make_current();
+
+        Ok(make_window(self, glfw_window, events))
+    }
+}
+
+fn make_window<T>(
+    builder: Builder<T>,
+    mut glfw_window: PWindow,
+    events: GlfwReceiver<(f64, WindowEvent)>,
+) -> Window {
+    glfw_window.make_current();
+    glfw_window.set_key_polling(true);
+
+    let mut window_resized = Box::new(Cell::new(false));
+
+    let resized_ptr = Box::as_ptr(&mut window_resized);
+    glfw_window.set_framebuffer_size_callback(move |_window, _width, _height| unsafe {
+        resized_ptr.as_ref().expect("FROM BOX").set(true);
+    });
+
+    if glfw_window.glfw.supports_raw_motion() && builder.raw_motion {
+        glfw_window.set_raw_mouse_motion(true);
+    }
+
+    let keyboard = Keyboard::new(&mut glfw_window);
+    let mouse = Mouse::new(&mut glfw_window, builder.mouse_fix_to_centre);
+
+    let size = glfw_window.get_framebuffer_size();
+    let size = (TexDim::new(size.0), TexDim::new(size.1));
+    let default_framebuffer = DefaultFramebuffer::new(size);
+
+    let mut window = Window {
+        window_resized,
+        default_framebuffer,
+        events,
+        glfw_window,
+        keyboard,
+        mouse,
+    };
+
+    if !builder.suppress_config {
+        window.configure();
+    }
+
+    window
 }

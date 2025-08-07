@@ -63,7 +63,7 @@ impl FramebufferInternals<1> for DefaultFramebuffer {
         self.size
     }
 
-    fn enables(context: &mut FramebufferContext) {
+    fn enables(&self, context: &mut FramebufferContext) {
         context.depth_testing(true);
         context.stencil_testing(true);
         context.srgb_framebuffer(true);
@@ -120,7 +120,7 @@ impl<const OUT: usize, X: Attachment> FramebufferInternals<OUT> for Framebuffer<
             .map_or_else(|| self.stencil_or_depth.size(), |tex| tex.borrow().size())
     }
 
-    fn enables(context: &mut FramebufferContext) {
+    fn enables(&self, context: &mut FramebufferContext) {
         X::enables(context)
     }
 }

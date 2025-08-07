@@ -3,6 +3,7 @@ use std::rc::Rc;
 
 use engine::array_vec::ArrayVec;
 use engine::framebuffer::Builder;
+use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::camera;
 use engine::modelling::cubic::camera::CameraPose;

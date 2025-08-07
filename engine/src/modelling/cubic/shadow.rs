@@ -27,7 +27,7 @@ pub struct Group<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> {
     opaque: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
     transparent: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
 
-    uniforms: Vec<(String, &'a dyn Uniform)>
+    uniforms: Vec<(String, &'a dyn Uniform)>,
 }
 
 impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
@@ -62,8 +62,13 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw for Group<'a, X> {
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
     ) -> Result<()> {
-        self.list_light
-            .gen_depth(sp_context, fb_context, &self.opaque, self.position, self.uniforms.clone())?;
+        self.list_light.gen_depth(
+            sp_context,
+            fb_context,
+            &self.opaque,
+            self.position,
+            self.uniforms.clone(),
+        )?;
 
         // At this point, all lights have their framebuffers filled with depth
         // information

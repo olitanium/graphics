@@ -84,7 +84,7 @@ impl<'a, 'b, const OUT: usize, D: FramebufferInternals<OUT>> ActiveFramebuffer<'
             gl::Viewport(0, 0, width.to_primitive(), height.to_primitive());
         }
 
-        D::enables(context);
+        framebuffer.enables(context);
 
         Self {
             _framebuffer: PhantomData,

@@ -12,7 +12,7 @@ impl<T, const N: usize> FromIterator<T> for ArrayVec<T, N> {
 
         for elem in iter {
             match out.push_within_capacity(elem) {
-                Ok(()) => {},
+                Ok(()) => {}
                 Err(_) => return out,
             }
         }

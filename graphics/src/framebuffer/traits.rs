@@ -74,7 +74,7 @@ pub trait FramebufferInternals<const OUT: usize>: Sized {
     }
     fn id(&self) -> &FrameBufferId;
 
-    fn enables(context: &mut FramebufferContext);
+    fn enables(&self, context: &mut FramebufferContext);
 
     fn bind<'a, 'b>(
         &'a self,

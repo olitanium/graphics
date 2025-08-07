@@ -13,18 +13,16 @@ where
     }
 }
 
-impl<F> HeapMultiZip<F>
-{
+impl<F> HeapMultiZip<F> {
     #[inline]
     pub fn new<T>(iters: T) -> Self
     where
         T: IntoIterator,
-        <T as IntoIterator>::Item: IntoIterator<IntoIter = F>
+        <T as IntoIterator>::Item: IntoIterator<IntoIter = F>,
     {
         Self(iters.into_iter().map(|x| x.into_iter()).collect())
     }
 }
-
 
 // T -> [S; N]
 // T: IntoIterator<Item = S>

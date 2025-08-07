@@ -9,7 +9,7 @@ fn pop_push() {
         vec.push(elem);
     }
     assert_eq!(vec.push_within_capacity(11), Err(11));
-    
+
     for elem in (0..10).rev() {
         assert_eq!(vec.pop(), Some(elem));
     }
@@ -22,7 +22,7 @@ fn iter() {
     use super::ArrayVec;
 
     let mut vec: ArrayVec<_, 10> = (0..20_usize).collect();
-    
+
     assert_eq!(vec.pop(), Some(9));
 
     for (index, item) in vec.into_iter().enumerate() {
@@ -39,8 +39,4 @@ fn rev() {
     for (index, item) in vec.into_iter().rev().enumerate() {
         assert_eq!(9 - item, index);
     }
-
-
 }
-
-

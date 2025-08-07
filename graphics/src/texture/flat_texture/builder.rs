@@ -10,8 +10,15 @@ use crate::framebuffer::attachments::{WithDepth, WithStencil, WithoutExtra};
 use crate::framebuffer::traits::Attachment;
 use crate::gl_call;
 use crate::texture::image::TexInternalFormat;
-use crate::texture::{Image, Magnification, Minification, TexBuilder, TexBuilderCanBuild, WrapType};
-use crate::types::{self, GLint,  TexDim, TexId};
+use crate::texture::{
+    Image,
+    Magnification,
+    Minification,
+    TexBuilder,
+    TexBuilderCanBuild,
+    WrapType,
+};
+use crate::types::{self, GLint, TexDim, TexId};
 
 #[derive(Default, Debug)]
 pub struct Builder<T> {
@@ -26,7 +33,6 @@ pub struct MissingData;
 
 #[derive(Debug)]
 pub struct Dimensions((TexDim, TexDim));
-
 
 #[derive(Debug)]
 pub struct FramebufferAttachment<X: Attachment> {
@@ -57,10 +63,7 @@ impl<T> Builder<T> {
     builder!(mag_filter: Magnification);
 
     pub fn image(self, image: Image) -> Builder<Image> {
-        Builder {
-            image,
-            ..self
-        }
+        Builder { image, ..self }
     }
 
     pub fn withoutextra_attachment(
@@ -100,12 +103,14 @@ impl<T> Builder<T> {
     }
 
     pub fn monochrome(self, colour: ColourRGBA) -> Builder<Image> {
-        /*let mut image = Rgba32FImage::new(1, 1);
-        image.get_pixel_mut(0, 0).0 = colour.as_array();
-        let image = ImageType::RgbaFloat(image.into_flat_samples());
-        */
+        // let mut image = Rgba32FImage::new(1, 1);
+        // image.get_pixel_mut(0, 0).0 = colour.as_array();
+        // let image = ImageType::RgbaFloat(image.into_flat_samples());
 
-        Builder { image: Image::new_monochrome(colour), ..self }
+        Builder {
+            image: Image::new_monochrome(colour),
+            ..self
+        }
     }
 }
 
@@ -156,30 +161,35 @@ fn gen_tex_set_parameters<T>(builder: &Builder<T>) -> TexId {
 impl Builder<Image> {
     pub fn build(self) -> FlatTexture {
         let id = gen_tex_set_parameters(&self);
-        /*let (internalformat, width, height, type_, pixels) = match &self.image {
-            ImageType::Rgba(samples) => (
-                gl::RGBA as GLint,
-                TexDim::new(samples.layout.width as GLsizei),
-                TexDim::new(samples.layout.height as GLsizei),
-                gl::UNSIGNED_BYTE,
-                samples.samples.as_ptr().cast(),
-            ),
-            ImageType::Srgba(samples) => (
-                gl::SRGB_ALPHA as GLint,
-                TexDim::new(samples.layout.width as GLsizei),
-                TexDim::new(samples.layout.height as GLsizei),
-                gl::UNSIGNED_BYTE,
-                samples.samples.as_ptr().cast(),
-            ),
-            ImageType::RgbaFloat(samples) => (
-                gl::RGBA16F as GLint,
-                TexDim::new(samples.layout.width as GLsizei),
-                TexDim::new(samples.layout.height as GLsizei),
-                gl::FLOAT,
-                samples.samples.as_ptr().cast(),
-            ),
-        };*/
-        let TexInternalFormat { internal_format, size: (width, height), type_, slice} = self.image.get_opengl_params();
+        // let (internalformat, width, height, type_, pixels) = match &self.image {
+        // ImageType::Rgba(samples) => (
+        // gl::RGBA as GLint,
+        // TexDim::new(samples.layout.width as GLsizei),
+        // TexDim::new(samples.layout.height as GLsizei),
+        // gl::UNSIGNED_BYTE,
+        // samples.samples.as_ptr().cast(),
+        // ),
+        // ImageType::Srgba(samples) => (
+        // gl::SRGB_ALPHA as GLint,
+        // TexDim::new(samples.layout.width as GLsizei),
+        // TexDim::new(samples.layout.height as GLsizei),
+        // gl::UNSIGNED_BYTE,
+        // samples.samples.as_ptr().cast(),
+        // ),
+        // ImageType::RgbaFloat(samples) => (
+        // gl::RGBA16F as GLint,
+        // TexDim::new(samples.layout.width as GLsizei),
+        // TexDim::new(samples.layout.height as GLsizei),
+        // gl::FLOAT,
+        // samples.samples.as_ptr().cast(),
+        // ),
+        // };
+        let TexInternalFormat {
+            internal_format,
+            size: (width, height),
+            type_,
+            slice,
+        } = self.image.get_opengl_params();
 
         gl_call! {
             gl::TexImage2D(

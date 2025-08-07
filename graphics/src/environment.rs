@@ -11,10 +11,10 @@ pub use global_state::GlobalState;
 pub use input::keyboard::Key;
 pub use input::mouse::Button;
 use utils::error_boilerplate;
-use window::Window;
+pub use window::Window;
 
 use crate::error::Result;
-use crate::framebuffer::FramebufferContext;
+use crate::framebuffer::{DefaultFramebuffer, FramebufferContext};
 use crate::gl_call;
 use crate::shader_program::ShaderProgramContext;
 use crate::types::TexDim;
@@ -83,12 +83,13 @@ extern "system" fn debug_callback(
 }
 
 #[derive(Debug)]
-pub enum Event {
+pub enum Event<'a> {
     CriticalFault,
+    WindowBuffer(&'a DefaultFramebuffer),
     FrameTime(f64),
     ActualTime(f64),
     WindowResize((TexDim, TexDim)),
-    TextBuffer(String),
+    TextBuffer(&'a mut String),
     Keyboard(HashSet<Key>),
     Mouse {
         buttons: HashSet<Button>,
@@ -101,6 +102,7 @@ pub enum Event {
 pub struct Environment<G: GlobalState> {
     global_state: G,
     window: Window,
+    // window2: Window,
     old_frame: f64,
     glfw: glfw::Glfw,
 }
@@ -123,7 +125,8 @@ impl<G: GlobalState> Environment<G> {
             glfw::OpenGlProfileHint::Core,
         ));
 
-        let window = Window::builder()
+        let mut window = Window::builder()
+            .suppress_config(true)
             .dims(screen_dims)
             .mouse_fix_to_centre(mouse_fix_to_centre)
             .title(title)
@@ -136,23 +139,15 @@ impl<G: GlobalState> Environment<G> {
         // we need a GL context before we can load OpenGL functions
         gl::load_with(|s| glfw.get_proc_address_raw(s));
 
-        gl_call! {
-            gl::Enable(gl::BLEND);
-        }
-        gl_call! {
-            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-        }
+        window.configure();
 
-        gl_call! {
-            gl::Enable(gl::DEBUG_OUTPUT);
-        }
-        gl_call! {
-            gl::DebugMessageCallback(Some(debug_callback), ptr::null());
-        }
-
-        gl_call! {
-            gl::ClearColor(0.1, 0.0, 0.1, 1.0);
-        }
+        // let window2 = Window::builder()
+        // .dims(screen_dims)
+        // .share_with(&window)
+        // .mouse_fix_to_centre(mouse_fix_to_centre)
+        // .title(title)
+        // .raw_motion(true)
+        // .build()?;
 
         let global_state = G::new(window.get_framebuffer_size())?;
 
@@ -166,24 +161,19 @@ impl<G: GlobalState> Environment<G> {
         })
     }
 
-    fn poll(&mut self) -> Result<Vec<Box<dyn Draw + '_>>> {
-        match self.calculate_events() {
-            Ok(events) => self
-                .global_state
-                .poll(events, &self.window.default_framebuffer),
-            Err(error) => Err(error),
-        }
-    }
-
     pub fn run(&mut self) -> Result<()> {
         // Substitute for `for to_draw in env.iter() {`
-        let mut frame_iter = self.iter();
+        // self.window.make_current();
+
         let mut shader_program_marker =
             ShaderProgramContext::new().expect("First invocation means only one marker");
         let mut framebuffer_register =
             FramebufferContext::new().expect("First invocation means only one register");
 
+        let mut frame_iter = self.iter();
         while let Some(result) = frame_iter.next() {
+            // for (window, result) in [(&mut self.window, result), (&mut self.window2,
+            // result_2)] { window.make_current();
             match result {
                 Ok(to_draw) => {
                     framebuffer_register.clear();
@@ -194,45 +184,40 @@ impl<G: GlobalState> Environment<G> {
                 }
                 Err(error) => return Err(error),
             }
+            //}
         }
 
         Ok(())
     }
 
-    fn end_render(&mut self) {
-        // Poll for and process events
-        self.glfw.poll_events();
-        // Swap front and back buffers
-        self.window.swap_buffers();
-        // self.window2.swap_buffers();
-    }
+    // fn end_render(&mut self) {
+    // Poll for and process events
+    // self.glfw.poll_events();
+    // Swap front and back buffers
+    // self.window.swap_buffers();
+    // self.window2.swap_buffers();
+    // }
 
-    fn calculate_events(&mut self) -> Result<Vec<Event>> {
+    fn poll(&mut self) -> Result<Vec<Box<dyn Draw + '_>>> {
         let curr_time = self.glfw.get_time();
         let frametime = curr_time - self.old_frame;
         self.old_frame = curr_time;
 
-        let mut event_buffer = vec![
-            Event::FrameTime(frametime),
-            Event::ActualTime(curr_time),
-            Event::Keyboard(self.window.keyboard().get_depressed_keys()),
-            Event::Mouse {
-                buttons: self.window.mouse().get_buttons_depressed(),
-                position: self.window.mouse().get_position(),
-                delta: self.window.mouse_mut().get_delta(),
-            },
-        ];
+        // let event_buffer = [&mut self.window, &mut self.window2].map(|window| {
+        let window = &mut self.window;
+        let mut events = window.poll_events();
 
-        let typing_buffer = self.window.keyboard_mut().get_reset_buffer();
-        if !typing_buffer.is_empty() {
-            event_buffer.push(Event::TextBuffer(typing_buffer))
-        }
+        events.push(Event::ActualTime(curr_time));
+        events.push(Event::FrameTime(frametime));
+        //    events
+        //});
+        // let window = &mut self.window2;
+        // window.make_current();
+        // let mut event_buffer = window.poll_events();
+        // event_buffer.push(Event::ActualTime(curr_time));
+        // event_buffer.push(Event::FrameTime(frametime));
 
-        if self.window.window_resized() {
-            event_buffer.push(Event::WindowResize(self.window.get_framebuffer_size()));
-        }
-
-        Ok(event_buffer)
+        self.global_state.poll(events)
     }
 
     #[expect(clippy::iter_not_returning_iterator)]
@@ -254,12 +239,15 @@ impl<'env, G: GlobalState> FrameIter<'env, G> {
 impl<'env, G: GlobalState> FrameIter<'env, G> {
     pub fn next(&mut self) -> Option<Result<Vec<Box<dyn Draw + '_>>>> {
         if !self.env.window.should_close() {
-            self.env.end_render();
+            // Poll for and process events
+            self.env.glfw.poll_events();
+            // Swap front and back buffers
+            self.env.window.swap_buffers();
+            // self.env.window2.swap_buffers();
 
             match self.env.poll() {
-                Ok(vec) => Some(Ok(vec)),
                 Err(crate::error::Error::Close) => None,
-                Err(err) => Some(Err(err)),
+                x => Some(x),
             }
         } else {
             None

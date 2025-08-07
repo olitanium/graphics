@@ -1,5 +1,5 @@
 macro_rules! elem_wise {
-    ($trait:ident::$fn:ident) => {
+    ($trait:ident:: $fn:ident) => {
         #[inline]
         pub fn $fn<const N: usize>(lhs: [f32; N], rhs: [f32; N]) -> [f32; N] {
             let mut out = [0.0; N];
@@ -14,7 +14,7 @@ macro_rules! elem_wise {
 elem_wise!(Add::add);
 elem_wise!(Sub::sub);
 elem_wise!(Mul::mul);
-//elem_wise!(Div::div);
+// elem_wise!(Div::div);
 
 #[inline]
 pub fn dot<const N: usize>(v1: [f32; N], v2: [f32; N]) -> f32 {

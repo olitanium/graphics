@@ -1,5 +1,5 @@
 mod vec;
-//mod array;
+// mod array;
 
 pub use vec::HeapMultiZip as MultiZip;
-//pub use array::MultiZip;
+// pub use array::MultiZip;

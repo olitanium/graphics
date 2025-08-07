@@ -9,7 +9,7 @@ impl State {
         &mut self,
         mouse_delta: (f32, f32),
         keyboard: HashSet<Key>,
-        typing_string: String,
+        string: &mut String,
         frame_time: f32,
     ) -> Result<()> {
         if keyboard.contains(&Key::Escape) {
@@ -26,7 +26,7 @@ impl State {
             self.camera.pose.move_left(-self.speed[0] * frame_time)
             // self.camera.move_right(self.speed[0] * frame_time);
         }
-        if typing_string.to_lowercase().contains('b') {
+        if string.to_lowercase().contains('b') {
             self.do_bloom = !self.do_bloom;
         }
         if keyboard.contains(&Key::S) {
@@ -60,7 +60,7 @@ impl State {
         if keyboard.contains(&Key::J) {
             self.camera.radius_out(0.5 * frame_time);
         }
-        if typing_string.contains('y') {
+        if string.to_lowercase().contains('y') {
             self.which_animation = (self.which_animation + 1) % 2
         }
         if keyboard.contains(&Key::Comma) {
@@ -68,6 +68,10 @@ impl State {
         }
         if keyboard.contains(&Key::Period) {
             self.camera.pose.roll_ccw(-frame_time);
+        }
+
+        if string.ends_with('Q') {
+            string.clear();
         }
 
         self.camera

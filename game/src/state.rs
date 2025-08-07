@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use engine::framebuffer::attachments::WithDepth;
+use engine::framebuffer::traits::FramebufferInternals;
 use engine::framebuffer::{DefaultFramebuffer, Framebuffer};
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::Camera;
@@ -53,16 +54,18 @@ pub struct State {
 impl GlobalState for State {
     fn poll<'a>(
         &'a mut self,
-        events: Vec<Event>,
-        default_framebuffer: &'a DefaultFramebuffer,
+        events: Vec<Event<'a>>,
+        // default_framebuffer: &'a DefaultFramebuffer,
     ) -> Result<Vec<Box<dyn Draw + 'a>>> {
         let mut frame_time = 0.0;
         let mut keyboard = HashSet::new();
         let mut mouse_delta = (0.0, 0.0);
-        let mut typing_string = String::new();
-
+        let mut string = String::new();
+        let mut local_string = &mut string;
+        let mut default_fb = None;
         for event in events {
             match event {
+                Event::WindowBuffer(buffer) => default_fb = Some(buffer),
                 Event::CriticalFault => return Err(engine::Error::Close),
                 Event::FrameTime(ft) => frame_time = ft as f32,
                 Event::ActualTime(at) => self.time = at as f32,
@@ -77,7 +80,7 @@ impl GlobalState for State {
                     };
                 }
                 Event::Keyboard(kb) => keyboard = kb,
-                Event::TextBuffer(string) => typing_string = string,
+                Event::TextBuffer(string) => local_string = string,
                 Event::Mouse {
                     buttons: _,
                     position: _,
@@ -88,15 +91,14 @@ impl GlobalState for State {
             }
         }
 
-        // println!("framerate: {}", 1.0 / frame_time);
+        println!("framerate: {}", 1.0 / frame_time);
+        println!("string: {}", local_string);
 
-        self.string.push_str(&typing_string);
-
-        self.controls(mouse_delta, keyboard, typing_string, frame_time)?;
+        self.controls(mouse_delta, keyboard, local_string, frame_time)?;
 
         self.physics(frame_time);
 
-        self.prep_draw(default_framebuffer)
+        self.prep_draw(default_fb.unwrap())
     }
 
     fn new(initial_size: (TexDim, TexDim)) -> Result<Self> {
@@ -179,6 +181,13 @@ impl State {
                 vec![&self.quad_to_draw],
                 vec![(String::from("exposure"), &self.exposure)],
             ));
+
+            // out.push(QuadGroup::new(
+            // engine::opengl_shaders::exposure(),
+            // other_buffer,
+            // vec![&self.quad_to_draw],
+            // vec![(String::from("exposure"), &self.exposure)],
+            // ));
         }
 
         Ok(out)

@@ -1,4 +1,5 @@
-use std::{iter::FusedIterator, mem::MaybeUninit};
+use std::iter::FusedIterator;
+use std::mem::MaybeUninit;
 
 use crate::ArrayVec;
 
@@ -8,23 +9,22 @@ pub struct Iter<'a, T, const N: usize> {
     pub(super) end_index: usize,
 }
 
-
 impl<'a, T, const N: usize> IntoIterator for &'a ArrayVec<T, N> {
-    type Item = &'a T;
     type IntoIter = Iter<'a, T, N>;
+    type Item = &'a T;
 
     fn into_iter(self) -> Self::IntoIter {
         Iter {
             vec: self,
             next_index: 0,
-            end_index: self.len
+            end_index: self.len,
         }
     }
 }
 
 impl<'a, T, const N: usize> Iterator for Iter<'a, T, N> {
     type Item = &'a T;
-    
+
     fn next(&mut self) -> Option<Self::Item> {
         if self.next_index < self.end_index {
             let output = unsafe { MaybeUninit::assume_init_ref(&self.vec.array[self.next_index]) };
@@ -35,9 +35,7 @@ impl<'a, T, const N: usize> Iterator for Iter<'a, T, N> {
         }
     }
 
-
     fn size_hint(&self) -> (usize, Option<usize>) {
-
         // 0123456789
         // xx!2345678
 

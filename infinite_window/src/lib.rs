@@ -2,8 +2,7 @@
 
 use std::array;
 
-
-/// returns an array of references (or ref mut) 
+/// returns an array of references (or ref mut)
 #[derive(Debug)]
 pub struct InfiniteWindowIter<'a, T, const N: usize> {
     backing: &'a [T],
@@ -24,14 +23,12 @@ impl<'a, T, const N: usize> Iterator for InfiniteWindowIter<'a, T, N> {
 
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
         let len = if self.backing.len() == 0 {
-            return None
+            return None;
         } else {
             self.backing.len()
         };
 
-        let output = array::from_fn(
-            |index| &self.backing[(index + self.current_index) % len]
-        );
+        let output = array::from_fn(|index| &self.backing[(index + self.current_index) % len]);
 
         self.current_index = (self.current_index + 1) % len;
 

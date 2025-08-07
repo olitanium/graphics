@@ -1,8 +1,10 @@
+use std::fmt::Debug;
+use std::iter;
+use std::ops::{self, Index, IndexMut};
+
 use multi_zip::MultiZip;
+
 use crate::vector::Vector;
-use std::{
-    fmt::Debug, iter, ops::{self, Index, IndexMut}
-};
 
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
@@ -38,7 +40,8 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     /// # Panics
-    /// Panics if the length of the slice is not as given by the compile-time constants
+    /// Panics if the length of the slice is not as given by the compile-time
+    /// constants
     #[inline]
     pub fn new_from_slice(input: &[Vector<R>]) -> Self {
         Self(input.try_into().unwrap())
@@ -172,9 +175,10 @@ impl<const R: usize> ops::MulAssign for Matrix<R, R> {
 }
 
 macro_rules! impl_ops {
-    ($trait:ident::$fn:ident) => {
+    ($trait:ident:: $fn:ident) => {
         impl<const R: usize, const C: usize> core::ops::$trait for Matrix<R, C> {
             type Output = Self;
+
             #[inline]
             fn $fn(self, rhs: Self) -> Self::Output {
                 Self::Output::new_from_slice(
@@ -194,6 +198,7 @@ impl_ops!(Sub::sub);
 
 impl<const R: usize, const C: usize> Index<(usize, usize)> for Matrix<R, C> {
     type Output = <Vector<R> as Index<usize>>::Output;
+
     #[inline]
     fn index(&self, index: (usize, usize)) -> &Self::Output {
         let (row, col) = index;
@@ -249,10 +254,10 @@ impl Matrix<4, 4> {
 
     pub fn transform_orthogonal(width: f32, height: f32, near: f32, far: f32) -> Self {
         Self::from_col_major([
-            [2.0/width, 0.0,        0.0,                        0.0],
-            [0.0,       2.0/height, 0.0,                        0.0],
-            [0.0,       0.0,        -2.0/(far - near),          0.0],
-            [0.0,       0.0,        -(far + near)/(far - near), 1.0],
+            [2.0 / width, 0.0, 0.0, 0.0],
+            [0.0, 2.0 / height, 0.0, 0.0],
+            [0.0, 0.0, -2.0 / (far - near), 0.0],
+            [0.0, 0.0, -(far + near) / (far - near), 1.0],
         ])
     }
 }

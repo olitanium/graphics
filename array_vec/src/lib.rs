@@ -1,13 +1,13 @@
 #![feature(maybe_uninit_slice)]
 #![feature(maybe_uninit_array_assume_init)]
 
-use std::{mem::{self, ManuallyDrop, MaybeUninit}, ops::{Deref, DerefMut}};
+use std::mem::{self, ManuallyDrop, MaybeUninit};
+use std::ops::{Deref, DerefMut};
 mod iterators;
 mod test;
 
-pub use iterators::IntoIter;
-pub use iterators::Iter;
 pub use ArrayVec as StackVec;
+pub use iterators::{IntoIter, Iter};
 
 #[derive(Debug)]
 pub struct ArrayVec<T, const N: usize> {
@@ -20,12 +20,15 @@ struct LengthError<const N: usize>;
 
 impl<T, const N: usize> ArrayVec<T, N> {
     pub fn new() -> Self {
-        Self {len: 0, array: ManuallyDrop::new([const { MaybeUninit::uninit() }; N]) }
+        Self {
+            len: 0,
+            array: ManuallyDrop::new([const { MaybeUninit::uninit() }; N]),
+        }
     }
 
     pub fn push_within_capacity(&mut self, elem: T) -> Result<(), T> {
         if self.len == N {
-            return Err(elem)
+            return Err(elem);
         }
 
         self.array[self.len] = MaybeUninit::new(elem);
@@ -35,12 +38,14 @@ impl<T, const N: usize> ArrayVec<T, N> {
     }
 
     pub fn push(&mut self, elem: T) {
-        self.push_within_capacity(elem).map_err(|_| LengthError::<N>).unwrap();
+        self.push_within_capacity(elem)
+            .map_err(|_| LengthError::<N>)
+            .unwrap();
     }
 
     pub fn pop(&mut self) -> Option<T> {
         if self.len == 0 {
-            return None
+            return None;
         }
 
         // security replaces with zeroes to obscure previous values
@@ -53,7 +58,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
 
     pub fn pop_unsecure(&mut self) -> Option<T> {
         if self.len == 0 {
-            return None
+            return None;
         }
 
         // security replaces with uninit
@@ -88,15 +93,14 @@ impl<T, const N: usize> ArrayVec<T, N> {
                 stack_vec_size: len,
             })
         } else {
-            Ok(unsafe {
-                MaybeUninit::array_assume_init(array)
-            })
+            Ok(unsafe { MaybeUninit::array_assume_init(array) })
         }
     }
 }
 
 impl<T, const N: usize> Deref for ArrayVec<T, N> {
     type Target = [T];
+
     fn deref(&self) -> &Self::Target {
         self.as_slice()
     }
@@ -130,7 +134,9 @@ impl<T, const N: usize> TryFrom<ArrayVec<T, N>> for [T; N] {
 }
 
 impl<T, const N: usize, const M: usize> TryFrom<[T; M]> for ArrayVec<T, N> {
-    type Error = (); // TODO
+    type Error = ();
+
+    // TODO
 
     fn try_from(value: [T; M]) -> Result<Self, Self::Error> {
         if M <= N {
@@ -152,5 +158,4 @@ impl<T: Clone, const N: usize> Clone for ArrayVec<T, N> {
     fn clone(&self) -> Self {
         self.iter().cloned().collect()
     }
-
 }

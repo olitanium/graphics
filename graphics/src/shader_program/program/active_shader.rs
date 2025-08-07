@@ -126,8 +126,9 @@ impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, 
     pub fn set_uniform_dyn(&mut self, values: Vec<(String, &dyn Uniform)>) {
         for (name, value) in values {
             if let Some(location) = self.get_uniform_location(name) {
-            value.set_uniform_ref(location, self);
-        }}
+                value.set_uniform_ref(location, self);
+            }
+        }
     }
 
     pub fn get_uniform_location(&self, name: String) -> Option<UniformLocation> {
@@ -145,4 +146,7 @@ impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, 
 
 pub trait IsActiveShaderProgram {}
 
-impl<'a, 'b, 'c, M, T: Texture, const OUT: usize> IsActiveShaderProgram for ActiveShaderProgram<'a, 'b, 'c, M, T, OUT> {}
+impl<'a, 'b, 'c, M, T: Texture, const OUT: usize> IsActiveShaderProgram
+    for ActiveShaderProgram<'a, 'b, 'c, M, T, OUT>
+{
+}

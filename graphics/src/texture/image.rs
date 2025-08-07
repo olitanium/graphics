@@ -2,7 +2,9 @@ use std::path::Path;
 
 use colour::ColourRGBA;
 
-use crate::{texture::Error, types::{self, TexDim}, Result};
+use crate::Result;
+use crate::texture::Error;
+use crate::types::{self, TexDim};
 
 #[derive(Debug, Clone)]
 pub struct Image {
@@ -23,18 +25,22 @@ fn new_from_file<P: AsRef<Path>>(path: P) -> Result<((TexDim, TexDim), Vec<Colou
         let image = image::ImageReader::open(&path)
             .map_err(|_| Error::OpeningTexture { path: path.into() })?
             .with_guessed_format()
-            .map_err(|_| Error::ParsingTextureImage { path: path.into() } )?
+            .map_err(|_| Error::ParsingTextureImage { path: path.into() })?
             .decode()
             .map_err(|_| Error::ParsingTextureImage { path: path.into() })?
             .flipv() // All OpenGL texture images are flipped (maybe)
             .into_rgba32f();
-        
-        let pixels = image.enumerate_pixels()
+
+        let pixels = image
+            .enumerate_pixels()
             .map(|(_, _, rgba)| ColourRGBA::new(rgba.0))
             .collect();
 
         let size_as_u32 = image.dimensions();
-        let size = (TexDim::new(size_as_u32.0 as i32), TexDim::new(size_as_u32.1 as i32));
+        let size = (
+            TexDim::new(size_as_u32.0 as i32),
+            TexDim::new(size_as_u32.1 as i32),
+        );
 
         Ok((size, pixels))
     }
@@ -44,18 +50,15 @@ fn new_from_file<P: AsRef<Path>>(path: P) -> Result<((TexDim, TexDim), Vec<Colou
 
 macro_rules! new_from_file {
     ($name:ident $enum_name:ident) => {
-
-pub fn $name<P: AsRef<Path>>(path: P) -> Result<Self> {
-    let (size, buffer) = new_from_file(path)?;
-    Ok(Self {
-        size,
-        data: ImageType::$enum_name(buffer),
-    })
-}
-
+        pub fn $name<P: AsRef<Path>>(path: P) -> Result<Self> {
+            let (size, buffer) = new_from_file(path)?;
+            Ok(Self {
+                size,
+                data: ImageType::$enum_name(buffer),
+            })
+        }
     };
 }
-
 
 pub(crate) struct TexInternalFormat<'a> {
     pub(crate) internal_format: types::GLint,
@@ -66,6 +69,7 @@ pub(crate) struct TexInternalFormat<'a> {
 
 impl Image {
     new_from_file!(new_from_srgba Srgba);
+
     new_from_file!(new_from_rgba Linear);
 
     pub fn new_monochrome(colour: ColourRGBA) -> Self {
@@ -93,6 +97,11 @@ impl Image {
             ImageType::Srgba(x) => x.as_slice(),
         };
 
-        TexInternalFormat { internal_format, size, type_, slice }
+        TexInternalFormat {
+            internal_format,
+            size,
+            type_,
+            slice,
+        }
     }
 }

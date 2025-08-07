@@ -33,7 +33,14 @@ impl<const N: usize, S: Debug, B: Attachment + Debug> Debug for Builder<N, S, B>
         f.debug_struct("Builder")
             .field("size", &self.size)
             .field("_phantom_buffer", &self._phantom_buffer)
-            .field("map_attachment", if self.map_attachment.is_some() {&"Some(..)"} else { &"None" })
+            .field(
+                "map_attachment",
+                if self.map_attachment.is_some() {
+                    &"Some(..)"
+                } else {
+                    &"None"
+                },
+            )
             .finish_non_exhaustive()
     }
 }
