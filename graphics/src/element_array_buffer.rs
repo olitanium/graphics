@@ -13,7 +13,7 @@ pub struct ElementArrayBuffer {
     /// The OpenGL provided 'name'
     id: ElementArrayId,
     /// The length of the internal buffer.
-    len: ElementArrayLen,
+    elements: Vec<ElementArrayElem>,
 }
 
 impl Drop for ElementArrayBuffer {
@@ -26,12 +26,12 @@ impl Drop for ElementArrayBuffer {
 }
 
 impl ElementArrayBuffer {
-    getter!(len: ElementArrayLen);
+    getter!(elements: Vec<ElementArrayElem>);
 
     /// Create new `ElementArrayBuffer` from a slice of `ElementArrayElem`s.
     /// There is no builder for this object.
-    pub(crate) fn new(contents: &[ElementArrayElem]) -> Self {
-        let len = ElementArrayLen::new(contents.len() as GLsizei);
+    pub(crate) fn new(elements: Vec<ElementArrayElem>) -> Self {
+        // let len = ElementArrayLen::new(contents.len() as GLsizei);
 
         let id = {
             let mut id = 0;
@@ -48,13 +48,17 @@ impl ElementArrayBuffer {
         gl_call! {
             gl::BufferData(
                 gl::ELEMENT_ARRAY_BUFFER,
-                mem::size_of_val(contents) as GLsizeiptr,
-                contents.as_ptr().cast(),
+                mem::size_of_val(elements.as_slice()) as GLsizeiptr,
+                elements.as_ptr().cast(),
                 gl::STATIC_DRAW,
             );
         };
 
-        Self { id, len }
+        Self { id, elements }
+    }
+
+    pub(crate) fn len(&self) -> ElementArrayLen {
+        ElementArrayLen::new(self.elements.len() as i32)
     }
 
     /// Bind ElementArrayBuffer

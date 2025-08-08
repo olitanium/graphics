@@ -39,7 +39,7 @@ pub struct Mouse(Box<Inner>);
 
 impl Mouse {
     pub(crate) fn new(window: &mut PWindow, fix_to_centre: bool) -> Self {
-        let mut out = Mouse(Box::default());
+        let out = Mouse(Box::default());
         const ERROR_MESSAGE: &str =
             "Pointer was created based on box, and so is valid for reads and writes";
         let state_ptr = &raw const out.0.state;

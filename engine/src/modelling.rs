@@ -8,6 +8,7 @@ pub use cubic::{
     ShadowGroup,
     Skeleton,
 };
+mod line;
 
 mod quad;
 pub use quad::{Quad, QuadGroup};

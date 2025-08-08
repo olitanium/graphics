@@ -87,7 +87,7 @@ impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, 
         }
     }
 
-    pub fn bind_textures(&mut self) -> Result<()> {
+    pub(crate) fn bind_textures(&mut self) -> Result<()> {
         static MAX_TEX_UNITS: LazyLock<usize> = LazyLock::new(|| {
             let mut out = 0;
             gl_call! {
@@ -114,6 +114,15 @@ impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, 
     pub fn set_uniform<U: Uniform>(&mut self, name: String, value: U) {
         if let Some(location) = self.get_uniform_location(name) {
             value.set_uniform(location, self);
+        }
+    }
+
+    pub fn set_uniform_vec<U: Uniform>(&mut self, name: String, value: &[U]) {
+        for (location, value) in value.into_iter().enumerate().map_while(|(index, value)| {
+            self.get_uniform_location(format!("{name}[{index}]"))
+                .map(|loc| (loc, value))
+        }) {
+            value.set_uniform_ref(location, self);
         }
     }
 

@@ -63,7 +63,7 @@ define_uniform!(UnitVector<$num> => |value, location, s| value.v().inner().set_u
     };
 }
 
-vectors!(1, 2, 3, 4);
+vectors!(2, 3, 4);
 
 macro_rules! matrix {
     ($row:literal, $col:literal => $func:ident) => {

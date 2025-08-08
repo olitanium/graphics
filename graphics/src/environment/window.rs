@@ -1,5 +1,4 @@
 use std::cell::Cell;
-use std::mem::ManuallyDrop;
 use std::ptr;
 
 use glfw::{Context, Glfw, GlfwReceiver, PWindow, WindowEvent};
@@ -9,9 +8,7 @@ use super::input::keyboard::Keyboard;
 use super::input::mouse::{CursorMode, Mouse};
 use crate::environment::Error;
 use crate::error::Result;
-use crate::framebuffer::attachments::{WithStencil, WithoutExtra};
-use crate::framebuffer::traits::AttachmentWithStencil;
-use crate::framebuffer::{self, DefaultFramebuffer, Framebuffer};
+use crate::framebuffer::DefaultFramebuffer;
 use crate::types::TexDim;
 use crate::{Event, gl_call};
 

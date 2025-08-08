@@ -83,6 +83,7 @@ impl ElementArrayElem {
     }
 }
 opaque!(ElementArrayLen: GLsizei, Clone, Copy);
+opaque!(VertexBufferLen: GLsizei, Clone, Copy);
 nz_opaque!(VertexBufferId: GLuint);
 opaque!(UniformLocation: GLint);
 nz_opaque!(ShaderId: GLuint);

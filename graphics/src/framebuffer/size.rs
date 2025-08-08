@@ -1,8 +1,7 @@
 use std::{iter, mem};
 
+use super::Framebuffer;
 use super::traits::Attachment;
-use super::{DefaultFramebuffer, Framebuffer};
-use crate::texture::Texture;
 use crate::types::TexDim;
 
 impl<const N: usize, D: Attachment> Framebuffer<N, D> {

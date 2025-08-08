@@ -7,3 +7,9 @@ pub enum Error {
 }
 
 utils::error_boilerplate!(Error);
+
+impl From<graphics::Error> for Error {
+    fn from(value: graphics::Error) -> Self {
+        Self::Graphics(value)
+    }
+}

@@ -43,9 +43,10 @@ where
     }
 
     pub fn build(self) -> VertexArray<V> {
-        let vertex_buffer = VertexBuffer::new(&self.vertices);
-        let element_array_buffer = ElementArrayBuffer::new(&self.element_array);
-        VertexArray::new(vertex_buffer, element_array_buffer)
+        let vertex_buffer = VertexBuffer::new(self.vertices);
+        let element_array_buffer = ElementArrayBuffer::new(self.element_array);
+
+        VertexArray::new(vertex_buffer, Some(element_array_buffer))
     }
 
     pub fn push_incomplete_triangle(&mut self, incomplete_triangle: &[IncompleteVertex; 3]) {

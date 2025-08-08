@@ -1,18 +1,17 @@
-use std::marker::PhantomData;
 use std::mem;
 
-use crate::types::VertexBufferId;
+use crate::types::{VertexBufferId, VertexBufferLen};
 use crate::vertex::Vertex;
 use crate::{gl_call, types};
 
 #[derive(Debug)] // No Clone
 pub struct VertexBuffer<V: Vertex> {
     id: VertexBufferId,
-    _phantom: PhantomData<Vec<V>>,
+    vertices: Vec<V>,
 }
 
 impl<V: Vertex> VertexBuffer<V> {
-    pub fn new(contents: &[V]) -> Self {
+    pub fn new(vertices: Vec<V>) -> Self {
         let id = {
             let mut id = 0;
             gl_call! {
@@ -27,15 +26,16 @@ impl<V: Vertex> VertexBuffer<V> {
 
         gl_call! { gl::BufferData(
             gl::ARRAY_BUFFER,
-            mem::size_of_val(contents) as types::GLsizeiptr,
-            contents.as_ptr().cast(),
+            mem::size_of_val(vertices.as_slice()) as types::GLsizeiptr,
+            vertices.as_ptr().cast(),
             gl::STATIC_DRAW,
         ); };
 
-        Self {
-            id,
-            _phantom: PhantomData,
-        }
+        Self { id, vertices }
+    }
+
+    pub(crate) fn len(&self) -> VertexBufferLen {
+        VertexBufferLen::new(self.vertices.len() as i32)
     }
 
     pub(crate) fn bind(&self) {

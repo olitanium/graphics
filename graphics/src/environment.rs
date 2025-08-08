@@ -15,13 +15,11 @@ pub use window::Window;
 
 use crate::error::Result;
 use crate::framebuffer::{DefaultFramebuffer, FramebufferContext};
-use crate::gl_call;
 use crate::shader_program::ShaderProgramContext;
 use crate::types::TexDim;
 
 #[derive(Debug, Clone)]
 pub enum Error {
-    ScreenDimsStaticPosion,
     GlfwInit { glfw_error: glfw::InitError },
     GlfwWindow,
 }
@@ -35,7 +33,6 @@ impl From<Error> for crate::error::Error {
 }
 
 use std::ffi::{CStr, c_void};
-use std::ptr;
 #[expect(unused_variables)]
 extern "system" fn debug_callback(
     source: u32,
@@ -72,7 +69,7 @@ extern "system" fn debug_callback(
         gl::DEBUG_SEVERITY_HIGH => "DEBUG_SEVERITY_HIGH",
         gl::DEBUG_SEVERITY_MEDIUM => "DEBUG_SEVERITY_MEDIUM",
         gl::DEBUG_SEVERITY_LOW => "DEBUG_SEVERITY_LOW",
-        gl::DEBUG_SEVERITY_NOTIFICATION => "DEBUG_SEVERITY_NOTIFICATION",
+        gl::DEBUG_SEVERITY_NOTIFICATION => return, //"DEBUG_SEVERITY_NOTIFICATION",
         _ => "ERROR SEVERITY NOT FOUND",
     };
 
@@ -83,8 +80,8 @@ extern "system" fn debug_callback(
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum Event<'a> {
-    CriticalFault,
     WindowBuffer(&'a DefaultFramebuffer),
     FrameTime(f64),
     ActualTime(f64),
@@ -102,7 +99,6 @@ pub enum Event<'a> {
 pub struct Environment<G: GlobalState> {
     global_state: G,
     window: Window,
-    // window2: Window,
     old_frame: f64,
     glfw: glfw::Glfw,
 }
@@ -172,8 +168,6 @@ impl<G: GlobalState> Environment<G> {
 
         let mut frame_iter = self.iter();
         while let Some(result) = frame_iter.next() {
-            // for (window, result) in [(&mut self.window, result), (&mut self.window2,
-            // result_2)] { window.make_current();
             match result {
                 Ok(to_draw) => {
                     framebuffer_register.clear();
@@ -190,32 +184,16 @@ impl<G: GlobalState> Environment<G> {
         Ok(())
     }
 
-    // fn end_render(&mut self) {
-    // Poll for and process events
-    // self.glfw.poll_events();
-    // Swap front and back buffers
-    // self.window.swap_buffers();
-    // self.window2.swap_buffers();
-    // }
-
     fn poll(&mut self) -> Result<Vec<Box<dyn Draw + '_>>> {
         let curr_time = self.glfw.get_time();
         let frametime = curr_time - self.old_frame;
         self.old_frame = curr_time;
 
-        // let event_buffer = [&mut self.window, &mut self.window2].map(|window| {
         let window = &mut self.window;
         let mut events = window.poll_events();
 
         events.push(Event::ActualTime(curr_time));
         events.push(Event::FrameTime(frametime));
-        //    events
-        //});
-        // let window = &mut self.window2;
-        // window.make_current();
-        // let mut event_buffer = window.poll_events();
-        // event_buffer.push(Event::ActualTime(curr_time));
-        // event_buffer.push(Event::FrameTime(frametime));
 
         self.global_state.poll(events)
     }
@@ -243,7 +221,6 @@ impl<'env, G: GlobalState> FrameIter<'env, G> {
             self.env.glfw.poll_events();
             // Swap front and back buffers
             self.env.window.swap_buffers();
-            // self.env.window2.swap_buffers();
 
             match self.env.poll() {
                 Err(crate::error::Error::Close) => None,

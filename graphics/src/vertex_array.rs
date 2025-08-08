@@ -22,8 +22,8 @@ mod builder;
 #[derive(Debug)]
 pub struct VertexArray<V: Vertex> {
     id: VertexArrayId,
-    _vertex_buffer: VertexBuffer<V>,
-    element_array_buffer: ElementArrayBuffer,
+    vertex_buffer: VertexBuffer<V>,
+    element_array_buffer: Option<ElementArrayBuffer>,
 }
 
 impl<V: Vertex> Drop for VertexArray<V> {
@@ -35,18 +35,6 @@ impl<V: Vertex> Drop for VertexArray<V> {
     }
 }
 
-// impl VertexArray<SimpleVertex> {
-// pub fn cubic_builder() -> CubicBuilder {
-// CubicBuilder::new()
-// }
-// }
-//
-// impl VertexArray<QuadVertex> {
-// pub fn quad_builder() -> QuadBuilder {
-// QuadBuilder::new()
-// }
-// }
-
 impl<V: Vertex> VertexArray<V>
 where
     [(); V::ELEMENT_COUNT]:,
@@ -55,11 +43,14 @@ where
         Builder::new()
     }
 
-    fn new(vertex_buffer: VertexBuffer<V>, element_array_buffer: ElementArrayBuffer) -> Self {
+    fn new(
+        vertex_buffer: VertexBuffer<V>,
+        element_array_buffer: Option<ElementArrayBuffer>,
+    ) -> Self {
         let id = {
             let mut id = 0;
             gl_call! {
-                gl::GenVertexArrays(1, ptr::addr_of_mut!(id));
+                gl::GenVertexArrays(1, &raw mut id);
             }
             VertexArrayId::new(id)
         };
@@ -69,7 +60,9 @@ where
         }
 
         vertex_buffer.bind();
-        element_array_buffer.bind();
+        if let Some(buffer) = &element_array_buffer {
+            buffer.bind();
+        };
 
         for (index, (offset, (type_of, count))) in
             iter::zip(V::offsets(), V::types_of()).enumerate()
@@ -88,26 +81,6 @@ where
                 gl::EnableVertexAttribArray(index as types::GLuint);
             }
         }
-        // offsets
-        // .iter()
-        // .enumerate()
-        // .fold(ptr::null::<f32>(), |pointer, (index, step)| {
-        // gl_call! {
-        // gl::VertexAttribPointer(
-        // index as types::GLuint,
-        // step as types::GLint,
-        // gl::FLOAT,
-        // gl::FALSE,
-        // vbo_stride,
-        // pointer.cast(),
-        // );
-        // }
-        // gl_call! {
-        // gl::EnableVertexAttribArray(index as types::GLuint);
-        // }
-        //
-        // pointer.wrapping_add(*step)
-        // });
 
         // Tidy in this order
         VertexArray::<V>::unbind();
@@ -117,7 +90,7 @@ where
         // Return object
         VertexArray {
             id,
-            _vertex_buffer: vertex_buffer,
+            vertex_buffer,
             element_array_buffer,
         }
     }
@@ -144,13 +117,19 @@ where
 
         active_shader_program.validate()?;
 
-        gl_call! {
-            gl::DrawElements(
-                gl::TRIANGLES,
-                self.element_array_buffer.len().to_primitive(),
-                gl::UNSIGNED_INT,
-                ptr::null(),
-            );
+        if let Some(element_buffer) = &self.element_array_buffer {
+            gl_call! {
+                gl::DrawElements(
+                    gl::TRIANGLES,
+                    element_buffer.len().to_primitive(),
+                    gl::UNSIGNED_INT,
+                    ptr::null(),
+                );
+            }
+        } else {
+            gl_call! {
+                gl::DrawArrays(gl::TRIANGLES, 0, self.vertex_buffer.len().to_primitive());
+            }
         }
 
         Ok(())
@@ -158,9 +137,9 @@ where
 
     pub fn empty() -> Self {
         Self::new(
-            VertexBuffer::new(&[]),
+            VertexBuffer::new(vec![]),
             // &[],
-            ElementArrayBuffer::new(&[]),
+            None,
         )
     }
 }

@@ -23,7 +23,6 @@ use engine::modelling::{
 use engine::types::TexDim;
 use engine::{Draw, Event, GlobalState, Result};
 pub struct State {
-    pub string: String,
     pub time: f32,
     pub camera: Camera<CameraPose>,
 
@@ -66,7 +65,6 @@ impl GlobalState for State {
         for event in events {
             match event {
                 Event::WindowBuffer(buffer) => default_fb = Some(buffer),
-                Event::CriticalFault => return Err(engine::Error::Close),
                 Event::FrameTime(ft) => frame_time = ft as f32,
                 Event::ActualTime(at) => self.time = at as f32,
                 Event::WindowResize(size) => {
@@ -88,6 +86,7 @@ impl GlobalState for State {
                 } => {
                     mouse_delta = (delta.0 as f32, delta.1 as f32);
                 }
+                _ => {}
             }
         }
 

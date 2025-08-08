@@ -273,19 +273,6 @@ impl State {
         let [dark_tex, light_tex] = hdr_fb.get_all_colour();
         let bloom = Bloom::new(dark_tex, light_tex);
 
-        let string = String::new();
-
-        let orientation1 = Orientation::new_from_to(
-            [0.0, 0.0, 0.0].into(),
-            [0.0, 0.0, 1.0].into(),
-            Vector::from([0.0, 1.0, 0.0]).normalize(),
-        );
-        let orientation2 = Orientation::new_from_to(
-            [0.0, 0.0, 0.0].into(),
-            [0.01, 0.0, -1.0].into(),
-            Vector::from([0.0, 1.0, 0.0]).normalize(),
-        );
-
         let quad_to_draw = Quad::screen(hdr_fb.get_all_colour()).downcast();
 
         let light_material = {
@@ -302,7 +289,6 @@ impl State {
 
         Ok(Self {
             time: 0.0,
-            string,
 
             camera,
             exposure,

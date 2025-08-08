@@ -41,3 +41,19 @@ impl IncompleteVertex {
         }
     }
 }
+
+impl Vertex for () {
+    const ELEMENT_COUNT: usize = 0;
+
+    fn offsets() -> [usize; Self::ELEMENT_COUNT] {
+        []
+    }
+
+    fn from_incomplete_triangle(_: &[IncompleteVertex; 3]) -> [Self; 3] {
+        [(), (), ()]
+    }
+
+    fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
+        []
+    }
+}
