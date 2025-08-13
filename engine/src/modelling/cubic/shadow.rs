@@ -5,13 +5,13 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::shader_program::Uniform;
 use graphics::texture::FlatTexture;
-use graphics::{Draw, Result, ShaderProgramContext};
+use graphics::{Draw, ShaderProgramContext};
 
 use super::camera::Camera;
 use super::geometry::YieldsPose;
 use super::lighting::shadow::ShadowListLights;
 use super::model::Cubic;
-use crate::opengl_shaders;
+use crate::{opengl_shaders, EngApiResult, EngError};
 
 pub const SHADOW_SHADER_MAX_LIGHTS: usize = 2;
 
@@ -56,12 +56,12 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
     }
 }
 
-impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw for Group<'a, X> {
+impl<'a, NEVER, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw<EngError<NEVER>> for Group<'a, X> {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> Result<()> {
+    ) -> EngApiResult<(), NEVER> {
         self.list_light.gen_depth(
             sp_context,
             fb_context,

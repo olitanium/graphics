@@ -14,12 +14,14 @@ use russimp::scene::{PostProcess, Scene};
 
 use super::material::Material;
 use super::model::{Cubic, Mesh};
-use crate::error::Result;
+use crate::error::EngResult;
 
 mod error {
     use std::path::PathBuf;
 
     use utils::error_boilerplate;
+
+    use crate::EngError;
 
     #[derive(Debug, Clone)]
     pub enum Error {
@@ -48,22 +50,13 @@ mod error {
             index_asked: usize,
             actual_len: usize,
         },
-        Graphics {
-            error: graphics::error::Error,
-        },
     }
 
     error_boilerplate!(Error);
 
-    impl From<Error> for crate::error::Error {
+    impl<NEVER> From<Error> for EngError<NEVER> {
         fn from(value: Error) -> Self {
             Self::Import(value)
-        }
-    }
-
-    impl From<graphics::error::Error> for Error {
-        fn from(value: graphics::error::Error) -> Self {
-            Self::Graphics { error: value }
         }
     }
 }
@@ -72,7 +65,7 @@ pub use error::Error;
 
 use super::Builder;
 
-pub(super) fn import<P: AsRef<Path>>(path: P, post_process: Vec<PostProcess>) -> Result<Builder> {
+pub(super) fn import<NEVER: Clone, P: AsRef<Path>>(path: P, post_process: Vec<PostProcess>) -> EngResult<Builder, NEVER> {
     let path = path.as_ref();
 
     let dir = path
@@ -101,12 +94,12 @@ pub(super) fn import<P: AsRef<Path>>(path: P, post_process: Vec<PostProcess>) ->
     Ok(Cubic::builder().meshes(out))
 }
 
-fn process_node(
+fn process_node<NEVER: Clone>(
     scene: &Scene,
     node: &Node,
     dir: &Path,
-    current_mat: &mut HashMap<u32, Result<Rc<Material>>>,
-) -> Result<Vec<Mesh>> {
+    current_mat: &mut HashMap<u32, EngResult<Rc<Material>, NEVER>>,
+) -> EngResult<Vec<Mesh>, NEVER> {
     // process current node and recursively process each in node.children.
     let mut curr_meshes = node
         .meshes
@@ -154,11 +147,11 @@ fn process_node(
 
             let mut vertex_array_builder = VertexArray::builder();
 
-            fn is_no_vec_or_element_exists<'a, T>(
+            fn is_no_vec_or_element_exists<'a, NEVER, T>(
                 name: &'static str,
                 opt_value: &'a Option<Vec<T>>,
                 index: usize,
-            ) -> Result<Option<&'a T>> {
+            ) -> EngResult<Option<&'a T>, NEVER> {
                 match opt_value {
                     None => Ok(None),
                     Some(vector) => match vector.get(index) {
@@ -195,7 +188,7 @@ fn process_node(
                         is_no_vec_or_element_exists("tangent", &opt_tangent, index)?.copied();
                     // opt_tangent.and_then(|vec| vec.get(index.to_primitive() as usize).copied() );
 
-                    Result::Ok(
+                    EngResult::Ok(
                         IncompleteVertex::new(triangle_position, triangle_texture)
                             .opt_normal(triangle_normal)
                             .opt_tangent(triangle_tangent),
@@ -228,17 +221,17 @@ fn process_node(
                 .or_insert_with_key(|key| parse_material(&scene.materials[*key as usize], dir))
                 .clone()?;
 
-            Result::Ok(Mesh::new(Rc::new(vertex_array), mat, 0)) // TODO: bone
+            EngResult::Ok(Mesh::new(Rc::new(vertex_array), mat, 0)) // TODO: bone
             // set to 0 for
             // debug
         })
-        .collect::<Result<Vec<_>>>()?;
+        .collect::<EngResult<Vec<_>, NEVER>>()?;
 
     let children = node.children.borrow();
     let child_meshes = children
         .iter()
         .map(|node| process_node(scene, node, dir, current_mat))
-        .collect::<Result<Vec<_>>>()?
+        .collect::<EngResult<Vec<_>, NEVER>>()?
         .into_iter()
         .flatten();
 
@@ -246,7 +239,7 @@ fn process_node(
     Ok(curr_meshes)
 }
 
-fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<Rc<Material>> {
+fn parse_material<NEVER>(material: &russimp::material::Material, dir: &Path) -> EngResult<Rc<Material>, NEVER> {
     // get semantic -> key -> data
     let mut material_properties = HashMap::new();
 
@@ -272,8 +265,7 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
                 .image(
                     Image::new_from_srgba(
                         [dir, filepath.as_ref()].into_iter().collect::<PathBuf>(),
-                    )
-                    .map_err(|error| Error::Graphics { error })?,
+                    )?
                 )
                 //.srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
                 .build(),
@@ -290,8 +282,7 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
                 .image(
                     Image::new_from_srgba(
                         [dir, filepath.as_ref()].into_iter().collect::<PathBuf>(),
-                    )
-                    .map_err(|error| Error::Graphics { error })?,
+                    )?
                 )
                 .build(),
         );
@@ -303,8 +294,7 @@ fn parse_material(material: &russimp::material::Material, dir: &Path) -> Result<
         builder = builder.normal_map(
             FlatTexture::builder()
                 .image(
-                    Image::new_from_rgba([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
-                        .map_err(|error| Error::Graphics { error })?,
+                    Image::new_from_rgba([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())?
                 )
                 //.rgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
                 //.map_err(|error| Error::Graphics { error })?

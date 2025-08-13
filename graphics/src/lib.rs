@@ -7,6 +7,7 @@
 #![feature(box_as_ptr)]
 #![feature(lazy_type_alias)]
 #![feature(inherent_associated_types)]
+#![feature(never_type)]
 
 mod environment;
 pub mod error;
@@ -19,15 +20,15 @@ pub mod framebuffer;
 pub mod vertex;
 pub mod vertex_array;
 pub mod vertex_buffer;
+
 pub use environment::{Draw, Environment, Event, GlobalState, Key};
-pub use error::{Error, Result};
+pub use error::{ApiError, ApiResult};
 pub use shader_program::{ActiveShaderProgram, ShaderProgram, ShaderProgramContext};
 pub use {colour, linear_algebra};
 
 #[macro_export]
-macro_rules! gl_call {
+macro_rules! gl_call_inner {
     ($input:stmt) => {{
-        // eprintln!(stringify!($input));
         // Skip all previous errors which have been ignored
         while unsafe { gl::GetError() } != gl::NO_ERROR {}
         // perform the expression
@@ -41,28 +42,24 @@ macro_rules! gl_call {
                 .take_while(|error| error.0 != gl::NO_ERROR)
                 .collect();
         if errors.is_empty() {
-            output
+            //Ok(output)
         } else {
+            //Err(
             panic!("{:?}", errors)
-        }
+            //)
+        }//.unwrap()
+        output
+    } };
+}
+
+#[macro_export]
+macro_rules! gl_call {
+    ($input:stmt) => {{
+        $crate::gl_call_inner!($input)
     }};
 
     ($input:stmt;) => {{
-        // eprintln!(stringify!($input));
-        // Skip all previous errors which have been ignored
-        while unsafe { gl::GetError() } != gl::NO_ERROR {}
-        // perform the expression
-        unsafe {
-            //#[expect(clippy::macro_metavars_in_unsafe)]
-            $input
-        };
-        // read through errors, returning Err if there are many.
-        let errors: Vec<$crate::types::GLError> =
-            std::iter::repeat_with(|| $crate::types::GLError(unsafe { gl::GetError() }))
-                .take_while(|error| error.0 != gl::NO_ERROR)
-                .collect();
-        if !errors.is_empty() {
-            panic!("{:?}", errors);
-        };
+        $crate::gl_call_inner!($input);
+        ()
     }};
 }

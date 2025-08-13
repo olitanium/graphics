@@ -1,7 +1,7 @@
 use std::sync::Mutex;
 
 use super::{CullFace, Error, ShaderProgram};
-use crate::error::Result;
+use crate::error::ApiResult;
 use crate::gl_call;
 use crate::texture::Texture;
 
@@ -68,7 +68,7 @@ impl ShaderProgramContext {
         }
     }
 
-    pub fn cull_face(&mut self, cull_face: CullFace) -> Result<()> {
+    pub fn cull_face<NEVER>(&mut self, cull_face: CullFace) -> ApiResult<(), NEVER> {
         match self.forced_cull_face {
             None => {
                 self.cull_face_after_check(cull_face);

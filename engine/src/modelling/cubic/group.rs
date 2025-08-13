@@ -3,7 +3,9 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
-use graphics::{Draw, Result};
+use graphics::{Draw};
+
+use crate::{EngError, EngApiResult};
 
 use super::Camera;
 use super::geometry::YieldsPose;
@@ -53,14 +55,14 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
     }
 }
 
-impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
+impl<'a, NEVER, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw<EngError<NEVER>>
     for Group<'a, MAX, OUT, D>
 {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> Result<()> {
+    ) -> EngApiResult<(), NEVER> {
         let mut active_shader = self.shader.use_program(sp_context);
         let mut active_framebuffer = self.framebuffer.bind(fb_context);
 

@@ -1,4 +1,3 @@
-use graphics::error::Result;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::shader_program::{ActiveShaderProgram, CullFace};
@@ -7,6 +6,7 @@ use graphics::vertex_array::VertexArray;
 
 use crate::modelling::SimpleVertex;
 use crate::modelling::test_models::vertex_array_cube;
+use crate::{EngResult};
 
 #[derive(Debug)]
 pub struct SkyBox {
@@ -22,11 +22,11 @@ impl SkyBox {
         }
     }
 
-    pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>>(
+    pub(crate) fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-    ) -> Result<()> {
+    ) -> EngResult<(), NEVER> {
         active_shader.cull_face(CullFace::DoNotCull)?;
         active_shader.register_texture(Some(("skybox".to_string(), &self.texture as &dyn Texture)));
 

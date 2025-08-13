@@ -2,7 +2,7 @@ use std::path::Path;
 
 use colour::ColourRGBA;
 
-use crate::Result;
+use crate::ApiResult;
 use crate::texture::Error;
 use crate::types::{self, TexDim};
 
@@ -18,10 +18,10 @@ pub enum ImageType {
     Srgba(Vec<ColourRGBA>),
 }
 
-fn new_from_file<P: AsRef<Path>>(path: P) -> Result<((TexDim, TexDim), Vec<ColourRGBA>)> {
+fn new_from_file<NEVER, P: AsRef<Path>>(path: P) -> ApiResult<((TexDim, TexDim), Vec<ColourRGBA>), NEVER> {
     let path_ref = path.as_ref();
 
-    fn new_from_file_path(path: &Path) -> Result<((TexDim, TexDim), Vec<ColourRGBA>)> {
+    fn new_from_file_path<NEVER>(path: &Path) -> ApiResult<((TexDim, TexDim), Vec<ColourRGBA>), NEVER> {
         let image = image::ImageReader::open(&path)
             .map_err(|_| Error::OpeningTexture { path: path.into() })?
             .with_guessed_format()
@@ -50,7 +50,7 @@ fn new_from_file<P: AsRef<Path>>(path: P) -> Result<((TexDim, TexDim), Vec<Colou
 
 macro_rules! new_from_file {
     ($name:ident $enum_name:ident) => {
-        pub fn $name<P: AsRef<Path>>(path: P) -> Result<Self> {
+        pub fn $name<NEVER, P: AsRef<Path>>(path: P) -> ApiResult<Self, NEVER> {
             let (size, buffer) = new_from_file(path)?;
             Ok(Self {
                 size,

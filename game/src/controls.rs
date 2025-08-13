@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
-use engine::{Error, Key, Result};
+use engine::{ApiError, EngResult, Key};
 
-use crate::state::State;
+use crate::state::{State, StateError};
 
 impl State {
     pub fn controls(
@@ -11,9 +11,9 @@ impl State {
         keyboard: HashSet<Key>,
         string: &mut String,
         frame_time: f32,
-    ) -> Result<()> {
+    ) -> EngResult<(), StateError> {
         if keyboard.contains(&Key::Escape) {
-            return Err(Error::Close);
+            return Err(ApiError::Close.into());
         }
         if keyboard.contains(&Key::W) {
             self.camera.pose.move_forward(self.speed[2] * frame_time);

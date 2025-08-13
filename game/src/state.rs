@@ -21,7 +21,7 @@ use engine::modelling::{
     SkyBoxGroup,
 };
 use engine::types::TexDim;
-use engine::{Draw, Event, GlobalState, Result};
+use engine::{EngApiResult, EngError, EngResult, Event, GlobalState, VecDraw};
 pub struct State {
     pub time: f32,
     pub camera: Camera<CameraPose>,
@@ -50,12 +50,17 @@ pub struct State {
     pub bloom: Bloom,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct StateError;
+
 impl GlobalState for State {
+    type Error = EngError<StateError>; 
+
     fn poll<'a>(
         &'a mut self,
         events: Vec<Event<'a>>,
         // default_framebuffer: &'a DefaultFramebuffer,
-    ) -> Result<Vec<Box<dyn Draw + 'a>>> {
+    ) -> EngApiResult<VecDraw<'a, StateError>, StateError> {
         let mut frame_time = 0.0;
         let mut keyboard = HashSet::new();
         let mut mouse_delta = (0.0, 0.0);
@@ -97,11 +102,13 @@ impl GlobalState for State {
 
         self.physics(frame_time);
 
-        self.prep_draw(default_fb.unwrap())
+        let out = self.prep_draw(default_fb.unwrap())?;
+        Ok(out)
     }
 
-    fn new(initial_size: (TexDim, TexDim)) -> Result<Self> {
-        Self::new_(initial_size)
+    fn new(initial_size: (TexDim, TexDim)) -> EngApiResult<Self, StateError> {
+        let output = Self::new_(initial_size)?;
+        Ok(output)
     }
 }
 
@@ -135,10 +142,10 @@ impl State {
     fn prep_draw<'a>(
         &'a mut self,
         default_framebuffer: &'a DefaultFramebuffer,
-    ) -> Result<Vec<Box<dyn Draw + 'a>>> {
+    ) -> EngResult<VecDraw<'a, StateError>, StateError> {
         let time = self.time;
 
-        let mut out: Vec<Box<dyn Draw>> = Vec::new();
+        let mut out: VecDraw<StateError> = Vec::new();
 
         let all_models = {
             let mut all_models = vec![(&self.imported, self.which_animation, time)];

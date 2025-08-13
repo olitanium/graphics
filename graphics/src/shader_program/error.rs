@@ -3,6 +3,8 @@ use std::path::PathBuf;
 
 use utils::error_boilerplate;
 
+use crate::ApiError;
+
 use super::CullFace;
 
 #[derive(Debug, Clone)]
@@ -42,7 +44,7 @@ pub enum Error {
 
 error_boilerplate!(Error);
 
-impl From<Error> for crate::error::Error {
+impl<E> From<Error> for ApiError<E> {
     fn from(value: Error) -> Self {
         Self::Shader(value)
     }

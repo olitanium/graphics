@@ -1,3 +1,4 @@
+use std::sync::LazyLock;
 use std::{iter, ptr};
 
 use builder::Builder;
@@ -6,23 +7,22 @@ use builder::Builder;
 // pub use quad_builder::QuadBuilder;
 use super::framebuffer::ActiveFramebuffer;
 use crate::element_array_buffer::ElementArrayBuffer;
-use crate::error::Result;
+use crate::error::ApiResult;
 use crate::framebuffer::traits::FramebufferInternals;
 use crate::shader_program::ActiveShaderProgram;
-use crate::types::VertexArrayId;
+use crate::types::{VertexArrayId, VertexBufferLen};
 use crate::vertex::Vertex;
 use crate::vertex_buffer::VertexBuffer;
 use crate::{gl_call, types};
 
-// mod cubic_builder;
-// mod quad_builder;
 mod builder;
-// mod test_models;
+mod draw_options;
+//pub use draw_options::DrawOptions;
 
 #[derive(Debug)]
 pub struct VertexArray<V: Vertex> {
     id: VertexArrayId,
-    vertex_buffer: VertexBuffer<V>,
+    vertex_buffer: Option<VertexBuffer<V>>,
     element_array_buffer: Option<ElementArrayBuffer>,
 }
 
@@ -90,7 +90,7 @@ where
         // Return object
         VertexArray {
             id,
-            vertex_buffer,
+            vertex_buffer: Some(vertex_buffer),
             element_array_buffer,
         }
     }
@@ -107,11 +107,11 @@ where
         }
     }
 
-    pub fn draw<M, const OUT: usize, D: FramebufferInternals<OUT>>(
+    pub fn draw<NEVER, M, const OUT: usize, D: FramebufferInternals<OUT>>(
         &self,
         active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-    ) -> Result<()> {
+    ) -> ApiResult<(), NEVER> {
         self.bind();
         active_shader_program.bind_textures()?;
 
@@ -126,20 +126,54 @@ where
                     ptr::null(),
                 );
             }
-        } else {
+        } else if let Some(vbo) = self.vertex_buffer.as_ref() {
             gl_call! {
-                gl::DrawArrays(gl::TRIANGLES, 0, self.vertex_buffer.len().to_primitive());
+                gl::DrawArrays(gl::TRIANGLES, 0, vbo.len().to_primitive());
             }
         }
 
         Ok(())
     }
 
+
     pub fn empty() -> Self {
-        Self::new(
-            VertexBuffer::new(vec![]),
-            // &[],
-            None,
-        )
+        let id = {
+            let mut id = 0;
+            gl_call! {
+                gl::GenVertexArrays(1, &raw mut id);
+            }
+            VertexArrayId::new(id)
+        };
+
+        Self {
+            id,
+            vertex_buffer: None,
+            element_array_buffer: None,
+        }
+    }
+}
+
+
+pub fn dummy_vertex_array() -> &'static VertexArray<()> {
+    static DUMMY_VERTEX_ARRAY: LazyLock<VertexArray<()>> = LazyLock::new(|| VertexArray::empty());
+    &DUMMY_VERTEX_ARRAY
+}
+
+impl VertexArray<()> {
+    pub fn draw_len<NEVER, M, const OUT: usize, D: FramebufferInternals<OUT>>(
+        &self,
+        active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, D::Tex, OUT>,
+        _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
+        len: VertexBufferLen,
+    ) -> ApiResult<(), NEVER> {
+        self.bind();
+        active_shader_program.bind_textures()?;
+        active_shader_program.validate()?;
+
+        gl_call! {
+            gl::DrawArrays(gl::LINES, 0, len.to_primitive());
+        }
+
+        Ok(())
     }
 }

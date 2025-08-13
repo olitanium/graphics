@@ -20,12 +20,12 @@ use engine::modelling::{Bloom, Bone, Cubic, Quad, Skeleton, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
-use engine::{ColourRGB, ColourRGBA, Error, Result};
+use engine::{ColourRGB, ColourRGBA, EngResult};
 
-use crate::state::State;
+use crate::state::{State, StateError};
 
 impl State {
-    pub fn new_(size: (TexDim, TexDim)) -> Result<Self> {
+    pub fn new_(size: (TexDim, TexDim)) -> EngResult<Self, StateError> {
         let speed = [1.0, 1.0, 1.0];
         let exposure = 1.0;
 
@@ -89,8 +89,7 @@ impl State {
                         P::OptimizeGraph,
                         P::OptimizeMeshes,
                     ],
-                )
-                .map_err(|error| Error::Other(error.to_string()))?
+                )?
                 .scale(0.01)
                 .build()
             }
@@ -104,8 +103,7 @@ impl State {
                     P::OptimizeGraph,
                     P::OptimizeMeshes,
                 ],
-            )
-            .map_err(|error| Error::Other(error.to_string()))?
+            )?
             .build(),
             "oliver" => {
                 let material = Rc::new(Material::builder().diffuse(FlatTexture::white()).build());

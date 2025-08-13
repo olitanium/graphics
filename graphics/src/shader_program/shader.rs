@@ -2,7 +2,7 @@ use std::fs;
 use std::path::Path;
 
 use super::error::Error;
-use crate::error::Result;
+use crate::error::ApiResult;
 use crate::gl_call;
 use crate::types::{GLenum, ShaderId};
 
@@ -13,7 +13,7 @@ pub struct Shader {
 }
 
 impl Shader {
-    pub fn new<P: AsRef<Path>>(shader_type: GLenum, source: P) -> Result<Self> {
+    pub fn new<NEVER, P: AsRef<Path>>(shader_type: GLenum, source: P) -> ApiResult<Self, NEVER> {
         let source = source.as_ref();
 
         let shader_source = fs::read_to_string(source).map_err(|_| Error::NoSourceFile {
@@ -23,7 +23,7 @@ impl Shader {
         Self::new_from_slice(shader_type, shader_source.as_bytes())
     }
 
-    pub(crate) fn new_from_slice(shader_type: GLenum, cstr: &[u8]) -> Result<Self> {
+    pub(crate) fn new_from_slice<NEVER>(shader_type: GLenum, cstr: &[u8]) -> ApiResult<Self, NEVER> {
         let shader_id = ShaderId::new(gl_call! { gl::CreateShader(shader_type) });
 
         let len = [cstr.len().try_into().map_err(|_| Error::SourceTooLong {

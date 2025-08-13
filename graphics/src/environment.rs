@@ -13,10 +13,11 @@ pub use input::mouse::Button;
 use utils::error_boilerplate;
 pub use window::Window;
 
-use crate::error::Result;
+use crate::error::ApiResult;
 use crate::framebuffer::{DefaultFramebuffer, FramebufferContext};
 use crate::shader_program::ShaderProgramContext;
 use crate::types::TexDim;
+use crate::ApiError;
 
 #[derive(Debug, Clone)]
 pub enum Error {
@@ -26,7 +27,7 @@ pub enum Error {
 
 error_boilerplate!(Error);
 
-impl From<Error> for crate::error::Error {
+impl<E> From<Error> for crate::error::ApiError<E> {
     fn from(value: Error) -> Self {
         Self::Window(value)
     }
@@ -110,7 +111,7 @@ impl<G: GlobalState> Environment<G> {
         title: &str,
         mouse_fix_to_centre: bool,
         // initial_state: G,
-    ) -> Result<Self> {
+    ) -> ApiResult<Self, G::Error> {
         let mut glfw =
             glfw::init(fail_on_errors!()).map_err(|glfw_error| Error::GlfwInit { glfw_error })?;
 
@@ -128,7 +129,8 @@ impl<G: GlobalState> Environment<G> {
             .title(title)
             .raw_motion(true)
             .glfw(&mut glfw)
-            .build()?;
+            .build().map_err(ApiError::temp_convert_from_never)?;
+
 
         glfw.set_swap_interval(glfw::SwapInterval::None);
 
@@ -157,7 +159,7 @@ impl<G: GlobalState> Environment<G> {
         })
     }
 
-    pub fn run(&mut self) -> Result<()> {
+    pub fn run(&mut self) -> ApiResult<(), G::Error> {
         // Substitute for `for to_draw in env.iter() {`
         // self.window.make_current();
 
@@ -184,7 +186,7 @@ impl<G: GlobalState> Environment<G> {
         Ok(())
     }
 
-    fn poll(&mut self) -> Result<Vec<Box<dyn Draw + '_>>> {
+    fn poll(&mut self) -> ApiResult<Vec<Box<dyn Draw<G::Error> + '_>>, G::Error> {
         let curr_time = self.glfw.get_time();
         let frametime = curr_time - self.old_frame;
         self.old_frame = curr_time;
@@ -215,7 +217,7 @@ impl<'env, G: GlobalState> FrameIter<'env, G> {
 }
 
 impl<'env, G: GlobalState> FrameIter<'env, G> {
-    pub fn next(&mut self) -> Option<Result<Vec<Box<dyn Draw + '_>>>> {
+    pub fn next(&mut self) -> Option<ApiResult<Vec<Box<dyn Draw<G::Error> + '_>>, G::Error>> {
         if !self.env.window.should_close() {
             // Poll for and process events
             self.env.glfw.poll_events();
@@ -223,7 +225,7 @@ impl<'env, G: GlobalState> FrameIter<'env, G> {
             self.env.window.swap_buffers();
 
             match self.env.poll() {
-                Err(crate::error::Error::Close) => None,
+                Err(crate::error::ApiError::Close) => None,
                 x => Some(x),
             }
         } else {

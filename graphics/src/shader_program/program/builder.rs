@@ -4,7 +4,7 @@ use std::path::Path;
 use utils::{builder, new};
 
 use super::{CullFace, ShaderProgram};
-use crate::error::Result;
+use crate::error::ApiResult;
 use crate::gl_call;
 use crate::shader_program::shader::Shader;
 use crate::texture::Texture;
@@ -54,51 +54,51 @@ impl<M, T: Texture, const OUT: usize>
 impl<M, T: Texture, const OUT: usize, V, F> Builder<M, T, OUT, V, F> {
     builder!(force_cull_face: Option<CullFace>);
 
-    pub fn vertex_shader<P: AsRef<Path>>(
+    pub fn vertex_shader<NEVER, P: AsRef<Path>>(
         self,
         source: P,
-    ) -> Result<Builder<M, T, OUT, VertexShader, F>> {
+    ) -> ApiResult<Builder<M, T, OUT, VertexShader, F>, NEVER> {
         Shader::new(gl::VERTEX_SHADER, source).map(|shader| Builder {
             vertex_shader: VertexShader(shader),
             ..self
         })
     }
 
-    pub fn vertex_shader_raw(self, source: &[u8]) -> Result<Builder<M, T, OUT, VertexShader, F>> {
+    pub fn vertex_shader_raw<NEVER>(self, source: &[u8]) -> ApiResult<Builder<M, T, OUT, VertexShader, F>, NEVER> {
         Shader::new_from_slice(gl::VERTEX_SHADER, source).map(|shader| Builder {
             vertex_shader: VertexShader(shader),
             ..self
         })
     }
 
-    pub fn fragment_shader<P: AsRef<Path>>(
+    pub fn fragment_shader<NEVER, P: AsRef<Path>>(
         self,
         source: P,
-    ) -> Result<Builder<M, T, OUT, V, FragmentShader>> {
+    ) -> ApiResult<Builder<M, T, OUT, V, FragmentShader>, NEVER> {
         Shader::new(gl::FRAGMENT_SHADER, source).map(|shader| Builder {
             fragment_shader: FragmentShader(shader),
             ..self
         })
     }
 
-    pub fn fragment_shader_raw(
+    pub fn fragment_shader_raw<NEVER>(
         self,
         source: &[u8],
-    ) -> Result<Builder<M, T, OUT, V, FragmentShader>> {
+    ) -> ApiResult<Builder<M, T, OUT, V, FragmentShader>, NEVER> {
         Shader::new_from_slice(gl::FRAGMENT_SHADER, source).map(|shader| Builder {
             fragment_shader: FragmentShader(shader),
             ..self
         })
     }
 
-    pub fn geometry_shader<P: AsRef<Path>>(self, source: P) -> Result<Self> {
+    pub fn geometry_shader<NEVER, P: AsRef<Path>>(self, source: P) -> ApiResult<Self, NEVER> {
         Shader::new(gl::GEOMETRY_SHADER, source).map(|shader| Builder {
             geometry_shader: Some(shader),
             ..self
         })
     }
 
-    pub fn geometry_shader_raw(self, source: &[u8]) -> Result<Self> {
+    pub fn geometry_shader_raw<NEVER>(self, source: &[u8]) -> ApiResult<Self, NEVER> {
         Shader::new_from_slice(gl::GEOMETRY_SHADER, source).map(|shader| Builder {
             geometry_shader: Some(shader),
             ..self

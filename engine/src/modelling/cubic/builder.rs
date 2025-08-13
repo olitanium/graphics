@@ -66,7 +66,7 @@ impl Builder {
             cull_face: self.cull_face,
             skeleton: self.skeleton.unwrap_or_default(),
             scale: self.scale.unwrap_or(1.0),
-            realtive: self.relative,
+            relative: self.relative,
         }
     }
 }

@@ -8,7 +8,7 @@ use image::DynamicImage;
 use utils::{builder, new};
 
 use super::CubeMap;
-use crate::error::Result;
+use crate::error::ApiResult;
 use crate::framebuffer::attachments::CubeWithDepth;
 use crate::framebuffer::traits::Attachment;
 use crate::texture::{Error, Magnification, Minification, TexBuilder, TexBuilderCanBuild};
@@ -56,7 +56,7 @@ impl TexBuilder for Builder<MissingData> {
     }
 }
 
-fn load_image<P: AsRef<Path>>(path: P) -> Result<DynamicImage> {
+fn load_image<E, P: AsRef<Path>>(path: P) -> ApiResult<DynamicImage, E> {
     let image = image::ImageReader::open(&path)
         .map_err(|_| Error::OpeningTexture {
             path: path.as_ref().into(),
@@ -95,7 +95,7 @@ impl<T> Builder<T> {
 impl Builder<MissingData> {
     new!();
 
-    pub fn image<P: AsRef<Path>>(
+    pub fn image<NEVER, P: AsRef<Path>>(
         self,
         positive_x: P,
         negative_x: P,
@@ -103,7 +103,7 @@ impl Builder<MissingData> {
         negative_y: P,
         positive_z: P,
         negative_z: P,
-    ) -> Result<Builder<HasSomeImage>> {
+    ) -> ApiResult<Builder<HasSomeImage>, NEVER> {
         let data = HasSomeImage {
             positive_x: load_image(positive_x)?,
             negative_x: load_image(negative_x)?,

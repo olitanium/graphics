@@ -1,5 +1,4 @@
 use graphics::Draw;
-use graphics::error::Result;
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Matrix;
@@ -8,6 +7,7 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use super::SkyBox;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::geometry::YieldsPose;
+use crate::{EngApiResult, EngError};
 // use crate::error::Result;
 
 #[derive(Debug)]
@@ -49,12 +49,12 @@ impl<'a, const OUT: usize, X: FramebufferWithDepth<OUT>> Group<'a, OUT, X> {
     }
 }
 
-impl<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw for Group<'a, OUT, D> {
+impl<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw<EngError<NEVER>> for Group<'a, OUT, D> {
     fn draw(
         self: Box<Self>,
         register: &mut FramebufferContext,
         marker: &mut ShaderProgramContext,
-    ) -> Result<()> {
+    ) -> EngApiResult<(), NEVER> {
         let mut active_framebuffer = self.framebuffer.bind(register);
         let mut active_shader = self.shader.use_program(marker);
 

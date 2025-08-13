@@ -6,7 +6,7 @@ use std::{iter, ptr};
 
 use super::uniform::Uniform;
 use super::{CullFace, Error, ShaderProgram, ShaderProgramContext};
-use crate::error::Result;
+use crate::error::ApiResult;
 use crate::gl_call;
 use crate::texture::{self, Texture};
 use crate::types::{self, UniformLocation};
@@ -63,7 +63,7 @@ impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, 
         }
     }
 
-    pub fn validate(&self) -> Result<()> {
+    pub fn validate<NEVER>(&self) -> ApiResult<(), NEVER> {
         gl_call! { gl::ValidateProgram(self.shader_program.id.to_primitive()); }
 
         let mut error = 0;
@@ -87,7 +87,7 @@ impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, 
         }
     }
 
-    pub(crate) fn bind_textures(&mut self) -> Result<()> {
+    pub(crate) fn bind_textures<NEVER>(&mut self) -> ApiResult<(), NEVER> {
         static MAX_TEX_UNITS: LazyLock<usize> = LazyLock::new(|| {
             let mut out = 0;
             gl_call! {
@@ -144,7 +144,7 @@ impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, 
         self.shader_program.get_uniform_location(name)
     }
 
-    pub fn cull_face(&mut self, cull_face: CullFace) -> Result<()> {
+    pub fn cull_face<NEVER>(&mut self, cull_face: CullFace) -> ApiResult<(), NEVER> {
         self.context.cull_face(cull_face)
     }
 

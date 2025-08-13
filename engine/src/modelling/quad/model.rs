@@ -2,7 +2,6 @@ use std::array;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use graphics::Result;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::shader_program::ActiveShaderProgram;
@@ -11,6 +10,7 @@ use graphics::vertex_array::VertexArray;
 
 use super::{Builder, QuadVertex};
 use crate::modelling::test_models::vertex_array_quad;
+use crate::{EngResult};
 
 #[derive(Debug)]
 pub struct Quad<const N: usize> {
@@ -50,11 +50,11 @@ impl<const N: usize> Quad<N> {
         }
     }
 
-    pub(crate) fn draw<'a, const OUT: usize, I: FramebufferWithoutExtra<OUT>>(
+    pub(crate) fn draw<'a, NEVER, const OUT: usize, I: FramebufferWithoutExtra<OUT>>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, I::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, I>,
-    ) -> Result<()> {
+    ) -> EngResult<(), NEVER> {
         let input = self.texture
             .iter()
             .map(|tex| /*SAFETY: ref only lives for this function call*/ unsafe { tex.try_borrow_unguarded().expect("the only borrow") as &dyn Texture} ) 
@@ -63,6 +63,8 @@ impl<const N: usize> Quad<N> {
 
         active_shader.register_texture(input);
 
-        self.vertex_array.draw(active_shader, active_framebuffer)
+        self.vertex_array.draw(active_shader, active_framebuffer)?;
+
+        Ok(())
     }
 }

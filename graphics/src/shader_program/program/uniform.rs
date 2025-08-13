@@ -29,7 +29,7 @@ macro_rules! define_uniform {
                     self,
                     location,
                     shader_program,
-                )
+                );
             }
 
             fn set_uniform(
@@ -43,8 +43,8 @@ macro_rules! define_uniform {
     };
 }
 
-define_uniform!(i32 => |value, location, _s| { gl_call!{ gl::Uniform1i(location.to_primitive(), *value) } } );
-define_uniform!(f32 => |value, location, _s| { gl_call!{ gl::Uniform1f(location.to_primitive(), *value) } } );
+define_uniform!(i32 => |value, location, _s| { gl_call!{ gl::Uniform1i(location.to_primitive(), *value); } } );
+define_uniform!(f32 => |value, location, _s| { gl_call!{ gl::Uniform1f(location.to_primitive(), *value); } } );
 define_uniform!([i32; 1] => |value, location, s| value[0].set_uniform_ref(location, s));
 define_uniform!([f32; 1] => |value, location, s| value[0].set_uniform_ref(location, s));
 define_uniform!([i32; 2] => |value, location, _s| gl_call! { gl::Uniform2i(location.to_primitive(), value[0], value[1]); });

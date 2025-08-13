@@ -7,7 +7,7 @@ use utils::{builder, new};
 use super::input::keyboard::Keyboard;
 use super::input::mouse::{CursorMode, Mouse};
 use crate::environment::Error;
-use crate::error::Result;
+use crate::error::ApiResult;
 use crate::framebuffer::DefaultFramebuffer;
 use crate::types::TexDim;
 use crate::{Event, gl_call};
@@ -77,21 +77,23 @@ impl Window {
     pub fn configure(&mut self) {
         gl_call! {
             gl::Enable(gl::BLEND);
-        }
+        };
         gl_call! {
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-        }
+        };
 
         gl_call! {
             gl::Enable(gl::DEBUG_OUTPUT);
-        }
+        };
         gl_call! {
             gl::DebugMessageCallback(Some(crate::environment::debug_callback), ptr::null());
-        }
+        };
 
         gl_call! {
             gl::ClearColor(0.1, 0.0, 0.1, 1.0);
-        }
+        };
+
+
     }
 }
 
@@ -160,7 +162,7 @@ impl<G> Builder<G> {
 }
 
 impl Builder<HasGlfw<'_>> {
-    pub(crate) fn build(self) -> Result<Window> {
+    pub(crate) fn build<NEVER>(self) -> ApiResult<Window, NEVER> {
         // Create a windowed mode window and its OpenGL context
         let (glfw_window, events) = self
             .maker
@@ -181,7 +183,7 @@ impl Builder<HasGlfw<'_>> {
 }
 
 impl Builder<FromOtherWindow<'_>> {
-    pub(crate) fn build(self) -> Result<Window> {
+    pub(crate) fn build<NEVER>(self) -> ApiResult<Window, NEVER> {
         // Create a windowed mode window and its OpenGL context
         let (glfw_window, events) = self
             .maker

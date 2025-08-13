@@ -11,7 +11,7 @@ pub enum Error {
 
 utils::error_boilerplate!(Error);
 
-impl From<Error> for crate::error::Error {
+impl<E> From<Error> for crate::error::ApiError<E> {
     fn from(value: Error) -> Self {
         Self::Texture(value)
     }

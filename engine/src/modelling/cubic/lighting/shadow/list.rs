@@ -1,5 +1,4 @@
 use array_vec::ArrayVec;
-use graphics::Result;
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferInternals;
 use graphics::linear_algebra::Vector;
@@ -9,7 +8,7 @@ use graphics::texture::Texture;
 use super::{ShadowFarLight, ShadowPointLight, ShadowSpotLight};
 use crate::modelling::Cubic;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
-use crate::opengl_shaders;
+use crate::{opengl_shaders, EngResult};
 
 #[derive(Debug, Default)]
 pub struct ShadowListLights<const MAX: usize> {
@@ -19,14 +18,14 @@ pub struct ShadowListLights<const MAX: usize> {
 }
 
 impl<const MAX: usize> ShadowListLights<MAX> {
-    pub(crate) fn gen_depth(
+    pub(crate) fn gen_depth<NEVER>(
         &self,
         sp_context: &mut ShaderProgramContext,
         fb_context: &mut FramebufferContext,
         complete_models: &[(&Cubic, usize /* animation */, f32 /* time */)],
         target_position: Vector<3>,
         uniforms: Vec<(String, &dyn Uniform)>,
-    ) -> Result<()> {
+    ) -> EngResult<(), NEVER> {
         let mut active_depth_only_shader =
             opengl_shaders::far_light_depth().use_program(sp_context);
         active_depth_only_shader.set_uniform_dyn(uniforms.clone());

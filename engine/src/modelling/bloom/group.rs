@@ -1,5 +1,4 @@
 use graphics::Draw;
-use graphics::error::Result;
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::{FramebufferInternals, FramebufferWithoutExtra};
 use graphics::shader_program::ShaderProgramContext;
@@ -7,7 +6,7 @@ use graphics::texture::FlatTexture;
 
 use super::Bloom;
 use crate::modelling::Quad;
-use crate::opengl_shaders;
+use crate::{opengl_shaders, EngApiResult, EngError};
 
 #[derive(Debug)]
 pub struct Group<'a, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> {
@@ -21,12 +20,12 @@ impl<'a, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> Group<'a, X> {
     }
 }
 
-impl<'a, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> Draw for Group<'a, X> {
+impl<'a, NEVER, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> Draw<EngError<NEVER>> for Group<'a, X> {
     fn draw(
         self: Box<Self>,
         register: &mut FramebufferContext,
         marker: &mut ShaderProgramContext,
-    ) -> Result<()> {
+    ) -> EngApiResult<(), NEVER> {
         let Group { bloom, output_fb } = *self;
 
         let mut active_framebuffer_x = bloom.framebuffer_x.bind(register);

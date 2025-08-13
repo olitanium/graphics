@@ -11,9 +11,10 @@ use russimp::scene::PostProcess;
 use super::geometry::YieldsPose;
 use super::material::Material;
 use super::{Builder, Skeleton, import};
-use crate::error::Result;
+use crate::error::EngResult;
 use crate::modelling::simple_vertex::SimpleVertex;
 use crate::modelling::test_models::vertex_array_cube;
+use crate::EngApiResult;
 
 #[derive(Debug, Clone)]
 pub struct Mesh {
@@ -35,7 +36,7 @@ impl Mesh {
         }
     }
 
-    pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
+    pub(crate) fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, (Cubic, L), D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
@@ -44,7 +45,7 @@ impl Mesh {
         animation: usize,
         time: f32,
         scale: f32,
-    ) -> graphics::Result<()> {
+    ) -> EngResult<(), NEVER> {
         self.material.register_to(active_shader, "material");
 
         active_shader.set_uniform(
@@ -55,7 +56,9 @@ impl Mesh {
                 * Matrix::transform_scale(scale, scale, scale),
         );
 
-        self.vertex_array.draw(active_shader, active_framebuffer)
+        self.vertex_array.draw(active_shader, active_framebuffer)?;
+
+        Ok(())
     }
 }
 
@@ -63,9 +66,8 @@ impl Mesh {
 pub struct Cubic {
     pub(crate) meshes: Vec<Mesh>,
     pub cull_face: CullFace,
-    // pub animation: Animation,
     pub skeleton: Skeleton,
-    pub realtive: bool,
+    pub relative: bool,
     pub scale: f32,
 }
 
@@ -97,15 +99,15 @@ impl Cubic {
             .for_each(|mesh| mesh.material = mat.clone());
     }
 
-    pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
+    pub(crate) fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, (Self, L), D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         animation: usize,
         time: f32,
-    ) -> graphics::Result<()> {
+    ) -> EngResult<(), NEVER> {
         // Ignore cull_face error
-        _ = active_shader.cull_face(self.cull_face);
+        let _: EngApiResult<_, NEVER> = active_shader.cull_face(self.cull_face);
 
         // active_shader.set_uniform("model".to_string(), self.model_matrix(hint));
 
@@ -114,7 +116,7 @@ impl Cubic {
                 active_shader,
                 active_framebuffer,
                 &self.skeleton,
-                self.realtive,
+                self.relative,
                 animation,
                 time,
                 self.scale,
@@ -124,7 +126,7 @@ impl Cubic {
         Ok(())
     }
 
-    pub fn import<PA: AsRef<Path>>(path: PA, post_process: Vec<PostProcess>) -> Result<Builder> {
+    pub fn import<NEVER: Clone, PA: AsRef<Path>>(path: PA, post_process: Vec<PostProcess>) -> EngResult<Builder, NEVER> {
         import::import(path, post_process)
     }
 }

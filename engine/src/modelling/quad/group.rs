@@ -1,7 +1,9 @@
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::{FramebufferInternals, FramebufferWithoutExtra};
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
-use graphics::{Draw, Result};
+use graphics::Draw;
+
+use crate::{EngApiResult, EngError};
 
 use super::Quad;
 
@@ -31,14 +33,14 @@ impl<'a, const N: usize, const OUT: usize, X: FramebufferWithoutExtra<OUT>> Grou
     }
 }
 
-impl<'a, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> Draw
+impl<'a, NEVER, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> Draw<EngError<NEVER>>
     for Group<'a, N, OUT, D>
 {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> Result<()> {
+    ) -> EngApiResult<(), NEVER> {
         let mut active_framebuffer = self.framebuffer.bind(fb_context);
         let mut shader = self.shader.use_program(sp_context);
         shader.set_uniform_dyn(self.uniforms);
