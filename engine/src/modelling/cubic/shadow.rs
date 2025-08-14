@@ -11,7 +11,7 @@ use super::camera::Camera;
 use super::geometry::YieldsPose;
 use super::lighting::shadow::ShadowListLights;
 use super::model::Cubic;
-use crate::{opengl_shaders, EngApiResult, EngError};
+use crate::{opengl_shaders, EngApiResult, EngError, EngResult};
 
 pub const SHADOW_SHADER_MAX_LIGHTS: usize = 2;
 
@@ -56,46 +56,46 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
     }
 }
 
-impl<'a, NEVER, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw<EngError<NEVER>> for Group<'a, X> {
+impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw for Group<'a, X> {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> EngApiResult<(), NEVER> {
-        self.list_light.gen_depth(
-            sp_context,
-            fb_context,
-            &self.opaque,
-            self.position,
-            self.uniforms.clone(),
-        )?;
-
-        // At this point, all lights have their framebuffers filled with depth
-        // information
-        let mut active_shadow_shader = opengl_shaders::shadow().use_program(sp_context);
-        // SAFETY: because active_shadow_shader is dropped before the end of this
-        // function, the references stored cannot leak
-        unsafe {
-            self.list_light
-                .bind(&mut active_shadow_shader, self.position);
-        }
-
-        active_shadow_shader.set_uniform("projtimesview".to_string(), self.look_at);
-        active_shadow_shader.set_uniform("camera_postion".to_string(), self.position.homogeneous());
-        active_shadow_shader.set_uniform_dyn(self.uniforms);
-
-        let mut active_output_framebuffer = self.output_framebuffer.bind(fb_context);
-        for (model, animation, time) in iter::chain(self.opaque, self.transparent) {
-            model.draw(
-                &mut active_shadow_shader,
-                &mut active_output_framebuffer,
-                animation,
-                time,
+    ) {
+        let _: EngResult<(), !> = try {
+            self.list_light.gen_depth(
+                sp_context,
+                fb_context,
+                &self.opaque,
+                self.position,
+                self.uniforms.clone(),
             )?;
-        }
 
-        drop(active_shadow_shader);
+            // At this point, all lights have their framebuffers filled with depth
+            // information
+            let mut active_shadow_shader = opengl_shaders::shadow().use_program(sp_context);
+            // SAFETY: because active_shadow_shader is dropped before the end of this
+            // function, the references stored cannot leak
+            unsafe {
+                self.list_light
+                    .bind(&mut active_shadow_shader, self.position);
+            }
 
-        Ok(())
+            active_shadow_shader.set_uniform("projtimesview".to_string(), self.look_at);
+            active_shadow_shader.set_uniform("camera_postion".to_string(), self.position.homogeneous());
+            active_shadow_shader.set_uniform_dyn(self.uniforms);
+
+            let mut active_output_framebuffer = self.output_framebuffer.bind(fb_context);
+                for (model, animation, time) in iter::chain(self.opaque, self.transparent) {
+                    model.draw(
+                        &mut active_shadow_shader,
+                        &mut active_output_framebuffer,
+                        animation,
+                        time,
+                    )?;
+                }
+
+            drop(active_shadow_shader);
+        };
     }
 }

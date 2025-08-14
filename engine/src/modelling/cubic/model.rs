@@ -99,15 +99,15 @@ impl Cubic {
             .for_each(|mesh| mesh.material = mat.clone());
     }
 
-    pub(crate) fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
+    pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, (Self, L), D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         animation: usize,
         time: f32,
-    ) -> EngResult<(), NEVER> {
+    ) -> EngResult<(), !> {
         // Ignore cull_face error
-        let _: EngApiResult<_, NEVER> = active_shader.cull_face(self.cull_face);
+        let _: EngApiResult<_, !> = active_shader.cull_face(self.cull_face);
 
         // active_shader.set_uniform("model".to_string(), self.model_matrix(hint));
 

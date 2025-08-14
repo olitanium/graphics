@@ -3,7 +3,7 @@ use graphics::framebuffer::traits::{FramebufferInternals, FramebufferWithoutExtr
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::Draw;
 
-use crate::{EngApiResult, EngError};
+use crate::{EngApiResult, EngError, EngResult};
 
 use super::Quad;
 
@@ -33,22 +33,22 @@ impl<'a, const N: usize, const OUT: usize, X: FramebufferWithoutExtra<OUT>> Grou
     }
 }
 
-impl<'a, NEVER, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> Draw<EngError<NEVER>>
+impl<'a, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> Draw
     for Group<'a, N, OUT, D>
 {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> EngApiResult<(), NEVER> {
-        let mut active_framebuffer = self.framebuffer.bind(fb_context);
-        let mut shader = self.shader.use_program(sp_context);
-        shader.set_uniform_dyn(self.uniforms);
+    ) {
+        let _: EngResult<(), !> = try {
+            let mut active_framebuffer = self.framebuffer.bind(fb_context);
+            let mut shader = self.shader.use_program(sp_context);
+            shader.set_uniform_dyn(self.uniforms);
 
-        for quad in self.quads {
-            quad.draw(&mut shader, &mut active_framebuffer)?;
-        }
-
-        Ok(())
+            for quad in self.quads {
+                quad.draw(&mut shader, &mut active_framebuffer)?;
+            }
+        };
     }
 }

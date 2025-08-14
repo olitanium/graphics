@@ -5,7 +5,7 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
 use graphics::{Draw};
 
-use crate::{EngError, EngApiResult};
+use crate::{EngApiResult, EngError, EngResult};
 
 use super::Camera;
 use super::geometry::YieldsPose;
@@ -55,29 +55,29 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
     }
 }
 
-impl<'a, NEVER, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw<EngError<NEVER>>
+impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
     for Group<'a, MAX, OUT, D>
 {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> EngApiResult<(), NEVER> {
-        let mut active_shader = self.shader.use_program(sp_context);
-        let mut active_framebuffer = self.framebuffer.bind(fb_context);
+    ) {
+        let _: EngResult<(), !> = try { 
+            let mut active_shader = self.shader.use_program(sp_context);
+            let mut active_framebuffer = self.framebuffer.bind(fb_context);
 
-        self.lights.bind(&mut active_shader);
-        let camera_pos = self.camera_pos;
+            self.lights.bind(&mut active_shader);
+            let camera_pos = self.camera_pos;
 
-        active_shader.set_uniform("projtimesview".to_string(), self.camera_look_at);
-        active_shader.set_uniform("camera_postion".to_string(), camera_pos.homogeneous());
+            active_shader.set_uniform("projtimesview".to_string(), self.camera_look_at);
+            active_shader.set_uniform("camera_postion".to_string(), camera_pos.homogeneous());
 
-        active_shader.set_uniform_dyn(self.uniforms);
+            active_shader.set_uniform_dyn(self.uniforms);
 
-        for (model, animation, time) in self.opaque {
-            model.draw(&mut active_shader, &mut active_framebuffer, animation, time)?;
-        }
-
-        Ok(())
+            for (model, animation, time) in self.opaque {
+                model.draw(&mut active_shader, &mut active_framebuffer, animation, time)?;
+            }
+        };
     }
 }

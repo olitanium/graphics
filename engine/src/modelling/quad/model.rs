@@ -50,11 +50,11 @@ impl<const N: usize> Quad<N> {
         }
     }
 
-    pub(crate) fn draw<'a, NEVER, const OUT: usize, I: FramebufferWithoutExtra<OUT>>(
+    pub(crate) fn draw<'a, const OUT: usize, I: FramebufferWithoutExtra<OUT>>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, I::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, I>,
-    ) -> EngResult<(), NEVER> {
+    ) -> EngResult<(), !> {
         let input = self.texture
             .iter()
             .map(|tex| /*SAFETY: ref only lives for this function call*/ unsafe { tex.try_borrow_unguarded().expect("the only borrow") as &dyn Texture} ) 

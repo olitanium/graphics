@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use engine::eng_state::EngState;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::framebuffer::{DefaultFramebuffer, Framebuffer};
@@ -21,7 +22,8 @@ use engine::modelling::{
     SkyBoxGroup,
 };
 use engine::types::TexDim;
-use engine::{EngApiResult, EngError, EngResult, Event, GlobalState, VecDraw};
+use engine::{EngApiResult, EngError, EngResult, Event, ApiState, VecDraw};
+
 pub struct State {
     pub time: f32,
     pub camera: Camera<CameraPose>,
@@ -53,14 +55,17 @@ pub struct State {
 #[derive(Debug, Clone, Copy)]
 pub struct StateError;
 
-impl GlobalState for State {
-    type Error = EngError<StateError>; 
+utils::error_boilerplate!(StateError);
+engine::derive_api_state!(State);
+
+impl EngState for State {
+    type Error = StateError; 
 
     fn poll<'a>(
         &'a mut self,
         events: Vec<Event<'a>>,
         // default_framebuffer: &'a DefaultFramebuffer,
-    ) -> EngApiResult<VecDraw<'a, StateError>, StateError> {
+    ) -> EngResult<VecDraw<'a>, StateError> {
         let mut frame_time = 0.0;
         let mut keyboard = HashSet::new();
         let mut mouse_delta = (0.0, 0.0);
@@ -106,7 +111,7 @@ impl GlobalState for State {
         Ok(out)
     }
 
-    fn new(initial_size: (TexDim, TexDim)) -> EngApiResult<Self, StateError> {
+    fn new(initial_size: (TexDim, TexDim)) -> EngResult<Self, StateError> {
         let output = Self::new_(initial_size)?;
         Ok(output)
     }
@@ -142,10 +147,10 @@ impl State {
     fn prep_draw<'a>(
         &'a mut self,
         default_framebuffer: &'a DefaultFramebuffer,
-    ) -> EngResult<VecDraw<'a, StateError>, StateError> {
+    ) -> EngResult<VecDraw<'a>, StateError> {
         let time = self.time;
 
-        let mut out: VecDraw<StateError> = Vec::new();
+        let mut out: VecDraw = Vec::new();
 
         let all_models = {
             let mut all_models = vec![(&self.imported, self.which_animation, time)];

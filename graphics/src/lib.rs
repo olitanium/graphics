@@ -21,7 +21,7 @@ pub mod vertex;
 pub mod vertex_array;
 pub mod vertex_buffer;
 
-pub use environment::{Draw, Environment, Event, GlobalState, Key};
+pub use environment::{Draw, Environment, Event, ApiState, Key};
 pub use error::{ApiError, ApiResult};
 pub use shader_program::{ActiveShaderProgram, ShaderProgram, ShaderProgramContext};
 pub use {colour, linear_algebra};

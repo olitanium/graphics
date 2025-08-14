@@ -1,3 +1,5 @@
+#![feature(never_type)]
+
 use engine::Environment;
 
 mod controls;

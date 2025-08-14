@@ -18,14 +18,14 @@ pub struct ShadowListLights<const MAX: usize> {
 }
 
 impl<const MAX: usize> ShadowListLights<MAX> {
-    pub(crate) fn gen_depth<NEVER>(
+    pub(crate) fn gen_depth(
         &self,
         sp_context: &mut ShaderProgramContext,
         fb_context: &mut FramebufferContext,
         complete_models: &[(&Cubic, usize /* animation */, f32 /* time */)],
         target_position: Vector<3>,
         uniforms: Vec<(String, &dyn Uniform)>,
-    ) -> EngResult<(), NEVER> {
+    ) -> EngResult<(), !> {
         let mut active_depth_only_shader =
             opengl_shaders::far_light_depth().use_program(sp_context);
         active_depth_only_shader.set_uniform_dyn(uniforms.clone());

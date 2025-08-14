@@ -7,7 +7,7 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use super::SkyBox;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::geometry::YieldsPose;
-use crate::{EngApiResult, EngError};
+use crate::{EngApiResult, EngError, EngResult};
 // use crate::error::Result;
 
 #[derive(Debug)]
@@ -49,25 +49,25 @@ impl<'a, const OUT: usize, X: FramebufferWithDepth<OUT>> Group<'a, OUT, X> {
     }
 }
 
-impl<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw<EngError<NEVER>> for Group<'a, OUT, D> {
+impl<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw for Group<'a, OUT, D> {
     fn draw(
         self: Box<Self>,
         register: &mut FramebufferContext,
         marker: &mut ShaderProgramContext,
-    ) -> EngApiResult<(), NEVER> {
-        let mut active_framebuffer = self.framebuffer.bind(register);
-        let mut active_shader = self.shader.use_program(marker);
+    ) {
+        let _: EngResult<(), !> = try { 
+            let mut active_framebuffer = self.framebuffer.bind(register);
+            let mut active_shader = self.shader.use_program(marker);
 
-        active_shader.drawing_skybox(true);
-        active_shader.set_uniform("projtimesview".to_string(), self.look_at);
+            active_shader.drawing_skybox(true);
+            active_shader.set_uniform("projtimesview".to_string(), self.look_at);
 
-        active_shader.set_uniform_dyn(self.uniforms);
+            active_shader.set_uniform_dyn(self.uniforms);
 
-        self.skybox
-            .draw(&mut active_shader, &mut active_framebuffer)?;
-
-        active_shader.drawing_skybox(false);
-
-        Ok(())
+            self.skybox
+                .draw(&mut active_shader, &mut active_framebuffer)?;
+            
+            active_shader.drawing_skybox(false);
+        };
     }
 }

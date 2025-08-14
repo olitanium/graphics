@@ -6,7 +6,7 @@ use graphics::texture::FlatTexture;
 
 use super::Bloom;
 use crate::modelling::Quad;
-use crate::{opengl_shaders, EngApiResult, EngError};
+use crate::{opengl_shaders, EngApiResult, EngError, EngResult};
 
 #[derive(Debug)]
 pub struct Group<'a, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> {
@@ -20,26 +20,26 @@ impl<'a, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> Group<'a, X> {
     }
 }
 
-impl<'a, NEVER, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> Draw<EngError<NEVER>> for Group<'a, X> {
+impl<'a, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> Draw for Group<'a, X> {
     fn draw(
         self: Box<Self>,
         register: &mut FramebufferContext,
         marker: &mut ShaderProgramContext,
-    ) -> EngApiResult<(), NEVER> {
-        let Group { bloom, output_fb } = *self;
+    ) {
+        let _: EngResult<(), !> = try {
+            let Group { bloom, output_fb } = *self;
 
-        let mut active_framebuffer_x = bloom.framebuffer_x.bind(register);
-        let mut active_blur_x = opengl_shaders::bloom_x().use_program(marker);
-        bloom
-            .to_blur
-            .draw(&mut active_blur_x, &mut active_framebuffer_x)?;
+            let mut active_framebuffer_x = bloom.framebuffer_x.bind(register);
+            let mut active_blur_x = opengl_shaders::bloom_x().use_program(marker);
+            bloom
+                .to_blur
+                .draw(&mut active_blur_x, &mut active_framebuffer_x)?;
 
-        let mut active_output_fb = output_fb.bind(register);
-        let mut active_blur_y = opengl_shaders::bloom_y().use_program(marker);
+            let mut active_output_fb = output_fb.bind(register);
+            let mut active_blur_y = opengl_shaders::bloom_y().use_program(marker);
 
-        Quad::screen(bloom.framebuffer_x.get_all_colour())
-            .draw(&mut active_blur_y, &mut active_output_fb)?;
-
-        Ok(())
+            Quad::screen(bloom.framebuffer_x.get_all_colour())
+                .draw(&mut active_blur_y, &mut active_output_fb)?;
+        };
     }
 }

@@ -7,7 +7,7 @@ mod window;
 
 pub use draw::Draw;
 use glfw::fail_on_errors;
-pub use global_state::GlobalState;
+pub use global_state::ApiState;
 pub use input::keyboard::Key;
 pub use input::mouse::Button;
 use utils::error_boilerplate;
@@ -97,14 +97,14 @@ pub enum Event<'a> {
 }
 
 #[derive(Debug)]
-pub struct Environment<G: GlobalState> {
+pub struct Environment<G: ApiState> {
     global_state: G,
     window: Window,
     old_frame: f64,
     glfw: glfw::Glfw,
 }
 
-impl<G: GlobalState> Environment<G> {
+impl<G: ApiState> Environment<G> {
     pub fn new(
         gl_version: (u32, u32),
         screen_dims: (u32, u32),
@@ -175,7 +175,7 @@ impl<G: GlobalState> Environment<G> {
                     framebuffer_register.clear();
                     // Begin rendering code
                     for draw in to_draw {
-                        draw.draw(&mut framebuffer_register, &mut shader_program_marker)?;
+                        draw.draw(&mut framebuffer_register, &mut shader_program_marker);
                     }
                 }
                 Err(error) => return Err(error),
@@ -186,7 +186,7 @@ impl<G: GlobalState> Environment<G> {
         Ok(())
     }
 
-    fn poll(&mut self) -> ApiResult<Vec<Box<dyn Draw<G::Error> + '_>>, G::Error> {
+    fn poll(&mut self) -> ApiResult<Vec<Box<dyn Draw + '_>>, G::Error> {
         let curr_time = self.glfw.get_time();
         let frametime = curr_time - self.old_frame;
         self.old_frame = curr_time;
@@ -206,18 +206,18 @@ impl<G: GlobalState> Environment<G> {
     }
 }
 
-struct FrameIter<'a, G: GlobalState> {
+struct FrameIter<'a, G: ApiState> {
     env: &'a mut Environment<G>,
 }
 
-impl<'env, G: GlobalState> FrameIter<'env, G> {
+impl<'env, G: ApiState> FrameIter<'env, G> {
     fn new(env: &'env mut Environment<G>) -> Self {
         Self { env }
     }
 }
 
-impl<'env, G: GlobalState> FrameIter<'env, G> {
-    pub fn next(&mut self) -> Option<ApiResult<Vec<Box<dyn Draw<G::Error> + '_>>, G::Error>> {
+impl<G: ApiState> FrameIter<'_, G> {
+    pub fn next(&mut self) -> Option<ApiResult<Vec<Box<dyn Draw + '_>>, G::Error>> {
         if !self.env.window.should_close() {
             // Poll for and process events
             self.env.glfw.poll_events();
