@@ -5,10 +5,9 @@ use graphics::linear_algebra::Matrix;
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 
 use super::SkyBox;
+use crate::EngResult;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::geometry::YieldsPose;
-use crate::{EngApiResult, EngError, EngResult};
-// use crate::error::Result;
 
 #[derive(Debug)]
 pub struct Group<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> {
@@ -50,12 +49,8 @@ impl<'a, const OUT: usize, X: FramebufferWithDepth<OUT>> Group<'a, OUT, X> {
 }
 
 impl<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw for Group<'a, OUT, D> {
-    fn draw(
-        self: Box<Self>,
-        register: &mut FramebufferContext,
-        marker: &mut ShaderProgramContext,
-    ) {
-        let _: EngResult<(), !> = try { 
+    fn draw(self: Box<Self>, register: &mut FramebufferContext, marker: &mut ShaderProgramContext) {
+        let _: EngResult<(), !> = try {
             let mut active_framebuffer = self.framebuffer.bind(register);
             let mut active_shader = self.shader.use_program(marker);
 
@@ -66,7 +61,7 @@ impl<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw for Group<'a, OUT,
 
             self.skybox
                 .draw(&mut active_shader, &mut active_framebuffer)?;
-            
+
             active_shader.drawing_skybox(false);
         };
     }

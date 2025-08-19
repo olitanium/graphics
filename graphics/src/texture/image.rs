@@ -18,10 +18,14 @@ pub enum ImageType {
     Srgba(Vec<ColourRGBA>),
 }
 
-fn new_from_file<NEVER, P: AsRef<Path>>(path: P) -> ApiResult<((TexDim, TexDim), Vec<ColourRGBA>), NEVER> {
+fn new_from_file<NEVER, P: AsRef<Path>>(
+    path: P,
+) -> ApiResult<((TexDim, TexDim), Vec<ColourRGBA>), NEVER> {
     let path_ref = path.as_ref();
 
-    fn new_from_file_path<NEVER>(path: &Path) -> ApiResult<((TexDim, TexDim), Vec<ColourRGBA>), NEVER> {
+    fn new_from_file_path<NEVER>(
+        path: &Path,
+    ) -> ApiResult<((TexDim, TexDim), Vec<ColourRGBA>), NEVER> {
         let image = image::ImageReader::open(&path)
             .map_err(|_| Error::OpeningTexture { path: path.into() })?
             .with_guessed_format()

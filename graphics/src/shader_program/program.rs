@@ -10,7 +10,7 @@ use crate::types::{ShaderProgramId, UniformLocation};
 
 mod active_shader;
 mod utils;
-pub use active_shader::ActiveShaderProgram;
+pub use active_shader::{ActiveShaderProgram, IsActiveShaderProgram};
 
 mod context;
 pub use context::ShaderProgramContext;
@@ -19,7 +19,7 @@ mod builder;
 pub use builder::Builder;
 use builder::{MissingFragmentShader, MissingVertexShader};
 mod uniform;
-pub use uniform::Uniform;
+pub use uniform::{NameNotFoundError, Uniform};
 
 mod cull_face;
 pub use cull_face::CullFace;

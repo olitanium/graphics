@@ -1,16 +1,15 @@
+use graphics::Draw;
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
-use graphics::{Draw};
-
-use crate::EngResult;
 
 use super::Camera;
 use super::geometry::YieldsPose;
 use super::lighting::simple::ListLights;
 use super::model::Cubic;
+use crate::EngResult;
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
@@ -39,8 +38,7 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
         opaque: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,
-    ) -> Box<Self>
-    {
+    ) -> Box<Self> {
         Box::new(Self {
             shader,
             framebuffer,
@@ -61,7 +59,7 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
     ) {
-        let _: EngResult<(), !> = try { 
+        let _: EngResult<(), !> = try {
             let mut active_shader = self.shader.use_program(sp_context);
             let mut active_framebuffer = self.framebuffer.bind(fb_context);
 

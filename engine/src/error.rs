@@ -1,6 +1,6 @@
 use graphics::ApiError;
 
-//pub(crate) type InnerEngResult<T> = EngResult<T, !>;
+// pub(crate) type InnerEngResult<T> = EngResult<T, !>;
 pub type EngResult<T, U> = core::result::Result<T, EngError<U>>;
 
 pub type EngApiResult<T, U> = graphics::ApiResult<T, EngError<U>>;
@@ -29,16 +29,16 @@ impl<U> From<!> for EngError<U> {
 }
 
 impl<U> From<ApiError<Self>> for EngError<U> {
-fn from(value: ApiError<EngError<U>>) -> Self {
-    Self::Api(Box::new(value))
-}
+    fn from(value: ApiError<EngError<U>>) -> Self {
+        Self::Api(Box::new(value))
+    }
 }
 
 impl<U> From<EngError<U>> for ApiError<EngError<U>> {
-fn from(value: EngError<U>) -> Self {
-    match value {
-        EngError::Api(x) => *x,
-        other => Self::Engine(other)
+    fn from(value: EngError<U>) -> Self {
+        match value {
+            EngError::Api(x) => *x,
+            other => Self::Engine(other),
+        }
     }
-}
 }

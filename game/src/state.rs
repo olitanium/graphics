@@ -11,10 +11,21 @@ use engine::modelling::cubic::geometry::{Orientation, Pose};
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::{
-    Bloom, BloomGroup, Cubic, Line, LineGroup, Quad, QuadGroup, ShadowGroup, SkyBox, SkyBoxGroup, SHADOW_SHADER_MAX_LIGHTS
+    Bloom,
+    BloomGroup,
+    Cubic,
+    Line,
+    LineGroup,
+    Quad,
+    QuadGroup,
+    SHADOW_SHADER_MAX_LIGHTS,
+    ShadowGroup,
+    SkyBox,
+    SkyBoxGroup,
+    TestLineVertex,
 };
 use engine::types::TexDim;
-use engine::{EngApiResult, EngError, EngResult, Event, ApiState, VecDraw};
+use engine::{ApiState, EngApiResult, EngError, EngResult, Event, VecDraw};
 
 pub struct State {
     pub time: f32,
@@ -27,7 +38,7 @@ pub struct State {
 
     pub speed: [f32; 3],
 
-    pub line: Line<3>,
+    pub line: Line<TestLineVertex>,
     pub angle: f32,
     pub quad_to_draw: Quad<1>,
 
@@ -53,7 +64,7 @@ utils::error_boilerplate!(StateError);
 engine::derive_api_state!(State);
 
 impl EngState for State {
-    type Error = StateError; 
+    type Error = StateError;
 
     fn poll<'a>(
         &'a mut self,
@@ -149,29 +160,24 @@ impl State {
         let all_models = {
             let mut all_models = vec![(&self.imported, self.which_animation, time)];
 
-            //all_models.extend(self.containers.iter().map(|x| (x, 0, time)));
+            // all_models.extend(self.containers.iter().map(|x| (x, 0, time)));
 
             all_models
         };
 
-        //let transparent_models = vec![]; // vec![(&self.light, time)];
+        // let transparent_models = vec![]; // vec![(&self.light, time)];
 
-        /*out.push(ShadowGroup::new(
-            &self.camera,
-            &(),
-            &self.light_group,
-            all_models,
-            transparent_models,
-            &self.hdr_fb,
-            vec![],
-        ));*/
+        // out.push(ShadowGroup::new(
+        // &self.camera,
+        // &(),
+        // &self.light_group,
+        // all_models,
+        // transparent_models,
+        // &self.hdr_fb,
+        // vec![],
+        // ));
 
-        out.push(LineGroup::new(
-            &self.hdr_fb,
-            &self.line,
-            &self.camera,
-            &(),
-        ));
+        out.push(LineGroup::new(&self.hdr_fb, &self.line, &self.camera, &()));
 
         out.push(SkyBoxGroup::new(
             engine::opengl_shaders::skybox_hdr(),

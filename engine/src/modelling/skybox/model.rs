@@ -4,9 +4,9 @@ use graphics::shader_program::{ActiveShaderProgram, CullFace};
 use graphics::texture::{CubeMap, Texture};
 use graphics::vertex_array::VertexArray;
 
+use crate::EngResult;
 use crate::modelling::SimpleVertex;
 use crate::modelling::test_models::vertex_array_cube;
-use crate::{EngResult};
 
 #[derive(Debug)]
 pub struct SkyBox {

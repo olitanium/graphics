@@ -65,7 +65,10 @@ pub use error::Error;
 
 use super::Builder;
 
-pub(super) fn import<NEVER: Clone, P: AsRef<Path>>(path: P, post_process: Vec<PostProcess>) -> EngResult<Builder, NEVER> {
+pub(super) fn import<NEVER: Clone, P: AsRef<Path>>(
+    path: P,
+    post_process: Vec<PostProcess>,
+) -> EngResult<Builder, NEVER> {
     let path = path.as_ref();
 
     let dir = path
@@ -183,10 +186,8 @@ fn process_node<NEVER: Clone>(
                         })?;
                     let triangle_normal =
                         is_no_vec_or_element_exists("normal", &opt_normal, index)?.copied();
-                    // opt_normal.and_then(|vec| vec.get(index.to_primitive() as usize).copied() );
                     let triangle_tangent =
                         is_no_vec_or_element_exists("tangent", &opt_tangent, index)?.copied();
-                    // opt_tangent.and_then(|vec| vec.get(index.to_primitive() as usize).copied() );
 
                     EngResult::Ok(
                         IncompleteVertex::new(triangle_position, triangle_texture)
@@ -208,8 +209,6 @@ fn process_node<NEVER: Clone>(
                 .clone()?;
 
             Ok(Mesh::new(Rc::new(vertex_array), mat, 0)) // TODO: bone
-            // set to 0 for
-            // debug
         })
         .collect::<EngResult<Vec<_>, NEVER>>()?;
 
@@ -225,7 +224,10 @@ fn process_node<NEVER: Clone>(
     Ok(curr_meshes)
 }
 
-fn parse_material<NEVER>(material: &russimp::material::Material, dir: &Path) -> EngResult<Rc<Material>, NEVER> {
+fn parse_material<NEVER>(
+    material: &russimp::material::Material,
+    dir: &Path,
+) -> EngResult<Rc<Material>, NEVER> {
     // get semantic -> key -> data
     let mut material_properties = HashMap::new();
 
@@ -248,12 +250,9 @@ fn parse_material<NEVER>(material: &russimp::material::Material, dir: &Path) -> 
     {
         builder = builder.diffuse(
             FlatTexture::builder()
-                .image(
-                    Image::new_from_srgba(
-                        [dir, filepath.as_ref()].into_iter().collect::<PathBuf>(),
-                    )?
-                )
-                //.srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
+                .image(Image::new_from_srgba(
+                    [dir, filepath.as_ref()].into_iter().collect::<PathBuf>(),
+                )?)
                 .build(),
         );
     }
@@ -263,13 +262,9 @@ fn parse_material<NEVER>(material: &russimp::material::Material, dir: &Path) -> 
     {
         builder = builder.specular(
             FlatTexture::builder()
-                //.srgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
-                //.map_err(|error| Error::Graphics { error })?
-                .image(
-                    Image::new_from_srgba(
-                        [dir, filepath.as_ref()].into_iter().collect::<PathBuf>(),
-                    )?
-                )
+                .image(Image::new_from_srgba(
+                    [dir, filepath.as_ref()].into_iter().collect::<PathBuf>(),
+                )?)
                 .build(),
         );
     }
@@ -279,11 +274,9 @@ fn parse_material<NEVER>(material: &russimp::material::Material, dir: &Path) -> 
     {
         builder = builder.normal_map(
             FlatTexture::builder()
-                .image(
-                    Image::new_from_rgba([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())?
-                )
-                //.rgba_image([dir, filepath.as_ref()].into_iter().collect::<PathBuf>())
-                //.map_err(|error| Error::Graphics { error })?
+                .image(Image::new_from_rgba(
+                    [dir, filepath.as_ref()].into_iter().collect::<PathBuf>(),
+                )?)
                 .build(),
         );
     }

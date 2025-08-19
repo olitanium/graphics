@@ -6,7 +6,7 @@ use graphics::texture::FlatTexture;
 
 use super::Bloom;
 use crate::modelling::Quad;
-use crate::{opengl_shaders, EngResult};
+use crate::{EngResult, opengl_shaders};
 
 #[derive(Debug)]
 pub struct Group<'a, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> {
@@ -21,11 +21,7 @@ impl<'a, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> Group<'a, X> {
 }
 
 impl<'a, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> Draw for Group<'a, X> {
-    fn draw(
-        self: Box<Self>,
-        register: &mut FramebufferContext,
-        marker: &mut ShaderProgramContext,
-    ) {
+    fn draw(self: Box<Self>, register: &mut FramebufferContext, marker: &mut ShaderProgramContext) {
         let _: EngResult<(), !> = try {
             let Group { bloom, output_fb } = *self;
 

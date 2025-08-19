@@ -11,10 +11,10 @@ pub trait Draw {
 
 impl<T: Draw> Draw for Vec<T> {
     fn draw(
-            self: Box<Self>,
-            fb_context: &mut FramebufferContext,
-            shader_marker: &mut ShaderProgramContext,
-        ) {
+        self: Box<Self>,
+        fb_context: &mut FramebufferContext,
+        shader_marker: &mut ShaderProgramContext,
+    ) {
         for group in *self {
             Box::new(group).draw(fb_context, shader_marker);
         }
@@ -23,10 +23,10 @@ impl<T: Draw> Draw for Vec<T> {
 
 impl Draw for Vec<Box<dyn Draw>> {
     fn draw(
-            self: Box<Self>,
-            fb_context: &mut FramebufferContext,
-            shader_marker: &mut ShaderProgramContext,
-        ) {
+        self: Box<Self>,
+        fb_context: &mut FramebufferContext,
+        shader_marker: &mut ShaderProgramContext,
+    ) {
         for group in *self {
             group.draw(fb_context, shader_marker);
         }

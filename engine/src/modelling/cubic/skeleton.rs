@@ -55,7 +55,7 @@ impl Skeleton {
 
 impl YieldsPose for Skeleton {
     type Hint = (
-        bool,  // realtive
+        bool,  // relative
         usize, // bone
         usize, // animation
         f32,   // time

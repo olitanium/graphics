@@ -77,22 +77,28 @@ pub trait FramebufferInternals: Sized {
     fn enables(&self, context: &mut FramebufferContext);
 }
 
-impl<T> FramebufferWithoutExtra<1> for T where T: FramebufferWithoutExtra<2> {} 
-impl<T> FramebufferWithDepth<1> for T where T: FramebufferWithDepth<2> {
+impl<T> FramebufferWithoutExtra<1> for T where T: FramebufferWithoutExtra<2> {}
+impl<T> FramebufferWithDepth<1> for T
+where
+    T: FramebufferWithDepth<2>,
+{
     fn depth_testing(depth_testing: bool, context: &mut FramebufferContext) {
         T::depth_testing(depth_testing, context);
     }
 }
-impl<T> FramebufferWithStencil<1> for T where T: FramebufferWithStencil<2> {
+impl<T> FramebufferWithStencil<1> for T
+where
+    T: FramebufferWithStencil<2>,
+{
     fn stencil_testing(stencil_testing: bool, context: &mut FramebufferContext) {
         T::stencil_testing(stencil_testing, context);
     }
 }
 pub trait FramebufferWithoutExtra<const OUT: usize>: FramebufferInternals {
     fn bind<'a, 'b>(
-            &'a self,
-            register: &'b mut FramebufferContext,
-        ) -> ActiveFramebuffer<'a, 'b, OUT, Self> {
+        &'a self,
+        register: &'b mut FramebufferContext,
+    ) -> ActiveFramebuffer<'a, 'b, OUT, Self> {
         register.register(self)
     }
 }

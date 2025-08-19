@@ -2,8 +2,9 @@ use std::collections::HashSet;
 use std::marker::PhantomData;
 use std::sync::Mutex;
 
-use super::{FramebufferInternals, FramebufferWithDepth, FramebufferWithStencil};
-use crate::{framebuffer::traits::FramebufferWithoutExtra, gl_call};
+use super::{FramebufferWithDepth, FramebufferWithStencil};
+use crate::framebuffer::traits::FramebufferWithoutExtra;
+use crate::gl_call;
 
 #[derive(Debug)]
 pub struct FramebufferContext {

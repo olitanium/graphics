@@ -1,12 +1,12 @@
 use std::path::Path;
 use std::rc::Rc;
 
+use graphics::ApiResult;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Matrix;
 use graphics::shader_program::{ActiveShaderProgram, CullFace};
 use graphics::vertex_array::VertexArray;
-use graphics::ApiResult;
 use russimp::scene::PostProcess;
 
 use super::geometry::YieldsPose;
@@ -36,7 +36,7 @@ impl Mesh {
         }
     }
 
-    pub(crate) fn draw<'a,  const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
+    pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, (Cubic, L), D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
@@ -124,7 +124,10 @@ impl Cubic {
         Ok(())
     }
 
-    pub fn import<NEVER: Clone, PA: AsRef<Path>>(path: PA, post_process: Vec<PostProcess>) -> EngResult<Builder, NEVER> {
+    pub fn import<NEVER: Clone, PA: AsRef<Path>>(
+        path: PA,
+        post_process: Vec<PostProcess>,
+    ) -> EngResult<Builder, NEVER> {
         import::import(path, post_process)
     }
 }

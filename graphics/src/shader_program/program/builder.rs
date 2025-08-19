@@ -64,7 +64,10 @@ impl<M, T: Texture, const OUT: usize, V, F> Builder<M, T, OUT, V, F> {
         })
     }
 
-    pub fn vertex_shader_raw<NEVER>(self, source: &[u8]) -> ApiResult<Builder<M, T, OUT, VertexShader, F>, NEVER> {
+    pub fn vertex_shader_raw<NEVER>(
+        self,
+        source: &[u8],
+    ) -> ApiResult<Builder<M, T, OUT, VertexShader, F>, NEVER> {
         Shader::new_from_slice(gl::VERTEX_SHADER, source).map(|shader| Builder {
             vertex_shader: VertexShader(shader),
             ..self

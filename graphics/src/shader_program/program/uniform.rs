@@ -1,5 +1,4 @@
 use std::fmt::Debug;
-use std::ops::Deref;
 
 use colour::{ColourRGB, ColourRGBA};
 use linear_algebra::{Matrix, UnitVector, Vector};
@@ -23,7 +22,7 @@ macro_rules! define_uniform {
         impl Uniform for $typ {
             fn set_uniform(
                 &self,
-                //location: UniformLocation,
+                // location: UniformLocation,
                 name: String,
                 shader_program: &dyn IsActiveShaderProgram,
             ) -> Result<(), NameNotFoundError> {
@@ -51,11 +50,7 @@ macro_rules! named_define_uniform {
                 name: String,
                 shader_program: &dyn IsActiveShaderProgram,
             ) -> Result<(), NameNotFoundError> {
-                (|$self: &Self, $name: String, $shader| $out)(
-                    self,
-                    name,
-                    shader_program,
-                )
+                (|$self: &Self, $name: String, $shader| $out)(self, name, shader_program)
             }
         }
     };
@@ -102,15 +97,22 @@ matrix!(4,4 => UniformMatrix4fv);
 named_define_uniform!(ColourRGB => |value, name, s| value.as_ref().set_uniform(name, s));
 named_define_uniform!(ColourRGBA => |value, name, s| value.as_ref().set_uniform(name, s));
 
-
 impl<U: Uniform> Uniform for [U] {
-    fn set_uniform(&self,
-            //location: UniformLocation,
-            name: String,
-            shader_program: &dyn IsActiveShaderProgram) -> Result<(), NameNotFoundError> {
-        let outputs: Vec<_> = self.into_iter().enumerate().map_while( |(index, value)|
-            value.set_uniform(format!("{name}[{index}]"), shader_program).ok()
-        ).collect();
+    fn set_uniform(
+        &self,
+        // location: UniformLocation,
+        name: String,
+        shader_program: &dyn IsActiveShaderProgram,
+    ) -> Result<(), NameNotFoundError> {
+        let outputs: Vec<_> = self
+            .into_iter()
+            .enumerate()
+            .map_while(|(index, value)| {
+                value
+                    .set_uniform(format!("{name}[{index}]"), shader_program)
+                    .ok()
+            })
+            .collect();
 
         if outputs.len() > 0 {
             Ok(())
@@ -120,22 +122,22 @@ impl<U: Uniform> Uniform for [U] {
     }
 }
 
-impl <U: Uniform> Uniform for Vec<U> {
+impl<U: Uniform> Uniform for Vec<U> {
     fn set_uniform(
-            &self,
-            name: String,
-            shader_program: &dyn IsActiveShaderProgram,
-        ) -> Result<(), NameNotFoundError> {
+        &self,
+        name: String,
+        shader_program: &dyn IsActiveShaderProgram,
+    ) -> Result<(), NameNotFoundError> {
         self.as_slice().set_uniform(name, shader_program)
     }
 }
 
 impl<U: Uniform> Uniform for &U {
     fn set_uniform(
-            &self,
-            name: String,
-            shader_program: &dyn IsActiveShaderProgram,
-        ) -> Result<(), NameNotFoundError> {
+        &self,
+        name: String,
+        shader_program: &dyn IsActiveShaderProgram,
+    ) -> Result<(), NameNotFoundError> {
         (*self).set_uniform(name, shader_program)
     }
 }

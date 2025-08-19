@@ -8,7 +8,6 @@ use super::uniform::Uniform;
 use super::{CullFace, Error, ShaderProgram, ShaderProgramContext};
 use crate::error::ApiResult;
 use crate::gl_call;
-use crate::shader_program::program::uniform::NameNotFoundError;
 use crate::texture::{self, Texture};
 use crate::types::{self, UniformLocation};
 

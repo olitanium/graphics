@@ -1,11 +1,10 @@
-use graphics::framebuffer::FramebufferContext;
-use graphics::framebuffer::traits::{FramebufferInternals, FramebufferWithoutExtra};
-use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::Draw;
-
-use crate::EngResult;
+use graphics::framebuffer::FramebufferContext;
+use graphics::framebuffer::traits::FramebufferWithoutExtra;
+use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 
 use super::Quad;
+use crate::EngResult;
 
 #[derive(Debug)]
 pub struct Group<'a, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> {

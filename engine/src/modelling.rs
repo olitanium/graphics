@@ -9,7 +9,7 @@ pub use cubic::{
     Skeleton,
 };
 mod line;
-pub use line::{Line, LineGroup};
+pub use line::{Line, LineGroup, TestLineVertex};
 
 mod quad;
 pub use quad::{Quad, QuadGroup};

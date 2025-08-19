@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 
-use engine::{linear_algebra::Vector, ApiError, EngResult, Key};
+use engine::linear_algebra::Vector;
+use engine::modelling::TestLineVertex;
+use engine::{ApiError, ColourRGB, EngResult, Key};
 
 use crate::state::{State, StateError};
 
@@ -76,9 +78,11 @@ impl State {
 
         if string.ends_with('l') {
             string.clear();
-            self.line.as_mut().push(Vector::new([self.angle.cos(), 0.0, self.angle.sin()]));
+            self.line.as_mut().push(TestLineVertex {
+                position: Vector::new([self.angle.cos(), 0.0, self.angle.sin()]),
+                colour: ColourRGB::new([self.angle.cos(), 0.0, self.angle.sin()]),
+            });
             self.angle += 0.1;
-
         }
         self.camera
             .pose

@@ -5,7 +5,7 @@ use graphics::texture::{CubeMap, FlatTexture};
 
 use crate::modelling::cubic::lighting::shadow::ShadowListLights;
 use crate::modelling::cubic::lighting::simple::ListLights;
-use crate::modelling::{Cubic, Line, Quad, SkyBox};
+use crate::modelling::{Cubic, Line, Quad, SkyBox, TestLineVertex};
 
 static ERROR_MESSAGE: &str = "Engine defined shader should exist and not have errors";
 
@@ -113,8 +113,10 @@ make_included! {
 }
 
 make_included! {
-    ShaderProgram<Line<3>, 1, FlatTexture>,
+    ShaderProgram<Line<TestLineVertex>, 1, FlatTexture>,
     line_test,
     "shaders/line/line.vert",
     "shaders/line/line.frag",
 }
+
+pub const LINE_SHADER_MAX_VERTICES: usize = 100;

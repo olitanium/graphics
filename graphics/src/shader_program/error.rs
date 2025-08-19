@@ -3,9 +3,8 @@ use std::path::PathBuf;
 
 use utils::error_boilerplate;
 
-use crate::ApiError;
-
 use super::CullFace;
+use crate::ApiError;
 
 #[derive(Debug, Clone)]
 pub enum Error {

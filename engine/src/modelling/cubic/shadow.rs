@@ -11,7 +11,7 @@ use super::camera::Camera;
 use super::geometry::YieldsPose;
 use super::lighting::shadow::ShadowListLights;
 use super::model::Cubic;
-use crate::{opengl_shaders, EngResult};
+use crate::{EngResult, opengl_shaders};
 
 pub const SHADOW_SHADER_MAX_LIGHTS: usize = 2;
 
@@ -39,8 +39,7 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
         transparent: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
         output_framebuffer: &'a X,
         uniforms: Vec<(String, &'a dyn Uniform)>,
-    ) -> Box<Self>
-    {
+    ) -> Box<Self> {
         Box::new(Self {
             look_at: camera.look_at(hint),
             position: camera.position(hint),
@@ -80,18 +79,19 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw for Group<'a, X> {
             }
 
             active_shadow_shader.set_uniform("projtimesview".to_string(), &self.look_at);
-            active_shadow_shader.set_uniform("camera_postion".to_string(), &self.position.homogeneous());
+            active_shadow_shader
+                .set_uniform("camera_postion".to_string(), &self.position.homogeneous());
             active_shadow_shader.set_uniform_dyn(self.uniforms);
 
             let mut active_output_framebuffer = self.output_framebuffer.bind(fb_context);
-                for (model, animation, time) in iter::chain(self.opaque, self.transparent) {
-                    model.draw(
-                        &mut active_shadow_shader,
-                        &mut active_output_framebuffer,
-                        animation,
-                        time,
-                    )?;
-                }
+            for (model, animation, time) in iter::chain(self.opaque, self.transparent) {
+                model.draw(
+                    &mut active_shadow_shader,
+                    &mut active_output_framebuffer,
+                    animation,
+                    time,
+                )?;
+            }
 
             drop(active_shadow_shader);
         };

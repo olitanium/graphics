@@ -21,7 +21,7 @@ pub mod vertex;
 pub mod vertex_array;
 pub mod vertex_buffer;
 
-pub use environment::{Draw, Environment, Event, ApiState, Key};
+pub use environment::{ApiState, Draw, Environment, Event, Key};
 pub use error::{ApiError, ApiResult};
 pub use shader_program::{ActiveShaderProgram, ShaderProgram, ShaderProgramContext};
 pub use {colour, linear_algebra};
@@ -42,21 +42,19 @@ macro_rules! gl_call_inner {
                 .take_while(|error| error.0 != gl::NO_ERROR)
                 .collect();
         if errors.is_empty() {
-            //Ok(output)
+            // Ok(output)
         } else {
-            //Err(
+            // Err(
             panic!("{:?}", errors)
             //)
-        }//.unwrap()
+        } //.unwrap()
         output
-    } };
+    }};
 }
 
 #[macro_export]
 macro_rules! gl_call {
-    ($input:stmt) => {{
-        $crate::gl_call_inner!($input)
-    }};
+    ($input:stmt) => {{ $crate::gl_call_inner!($input) }};
 
     ($input:stmt;) => {{
         $crate::gl_call_inner!($input);

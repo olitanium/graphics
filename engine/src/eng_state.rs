@@ -1,4 +1,5 @@
-use graphics::{types::TexDim, Event};
+use graphics::Event;
+use graphics::types::TexDim;
 
 use crate::{EngResult, VecDraw};
 
@@ -13,15 +14,14 @@ pub trait EngState: Sized {
 #[macro_export]
 macro_rules! derive_api_state {
     ($slf:path) => {
-        
         impl ApiState for $slf {
             type Error = EngError<<$slf as EngState>::Error>;
-            
+
             fn new(initial_size: (TexDim, TexDim)) -> $crate::ApiResult<Self, Self::Error> {
                 let out = <$slf as EngState>::new(initial_size)?;
                 Ok(out)
             }
-            
+
             fn poll<'a>(
                 &'a mut self,
                 events: Vec<Event<'a>>,

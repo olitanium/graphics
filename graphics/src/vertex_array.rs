@@ -8,7 +8,7 @@ use builder::Builder;
 use super::framebuffer::ActiveFramebuffer;
 use crate::element_array_buffer::ElementArrayBuffer;
 use crate::error::ApiResult;
-use crate::framebuffer::traits::{FramebufferInternals, FramebufferWithoutExtra};
+use crate::framebuffer::traits::FramebufferWithoutExtra;
 use crate::shader_program::ActiveShaderProgram;
 use crate::types::{VertexArrayId, VertexBufferLen};
 use crate::vertex::Vertex;
@@ -17,7 +17,7 @@ use crate::{gl_call, types};
 
 mod builder;
 mod draw_options;
-//pub use draw_options::DrawOptions;
+// pub use draw_options::DrawOptions;
 
 #[derive(Debug)]
 pub struct VertexArray<V: Vertex> {
@@ -135,7 +135,6 @@ where
         Ok(())
     }
 
-
     pub fn empty() -> Self {
         let id = {
             let mut id = 0;
@@ -152,7 +151,6 @@ where
         }
     }
 }
-
 
 pub fn dummy_vertex_array() -> &'static VertexArray<()> {
     static DUMMY_VERTEX_ARRAY: LazyLock<VertexArray<()>> = LazyLock::new(|| VertexArray::empty());

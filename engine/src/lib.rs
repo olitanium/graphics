@@ -7,19 +7,17 @@
 #![feature(try_blocks)]
 #![feature(never_type)]
 
+pub mod eng_state;
 #[expect(hidden_glob_reexports)]
 mod error;
 pub mod modelling;
 pub mod opengl_shaders;
-pub mod eng_state;
 
 pub use array_vec;
+pub use error::{EngApiResult, EngError, EngResult};
 pub use graphics::colour::{ColourRGB, ColourRGBA};
 pub use graphics::framebuffer::Builder as FrameBufferBuilder;
 pub use graphics::{types, *};
 pub use russimp::scene::PostProcess;
-pub use error::EngResult;
-pub use error::EngApiResult;
-pub use error::EngError;
 
 pub type VecDraw<'a> = Vec<Box<dyn Draw + 'a>>;

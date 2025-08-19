@@ -1,9 +1,23 @@
-use graphics::{colour::ColourRGB, linear_algebra::Vector, ActiveShaderProgram};
+use graphics::colour::ColourRGB;
+use graphics::linear_algebra::Vector;
+use graphics::shader_program::{IsActiveShaderProgram, NameNotFoundError, Uniform};
 
-use crate::EngResult;
-
+#[derive(Debug)]
 pub struct TestLineVertex {
-    position: Vector<3>,
-    colour: ColourRGB,
+    pub position: Vector<3>,
+    pub colour: ColourRGB,
 }
 
+impl Uniform for TestLineVertex {
+    fn set_uniform(
+        &self,
+        name: String,
+        shader_program: &dyn IsActiveShaderProgram,
+    ) -> Result<(), NameNotFoundError> {
+        self.position
+            .set_uniform(format!("{name}.position"), shader_program)?;
+        self.colour
+            .set_uniform(format!("{name}.colour"), shader_program)?;
+        Ok(())
+    }
+}

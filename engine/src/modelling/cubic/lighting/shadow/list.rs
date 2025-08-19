@@ -1,6 +1,6 @@
 use array_vec::ArrayVec;
 use graphics::framebuffer::FramebufferContext;
-use graphics::framebuffer::traits::{FramebufferWithoutExtra};
+use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::linear_algebra::Vector;
 use graphics::shader_program::{ActiveShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::Texture;
@@ -8,7 +8,7 @@ use graphics::texture::Texture;
 use super::{ShadowFarLight, ShadowPointLight, ShadowSpotLight};
 use crate::modelling::Cubic;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
-use crate::{opengl_shaders, EngResult};
+use crate::{EngResult, opengl_shaders};
 
 #[derive(Debug, Default)]
 pub struct ShadowListLights<const MAX: usize> {
@@ -135,7 +135,10 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         }
 
         const POINT_LIGHT_NAME: &str = "point";
-        active_shader.set_uniform(format!("num_{POINT_LIGHT_NAME}"), &(self.point.len() as i32));
+        active_shader.set_uniform(
+            format!("num_{POINT_LIGHT_NAME}"),
+            &(self.point.len() as i32),
+        );
         for (index, light) in self.point.iter().enumerate() {
             unsafe {
                 light.bind_to(active_shader, POINT_LIGHT_NAME, index);

@@ -137,8 +137,6 @@ void main() {
     //    discard;
     //}
 
-    //colour = vec4(frag_pos_world_space, 1.0);
-
     frag_colour = colour;
     if (dot(colour.rgb, vec3(0.2126, 0.7152, 0.0722)) > 1.0) {
         bright_colour = vec4(colour.rgb, 1.0);

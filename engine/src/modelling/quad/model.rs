@@ -9,8 +9,8 @@ use graphics::texture::{FlatTexture, Texture};
 use graphics::vertex_array::VertexArray;
 
 use super::{Builder, QuadVertex};
+use crate::EngResult;
 use crate::modelling::test_models::vertex_array_quad;
-use crate::{EngResult};
 
 #[derive(Debug)]
 pub struct Quad<const N: usize> {

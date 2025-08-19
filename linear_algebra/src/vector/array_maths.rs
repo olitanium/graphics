@@ -14,7 +14,6 @@ macro_rules! elem_wise {
 elem_wise!(Add::add);
 elem_wise!(Sub::sub);
 elem_wise!(Mul::mul);
-// elem_wise!(Div::div);
 
 #[inline]
 pub fn dot<const N: usize>(v1: [f32; N], v2: [f32; N]) -> f32 {

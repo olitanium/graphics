@@ -23,7 +23,10 @@ impl Shader {
         Self::new_from_slice(shader_type, shader_source.as_bytes())
     }
 
-    pub(crate) fn new_from_slice<NEVER>(shader_type: GLenum, cstr: &[u8]) -> ApiResult<Self, NEVER> {
+    pub(crate) fn new_from_slice<NEVER>(
+        shader_type: GLenum,
+        cstr: &[u8],
+    ) -> ApiResult<Self, NEVER> {
         let shader_id = ShaderId::new(gl_call! { gl::CreateShader(shader_type) });
 
         let len = [cstr.len().try_into().map_err(|_| Error::SourceTooLong {

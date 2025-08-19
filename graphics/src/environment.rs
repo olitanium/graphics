@@ -13,11 +13,11 @@ pub use input::mouse::Button;
 use utils::error_boilerplate;
 pub use window::Window;
 
+use crate::ApiError;
 use crate::error::ApiResult;
 use crate::framebuffer::{DefaultFramebuffer, FramebufferContext};
 use crate::shader_program::ShaderProgramContext;
 use crate::types::TexDim;
-use crate::ApiError;
 
 #[derive(Debug, Clone)]
 pub enum Error {
@@ -129,8 +129,8 @@ impl<G: ApiState> Environment<G> {
             .title(title)
             .raw_motion(true)
             .glfw(&mut glfw)
-            .build().map_err(ApiError::temp_convert_from_never)?;
-
+            .build()
+            .map_err(ApiError::temp_convert_from_never)?;
 
         glfw.set_swap_interval(glfw::SwapInterval::None);
 
