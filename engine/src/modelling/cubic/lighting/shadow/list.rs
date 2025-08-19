@@ -1,6 +1,6 @@
 use array_vec::ArrayVec;
 use graphics::framebuffer::FramebufferContext;
-use graphics::framebuffer::traits::FramebufferInternals;
+use graphics::framebuffer::traits::{FramebufferWithoutExtra};
 use graphics::linear_algebra::Vector;
 use graphics::shader_program::{ActiveShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::Texture;
@@ -35,7 +35,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
             // framebuffer
             active_depth_only_shader.set_uniform(
                 "projtimesview".to_string(),
-                light.projtimesview(target_position),
+                &light.projtimesview(target_position),
             );
 
             let mut active_light_framebuffer = light.framebuffer.bind(fb_context);
@@ -59,7 +59,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
             // Draw the scene from the lights perspective, saving to the light's internal
             // framebuffer
             active_depth_only_shader
-                .set_uniform("projtimesview".to_string(), light.projtimesview());
+                .set_uniform("projtimesview".to_string(), &light.projtimesview());
 
             let mut active_light_framebuffer = light.framebuffer.bind(fb_context);
 
@@ -80,11 +80,11 @@ impl<const MAX: usize> ShadowListLights<MAX> {
 
         for light in &self.point {
             for (index, matrix) in light.get_look_at_matrices().into_iter().enumerate() {
-                active_depth_only_shader_point.set_uniform(format!("matrix[{index}]"), matrix);
+                active_depth_only_shader_point.set_uniform(format!("matrix[{index}]"), &matrix);
             }
             active_depth_only_shader_point
-                .set_uniform("light_position".into(), light.light.position);
-            active_depth_only_shader_point.set_uniform("far_plane".into(), light.far_plane());
+                .set_uniform("light_position".into(), &light.light.position);
+            active_depth_only_shader_point.set_uniform("far_plane".into(), &light.far_plane());
 
             let mut active_light_framebuffer = light.framebuffer.bind(fb_context);
 
@@ -113,7 +113,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         target: Vector<3>,
     ) {
         const FAR_LIGHT_NAME: &str = "far";
-        active_shader.set_uniform(format!("num_{FAR_LIGHT_NAME}"), self.far.len() as i32);
+        active_shader.set_uniform(format!("num_{FAR_LIGHT_NAME}"), &(self.far.len() as i32));
         for (index, light) in self.far.iter().enumerate() {
             unsafe {
                 light.bind_to(active_shader, FAR_LIGHT_NAME, index, target);
@@ -124,7 +124,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         }
 
         const SPOT_LIGHT_NAME: &str = "spot";
-        active_shader.set_uniform(format!("num_{SPOT_LIGHT_NAME}"), self.spot.len() as i32);
+        active_shader.set_uniform(format!("num_{SPOT_LIGHT_NAME}"), &(self.spot.len() as i32));
         for (index, light) in self.spot.iter().enumerate() {
             unsafe {
                 light.bind_to(active_shader, SPOT_LIGHT_NAME, index);
@@ -135,7 +135,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         }
 
         const POINT_LIGHT_NAME: &str = "point";
-        active_shader.set_uniform(format!("num_{POINT_LIGHT_NAME}"), self.point.len() as i32);
+        active_shader.set_uniform(format!("num_{POINT_LIGHT_NAME}"), &(self.point.len() as i32));
         for (index, light) in self.point.iter().enumerate() {
             unsafe {
                 light.bind_to(active_shader, POINT_LIGHT_NAME, index);

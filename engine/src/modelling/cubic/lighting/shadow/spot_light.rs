@@ -62,7 +62,7 @@ impl ShadowSpotLight {
         index: usize,
     ) {
         self.light.bind_to(shader, name, index);
-        shader.set_uniform(format!("{name}[{index}].matrix"), self.projtimesview());
+        shader.set_uniform(format!("{name}[{index}].matrix"), &self.projtimesview());
         // SAFETY: Reference must not live to a point where the
         shader.register_texture(Some((format!("{name}[{index}].depth"), unsafe {
             self.framebuffer.get_attachment_ref()
@@ -86,6 +86,6 @@ impl ShadowSpotLight {
     }
 
     pub(crate) fn projtimesview(&self) -> Matrix<4, 4> {
-        self.camera().look_at(())
+        self.camera().look_at(&())
     }
 }

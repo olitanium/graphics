@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use std::sync::Mutex;
 
 use super::{FramebufferInternals, FramebufferWithDepth, FramebufferWithStencil};
-use crate::gl_call;
+use crate::{framebuffer::traits::FramebufferWithoutExtra, gl_call};
 
 #[derive(Debug)]
 pub struct FramebufferContext {
@@ -42,7 +42,7 @@ impl FramebufferContext {
         }
     }
 
-    pub fn register<'a, 'b, const OUT: usize, D: FramebufferInternals<OUT>>(
+    pub fn register<'a, 'b, const OUT: usize, D: FramebufferWithoutExtra<OUT>>(
         &'b mut self,
         framebuffer: &'a D,
     ) -> ActiveFramebuffer<'a, 'b, OUT, D> {
@@ -68,12 +68,12 @@ impl FramebufferContext {
 }
 
 #[derive(Debug)]
-pub struct ActiveFramebuffer<'a, 'b, const OUT: usize, D: FramebufferInternals<OUT>> {
+pub struct ActiveFramebuffer<'a, 'b, const OUT: usize, D: FramebufferWithoutExtra<OUT>> {
     _framebuffer: PhantomData<&'a D>,
     context: &'b mut FramebufferContext,
 }
 
-impl<'a, 'b, const OUT: usize, D: FramebufferInternals<OUT>> ActiveFramebuffer<'a, 'b, OUT, D> {
+impl<'a, 'b, const OUT: usize, D: FramebufferWithoutExtra<OUT>> ActiveFramebuffer<'a, 'b, OUT, D> {
     pub fn new(framebuffer: &'a D, context: &'b mut FramebufferContext) -> Self {
         let (width, height) = framebuffer.size();
 

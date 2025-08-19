@@ -79,7 +79,7 @@ impl Pose {
 impl YieldsPose for Pose {
     type Hint = ();
 
-    fn get_pose(&self, _: Self::Hint) -> Pose {
+    fn get_pose(&self, _: &Self::Hint) -> Pose {
         *self
     }
 }

@@ -11,7 +11,7 @@ use super::camera::Camera;
 use super::geometry::YieldsPose;
 use super::lighting::shadow::ShadowListLights;
 use super::model::Cubic;
-use crate::{opengl_shaders, EngApiResult, EngError, EngResult};
+use crate::{opengl_shaders, EngResult};
 
 pub const SHADOW_SHADER_MAX_LIGHTS: usize = 2;
 
@@ -33,18 +33,16 @@ pub struct Group<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> {
 impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
     pub fn new<O: YieldsPose>(
         camera: &Camera<O>,
-        hint: O::Hint,
+        hint: &O::Hint,
         list_light: &'a ShadowListLights<2>,
         opaque: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
         transparent: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
         output_framebuffer: &'a X,
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Box<Self>
-    where
-        O::Hint: Clone,
     {
         Box::new(Self {
-            look_at: camera.look_at(hint.clone()),
+            look_at: camera.look_at(hint),
             position: camera.position(hint),
 
             list_light,
@@ -81,8 +79,8 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw for Group<'a, X> {
                     .bind(&mut active_shadow_shader, self.position);
             }
 
-            active_shadow_shader.set_uniform("projtimesview".to_string(), self.look_at);
-            active_shadow_shader.set_uniform("camera_postion".to_string(), self.position.homogeneous());
+            active_shadow_shader.set_uniform("projtimesview".to_string(), &self.look_at);
+            active_shadow_shader.set_uniform("camera_postion".to_string(), &self.position.homogeneous());
             active_shadow_shader.set_uniform_dyn(self.uniforms);
 
             let mut active_output_framebuffer = self.output_framebuffer.bind(fb_context);

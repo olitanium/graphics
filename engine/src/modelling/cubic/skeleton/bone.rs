@@ -49,8 +49,8 @@ impl<'a> YieldsPose for &'a Bone {
         f32,        // time
     );
 
-    fn get_pose(&self, hint: Self::Hint) -> Pose {
-        let (skeleton, animation_index, time) = hint;
+    fn get_pose(&self, hint: &Self::Hint) -> Pose {
+        let (skeleton, animation_index, time) = *hint;
 
         if let Some(pose) = self
             .last_query
@@ -69,7 +69,7 @@ impl<'a> YieldsPose for &'a Bone {
         let own_pose = self
             .animation
             .get(animation_index)
-            .map(|anim| anim.get_pose(time))
+            .map(|anim| anim.get_pose(&time))
             .unwrap_or_default();
 
         let total_pose = own_pose.apply_after(parent_pose);

@@ -8,6 +8,7 @@ use super::uniform::Uniform;
 use super::{CullFace, Error, ShaderProgram, ShaderProgramContext};
 use crate::error::ApiResult;
 use crate::gl_call;
+use crate::shader_program::program::uniform::NameNotFoundError;
 use crate::texture::{self, Texture};
 use crate::types::{self, UniformLocation};
 
@@ -99,7 +100,7 @@ impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, 
         if self.texture_list.len() <= *MAX_TEX_UNITS {
             for (index, (name, tex)) in self.texture_list.clone().into_iter().enumerate() {
                 tex.bind_to(index as u32);
-                self.set_uniform(name, index as i32);
+                self.set_uniform(name, &(index as i32));
             }
             Ok(())
         } else {
@@ -111,32 +112,13 @@ impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, 
         }
     }
 
-    pub fn set_uniform<U: Uniform>(&mut self, name: String, value: U) {
-        if let Some(location) = self.get_uniform_location(name) {
-            value.set_uniform(location, self);
-        }
-    }
-
-    pub fn set_uniform_vec<U: Uniform>(&mut self, name: String, value: &[U]) {
-        for (location, value) in value.into_iter().enumerate().map_while(|(index, value)| {
-            self.get_uniform_location(format!("{name}[{index}]"))
-                .map(|loc| (loc, value))
-        }) {
-            value.set_uniform_ref(location, self);
-        }
-    }
-
-    pub fn set_uniform_ref<U: Uniform>(&mut self, name: String, value: &U) {
-        if let Some(location) = self.get_uniform_location(name) {
-            value.set_uniform_ref(location, self);
-        }
+    pub fn set_uniform<U: Uniform + ?Sized>(&mut self, name: String, value: &U) {
+        let _ = value.set_uniform(name, self);
     }
 
     pub fn set_uniform_dyn(&mut self, values: Vec<(String, &dyn Uniform)>) {
         for (name, value) in values {
-            if let Some(location) = self.get_uniform_location(name) {
-                value.set_uniform_ref(location, self);
-            }
+            let _ = value.set_uniform(name, self);
         }
     }
 
@@ -154,9 +136,14 @@ impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, 
     }
 }
 
-pub trait IsActiveShaderProgram {}
+pub trait IsActiveShaderProgram {
+    fn get_uniform_location(&self, name: String) -> Option<UniformLocation>;
+}
 
 impl<'a, 'b, 'c, M, T: Texture, const OUT: usize> IsActiveShaderProgram
     for ActiveShaderProgram<'a, 'b, 'c, M, T, OUT>
 {
+    fn get_uniform_location(&self, name: String) -> Option<UniformLocation> {
+        self.shader_program.get_uniform_location(name)
+    }
 }

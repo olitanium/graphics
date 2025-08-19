@@ -48,7 +48,7 @@ impl Skeleton {
     pub fn get_all_bones(&self, animation: usize, time: f32) -> Vec<Matrix<4, 4>> {
         self.values
             .iter()
-            .map(|bone| bone.get_pose((&self.values, animation, time)).as_matrix())
+            .map(|bone| bone.get_pose(&(&self.values, animation, time)).as_matrix())
             .collect()
     }
 }
@@ -61,13 +61,13 @@ impl YieldsPose for Skeleton {
         f32,   // time
     );
 
-    fn get_pose(&self, hint: Self::Hint) -> Pose {
-        let (relative, bone, animation, time) = hint;
+    fn get_pose(&self, hint: &Self::Hint) -> Pose {
+        let (relative, bone, animation, time) = *hint;
 
         self.values
             .get(bone)
             .map(|bone| {
-                let mut bone_pose = bone.get_pose((&self.values, animation, time));
+                let mut bone_pose = bone.get_pose(&(&self.values, animation, time));
                 if relative {
                     bone_pose = bone_pose.apply_after(bone.inverse_bind_pose);
                 }

@@ -34,22 +34,22 @@ impl SpotLight {
     ) {
         shader.set_uniform(
             format!("{name}_vary[{index}].position"),
-            self.position.homogeneous(),
+            &self.position.homogeneous(),
         );
-        shader.set_uniform(format!("{name}_vary[{index}].direction"), self.direction);
+        shader.set_uniform(format!("{name}_vary[{index}].direction"), &self.direction);
 
-        shader.set_uniform(format!("{name}[{index}].attenuation"), self.attenuation);
-        shader.set_uniform(format!("{name}[{index}].ambient"), self.ambient);
-        shader.set_uniform(format!("{name}[{index}].diffuse"), self.diffuse);
+        shader.set_uniform(format!("{name}[{index}].attenuation"), &self.attenuation);
+        shader.set_uniform(format!("{name}[{index}].ambient"), &self.ambient);
+        shader.set_uniform(format!("{name}[{index}].diffuse"), &self.diffuse);
         shader.set_uniform(
             format!("{name}[{index}].specular"),
-            self.specular.as_array(),
+            &self.specular.as_array(),
         );
-        shader.set_uniform(format!("{name}[{index}].cos_cut_off"), self.cos_cut_off);
+        shader.set_uniform(format!("{name}[{index}].cos_cut_off"), &self.cos_cut_off);
 
         shader.set_uniform(
             format!("{name}[{index}].cos_outer_cut_off"),
-            self.cos_outer_cut_off,
+            &self.cos_outer_cut_off,
         );
     }
 }

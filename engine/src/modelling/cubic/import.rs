@@ -202,26 +202,12 @@ fn process_node<NEVER: Clone>(
 
             let vertex_array = vertex_array_builder.build();
 
-            // let mut vertex_array_builder = VertexArray::cubic_builder()
-            // .position(vertices)
-            // .tex_coord(texture)
-            // .element_array(element_buffer);
-            //
-            // if let Some(tangent) = opt_tangent {
-            // vertex_array_builder = vertex_array_builder.tangent(tangent)
-            // }
-            // if let Some(normal) = opt_normal {
-            // vertex_array_builder = vertex_array_builder.normal(normal)
-            // }
-            //
-            // let vertex_array = Rc::new(vertex_array_builder.build()?);
-
             let mat = current_mat
                 .entry(mesh.material_index)
                 .or_insert_with_key(|key| parse_material(&scene.materials[*key as usize], dir))
                 .clone()?;
 
-            EngResult::Ok(Mesh::new(Rc::new(vertex_array), mat, 0)) // TODO: bone
+            Ok(Mesh::new(Rc::new(vertex_array), mat, 0)) // TODO: bone
             // set to 0 for
             // debug
         })

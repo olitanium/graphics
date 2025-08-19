@@ -23,11 +23,11 @@ pub fn builder() -> Builder<MissingPose> {
 }
 
 impl<P: YieldsPose> Camera<P> {
-    pub fn centre(&self, hint: P::Hint) -> Vector<3> {
+    pub fn centre(&self, hint: &P::Hint) -> Vector<3> {
         self.pose.get_position(hint)
     }
 
-    pub fn orientation(&self, hint: P::Hint) -> Orientation {
+    pub fn orientation(&self, hint: &P::Hint) -> Orientation {
         self.pose.get_orientation(hint)
     }
 
@@ -35,7 +35,7 @@ impl<P: YieldsPose> Camera<P> {
         self.radius < 0.01
     }
 
-    pub fn position(&self, hint: P::Hint) -> Vector<3> {
+    pub fn position(&self, hint: &P::Hint) -> Vector<3> {
         if self.first_person() {
             self.centre(hint)
         } else {
@@ -44,7 +44,7 @@ impl<P: YieldsPose> Camera<P> {
         }
     }
 
-    pub fn direction(&self, hint: P::Hint) -> UnitVector<3> {
+    pub fn direction(&self, hint: &P::Hint) -> UnitVector<3> {
         self.orientation(hint).view_forward()
     }
 
@@ -56,11 +56,11 @@ impl<P: YieldsPose> Camera<P> {
         self.radius
     }
 
-    pub fn look_at(&self, hint: P::Hint) -> Matrix<4, 4> {
+    pub fn look_at(&self, hint: &P::Hint) -> Matrix<4, 4> {
         self.projection.as_matrix() * self.view(hint)
     }
 
-    pub fn view(&self, hint: P::Hint) -> Matrix<4, 4> {
+    pub fn view(&self, hint: &P::Hint) -> Matrix<4, 4> {
         let pose = self.pose.get_pose(hint);
 
         let camera_right = -pose.orientation().view_left();

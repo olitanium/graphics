@@ -1,12 +1,12 @@
 use graphics::Draw;
 use graphics::framebuffer::FramebufferContext;
-use graphics::framebuffer::traits::{FramebufferInternals, FramebufferWithoutExtra};
+use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::shader_program::ShaderProgramContext;
 use graphics::texture::FlatTexture;
 
 use super::Bloom;
 use crate::modelling::Quad;
-use crate::{opengl_shaders, EngApiResult, EngError, EngResult};
+use crate::{opengl_shaders, EngResult};
 
 #[derive(Debug)]
 pub struct Group<'a, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> {

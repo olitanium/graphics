@@ -52,7 +52,7 @@ impl Drop for DefaultFramebuffer {
     fn drop(&mut self) {}
 }
 
-impl FramebufferInternals<1> for DefaultFramebuffer {
+impl FramebufferInternals for DefaultFramebuffer {
     type Tex = FlatTexture;
 
     fn id(&self) -> &FrameBufferId {
@@ -107,7 +107,7 @@ impl<const OUT: usize, X: Attachment> Drop for Framebuffer<OUT, X> {
     }
 }
 
-impl<const OUT: usize, X: Attachment> FramebufferInternals<OUT> for Framebuffer<OUT, X> {
+impl<const OUT: usize, X: Attachment> FramebufferInternals for Framebuffer<OUT, X> {
     type Tex = X::Tex;
 
     fn id(&self) -> &FrameBufferId {

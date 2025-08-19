@@ -77,7 +77,7 @@ impl ShadowPointLight {
                 ))
                 .perspective((90.0_f32).to_radians(), 1.0, NEAR_PLANE, far_plane)
                 .build()
-                .look_at(())
+                .look_at(&())
         })
     }
 
@@ -94,7 +94,7 @@ impl ShadowPointLight {
         index: usize,
     ) {
         self.light.bind_to(shader, name, index);
-        shader.set_uniform(format!("{name}[{index}].far_plane"), self.far_plane());
+        shader.set_uniform(format!("{name}[{index}].far_plane"), &self.far_plane());
         // SAFETY: Reference must not live to a point where RefCell::borrow_mut can be
         // called on the texture
         shader.register_texture(Some((format!("{name}[{index}].depth"), unsafe {

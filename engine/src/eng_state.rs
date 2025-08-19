@@ -1,6 +1,6 @@
-use graphics::{types::TexDim, ApiResult, ApiState, Event};
+use graphics::{types::TexDim, Event};
 
-use crate::{eng_state, EngError, EngResult, VecDraw};
+use crate::{EngResult, VecDraw};
 
 pub trait EngState: Sized {
     type Error: core::error::Error;

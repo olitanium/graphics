@@ -9,6 +9,7 @@ pub use cubic::{
     Skeleton,
 };
 mod line;
+pub use line::{Line, LineGroup};
 
 mod quad;
 pub use quad::{Quad, QuadGroup};

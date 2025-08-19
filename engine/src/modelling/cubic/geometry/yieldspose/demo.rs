@@ -9,7 +9,7 @@ pub struct Demo;
 impl YieldsPose for Demo {
     type Hint = f32;
 
-    fn get_pose(&self, hint: Self::Hint) -> Pose {
+    fn get_pose(&self, hint: &Self::Hint) -> Pose {
         let hint = hint / 10.0;
 
         let position = [hint.sin(), hint.sin(), hint.cos()].into();

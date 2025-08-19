@@ -37,7 +37,7 @@ impl Material {
         shader: &mut ActiveShaderProgram<'a, 'b, 'c, (Cubic, L), T, N>,
         name: &str,
     ) {
-        shader.set_uniform(format!("{name}.shininess"), self.shininess);
+        shader.set_uniform(format!("{name}.shininess"), &self.shininess);
         shader.register_texture(
             vec![
                 (format!("{name}.diffuse"), &self.diffuse),

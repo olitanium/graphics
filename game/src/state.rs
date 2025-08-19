@@ -11,15 +11,7 @@ use engine::modelling::cubic::geometry::{Orientation, Pose};
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::{
-    Bloom,
-    BloomGroup,
-    Cubic,
-    Quad,
-    QuadGroup,
-    SHADOW_SHADER_MAX_LIGHTS,
-    ShadowGroup,
-    SkyBox,
-    SkyBoxGroup,
+    Bloom, BloomGroup, Cubic, Line, LineGroup, Quad, QuadGroup, ShadowGroup, SkyBox, SkyBoxGroup, SHADOW_SHADER_MAX_LIGHTS
 };
 use engine::types::TexDim;
 use engine::{EngApiResult, EngError, EngResult, Event, ApiState, VecDraw};
@@ -35,6 +27,8 @@ pub struct State {
 
     pub speed: [f32; 3],
 
+    pub line: Line<3>,
+    pub angle: f32,
     pub quad_to_draw: Quad<1>,
 
     pub light_group: ShadowListLights<SHADOW_SHADER_MAX_LIGHTS>,
@@ -139,8 +133,8 @@ impl State {
         }
 
         if let Some(light) = self.light_group.spot.get_mut(0) {
-            light.light.direction = self.camera.direction(());
-            light.light.position = self.camera.position(());
+            light.light.direction = self.camera.direction(&());
+            light.light.position = self.camera.position(&());
         }
     }
 
@@ -155,21 +149,28 @@ impl State {
         let all_models = {
             let mut all_models = vec![(&self.imported, self.which_animation, time)];
 
-            all_models.extend(self.containers.iter().map(|x| (x, 0, time)));
+            //all_models.extend(self.containers.iter().map(|x| (x, 0, time)));
 
             all_models
         };
 
-        let transparent_models = vec![]; // vec![(&self.light, time)];
+        //let transparent_models = vec![]; // vec![(&self.light, time)];
 
-        out.push(ShadowGroup::new(
+        /*out.push(ShadowGroup::new(
             &self.camera,
-            (),
+            &(),
             &self.light_group,
             all_models,
             transparent_models,
             &self.hdr_fb,
             vec![],
+        ));*/
+
+        out.push(LineGroup::new(
+            &self.hdr_fb,
+            &self.line,
+            &self.camera,
+            &(),
         ));
 
         out.push(SkyBoxGroup::new(
@@ -177,7 +178,7 @@ impl State {
             &self.hdr_fb,
             &self.skybox,
             &self.camera,
-            (),
+            &(),
             vec![],
         ));
 

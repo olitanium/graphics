@@ -5,7 +5,7 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
 use graphics::{Draw};
 
-use crate::{EngApiResult, EngError, EngResult};
+use crate::EngResult;
 
 use super::Camera;
 use super::geometry::YieldsPose;
@@ -34,19 +34,17 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
         framebuffer: &'a D,
 
         camera: &Camera<O>,
-        hint: O::Hint,
+        hint: &O::Hint,
         lights: &'a ListLights<MAX>,
         opaque: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Box<Self>
-    where
-        O::Hint: Clone,
     {
         Box::new(Self {
             shader,
             framebuffer,
-            camera_pos: camera.position(hint.clone()),
+            camera_pos: camera.position(hint),
             camera_look_at: camera.look_at(hint),
             lights,
             opaque,
@@ -68,10 +66,9 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
             let mut active_framebuffer = self.framebuffer.bind(fb_context);
 
             self.lights.bind(&mut active_shader);
-            let camera_pos = self.camera_pos;
 
-            active_shader.set_uniform("projtimesview".to_string(), self.camera_look_at);
-            active_shader.set_uniform("camera_postion".to_string(), camera_pos.homogeneous());
+            active_shader.set_uniform("projtimesview".to_string(), &self.camera_look_at);
+            active_shader.set_uniform("camera_postion".to_string(), &self.camera_pos.homogeneous());
 
             active_shader.set_uniform_dyn(self.uniforms);
 

@@ -8,7 +8,7 @@ use builder::Builder;
 use super::framebuffer::ActiveFramebuffer;
 use crate::element_array_buffer::ElementArrayBuffer;
 use crate::error::ApiResult;
-use crate::framebuffer::traits::FramebufferInternals;
+use crate::framebuffer::traits::{FramebufferInternals, FramebufferWithoutExtra};
 use crate::shader_program::ActiveShaderProgram;
 use crate::types::{VertexArrayId, VertexBufferLen};
 use crate::vertex::Vertex;
@@ -107,7 +107,7 @@ where
         }
     }
 
-    pub fn draw<NEVER, M, const OUT: usize, D: FramebufferInternals<OUT>>(
+    pub fn draw<NEVER, M, const OUT: usize, D: FramebufferWithoutExtra<OUT>>(
         &self,
         active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
@@ -160,7 +160,7 @@ pub fn dummy_vertex_array() -> &'static VertexArray<()> {
 }
 
 impl VertexArray<()> {
-    pub fn draw_len<NEVER, M, const OUT: usize, D: FramebufferInternals<OUT>>(
+    pub fn draw_len<NEVER, M, const OUT: usize, D: FramebufferWithoutExtra<OUT>>(
         &self,
         active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
@@ -171,7 +171,7 @@ impl VertexArray<()> {
         active_shader_program.validate()?;
 
         gl_call! {
-            gl::DrawArrays(gl::LINES, 0, len.to_primitive());
+            gl::DrawArrays(gl::LINE_STRIP, 0, len.to_primitive());
         }
 
         Ok(())

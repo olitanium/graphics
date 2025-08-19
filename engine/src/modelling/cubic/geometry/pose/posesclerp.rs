@@ -8,8 +8,8 @@ pub struct PoseSclerp {
 impl YieldsPose for PoseSclerp {
     type Hint = f32;
 
-    fn get_pose(&self, hint: Self::Hint) -> super::Pose {
-        Pose::new_from_dual(self.sclerp.get(hint))
+    fn get_pose(&self, hint: &Self::Hint) -> super::Pose {
+        Pose::new_from_dual(self.sclerp.get(*hint))
     }
 }
 

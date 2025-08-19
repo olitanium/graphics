@@ -6,6 +6,7 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Matrix;
 use graphics::shader_program::{ActiveShaderProgram, CullFace};
 use graphics::vertex_array::VertexArray;
+use graphics::ApiResult;
 use russimp::scene::PostProcess;
 
 use super::geometry::YieldsPose;
@@ -14,7 +15,6 @@ use super::{Builder, Skeleton, import};
 use crate::error::EngResult;
 use crate::modelling::simple_vertex::SimpleVertex;
 use crate::modelling::test_models::vertex_array_cube;
-use crate::EngApiResult;
 
 #[derive(Debug, Clone)]
 pub struct Mesh {
@@ -36,7 +36,7 @@ impl Mesh {
         }
     }
 
-    pub(crate) fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
+    pub(crate) fn draw<'a,  const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, (Cubic, L), D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
@@ -45,15 +45,15 @@ impl Mesh {
         animation: usize,
         time: f32,
         scale: f32,
-    ) -> EngResult<(), NEVER> {
+    ) -> EngResult<(), !> {
         self.material.register_to(active_shader, "material");
 
         active_shader.set_uniform(
             "model".into(),
-            skeleton
-                .get_pose((relative, self.bone, animation, time))
+            &(skeleton
+                .get_pose(&(relative, self.bone, animation, time))
                 .as_matrix()
-                * Matrix::transform_scale(scale, scale, scale),
+                * Matrix::transform_scale(scale, scale, scale)),
         );
 
         self.vertex_array.draw(active_shader, active_framebuffer)?;
@@ -107,9 +107,7 @@ impl Cubic {
         time: f32,
     ) -> EngResult<(), !> {
         // Ignore cull_face error
-        let _: EngApiResult<_, !> = active_shader.cull_face(self.cull_face);
-
-        // active_shader.set_uniform("model".to_string(), self.model_matrix(hint));
+        let _: ApiResult<_, !> = active_shader.cull_face(self.cull_face);
 
         for mesh in &self.meshes {
             mesh.draw(

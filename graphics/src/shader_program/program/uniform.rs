@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::ops::Deref;
 
 use colour::{ColourRGB, ColourRGBA};
 use linear_algebra::{Matrix, UnitVector, Vector};
@@ -7,37 +8,54 @@ use crate::gl_call;
 use crate::shader_program::program::active_shader::IsActiveShaderProgram;
 use crate::types::UniformLocation;
 
-pub trait Uniform: Debug {
-    fn set_uniform_ref(
-        &self,
-        location: UniformLocation,
-        shader_program: &dyn IsActiveShaderProgram,
-    );
+pub struct NameNotFoundError;
 
-    fn set_uniform(self, location: UniformLocation, shader_program: &dyn IsActiveShaderProgram);
+pub trait Uniform: Debug {
+    fn set_uniform(
+        &self,
+        name: String,
+        shader_program: &dyn IsActiveShaderProgram,
+    ) -> Result<(), NameNotFoundError>;
 }
 
 macro_rules! define_uniform {
     ($typ:ty => | $self:ident, $loc:ident, $shader:ident | $out:expr) => {
         impl Uniform for $typ {
-            fn set_uniform_ref(
-                &self,
-                location: UniformLocation,
-                shader_program: &dyn IsActiveShaderProgram,
-            ) {
-                (|$self: &Self, $loc: UniformLocation, $shader| $out)(
-                    self,
-                    location,
-                    shader_program,
-                );
-            }
-
             fn set_uniform(
-                self,
-                location: UniformLocation,
+                &self,
+                //location: UniformLocation,
+                name: String,
                 shader_program: &dyn IsActiveShaderProgram,
-            ) {
-                self.set_uniform_ref(location, shader_program)
+            ) -> Result<(), NameNotFoundError> {
+                if let Some(location) = shader_program.get_uniform_location(name) {
+                    (|$self: &Self, $loc: UniformLocation, $shader| $out)(
+                        self,
+                        location,
+                        shader_program,
+                    );
+
+                    Ok(())
+                } else {
+                    Err(NameNotFoundError)
+                }
+            }
+        }
+    };
+}
+
+macro_rules! named_define_uniform {
+    ($typ:ty => | $self:ident, $name:ident, $shader:ident | $out:expr) => {
+        impl Uniform for $typ {
+            fn set_uniform(
+                &self,
+                name: String,
+                shader_program: &dyn IsActiveShaderProgram,
+            ) -> Result<(), NameNotFoundError> {
+                (|$self: &Self, $name: String, $shader| $out)(
+                    self,
+                    name,
+                    shader_program,
+                )
             }
         }
     };
@@ -45,8 +63,8 @@ macro_rules! define_uniform {
 
 define_uniform!(i32 => |value, location, _s| { gl_call!{ gl::Uniform1i(location.to_primitive(), *value); } } );
 define_uniform!(f32 => |value, location, _s| { gl_call!{ gl::Uniform1f(location.to_primitive(), *value); } } );
-define_uniform!([i32; 1] => |value, location, s| value[0].set_uniform_ref(location, s));
-define_uniform!([f32; 1] => |value, location, s| value[0].set_uniform_ref(location, s));
+named_define_uniform!([i32; 1] => |value, name, s| value[0].set_uniform(name, s));
+named_define_uniform!([f32; 1] => |value, name, s| value[0].set_uniform(name, s));
 define_uniform!([i32; 2] => |value, location, _s| gl_call! { gl::Uniform2i(location.to_primitive(), value[0], value[1]); });
 define_uniform!([f32; 2] => |value, location, _s| gl_call! { gl::Uniform2f(location.to_primitive(), value[0], value[1]); });
 define_uniform!([i32; 3] => |value, location, _s| gl_call! { gl::Uniform3i(location.to_primitive(), value[0], value[1], value[2]); });
@@ -57,8 +75,8 @@ define_uniform!([f32; 4] => |value, location, _s| gl_call! { gl::Uniform4f(locat
 macro_rules! vectors {
     ($($num:literal),*) => {
         $(
-define_uniform!(Vector<$num> => |value, location, s| value.inner().set_uniform_ref(location, s));
-define_uniform!(UnitVector<$num> => |value, location, s| value.v().inner().set_uniform_ref(location, s));
+named_define_uniform!(Vector<$num> => |value, name, s| value.inner().set_uniform(name, s));
+named_define_uniform!(UnitVector<$num> => |value, name, s| value.v().inner().set_uniform(name, s));
         )*
     };
 }
@@ -81,5 +99,43 @@ matrix!(4,2 => UniformMatrix2x4fv);
 matrix!(4,3 => UniformMatrix3x4fv);
 matrix!(4,4 => UniformMatrix4fv);
 
-define_uniform!(ColourRGB => |value, location, s| value.as_ref().set_uniform_ref(location, s));
-define_uniform!(ColourRGBA => |value, location, s| value.as_ref().set_uniform_ref(location, s));
+named_define_uniform!(ColourRGB => |value, name, s| value.as_ref().set_uniform(name, s));
+named_define_uniform!(ColourRGBA => |value, name, s| value.as_ref().set_uniform(name, s));
+
+
+impl<U: Uniform> Uniform for [U] {
+    fn set_uniform(&self,
+            //location: UniformLocation,
+            name: String,
+            shader_program: &dyn IsActiveShaderProgram) -> Result<(), NameNotFoundError> {
+        let outputs: Vec<_> = self.into_iter().enumerate().map_while( |(index, value)|
+            value.set_uniform(format!("{name}[{index}]"), shader_program).ok()
+        ).collect();
+
+        if outputs.len() > 0 {
+            Ok(())
+        } else {
+            Err(NameNotFoundError)
+        }
+    }
+}
+
+impl <U: Uniform> Uniform for Vec<U> {
+    fn set_uniform(
+            &self,
+            name: String,
+            shader_program: &dyn IsActiveShaderProgram,
+        ) -> Result<(), NameNotFoundError> {
+        self.as_slice().set_uniform(name, shader_program)
+    }
+}
+
+impl<U: Uniform> Uniform for &U {
+    fn set_uniform(
+            &self,
+            name: String,
+            shader_program: &dyn IsActiveShaderProgram,
+        ) -> Result<(), NameNotFoundError> {
+        (*self).set_uniform(name, shader_program)
+    }
+}

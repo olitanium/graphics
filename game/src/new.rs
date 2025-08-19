@@ -16,7 +16,7 @@ use engine::modelling::cubic::lighting::shadow::{
 };
 use engine::modelling::cubic::lighting::simple::{FarLight, ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
-use engine::modelling::{Bloom, Bone, Cubic, Quad, Skeleton, SkyBox};
+use engine::modelling::{Bloom, Bone, Cubic, Line, Quad, Skeleton, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
@@ -256,8 +256,8 @@ impl State {
         let spotlight_colour = ColourRGB::new([1.0; 3]);
         let spotlight = ShadowSpotLight::new(
             SpotLight {
-                position: camera.centre(()),
-                direction: camera.direction(()),
+                position: camera.centre(&()),
+                direction: camera.direction(&()),
                 attenuation: [1.0, 0.09, 0.032],
                 ambient: spotlight_colour.map(|x| x * 0.0),
                 diffuse: spotlight_colour,
@@ -285,9 +285,15 @@ impl State {
             .scale(0.2)
             .build();
 
+        let line = Line::new(vec![
+            //Vector::new([0.0, 1.0, 0.0]),
+            //Vector::new([1.0, 1.0, 1.0]),
+        ]);
+
         Ok(Self {
             time: 0.0,
-
+            line,
+            angle: 0.0,
             camera,
             exposure,
             sensitivity,

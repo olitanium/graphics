@@ -26,7 +26,7 @@ impl<'a, const OUT: usize, X: FramebufferWithDepth<OUT>> Group<'a, OUT, X> {
         framebuffer: &'a X,
         skybox: &'a SkyBox,
         camera: &Camera<O>,
-        camera_hint: O::Hint,
+        camera_hint: &O::Hint,
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Box<Self> {
         let proj = camera.projection;
@@ -60,7 +60,7 @@ impl<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw for Group<'a, OUT,
             let mut active_shader = self.shader.use_program(marker);
 
             active_shader.drawing_skybox(true);
-            active_shader.set_uniform("projtimesview".to_string(), self.look_at);
+            active_shader.set_uniform("projtimesview".to_string(), &self.look_at);
 
             active_shader.set_uniform_dyn(self.uniforms);
 

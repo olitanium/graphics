@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use engine::{ApiError, EngResult, Key};
+use engine::{linear_algebra::Vector, ApiError, EngResult, Key};
 
 use crate::state::{State, StateError};
 
@@ -74,6 +74,12 @@ impl State {
             string.clear();
         }
 
+        if string.ends_with('l') {
+            string.clear();
+            self.line.as_mut().push(Vector::new([self.angle.cos(), 0.0, self.angle.sin()]));
+            self.angle += 0.1;
+
+        }
         self.camera
             .pose
             .look_left(-mouse_delta.0 * self.sensitivity);

@@ -3,12 +3,12 @@ use graphics::framebuffer::traits::{FramebufferInternals, FramebufferWithoutExtr
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::Draw;
 
-use crate::{EngApiResult, EngError, EngResult};
+use crate::EngResult;
 
 use super::Quad;
 
 #[derive(Debug)]
-pub struct Group<'a, const N: usize, const OUT: usize, D: FramebufferInternals<OUT>> {
+pub struct Group<'a, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> {
     shader: &'a ShaderProgram<Quad<N>, OUT, D::Tex>,
     framebuffer: &'a D,
 

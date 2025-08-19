@@ -74,7 +74,7 @@ impl ShadowFarLight {
         self.light.bind_to(shader, name, index);
         shader.set_uniform(
             format!("{name}[{index}].matrix"),
-            self.projtimesview(target),
+            &self.projtimesview(target),
         );
         // SAFETY: Reference, therefore the ActiveShaderProgram, must not live to a
         // point where the inner framebuffer is resized.
@@ -103,6 +103,6 @@ impl ShadowFarLight {
     }
 
     pub(crate) fn projtimesview(&self, target: Vector<3>) -> Matrix<4, 4> {
-        self.camera(target).look_at(())
+        self.camera(target).look_at(&())
     }
 }

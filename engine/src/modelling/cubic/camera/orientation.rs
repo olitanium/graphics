@@ -176,7 +176,7 @@ impl CameraPose {
 impl YieldsPose for CameraPose {
     type Hint = ();
 
-    fn get_pose(&self, _: Self::Hint) -> Pose {
+    fn get_pose(&self, _: &Self::Hint) -> Pose {
         Pose::new_from_orientation_translation(self.orientation(), self.position())
     }
 }
