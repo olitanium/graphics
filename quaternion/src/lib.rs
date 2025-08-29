@@ -14,6 +14,8 @@ pub struct Quaternion {
 }
 
 impl Quaternion {
+    pub const ZERO: Self = Self::new(0.0, 0.0, 0.0, 0.0);
+
     pub const fn new(real: f32, i: f32, j: f32, k: f32) -> Self {
         Self {
             real,
@@ -62,7 +64,7 @@ impl Quaternion {
         self
     }
 
-    pub fn from_vec(vector: Vector<3>) -> Self {
+    pub fn from_vector(vector: Vector<3>) -> Self {
         Self { real: 0.0, vector }
     }
 

@@ -2,7 +2,8 @@ mod array_maths;
 
 use core::array;
 use core::ops::{Index, IndexMut};
-use std::ops::{AddAssign, Mul, SubAssign};
+use std::iter::Sum;
+use std::ops::{Add, AddAssign, Mul, SubAssign};
 
 use super::matrix::Matrix;
 
@@ -123,7 +124,6 @@ impl<const N: usize> Vector<N> {
     #[inline]
     #[must_use]
     pub fn scale(self, scalar: f32) -> Self {
-        let scalar: f32 = scalar;
         self.map(|elem| scalar * elem)
     }
 
@@ -326,6 +326,18 @@ impl<const N: usize> core::ops::Neg for Vector<N> {
     #[inline]
     fn neg(self) -> Self::Output {
         self.flip()
+    }
+}
+
+impl<const N: usize> Sum<Vector<N>> for Option<Vector<N>> {
+    fn sum<I: Iterator<Item = Vector<N>>>(iter: I) -> Self {
+        iter.reduce(Add::add)
+    }
+}
+
+impl<const N: usize> Sum for Vector<N> {
+    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
+        iter.reduce(Add::add).unwrap_or_else(Vector::new_zero)
     }
 }
 

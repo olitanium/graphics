@@ -32,12 +32,12 @@ pub struct Group<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> {
 
 impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
     pub fn new<O: YieldsPose>(
+        output_framebuffer: &'a X,
         camera: &Camera<O>,
         hint: &O::Hint,
         list_light: &'a ShadowListLights<2>,
         opaque: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
         transparent: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
-        output_framebuffer: &'a X,
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Box<Self> {
         Box::new(Self {

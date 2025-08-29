@@ -15,11 +15,12 @@ impl IncompleteVertex {
 
     builder!(tangent, opt_tangent: Option<UnitVector<3>>);
 
-    pub fn new(position: Vector<3>, texture: Vector<2>) -> Self {
+    pub const fn new(position: Vector<3>, texture: Vector<2>) -> Self {
         Self {
             position,
             texture,
-            ..Default::default()
+            normal: None,
+            tangent: None,
         }
     }
 }

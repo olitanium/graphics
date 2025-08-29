@@ -74,6 +74,15 @@ impl Pose {
 
         Self { dual_quaternion }
     }
+
+    pub fn act_on(self, vector: Vector<3>) -> Vector<3> {
+        let quaternion = DualQuaternion::from_vector(vector);
+        let dual_quat_out =
+            self.dual_quaternion.u() * quaternion * self.dual_quaternion.u().conjugate();
+        debug_assert!(dual_quat_out.dual.is_zero());
+        debug_assert_eq!(dual_quat_out.real.scalar(), 0.0);
+        dual_quat_out.real.vector()
+    }
 }
 
 impl YieldsPose for Pose {

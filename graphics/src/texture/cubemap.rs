@@ -77,3 +77,12 @@ impl Texture for CubeMap {
         (self.size, self.size)
     }
 }
+
+impl Drop for CubeMap {
+    fn drop(&mut self) {
+        let primitive = self.id.to_primitive();
+        gl_call! {
+            gl::DeleteTextures(1, &raw const primitive);
+        }
+    }
+}

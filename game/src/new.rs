@@ -16,7 +16,7 @@ use engine::modelling::cubic::lighting::shadow::{
 };
 use engine::modelling::cubic::lighting::simple::{FarLight, ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
-use engine::modelling::{Bloom, Bone, Cubic, Line, Quad, Skeleton, SkyBox};
+use engine::modelling::{Bloom, Bone, BoundingBox, Cubic, Line, Quad, Skeleton, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
@@ -50,11 +50,11 @@ impl State {
 
         let cube_positions = [
             //[0.0, 0.0, 0.0],
-            [2.0, 0.0, 0.0],
+            //[2.0, 0.0, 0.0],
             //[-2.0, 0.0, 0.0],
-            [0.0, 2.0, 0.0],
+            //[0.0, 2.0, 0.0],
             //[0.0, -2.0, 0.0],
-            [0.0, 0.0, 2.0],
+            //[0.0, 0.0, 2.0],
             //[0.0, 0.0, -2.0],
         ];
 
@@ -75,129 +75,15 @@ impl State {
             })
             .collect();
 
-        const WHICH_MODEL: &str = "backpack";
-        use engine::PostProcess as P;
-        let imported = match WHICH_MODEL {
-            "morgan" => {
-                Cubic::import(
-                    "assets/Teddy Statue/Teddy Statue.obj",
-                    vec![
-                        P::Triangulate,
-                        P::GenerateNormals,
-                        P::CalculateTangentSpace,
-                        // P::FlipUVs,
-                        P::OptimizeGraph,
-                        P::OptimizeMeshes,
-                    ],
-                )?
-                .scale(0.01)
-                .build()
-            }
-            "backpack" => Cubic::import(
-                "assets/backpack/backpack.obj",
-                vec![
-                    P::Triangulate,
-                    P::GenerateNormals,
-                    P::CalculateTangentSpace,
-                    P::FlipUVs,
-                    P::OptimizeGraph,
-                    P::OptimizeMeshes,
-                ],
-            )?
-            .build(),
-            "oliver" => {
-                let material = Rc::new(Material::builder().diffuse(FlatTexture::white()).build());
+        let imported = make_model("backpack")?;
+        let imported_other = make_model("oliver")?;
+        // let imported_third = make_model("morgan")?;
 
-                const TAIL_GRADIENT: f32 = 0.9;
-                const TAIL_EPSILON: f32 = 0.1;
-                let animation1 = {
-                    let mut animation = Animation::new();
-                    animation
-                        .push(
-                            Pose::new_from_orientation_translation(
-                                Orientation::new_forward_up(
-                                    Vector::new([0.25, 0.0, 1.0]).normalize(),
-                                    Vector::new([0.0, 1.0, 0.0]).normalize(),
-                                ),
-                                Vector::new([0.0, 0.0, 0.5 + TAIL_GRADIENT / 2.0 - TAIL_EPSILON]),
-                            ),
-                            1.0,
-                        )
-                        .unwrap();
-                    animation
-                        .push(
-                            Pose::new_from_orientation_translation(
-                                Orientation::new_forward_up(
-                                    Vector::new([-0.25, 0.0, 1.0]).normalize(),
-                                    Vector::new([0.0, 1.0, 0.0]).normalize(),
-                                ),
-                                Vector::new([0.0, 0.0, 0.5 + TAIL_GRADIENT / 2.0 - TAIL_EPSILON]),
-                                // scale: TAIL_GRADIENT
-                            ),
-                            1.0,
-                        )
-                        .unwrap();
-                    animation
-                };
+        let imported_bounding_box = BoundingBox::from_cubic(&imported, 1).unwrap();
+        let bounding_box_level = 0;
+        let imported_bounding_box_as_model = imported_bounding_box.make_model(bounding_box_level);
 
-                let animation2 = {
-                    let mut animation = Animation::new();
-                    animation
-                        .push(
-                            Pose::new_from_orientation_translation(
-                                Orientation::new_forward_up(
-                                    Vector::new([0.0, 0.25, 1.0]).normalize(),
-                                    Vector::new([0.0, 1.0, 0.0]).normalize(),
-                                ),
-                                Vector::new([0.0, 0.0, 0.5 + TAIL_GRADIENT / 2.0 - TAIL_EPSILON]),
-                            ),
-                            1.0,
-                        )
-                        .unwrap();
-                    animation
-                        .push(
-                            Pose::new_from_orientation_translation(
-                                Orientation::new_forward_up(
-                                    Vector::new([0.0, -0.25, 1.0]).normalize(),
-                                    Vector::new([0.0, 1.0, 0.0]).normalize(),
-                                ),
-                                Vector::new([0.0, 0.0, 0.5 + TAIL_GRADIENT / 2.0 - TAIL_EPSILON]),
-                                // scale: TAIL_GRADIENT
-                            ),
-                            1.0,
-                        )
-                        .unwrap();
-                    animation
-                };
-
-                let mut skeleton = Skeleton::default();
-                let animation_rc = Rc::new([animation1, animation2]);
-                let mut builder = Cubic::builder();
-                let mut current_bone = 0;
-                builder = builder.push_cube(material.clone(), 1.0, current_bone);
-
-                const LENGTH_TAIL: usize = 10;
-
-                for (material, animation) in
-                    iter::repeat_n((material, animation_rc), LENGTH_TAIL - 1)
-                {
-                    let bone = Bone::builder(current_bone)
-                        .all_animations(animation)
-                        .build();
-
-                    current_bone = skeleton.push_bone(bone).unwrap();
-                    builder = builder.push_cube(material, 1.0, current_bone);
-                }
-
-                builder
-                    .cull_face(CullFace::BackFace)
-                    .skeleton(skeleton)
-                    .build()
-            }
-            _ => Cubic::empty(),
-        };
-
-        const START_LOC: [f32; 3] = [0.0, 1.0, 3.0];
+        const START_LOC: [f32; 3] = [0.0, 0.0, -3.0];
 
         let camera = camera::builder()
             .pose(
@@ -211,67 +97,67 @@ impl State {
             .build();
 
         let light_colour = ColourRGB::new([1.0, 1.0, 1.0].map(|x| x * 1.0));
-        let light_attenuation_array = [1.0, 0.0, 0.0];
-        let point_light = ShadowPointLight::new(
-            PointLight {
-                position: Vector::default(),
-                attenuation: light_attenuation_array,
-                ambient: light_colour.map(|x| x * 0.1),
-                diffuse: light_colour.map(|x| x * 0.5),
-                specular: light_colour,
-            },
-            1000.into(),
-        );
-
-        let ns_point_light = PointLight {
-            position: Vector::default(),
-            attenuation: light_attenuation_array,
-            ambient: light_colour.map(|x| x * 0.1),
-            diffuse: light_colour.map(|x| x * 0.5),
-            specular: light_colour,
-        };
-
-        let sun_colour = ColourRGB::new([1.0, 1.0, 1.0]);
-        let far_light = ShadowFarLight::new(
-            FarLight {
-                direction: Vector::new([0.0, -0.99, 0.001]).normalize(),
-                ambient: sun_colour.map(|x| x * 0.1),
-                diffuse: sun_colour.map(|x| x * 0.5),
-                specular: sun_colour.map(|x| x * 1.0),
-            },
-            (1000.into(), 1000.into()),
-        );
-
-        let sun2_colour = ColourRGB::new([1.0, 1.0, 1.0]);
-        let far_light2 = ShadowFarLight::new(
-            FarLight {
-                direction: Vector::new([1.0, 0.0, 0.0]).normalize(),
-                ambient: sun2_colour.map(|x| x * 0.0),
-                diffuse: sun2_colour.map(|x| x * 0.5),
-                specular: sun2_colour.map(|x| x * 1.0),
-            },
-            (1000.into(), 1000.into()),
-        );
-
-        let spotlight_colour = ColourRGB::new([1.0; 3]);
-        let spotlight = ShadowSpotLight::new(
-            SpotLight {
-                position: camera.centre(&()),
-                direction: camera.direction(&()),
-                attenuation: [1.0, 0.09, 0.032],
-                ambient: spotlight_colour.map(|x| x * 0.0),
-                diffuse: spotlight_colour,
-                specular: spotlight_colour,
-                cos_cut_off: 20f32.to_radians().cos(),
-                cos_outer_cut_off: 25f32.to_radians().cos(),
-            },
-            1000.into(),
-        );
+        // let light_attenuation_array = [1.0, 0.0, 0.0];
+        // let point_light = ShadowPointLight::new(
+        // PointLight {
+        // position: Vector::default(),
+        // attenuation: light_attenuation_array,
+        // ambient: light_colour.map(|x| x * 0.1),
+        // diffuse: light_colour.map(|x| x * 0.5),
+        // specular: light_colour,
+        // },
+        // 1000.into(),
+        // );
+        //
+        // let ns_point_light = PointLight {
+        // position: Vector::default(),
+        // attenuation: light_attenuation_array,
+        // ambient: light_colour.map(|x| x * 0.1),
+        // diffuse: light_colour.map(|x| x * 0.5),
+        // specular: light_colour,
+        // };
+        //
+        // let sun_colour = ColourRGB::new([1.0, 1.0, 1.0]);
+        // let far_light = ShadowFarLight::new(
+        // FarLight {
+        // direction: Vector::new([0.0, -0.99, 0.001]).normalize(),
+        // ambient: sun_colour.map(|x| x * 0.1),
+        // diffuse: sun_colour.map(|x| x * 0.5),
+        // specular: sun_colour.map(|x| x * 1.0),
+        // },
+        // (1000.into(), 1000.into()),
+        // );
+        //
+        // let sun2_colour = ColourRGB::new([1.0, 1.0, 1.0]);
+        // let far_light2 = ShadowFarLight::new(
+        // FarLight {
+        // direction: Vector::new([1.0, 0.0, 0.0]).normalize(),
+        // ambient: sun2_colour.map(|x| x * 0.0),
+        // diffuse: sun2_colour.map(|x| x * 0.5),
+        // specular: sun2_colour.map(|x| x * 1.0),
+        // },
+        // (1000.into(), 1000.into()),
+        // );
+        //
+        // let spotlight_colour = ColourRGB::new([1.0; 3]);
+        // let spotlight = ShadowSpotLight::new(
+        // SpotLight {
+        // position: camera.centre(&()),
+        // direction: camera.direction(&()),
+        // attenuation: [1.0, 0.09, 0.032],
+        // ambient: spotlight_colour.map(|x| x * 0.0),
+        // diffuse: spotlight_colour,
+        // specular: spotlight_colour,
+        // cos_cut_off: 20f32.to_radians().cos(),
+        // cos_outer_cut_off: 25f32.to_radians().cos(),
+        // },
+        // 1000.into(),
+        // );
 
         let [dark_tex, light_tex] = hdr_fb.get_all_colour();
         let bloom = Bloom::new(dark_tex, light_tex);
 
-        let quad_to_draw = Quad::screen(hdr_fb.get_all_colour()).downcast();
+        let quad_to_draw = Quad::screen([hdr_fb.get_colour(0).unwrap()]); //.downcast();
 
         let light_material = {
             let light_emission = FlatTexture::monochrome(light_colour.to_rgba_with(1.0));
@@ -291,6 +177,7 @@ impl State {
         ]);
 
         Ok(Self {
+            bin: vec![],
             time: 0.0,
             line,
             angle: 0.0,
@@ -303,7 +190,15 @@ impl State {
             containers,
             skybox,
 
+            testbool: false,
             imported,
+            imported_other,
+            blank: Cubic::empty(),
+            imported_third: None,
+            imported_bounding_box,
+            imported_bounding_box_model: imported_bounding_box_as_model,
+            bounding_box_level,
+
             which_animation: 0,
 
             hdr_fb,
@@ -311,18 +206,140 @@ impl State {
             bloom,
 
             light_group: ShadowListLights {
-                point: ArrayVec::try_from([point_light])
-                    .expect("size leq SHADOW_SHADER_MAX_LIGHTS"),
+                // point: ArrayVec::try_from([point_light])
+                //    .expect("size leq SHADOW_SHADER_MAX_LIGHTS"),
                 ..ShadowListLights::default()
             },
 
             ns_light_group: ListLights {
-                point: ArrayVec::try_from([ns_point_light])
-                    .expect("size leq SHADOW_SHADER_MAX_LIGHTS"),
+                // point: ArrayVec::try_from([ns_point_light])
+                //    .expect("size leq SHADOW_SHADER_MAX_LIGHTS"),
                 ..ListLights::default()
             },
 
             quad_to_draw,
         })
     }
+}
+
+pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
+    use engine::PostProcess as P;
+    let model = match which_model {
+        "morgan" => {
+            Cubic::import(
+                "assets/Teddy Statue/Teddy Statue.obj",
+                vec![
+                    P::Triangulate,
+                    P::GenerateNormals,
+                    P::CalculateTangentSpace,
+                    // P::FlipUVs,
+                    P::OptimizeGraph,
+                    P::OptimizeMeshes,
+                ],
+            )?
+            .scale(0.01)
+            .build()
+        }
+        "backpack" => Cubic::import(
+            "assets/backpack/backpack.obj",
+            vec![
+                P::Triangulate,
+                P::GenerateNormals,
+                P::CalculateTangentSpace,
+                P::FlipUVs,
+                P::OptimizeGraph,
+                P::OptimizeMeshes,
+            ],
+        )?
+        .build(),
+        "oliver" => {
+            let material = Rc::new(Material::builder().diffuse(FlatTexture::white()).build());
+
+            const TAIL_GRADIENT: f32 = 0.9;
+            const TAIL_EPSILON: f32 = 0.1;
+            let animation1 = {
+                let mut animation = Animation::new();
+                animation
+                    .push(
+                        Pose::new_from_orientation_translation(
+                            Orientation::new_forward_up(
+                                Vector::new([0.25, 0.0, 1.0]).normalize(),
+                                Vector::new([0.0, 1.0, 0.0]).normalize(),
+                            ),
+                            Vector::new([0.0, 0.0, 0.5 + TAIL_GRADIENT / 2.0 - TAIL_EPSILON]),
+                        ),
+                        1.0,
+                    )
+                    .unwrap();
+                animation
+                    .push(
+                        Pose::new_from_orientation_translation(
+                            Orientation::new_forward_up(
+                                Vector::new([-0.25, 0.0, 1.0]).normalize(),
+                                Vector::new([0.0, 1.0, 0.0]).normalize(),
+                            ),
+                            Vector::new([0.0, 0.0, 0.5 + TAIL_GRADIENT / 2.0 - TAIL_EPSILON]),
+                            // scale: TAIL_GRADIENT
+                        ),
+                        1.0,
+                    )
+                    .unwrap();
+                animation
+            };
+
+            let animation2 = {
+                let mut animation = Animation::new();
+                animation
+                    .push(
+                        Pose::new_from_orientation_translation(
+                            Orientation::new_forward_up(
+                                Vector::new([0.0, 0.25, 1.0]).normalize(),
+                                Vector::new([0.0, 1.0, 0.0]).normalize(),
+                            ),
+                            Vector::new([0.0, 0.0, 0.5 + TAIL_GRADIENT / 2.0 - TAIL_EPSILON]),
+                        ),
+                        1.0,
+                    )
+                    .unwrap();
+                animation
+                    .push(
+                        Pose::new_from_orientation_translation(
+                            Orientation::new_forward_up(
+                                Vector::new([0.0, -0.25, 1.0]).normalize(),
+                                Vector::new([0.0, 1.0, 0.0]).normalize(),
+                            ),
+                            Vector::new([0.0, 0.0, 0.5 + TAIL_GRADIENT / 2.0 - TAIL_EPSILON]),
+                            // scale: TAIL_GRADIENT
+                        ),
+                        1.0,
+                    )
+                    .unwrap();
+                animation
+            };
+
+            let mut skeleton = Skeleton::default();
+            let animation_rc = Rc::new([animation1, animation2]);
+            let mut builder = Cubic::builder();
+            let mut current_bone = 0;
+            builder = builder.push_cube(material.clone(), 1.0, current_bone);
+
+            const LENGTH_TAIL: usize = 10;
+
+            for (material, animation) in iter::repeat_n((material, animation_rc), LENGTH_TAIL - 1) {
+                let bone = Bone::builder(current_bone)
+                    .all_animations(animation)
+                    .build();
+
+                current_bone = skeleton.push_bone(bone).unwrap();
+                builder = builder.push_cube(material, 1.0, current_bone);
+            }
+
+            builder
+                .cull_face(CullFace::BackFace)
+                .skeleton(skeleton)
+                .build()
+        }
+        _ => Cubic::empty(),
+    };
+    Ok(model)
 }

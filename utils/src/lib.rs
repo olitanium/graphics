@@ -1,5 +1,8 @@
 #![feature(never_type)]
 mod error;
+mod ref_or_owned;
+
+pub use ref_or_owned::RefOwned;
 // pub use error::Error;
 // pub use error::Result;
 
@@ -15,27 +18,27 @@ macro_rules! getter {
 #[macro_export]
 macro_rules! builder {
     ($name:ident, $optname:ident : Option < $typ:ty >) => {
-        pub fn $name<X: Into<$typ>>(mut self, $name: X) -> Self {
-            self.$name = Some($name.into());
+        pub const fn $name(mut self, $name: $typ) -> Self {
+            self.$name = Some($name);
             self
         }
 
-        pub fn $optname<X: Into<$typ>>(mut self, $optname: Option<X>) -> Self {
-            self.$name = $optname.map(Into::into);
+        pub const fn $optname(mut self, $optname: Option<$typ>) -> Self {
+            self.$name = $optname;
             self
         }
     };
 
     ($name:ident : Option < $typ:ty >) => {
-        pub fn $name<X: Into<$typ>>(mut self, $name: X) -> Self {
-            self.$name = Some($name.into());
+        pub fn $name(mut self, $name: $typ) -> Self {
+            self.$name = Some($name);
             self
         }
     };
 
     ($name:ident : $typ:ty) => {
-        pub fn $name<X: Into<$typ>>(mut self, $name: X) -> Self {
-            self.$name = $name.into();
+        pub fn $name(mut self, $name: $typ) -> Self {
+            self.$name = $name;
             self
         }
     };

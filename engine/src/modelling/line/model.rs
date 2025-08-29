@@ -1,7 +1,7 @@
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::shader_program::Uniform;
-use graphics::types::VertexBufferLen;
+use graphics::types::ElementArrayLen;
 use graphics::{ActiveShaderProgram, vertex_array};
 
 use crate::EngResult;
@@ -19,6 +19,10 @@ impl<U: Uniform> Line<U> {
     pub fn as_mut(&mut self) -> &mut Vec<U> {
         &mut self.vertices
     }
+
+    pub fn as_ref(&self) -> &Vec<U> {
+        &self.vertices
+    }
 }
 
 impl<U: Uniform> Line<U> {
@@ -27,18 +31,12 @@ impl<U: Uniform> Line<U> {
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, F::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, F>,
     ) -> EngResult<(), !> {
-        // active_shader.set_uniform("in_colour".into(), [ColourRGB::WHITE,
-        // ColourRGB::BLACK, ColourRGB::WHITE, ColourRGB::BLACK].as_slice());
-        // active_shader.set_uniform("in_position".into(), &self.vertices);
         active_shader.set_uniform("vertex".to_string(), &self.vertices);
-
-        println!("len = {}", self.vertices.len());
-        println!("self = {:?}", self.vertices);
 
         vertex_array::dummy_vertex_array().draw_len(
             active_shader,
             active_framebuffer,
-            VertexBufferLen::new(Ord::min(self.vertices.len(), LINE_SHADER_MAX_VERTICES) as _),
+            ElementArrayLen::new(Ord::min(self.vertices.len(), LINE_SHADER_MAX_VERTICES) as _),
         )?;
 
         Ok(())

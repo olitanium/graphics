@@ -158,7 +158,7 @@ impl<const N: usize, B: Attachment> Builder<N, HasSize, B> {
         if N == 0 {
             gl_call! { gl::DrawBuffer(gl::NONE); }
         } else {
-            let draw_buffers: [types::GLenum; N] =
+            let draw_buffers: [_; N] =
                 array::from_fn(|x| gl::COLOR_ATTACHMENT0 + x as types::GLenum);
 
             gl_call! { gl::DrawBuffers(N as types::GLsizei, draw_buffers.as_ptr()); }

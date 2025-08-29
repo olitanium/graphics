@@ -49,7 +49,7 @@ where
         VertexArray::new(vertex_buffer, Some(element_array_buffer))
     }
 
-    pub fn push_incomplete_triangle(&mut self, incomplete_triangle: &[IncompleteVertex; 3]) {
+    pub fn push_incomplete_triangle(&mut self, incomplete_triangle: [IncompleteVertex; 3]) {
         let complete_triangle = V::from_incomplete_triangle(incomplete_triangle);
         self.push_triangle(complete_triangle);
     }

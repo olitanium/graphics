@@ -6,6 +6,8 @@
 #![feature(array_try_map)]
 #![feature(try_blocks)]
 #![feature(never_type)]
+#![feature(option_array_transpose)]
+#![feature(associated_const_equality)]
 
 pub mod eng_state;
 #[expect(hidden_glob_reexports)]

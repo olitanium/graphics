@@ -61,6 +61,14 @@ impl DualQuaternion {
     pub fn normalize(self) -> UnitDualQuaternion {
         UnitDualQuaternion::normalize_dual_quaternion(self)
     }
+
+    pub fn from_vector(vector: Vector<3>) -> Self {
+        let quaternion = Quaternion::from_vector(vector);
+        Self {
+            real: quaternion,
+            dual: Quaternion::ZERO,
+        }
+    }
 }
 
 #[cfg(test)]

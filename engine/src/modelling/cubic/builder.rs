@@ -8,7 +8,7 @@ use super::material::Material;
 use super::model::Mesh;
 use super::{Cubic, Skeleton};
 use crate::modelling::SimpleVertex;
-use crate::modelling::test_models::vertex_array_cube;
+use crate::modelling::test_models;
 
 #[derive(Debug, Default, Clone)]
 pub struct Builder {
@@ -38,7 +38,7 @@ impl Builder {
     }
 
     pub fn push_cube(self, material: Rc<Material>, side_length: f32, bone: usize) -> Self {
-        let cube = Rc::new(vertex_array_cube(side_length));
+        let cube = Rc::new(test_models::origin_cube(side_length));
         self.push_mesh_from(cube, material, bone)
     }
 

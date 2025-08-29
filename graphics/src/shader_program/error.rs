@@ -39,6 +39,12 @@ pub enum Error {
         forced: CullFace,
         attempted: CullFace,
     },
+    ProgramLinkError {
+        info_log: String,
+        vertex_shader: String,
+        fragment_shader: String,
+        geometry_shader: Option<String>,
+    }
 }
 
 error_boilerplate!(Error);

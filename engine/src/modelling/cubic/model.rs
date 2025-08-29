@@ -14,7 +14,7 @@ use super::material::Material;
 use super::{Builder, Skeleton, import};
 use crate::error::EngResult;
 use crate::modelling::simple_vertex::SimpleVertex;
-use crate::modelling::test_models::vertex_array_cube;
+use crate::modelling::test_models;
 
 #[derive(Debug, Clone)]
 pub struct Mesh {
@@ -60,6 +60,10 @@ impl Mesh {
 
         Ok(())
     }
+
+    pub fn triangles(&self) -> Vec<[SimpleVertex; 3]> {
+        self.vertex_array.triangles()
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -73,7 +77,7 @@ pub struct Cubic {
 
 impl Default for Cubic {
     fn default() -> Self {
-        Self::cube(1.0, Rc::new(Material::blank())).build()
+        Self::cube(1.0, Default::default()).build()
     }
 }
 
@@ -89,7 +93,7 @@ impl Cubic {
     }
 
     pub fn cube(side_length: f32, material: Rc<Material>) -> Builder {
-        let vertex_array = Rc::new(vertex_array_cube(side_length));
+        let vertex_array = Rc::new(test_models::origin_cube(side_length));
         Self::builder().push_mesh_from(vertex_array, material, 0)
     }
 
@@ -97,6 +101,10 @@ impl Cubic {
         self.meshes
             .iter_mut()
             .for_each(|mesh| mesh.material = mat.clone());
+    }
+
+    pub fn triangles(&self) -> Vec<[SimpleVertex; 3]> {
+        self.meshes.iter().map(Mesh::triangles).flatten().collect()
     }
 
     pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(

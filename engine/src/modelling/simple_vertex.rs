@@ -18,6 +18,7 @@ pub struct SimpleVertex {
 }
 
 impl Vertex for SimpleVertex {
+    const DIMENSIONS: usize = 3;
     const ELEMENT_COUNT: usize = 4;
 
     fn offsets() -> [usize; Self::ELEMENT_COUNT] {
@@ -34,7 +35,7 @@ impl Vertex for SimpleVertex {
         [(V::f32, 3), (V::f32, 2), (V::f32, 3), (V::f32, 3)]
     }
 
-    fn from_incomplete_triangle(incomplete_triangle: &[IncompleteVertex; 3]) -> [Self; 3] {
+    fn from_incomplete_triangle(incomplete_triangle: [IncompleteVertex; 3]) -> [Self; 3] {
         let new_normal = if incomplete_triangle.iter().all(|v| v.normal.is_none()) {
             let ab = incomplete_triangle[1].position - incomplete_triangle[0].position;
             let ac = incomplete_triangle[2].position - incomplete_triangle[0].position;
@@ -69,5 +70,9 @@ impl Vertex for SimpleVertex {
                 tangent: tangent.unwrap_or(new_tangent),
             },
         )
+    }
+
+    fn position(&self) -> Vector<{ Self::DIMENSIONS }> {
+        self.position
     }
 }

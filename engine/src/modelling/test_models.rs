@@ -1,4 +1,5 @@
 use std::iter;
+use std::sync::LazyLock;
 
 use graphics::linear_algebra::Vector;
 use graphics::types::ElementArrayElem;
@@ -8,19 +9,23 @@ use graphics::vertex_array::VertexArray;
 use crate::modelling::SimpleVertex;
 use crate::modelling::quad::QuadVertex;
 
-pub fn vertex_array_cube(side_length: f32) -> VertexArray<SimpleVertex> {
+pub fn vertex_array_cube(
+    lowerbounds: Vector<3>,
+    upperbounds: Vector<3>,
+) -> VertexArray<SimpleVertex> {
+    let [low_x, low_y, low_z] = lowerbounds.into_inner();
+    let [up_x, up_y, up_z] = upperbounds.into_inner();
     let vertex_positions = [
         // x    y    z
-        [0.0, 0.0, 0.0], // 0
-        [0.0, 0.0, 1.0], // 1
-        [0.0, 1.0, 0.0], // 2
-        [0.0, 1.0, 1.0], // 3
-        [1.0, 0.0, 0.0], // 4
-        [1.0, 0.0, 1.0], // 5
-        [1.0, 1.0, 0.0], // 6
-        [1.0, 1.0, 1.0], // 7
+        [low_x, low_y, low_z], // 0
+        [low_x, low_y, up_z],  // 1
+        [low_x, up_y, low_z],  // 2
+        [low_x, up_y, up_z],   // 3
+        [up_x, low_y, low_z],  // 4
+        [up_x, low_y, up_z],   // 5
+        [up_x, up_y, low_z],   // 6
+        [up_x, up_y, up_z],    // 7
     ]
-    .map(|vertex| vertex.map(|elem| (elem - 0.5) * side_length))
     .map(Vector::new);
 
     let tex_coords =
@@ -54,10 +59,21 @@ pub fn vertex_array_cube(side_length: f32) -> VertexArray<SimpleVertex> {
     let mut vertex_array_builder = VertexArray::builder();
 
     for incomplete_triangle in triangles {
-        vertex_array_builder.push_incomplete_triangle(&incomplete_triangle);
+        vertex_array_builder.push_incomplete_triangle(incomplete_triangle);
     }
 
     vertex_array_builder.build()
+}
+
+pub fn origin_unit_cube() -> VertexArray<SimpleVertex> {
+    origin_cube(1.0)
+}
+
+pub fn origin_cube(side_length: f32) -> VertexArray<SimpleVertex> {
+    let upperbounds = Vector::new([side_length / 2.0; 3]);
+    let lowerbounds = Vector::new([-side_length / 2.0; 3]);
+
+    vertex_array_cube(lowerbounds, upperbounds)
 }
 
 pub fn vertex_array_quad(
@@ -66,7 +82,7 @@ pub fn vertex_array_quad(
     lower_y: f32,
     upper_y: f32,
 ) -> VertexArray<QuadVertex> {
-    let quad_vertices = [
+    let mut quad_vertices = [
         QuadVertex {
             position: Vector::new([lower_x, lower_y]),
             tex_coordinate: Vector::new([0.0, 0.0]),
@@ -80,19 +96,31 @@ pub fn vertex_array_quad(
             tex_coordinate: Vector::new([1.0, 1.0]),
         },
         QuadVertex {
+            position: Vector::new([lower_x, lower_y]),
+            tex_coordinate: Vector::new([0.0, 0.0]),
+        },
+        QuadVertex {
+            position: Vector::new([upper_x, upper_y]),
+            tex_coordinate: Vector::new([1.0, 1.0]),
+        },
+        QuadVertex {
             position: Vector::new([lower_x, upper_y]),
             tex_coordinate: Vector::new([0.0, 1.0]),
         },
     ];
+    
+    quad_vertices.reverse();
 
-    let element_array = [0, 1, 2, 0, 2, 3].map(ElementArrayElem::new);
+    let element_array = [5, 4, 3, 2, 1, 0].map(ElementArrayElem::new);
 
     VertexArray::builder()
-        .vertices(quad_vertices)
-        .element_array(element_array)
+        .vertices(quad_vertices.to_vec())
+        .element_array(element_array.to_vec())
         .build()
+}
 
-    // let vertex_buffer = VertexBuffer::new(&quad_vertices);
-    // let element_array_buffer = ElementArrayBuffer::new(&element_array);
-    // VertexArray::new(vertex_buffer, /*&OFFSETS,*/ element_array_buffer)
+pub fn screen_quad() -> &'static VertexArray<QuadVertex> {
+    static SCREEN_QUAD: LazyLock<VertexArray<QuadVertex>> = LazyLock::new(|| vertex_array_quad(-1.0, 1.0, -1.0, 1.0));
+
+    &SCREEN_QUAD
 }

@@ -198,7 +198,7 @@ fn process_node<NEVER: Clone>(
 
                 let transpose = incomplete_triangle.try_map(identity)?;
 
-                vertex_array_builder.push_incomplete_triangle(&transpose);
+                vertex_array_builder.push_incomplete_triangle(transpose);
             }
 
             let vertex_array = vertex_array_builder.build();

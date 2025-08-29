@@ -66,10 +66,6 @@ impl Window {
         event_buffer
     }
 
-    pub(crate) fn make_current(&mut self) {
-        self.glfw_window.make_current();
-    }
-
     pub fn set_cursor_mode(&mut self, mode: CursorMode) {
         self.glfw_window.set_cursor_mode(mode);
     }
@@ -90,7 +86,11 @@ impl Window {
         };
 
         gl_call! {
-            gl::ClearColor(0.1, 0.0, 0.1, 1.0);
+            gl::ClearColor(1.0, 0.0, 0.1, 1.0);
+        };
+
+        gl_call! {
+            gl::Enable(gl::LINE_SMOOTH);
         };
     }
 }
@@ -99,8 +99,6 @@ impl Window {
 pub struct MissingGlfw;
 #[derive(Debug)]
 pub struct HasGlfw<'a>(&'a mut Glfw);
-
-pub struct FromOtherWindow<'a>(&'a mut Window);
 
 #[derive(Debug)]
 pub struct Builder<G> {
@@ -133,13 +131,6 @@ impl Builder<MissingGlfw> {
     pub fn glfw(self, glfw: &mut Glfw) -> Builder<HasGlfw<'_>> {
         Builder {
             maker: HasGlfw(glfw),
-            ..self
-        }
-    }
-
-    pub fn share_with(self, window: &mut Window) -> Builder<FromOtherWindow<'_>> {
-        Builder {
-            maker: FromOtherWindow(window),
             ..self
         }
     }
@@ -176,31 +167,6 @@ impl Builder<HasGlfw<'_>> {
                 },
             )
             .ok_or(Error::GlfwWindow)?;
-        Ok(make_window(self, glfw_window, events))
-    }
-}
-
-impl Builder<FromOtherWindow<'_>> {
-    pub(crate) fn build<NEVER>(self) -> ApiResult<Window, NEVER> {
-        // Create a windowed mode window and its OpenGL context
-        let (glfw_window, events) = self
-            .maker
-            .0
-            .glfw_window
-            .create_shared(
-                self.dims.0,
-                self.dims.1,
-                &self.title,
-                if self.windowed {
-                    glfw::WindowMode::Windowed
-                } else {
-                    todo!("fullscreen not supported");
-                },
-            )
-            .ok_or(Error::GlfwWindow)?;
-
-        self.maker.0.make_current();
-
         Ok(make_window(self, glfw_window, events))
     }
 }

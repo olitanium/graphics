@@ -61,7 +61,7 @@ impl FramebufferContext {
     }
 
     /// Clear the currently bound Framebuffer and ALL buffer bits
-    pub fn clear_framebuffer(&mut self) {
+    pub fn clear_current_framebuffer(&mut self) {
         gl_call! {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
         }
@@ -95,7 +95,7 @@ impl<'a, 'b, const OUT: usize, D: FramebufferWithoutExtra<OUT>> ActiveFramebuffe
 
     /// Clear the currently bound Framebuffer and ALL buffer bits
     pub fn clear(&mut self) {
-        self.context.clear_framebuffer()
+        self.context.clear_current_framebuffer()
     }
 }
 

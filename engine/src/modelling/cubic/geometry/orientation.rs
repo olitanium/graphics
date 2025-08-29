@@ -16,7 +16,7 @@ impl Orientation {
     }
 
     pub fn act_on(self, vector: Vector<3>) -> Vector<3> {
-        let vec_as_quarternion = Quaternion::from_vec(vector);
+        let vec_as_quarternion = Quaternion::from_vector(vector);
         let output_quaternion =
             self.quaternion.q() * vec_as_quarternion * self.quaternion.q().conjugate();
         output_quaternion.vector()

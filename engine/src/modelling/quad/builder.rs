@@ -4,10 +4,10 @@ use std::rc::Rc;
 
 use graphics::texture::FlatTexture;
 use graphics::vertex_array::VertexArray;
-use utils::builder;
+use utils::{RefOwned, builder};
 
 use super::{Quad, QuadVertex};
-use crate::modelling::test_models::vertex_array_quad;
+use crate::modelling::test_models;
 
 #[derive(Debug, Default)]
 pub struct Builder<const N: usize> {
@@ -27,9 +27,10 @@ impl<const N: usize> Builder<N> {
 impl<const N: usize> Builder<N> {
     pub fn build(self) -> Quad<N> {
         Quad {
-            vertex_array: self
-                .vertex_array
-                .unwrap_or_else(|| vertex_array_quad(-1.0, 1.0, -1.0, 1.0)),
+            vertex_array: self.vertex_array.map_or_else(
+                || RefOwned::Ref(test_models::screen_quad()),
+                |arr| RefOwned::Owned(arr),
+            ),
             texture: self.texture.unwrap_or(array::from_fn(|_| {
                 Rc::new(RefCell::new(FlatTexture::default()))
             })),

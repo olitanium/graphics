@@ -49,6 +49,10 @@ impl<V: Vertex> VertexBuffer<V> {
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         }
     }
+
+    pub(crate) fn vertices(&self) -> &[V] {
+        &self.vertices
+    }
 }
 
 impl<V: Vertex> Drop for VertexBuffer<V> {

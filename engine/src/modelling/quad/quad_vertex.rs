@@ -11,6 +11,7 @@ pub struct QuadVertex {
 }
 
 impl Vertex for QuadVertex {
+    const DIMENSIONS: usize = 2;
     const ELEMENT_COUNT: usize = 2;
 
     fn offsets() -> [usize; Self::ELEMENT_COUNT] {
@@ -25,7 +26,7 @@ impl Vertex for QuadVertex {
         [(V::f32, 2), (V::f32, 2)]
     }
 
-    fn from_incomplete_triangle(triangle: &[IncompleteVertex; 3]) -> [Self; 3] {
+    fn from_incomplete_triangle(triangle: [IncompleteVertex; 3]) -> [Self; 3] {
         triangle.map(
             |IncompleteVertex {
                  position, texture, ..
@@ -36,5 +37,9 @@ impl Vertex for QuadVertex {
                 }
             },
         )
+    }
+
+    fn position(&self) -> Vector<{ Self::DIMENSIONS }> {
+        self.position
     }
 }

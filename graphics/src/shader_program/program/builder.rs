@@ -1,4 +1,5 @@
 use std::marker::PhantomData;
+use std::mem;
 use std::path::Path;
 
 use utils::{builder, new};
@@ -6,6 +7,7 @@ use utils::{builder, new};
 use super::{CullFace, ShaderProgram};
 use crate::error::ApiResult;
 use crate::gl_call;
+use crate::shader_program::Error;
 use crate::shader_program::shader::Shader;
 use crate::texture::Texture;
 use crate::types::{self, ShaderProgramId};
@@ -109,7 +111,7 @@ impl<M, T: Texture, const OUT: usize, V, F> Builder<M, T, OUT, V, F> {
     }
 }
 impl<M, T: Texture, const OUT: usize> Builder<M, T, OUT, VertexShader, FragmentShader> {
-    pub fn build(self) -> ShaderProgram<M, OUT, T> {
+    pub fn build<NEVER>(mut self) -> ApiResult<ShaderProgram<M, OUT, T>, NEVER> {
         let program_id = gl_call! { ShaderProgramId::new(gl::CreateProgram()) };
 
         gl_call! {
@@ -142,24 +144,21 @@ impl<M, T: Texture, const OUT: usize> Builder<M, T, OUT, VertexShader, FragmentS
             v.truncate(len as usize);
             let info_log = String::from_utf8(v).expect("ascii is a subset of UTF-8");
 
-            eprintln!("{info_log}");
-
-            panic!(
-                "failed to link shader:\nVertex Shader:\n{}\n\nFragment Shader:\n{}\n\nGeometry \
-                 Shader:\n{}",
-                self.vertex_shader.0.source,
-                self.fragment_shader.0.source,
-                self.geometry_shader
-                    .map_or("None".into(), |shader| shader.source.clone())
-            );
-        }
-
-        ShaderProgram {
-            id: program_id,
-            uniform_locations: Default::default(),
-            force_cull_face: self.force_cull_face,
-            _phantom_model: PhantomData,
-            _phantom_tex: PhantomData,
+            Err(Error::ProgramLinkError {
+                info_log,
+                vertex_shader: mem::take(&mut self.vertex_shader.0.source),
+                fragment_shader: mem::take(&mut self.fragment_shader.0.source),
+                geometry_shader: self.geometry_shader
+                .map(|mut shader| mem::take(&mut shader.source)),
+            }.into())
+        } else {
+            Ok(ShaderProgram {
+                id: program_id,
+                uniform_locations: Default::default(),
+                force_cull_face: self.force_cull_face,
+                _phantom_model: PhantomData,
+                _phantom_tex: PhantomData,
+            })
         }
     }
 }

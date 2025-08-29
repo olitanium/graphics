@@ -20,7 +20,7 @@ macro_rules! make_included {
                         .fragment_shader($fragment)?
                         $(.geometry_shader($geometry)?)?
                         $(.force_cull_face($cull_face))?
-                        .build()
+                        .build()?
                     };
 
                     out.expect(ERROR_MESSAGE)

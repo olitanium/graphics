@@ -8,6 +8,7 @@
 #![feature(lazy_type_alias)]
 #![feature(inherent_associated_types)]
 #![feature(never_type)]
+#![feature(option_array_transpose)]
 
 mod environment;
 pub mod error;

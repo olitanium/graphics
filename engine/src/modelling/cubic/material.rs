@@ -17,6 +17,12 @@ pub struct Material {
     pub ambient_occlusion: FlatTexture,
 }
 
+impl Default for Material {
+    fn default() -> Self {
+        Self::black()
+    }
+}
+
 impl Material {
     pub fn builder() -> Builder {
         Builder::new()

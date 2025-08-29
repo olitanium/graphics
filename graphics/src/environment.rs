@@ -126,7 +126,7 @@ impl<G: ApiState> Environment<G> {
             .suppress_config(true)
             .dims(screen_dims)
             .mouse_fix_to_centre(mouse_fix_to_centre)
-            .title(title)
+            .title(title.to_string())
             .raw_motion(true)
             .glfw(&mut glfw)
             .build()

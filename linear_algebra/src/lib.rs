@@ -4,5 +4,8 @@
 mod matrix;
 mod vector;
 
+#[cfg(test)]
+mod test;
+
 pub use matrix::Matrix;
 pub use vector::{UnitVector, Vector};

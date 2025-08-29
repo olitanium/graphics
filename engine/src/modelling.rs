@@ -21,3 +21,6 @@ mod simple_vertex;
 pub use simple_vertex::SimpleVertex;
 
 pub mod test_models;
+
+mod bounding_box;
+pub use bounding_box::BoundingBox;

@@ -24,31 +24,11 @@ impl Bloom {
         let size = dark.borrow().size();
         let to_blur = Quad::screen([dark, light]);
 
-        // let blur_x = ShaderProgram::builder()
-        // .vertex_shader_raw(include_bytes!("../../../shaders/blur_x/blur_x.vert"))
-        // .expect(EXPECT_MESSAGE)
-        // .fragment_shader_raw(include_bytes!("../../../shaders/blur_x/blur_x.frag"))
-        // .expect(EXPECT_MESSAGE)
-        // .build();
-
         let framebuffer_x = Builder::new_flat().size(size).build();
-
-        // let blur_y_merge = ShaderProgram::builder()
-        // .vertex_shader_raw(include_bytes!(
-        // "../../../shaders/blur_y_merge/blur_y_merge.vert"
-        // ))
-        // .expect(EXPECT_MESSAGE)
-        // .fragment_shader_raw(include_bytes!(
-        // "../../../shaders/blur_y_merge/blur_y_merge.frag"
-        // ))
-        // .expect(EXPECT_MESSAGE)
-        // .build();
 
         Self {
             to_blur,
-            // blur_x,
             framebuffer_x,
-            // blur_y_merge,
         }
     }
 

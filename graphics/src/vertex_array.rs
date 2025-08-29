@@ -3,21 +3,17 @@ use std::{iter, ptr};
 
 use builder::Builder;
 
-// pub use cubic_builder::CubicBuilder;
-// pub use quad_builder::QuadBuilder;
 use super::framebuffer::ActiveFramebuffer;
 use crate::element_array_buffer::ElementArrayBuffer;
 use crate::error::ApiResult;
 use crate::framebuffer::traits::FramebufferWithoutExtra;
 use crate::shader_program::ActiveShaderProgram;
-use crate::types::{VertexArrayId, VertexBufferLen};
+use crate::types::{ElementArrayLen, VertexArrayId};
 use crate::vertex::Vertex;
 use crate::vertex_buffer::VertexBuffer;
 use crate::{gl_call, types};
 
 mod builder;
-mod draw_options;
-// pub use draw_options::DrawOptions;
 
 #[derive(Debug)]
 pub struct VertexArray<V: Vertex> {
@@ -32,6 +28,15 @@ impl<V: Vertex> Drop for VertexArray<V> {
         gl_call! {
             gl::DeleteVertexArrays(1, &raw const primitive);
         }
+    }
+}
+
+impl<V: Vertex> Default for VertexArray<V>
+where
+    [(); V::ELEMENT_COUNT]:,
+{
+    fn default() -> Self {
+        Self::builder().build()
     }
 }
 
@@ -107,6 +112,27 @@ where
         }
     }
 
+    pub fn triangles(&self) -> Vec<[V; 3]> {
+        match (
+            self.element_array_buffer.as_ref(),
+            self.vertex_buffer.as_ref(),
+        ) {
+            (Some(element), Some(vertex)) => {
+                let triangles = element.triangles();
+                let vertices = vertex.vertices();
+
+                let option_vec_triangles: Option<Vec<_>> = triangles
+                    .iter()
+                    .copied()
+                    .map(|index| index.map(|value| vertices.get(value).copied()).transpose())
+                    .collect();
+
+                option_vec_triangles.unwrap_or_default()
+            }
+            _ => vec![],
+        }
+    }
+
     pub fn draw<NEVER, M, const OUT: usize, D: FramebufferWithoutExtra<OUT>>(
         &self,
         active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, D::Tex, OUT>,
@@ -118,6 +144,7 @@ where
         active_shader_program.validate()?;
 
         if let Some(element_buffer) = &self.element_array_buffer {
+            element_buffer.bind();
             gl_call! {
                 gl::DrawElements(
                     gl::TRIANGLES,
@@ -162,7 +189,7 @@ impl VertexArray<()> {
         &self,
         active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-        len: VertexBufferLen,
+        len: ElementArrayLen,
     ) -> ApiResult<(), NEVER> {
         self.bind();
         active_shader_program.bind_textures()?;

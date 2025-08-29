@@ -294,12 +294,3 @@ impl<T: Attachment> Builder<FramebufferAttachment<T>> {
         })
     }
 }
-
-impl Drop for CubeMap {
-    fn drop(&mut self) {
-        let primitive = self.id.to_primitive();
-        gl_call! {
-            gl::DeleteTextures(1, &raw const primitive);
-        }
-    }
-}

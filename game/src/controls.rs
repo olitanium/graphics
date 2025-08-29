@@ -1,7 +1,8 @@
 use std::collections::HashSet;
+use std::mem;
 
 use engine::linear_algebra::Vector;
-use engine::modelling::TestLineVertex;
+use engine::modelling::{Cubic, TestLineVertex};
 use engine::{ApiError, ColourRGB, EngResult, Key};
 
 use crate::state::{State, StateError};
@@ -27,9 +28,6 @@ impl State {
         if keyboard.contains(&Key::D) {
             self.camera.pose.move_left(-self.speed[0] * frame_time)
             // self.camera.move_right(self.speed[0] * frame_time);
-        }
-        if string.to_lowercase().contains('b') {
-            self.do_bloom = !self.do_bloom;
         }
         if keyboard.contains(&Key::S) {
             self.camera.pose.move_forward(-self.speed[2] * frame_time);
@@ -72,18 +70,42 @@ impl State {
             self.camera.pose.roll_ccw(-frame_time);
         }
 
-        if string.ends_with('Q') {
-            string.clear();
+        match string.pop() {
+            Some(ch) => match ch {
+                'Q' => string.clear(),
+                'l' => {
+                    self.line.as_mut().push(TestLineVertex {
+                        position: Vector::new([self.angle.cos(), 0.0, self.angle.sin()]),
+                        colour: ColourRGB::new([self.angle.cos(), 0.0, self.angle.sin()]),
+                    });
+                    self.angle += 0.1;
+                }
+                // 'o' => {
+                // self.bounding_box_level += 1;
+                // eprintln!("level: {}", self.bounding_box_level);
+                // self.imported_bounding_box_model =
+                // self.imported_bounding_box.make_model(self.bounding_box_level); }
+                'b' | 'B' => self.do_bloom = !self.do_bloom,
+                'o' => self.testbool = !self.testbool,
+                other => string.push(other),
+            },
+            None => {}
         }
 
-        if string.ends_with('l') {
-            string.clear();
-            self.line.as_mut().push(TestLineVertex {
-                position: Vector::new([self.angle.cos(), 0.0, self.angle.sin()]),
-                colour: ColourRGB::new([self.angle.cos(), 0.0, self.angle.sin()]),
-            });
-            self.angle += 0.1;
+        for test_string in ["m"] {
+            let newlinestr = format!("{test_string}\n");
+            if string.contains(&newlinestr) {
+                eprintln!("{string}");
+                string.clear();
+
+                // let to_forget = mem::swap(&mut self.imported, &mut self.imported_third);
+                // self.imported_third.get_or_insert_default();
+                _ = mem::replace(&mut self.imported, Cubic::default());
+                //self.bin.push(to_forget);
+                // mem::forget(to_forget);
+            }
         }
+
         self.camera
             .pose
             .look_left(-mouse_delta.0 * self.sensitivity);

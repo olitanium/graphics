@@ -13,21 +13,25 @@ use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::{
     Bloom,
     BloomGroup,
+    BoundingBox,
     Cubic,
+    CubicGroup,
     Line,
     LineGroup,
     Quad,
     QuadGroup,
     SHADOW_SHADER_MAX_LIGHTS,
     ShadowGroup,
+    SimpleVertex,
     SkyBox,
     SkyBoxGroup,
     TestLineVertex,
 };
 use engine::types::TexDim;
-use engine::{ApiState, EngApiResult, EngError, EngResult, Event, VecDraw};
+use engine::{ApiState, EngApiResult, EngError, EngResult, Event, VecDraw, opengl_shaders};
 
 pub struct State {
+    pub bin: Vec<Cubic>,
     pub time: f32,
     pub camera: Camera<CameraPose>,
 
@@ -47,7 +51,16 @@ pub struct State {
 
     pub light: Cubic,
     pub containers: Vec<Cubic>,
+    pub testbool: bool,
     pub imported: Cubic,
+    pub imported_other: Cubic,
+    pub imported_third: Option<Cubic>,
+    pub blank: Cubic,
+
+    pub imported_bounding_box: BoundingBox<3>,
+    pub imported_bounding_box_model: Vec<Cubic>,
+    pub bounding_box_level: usize,
+
     pub which_animation: usize,
 
     // pub player: Cubic,
@@ -105,8 +118,8 @@ impl EngState for State {
             }
         }
 
-        println!("framerate: {}", 1.0 / frame_time);
-        println!("string: {}", local_string);
+        // println!("framerate: {}", 1.0 / frame_time);
+        // println!("string: {}", local_string);
 
         self.controls(mouse_delta, keyboard, local_string, frame_time)?;
 
@@ -155,29 +168,28 @@ impl State {
     ) -> EngResult<VecDraw<'a>, StateError> {
         let time = self.time;
 
-        let mut out: VecDraw = Vec::new();
+        let mut out = VecDraw::new();
 
         let all_models = {
             let mut all_models = vec![(&self.imported, self.which_animation, time)];
-
-            // all_models.extend(self.containers.iter().map(|x| (x, 0, time)));
-
+            // let all_models = if self.testbool {vec![(&self.imported,
+            // self.which_animation, time)]} else if let Some(model) =
+            // &self.imported_third {vec![(model, self.which_animation, time)]}
+            // else {vec![]};
+            // all_models.extend(self.imported_bounding_box_model.iter().map(|x| (x, 0,
+            // time)));
+            // let all_models = vec![(&self.blank, 0, 0.0)];
+            // let all_models = vec![];
             all_models
         };
 
-        // let transparent_models = vec![]; // vec![(&self.light, time)];
+        // let transparent_models = self
+        // .imported_bounding_box_model
+        // .iter()
+        // .map(|x| (x, 0, time))
+        // .collect(); //vec![]; // vec![(&self.light, time)];
 
-        // out.push(ShadowGroup::new(
-        // &self.camera,
-        // &(),
-        // &self.light_group,
-        // all_models,
-        // transparent_models,
-        // &self.hdr_fb,
-        // vec![],
-        // ));
-
-        out.push(LineGroup::new(&self.hdr_fb, &self.line, &self.camera, &()));
+        // let transparent_models = vec![];
 
         out.push(SkyBoxGroup::new(
             engine::opengl_shaders::skybox_hdr(),
@@ -187,6 +199,28 @@ impl State {
             &(),
             vec![],
         ));
+
+        out.push(CubicGroup::new(
+            opengl_shaders::hdr(),
+            &self.hdr_fb,
+            &self.camera,
+            &(),
+            &self.ns_light_group,
+            all_models,
+            vec![],
+        ));
+
+        // out.push(ShadowGroup::new(
+        // &self.hdr_fb,
+        // &self.camera,
+        // &(),
+        // &self.light_group,
+        // all_models,
+        // transparent_models,
+        // vec![],
+        // ));
+
+        // out.push(LineGroup::new(&self.hdr_fb, &self.line, &self.camera, &()));
 
         if self.do_bloom {
             // println!("bloom_on");
@@ -199,13 +233,6 @@ impl State {
                 vec![&self.quad_to_draw],
                 vec![(String::from("exposure"), &self.exposure)],
             ));
-
-            // out.push(QuadGroup::new(
-            // engine::opengl_shaders::exposure(),
-            // other_buffer,
-            // vec![&self.quad_to_draw],
-            // vec![(String::from("exposure"), &self.exposure)],
-            // ));
         }
 
         Ok(out)

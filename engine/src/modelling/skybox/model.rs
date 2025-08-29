@@ -6,7 +6,7 @@ use graphics::vertex_array::VertexArray;
 
 use crate::EngResult;
 use crate::modelling::SimpleVertex;
-use crate::modelling::test_models::vertex_array_cube;
+use crate::modelling::test_models;
 
 #[derive(Debug)]
 pub struct SkyBox {
@@ -17,7 +17,7 @@ pub struct SkyBox {
 impl SkyBox {
     pub fn new(texture: CubeMap) -> Self {
         Self {
-            model: vertex_array_cube(1.0),
+            model: test_models::origin_unit_cube(),
             texture,
         }
     }

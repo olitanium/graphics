@@ -1,7 +1,5 @@
 use std::mem;
 
-use utils::getter;
-
 use crate::gl_call;
 use crate::types::{ElementArrayElem, ElementArrayId, ElementArrayLen, GLsizeiptr};
 
@@ -13,7 +11,7 @@ pub struct ElementArrayBuffer {
     /// The OpenGL provided 'name'
     id: ElementArrayId,
     /// The length of the internal buffer.
-    elements: Vec<ElementArrayElem>,
+    elements: Vec<usize>,
 }
 
 impl Drop for ElementArrayBuffer {
@@ -26,8 +24,6 @@ impl Drop for ElementArrayBuffer {
 }
 
 impl ElementArrayBuffer {
-    getter!(elements: Vec<ElementArrayElem>);
-
     /// Create new `ElementArrayBuffer` from a slice of `ElementArrayElem`s.
     /// There is no builder for this object.
     pub(crate) fn new(elements: Vec<ElementArrayElem>) -> Self {
@@ -54,11 +50,23 @@ impl ElementArrayBuffer {
             );
         };
 
-        Self { id, elements }
+        let elements_usize = elements
+            .into_iter()
+            .map(ElementArrayElem::as_usize)
+            .collect();
+
+        Self {
+            id,
+            elements: elements_usize,
+        }
     }
 
     pub(crate) fn len(&self) -> ElementArrayLen {
         ElementArrayLen::new(self.elements.len() as i32)
+    }
+
+    pub(crate) fn triangles(&self) -> &[[usize; 3]] {
+        self.elements.as_chunks().0
     }
 
     /// Bind ElementArrayBuffer
