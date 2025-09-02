@@ -176,8 +176,7 @@ impl State {
             // self.which_animation, time)]} else if let Some(model) =
             // &self.imported_third {vec![(model, self.which_animation, time)]}
             // else {vec![]};
-            // all_models.extend(self.imported_bounding_box_model.iter().map(|x| (x, 0,
-            // time)));
+            all_models.extend(self.imported_bounding_box_model.iter().map(|x| (x, 0, time)));
             // let all_models = vec![(&self.blank, 0, 0.0)];
             // let all_models = vec![];
             all_models

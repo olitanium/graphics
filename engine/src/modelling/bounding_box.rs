@@ -65,7 +65,7 @@ impl<const N: usize> BoundingBox<N> {
         Self::new_from_triangles(&new_triangles, depth)
     }
 
-    pub fn new_from_triangles<V: Vertex>(triangles: &[[V; 3]], depth: usize) -> Option<Self>
+    pub fn new_from_triangles<V: Vertex /*<V::DIMENSIONS=N>*/>(triangles: &[[V; 3]], depth: usize) -> Option<Self>
     where
         [(); V::DIMENSIONS]:,
     {
@@ -73,7 +73,8 @@ impl<const N: usize> BoundingBox<N> {
             |triangle| {
                 let vertices = triangle.map(|vertex| vertex.position().truncate(/* currently required to force the vectors to the correct length */));
                 let mut mid: Vector<_> = vertices.into_iter().sum();
-                mid = mid.scale(1.0/3.0);
+                const ONE_THIRD: f32 = 1.0/3.0;
+                mid = mid.scale(ONE_THIRD);
 
                 (mid, vertices)
             }
@@ -86,43 +87,40 @@ impl<const N: usize> BoundingBox<N> {
         triangles: &mut [(Vector<N>, [Vector<N>; 3])],
         depth: usize,
     ) -> Option<Self> {
-        // partition is done by the centres of the triangles, triangles are by triplets
-        // from the element array buffer. get all the vertices and all of the
-        // relevant triangles (as triplets of indices) build all the triangles
-        // and get their centres. (this can be cached along with the element array
-        // buffer triplets) extend based on accessing the vertices array at the
-        // given positions for each vertex for each triangle. partition based on
-        // the (cacehed) centres for each triangle.
-
         let vectors: Vec<_> = triangles.into_iter().flat_map(|(_, arr)| *arr).collect();
         let upper_bounds = make_upper_bound(&vectors)?;
         let lower_bounds = make_lower_bound(&vectors)?;
 
-        // vectors must be populated
+        // vectors must be populated at this point
         let other = if depth != 0 {
             let dimensions = upper_bounds - lower_bounds;
             let (max_index, _) = dimensions
+
                 .into_iter()
                 .enumerate()
                 .max_by(|(_, size), (_, size2)| {
-                    size.partial_cmp(size2).expect(
-                        "vectors has values, so has filled the previous step. No NAN in this \
+                    f32::partial_cmp(size, size2).expect(
+                        "`vectors` has values, so has filled the previous step. No NAN in this \
                          vector",
                     )
                 })
                 .expect("input vector const N > 0");
 
             let centre_point = 0.5 * (upper_bounds + lower_bounds);
-
+                eprintln!("dimensions = {dimensions:?}");
+                eprintln!("max_index = {max_index}");
+                eprintln!("centre_point = {centre_point:?}");
             // split on the dimension given by max_index
             triangles.sort_unstable_by(|(lhs, _), (rhs, _)| {
                 f32::partial_cmp(&lhs[max_index], &rhs[max_index])
                     .expect("no NAN in input vectors permitted")
             });
             let partition = triangles
-                .partition_point(|(vector, _)| vector[max_index] <= centre_point[max_index]);
+                .partition_point(|(centre, _)| centre[max_index] <= centre_point[max_index]);
 
             let (lower, upper) = triangles.split_at_mut(partition);
+
+            //eprintln!("lower: {lower:?}, upper:{upper:?}");
 
             let lower_bounding_box = Self::new_from_many_inner(lower, depth - 1).map(Box::new);
             let upper_bounding_box = Self::new_from_many_inner(upper, depth - 1).map(Box::new);

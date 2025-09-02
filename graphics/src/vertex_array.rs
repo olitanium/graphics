@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::sync::LazyLock;
 use std::{iter, ptr};
 
@@ -112,7 +113,7 @@ where
         }
     }
 
-    pub fn triangles(&self) -> Vec<[V; 3]> {
+    pub fn triangles(&self) -> Cow<'_, [[V; 3]]> {
         match (
             self.element_array_buffer.as_ref(),
             self.vertex_buffer.as_ref(),
@@ -127,9 +128,12 @@ where
                     .map(|index| index.map(|value| vertices.get(value).copied()).transpose())
                     .collect();
 
-                option_vec_triangles.unwrap_or_default()
+                Cow::Owned(option_vec_triangles.unwrap_or_default())
             }
-            _ => vec![],
+            (None, Some(vertex)) => {
+                Cow::Borrowed(vertex.vertices().as_chunks().0)
+            }
+            _ => Cow::Owned(vec![]),
         }
     }
 

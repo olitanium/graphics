@@ -13,7 +13,7 @@ pub use input::mouse::Button;
 use utils::error_boilerplate;
 pub use window::Window;
 
-use crate::ApiError;
+use crate::{ApiError, gl_call};
 use crate::error::ApiResult;
 use crate::framebuffer::{DefaultFramebuffer, FramebufferContext};
 use crate::shader_program::ShaderProgramContext;
@@ -33,7 +33,7 @@ impl<E> From<Error> for crate::error::ApiError<E> {
     }
 }
 
-use std::ffi::{CStr, c_void};
+use std::ffi::{CStr, CString, c_void};
 #[expect(unused_variables)]
 extern "system" fn debug_callback(
     source: u32,
@@ -110,7 +110,6 @@ impl<G: ApiState> Environment<G> {
         screen_dims: (u32, u32),
         title: &str,
         mouse_fix_to_centre: bool,
-        // initial_state: G,
     ) -> ApiResult<Self, G::Error> {
         let mut glfw =
             glfw::init(fail_on_errors!()).map_err(|glfw_error| Error::GlfwInit { glfw_error })?;
@@ -121,6 +120,7 @@ impl<G: ApiState> Environment<G> {
         glfw.window_hint(glfw::WindowHint::OpenGlProfile(
             glfw::OpenGlProfileHint::Core,
         ));
+        glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
 
         let mut window = Window::builder()
             .suppress_config(true)
@@ -136,6 +136,11 @@ impl<G: ApiState> Environment<G> {
 
         // we need a GL context before we can load OpenGL functions
         gl::load_with(|s| glfw.get_proc_address_raw(s));
+
+        let version_ptr = gl_call!{ gl::GetString(gl::VERSION) };
+        let version_cstring = unsafe { CStr::from_ptr(version_ptr.cast()) };
+
+        eprintln!("OpenGL Version: {version_cstring:?}");
 
         window.configure();
 

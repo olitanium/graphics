@@ -80,13 +80,15 @@ impl State {
                     });
                     self.angle += 0.1;
                 }
-                // 'o' => {
-                // self.bounding_box_level += 1;
-                // eprintln!("level: {}", self.bounding_box_level);
-                // self.imported_bounding_box_model =
-                // self.imported_bounding_box.make_model(self.bounding_box_level); }
                 'b' | 'B' => self.do_bloom = !self.do_bloom,
-                'o' => self.testbool = !self.testbool,
+                'o' => {
+                    self.bounding_box_level += 1;
+                    self.imported_bounding_box_model = self.imported_bounding_box.make_model(self.bounding_box_level);
+                }
+                'i' => {
+                    self.bounding_box_level -= 1;
+                    self.imported_bounding_box_model = self.imported_bounding_box.make_model(self.bounding_box_level);
+                }
                 other => string.push(other),
             },
             None => {}

@@ -1,3 +1,4 @@
+use std::borrow::Cow;
 use std::path::Path;
 use std::rc::Rc;
 
@@ -61,7 +62,7 @@ impl Mesh {
         Ok(())
     }
 
-    pub fn triangles(&self) -> Vec<[SimpleVertex; 3]> {
+    pub fn triangles(&self) -> Cow<'_, [[SimpleVertex; 3]]> {
         self.vertex_array.triangles()
     }
 }
@@ -104,7 +105,7 @@ impl Cubic {
     }
 
     pub fn triangles(&self) -> Vec<[SimpleVertex; 3]> {
-        self.meshes.iter().map(Mesh::triangles).flatten().collect()
+        self.meshes.iter().map(|mesh| mesh.triangles().into_owned()).flatten().collect()
     }
 
     pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
