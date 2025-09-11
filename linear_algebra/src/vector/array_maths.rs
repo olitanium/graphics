@@ -2,11 +2,12 @@ macro_rules! elem_wise {
     ($trait:ident:: $fn:ident) => {
         #[inline]
         pub fn $fn<const N: usize>(lhs: [f32; N], rhs: [f32; N]) -> [f32; N] {
-            let mut out = [0.0; N];
-            for (dest, (v1i, v2i)) in core::iter::zip(&mut out, core::iter::zip(lhs, rhs)) {
-                *dest = core::ops::$trait::$fn(v1i, v2i);
-            }
-            out
+            // let mut out = [0.0; N];
+            // for (dest, (v1i, v2i)) in core::iter::zip(&mut out, core::iter::zip(lhs,
+            // rhs)) { dest = core::ops::$trait::$fn(v1i, v2i);
+            // }
+            // out
+            core::array::from_fn(|index| core::ops::$trait::$fn(lhs[index], rhs[index]))
         }
     };
 }

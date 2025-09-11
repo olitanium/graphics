@@ -3,7 +3,7 @@ mod array_maths;
 use core::array;
 use core::ops::{Index, IndexMut};
 use std::iter::Sum;
-use std::ops::{Add, AddAssign, Mul, SubAssign};
+use std::ops::{Add, AddAssign, Mul, MulAssign, SubAssign};
 
 use super::matrix::Matrix;
 
@@ -211,6 +211,12 @@ impl<const N: usize> Mul<f32> for Vector<N> {
 
     fn mul(self, rhs: f32) -> Self::Output {
         self.scale(rhs)
+    }
+}
+
+impl<const N: usize> MulAssign<f32> for Vector<N> {
+    fn mul_assign(&mut self, rhs: f32) {
+        *self = *self * rhs;
     }
 }
 

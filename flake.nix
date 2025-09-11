@@ -23,8 +23,8 @@
       openssl
       pkg-config
 
-      #glfw
-      glfw-wayland
+      glfw
+      #glfw-wayland
       cmake
       xorg.libX11
       xorg.libXrandr
@@ -40,7 +40,7 @@
     devShells.${system}.default = pkgs.mkShell {
       buildInputs = buildInputs ++ [pkgs.bashInteractive];
 
-      # shellHook = "echo Success";
+      # shellHook = "echo Success"
 
       # Set Environment Variables
       LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath buildInputs}";

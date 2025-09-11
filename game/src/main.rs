@@ -7,7 +7,7 @@ mod new;
 mod state;
 
 fn main() {
-    Environment::<state::State>::new((3, 3), (1920, 1080), "Window", true)
+    Environment::<state::State>::new((4, 5), (1920, 1080), "Window", true)
         .unwrap()
         .run()
         .unwrap()

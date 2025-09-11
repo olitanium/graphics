@@ -83,11 +83,15 @@ impl State {
                 'b' | 'B' => self.do_bloom = !self.do_bloom,
                 'o' => {
                     self.bounding_box_level += 1;
-                    self.imported_bounding_box_model = self.imported_bounding_box.make_model(self.bounding_box_level);
+                    self.imported_bounding_box_model = self
+                        .imported_bounding_box
+                        .make_model(self.bounding_box_level);
                 }
                 'i' => {
                     self.bounding_box_level -= 1;
-                    self.imported_bounding_box_model = self.imported_bounding_box.make_model(self.bounding_box_level);
+                    self.imported_bounding_box_model = self
+                        .imported_bounding_box
+                        .make_model(self.bounding_box_level);
                 }
                 other => string.push(other),
             },
@@ -103,7 +107,7 @@ impl State {
                 // let to_forget = mem::swap(&mut self.imported, &mut self.imported_third);
                 // self.imported_third.get_or_insert_default();
                 _ = mem::replace(&mut self.imported, Cubic::default());
-                //self.bin.push(to_forget);
+                // self.bin.push(to_forget);
                 // mem::forget(to_forget);
             }
         }

@@ -38,6 +38,12 @@ impl Material {
             .build()
     }
 
+    pub fn white() -> Self {
+        Self::builder()
+            .diffuse(FlatTexture::grayscale(1.0, 1.0))
+            .build()
+    }
+
     pub fn register_to<'a, 'b, 'c, const N: usize, L, T: Texture>(
         &'c self,
         shader: &mut ActiveShaderProgram<'a, 'b, 'c, (Cubic, L), T, N>,

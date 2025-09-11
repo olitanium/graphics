@@ -14,58 +14,9 @@ use super::geometry::YieldsPose;
 use super::material::Material;
 use super::{Builder, Skeleton, import};
 use crate::error::EngResult;
+use super::Mesh;
 use crate::modelling::simple_vertex::SimpleVertex;
 use crate::modelling::test_models;
-
-#[derive(Debug, Clone)]
-pub struct Mesh {
-    pub vertex_array: Rc<VertexArray<SimpleVertex>>,
-    pub material: Rc<Material>,
-    pub bone: usize,
-}
-
-impl Mesh {
-    pub fn new(
-        vertex_array: Rc<VertexArray<SimpleVertex>>,
-        material: Rc<Material>,
-        bone: usize,
-    ) -> Self {
-        Self {
-            vertex_array,
-            material,
-            bone,
-        }
-    }
-
-    pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
-        &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, (Cubic, L), D::Tex, OUT>,
-        active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-        skeleton: &Skeleton,
-        relative: bool,
-        animation: usize,
-        time: f32,
-        scale: f32,
-    ) -> EngResult<(), !> {
-        self.material.register_to(active_shader, "material");
-
-        active_shader.set_uniform(
-            "model".into(),
-            &(skeleton
-                .get_pose(&(relative, self.bone, animation, time))
-                .as_matrix()
-                * Matrix::transform_scale(scale, scale, scale)),
-        );
-
-        self.vertex_array.draw(active_shader, active_framebuffer)?;
-
-        Ok(())
-    }
-
-    pub fn triangles(&self) -> Cow<'_, [[SimpleVertex; 3]]> {
-        self.vertex_array.triangles()
-    }
-}
 
 #[derive(Clone, Debug)]
 pub struct Cubic {
@@ -73,7 +24,7 @@ pub struct Cubic {
     pub cull_face: CullFace,
     pub skeleton: Skeleton,
     pub relative: bool,
-    pub scale: f32,
+    //pub scale: f32,
 }
 
 impl Default for Cubic {
@@ -85,7 +36,7 @@ impl Default for Cubic {
 impl Cubic {
     pub fn empty() -> Self {
         Self::builder()
-            .push_mesh_from(Rc::new(VertexArray::empty()), Rc::new(Material::blank()), 0)
+            //.push_mesh_from(Rc::new(VertexArray::empty()), Rc::new(Material::blank()), 0)
             .build()
     }
 
@@ -94,8 +45,10 @@ impl Cubic {
     }
 
     pub fn cube(side_length: f32, material: Rc<Material>) -> Builder {
-        let vertex_array = Rc::new(test_models::origin_cube(side_length));
-        Self::builder().push_mesh_from(vertex_array, material, 0)
+        //let vertex_array = Rc::new(test_models::origin_cube(side_length));
+        let mut out = Self::builder();
+        out.push_cube(material, side_length, 0);
+        out
     }
 
     pub fn temp_set_all_material(&mut self, mat: Rc<Material>) {
@@ -105,7 +58,11 @@ impl Cubic {
     }
 
     pub fn triangles(&self) -> Vec<[SimpleVertex; 3]> {
-        self.meshes.iter().map(|mesh| mesh.triangles().into_owned()).flatten().collect()
+        self.meshes
+            .iter()
+            .map(|mesh| mesh.triangles().into_owned())
+            .flatten()
+            .collect()
     }
 
     pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
@@ -126,7 +83,9 @@ impl Cubic {
                 self.relative,
                 animation,
                 time,
-                self.scale,
+                //self.scale,
+                // TODO: remove
+                1.0,
             )?;
         }
 

@@ -10,5 +10,6 @@ members = [
     "dual_number",
     "linear_algebra",
     "multi_zip",
-    "infinite_window"
+    "infinite_window",
+    "localrc",
 ]

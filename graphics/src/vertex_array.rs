@@ -130,9 +130,7 @@ where
 
                 Cow::Owned(option_vec_triangles.unwrap_or_default())
             }
-            (None, Some(vertex)) => {
-                Cow::Borrowed(vertex.vertices().as_chunks().0)
-            }
+            (None, Some(vertex)) => Cow::Borrowed(vertex.vertices().as_chunks().0),
             _ => Cow::Owned(vec![]),
         }
     }

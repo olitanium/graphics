@@ -5,8 +5,7 @@ use graphics::texture::{CubeMap, Texture};
 use graphics::vertex_array::VertexArray;
 
 use crate::EngResult;
-use crate::modelling::SimpleVertex;
-use crate::modelling::test_models;
+use crate::modelling::{SimpleVertex, test_models};
 
 #[derive(Debug)]
 pub struct SkyBox {
@@ -16,8 +15,11 @@ pub struct SkyBox {
 
 impl SkyBox {
     pub fn new(texture: CubeMap) -> Self {
+        let mut model_builder = VertexArray::builder();
+        model_builder.extend_incomplete_triangles(test_models::origin_unit_cube());
+        let model = model_builder.build();
         Self {
-            model: test_models::origin_unit_cube(),
+            model,
             texture,
         }
     }

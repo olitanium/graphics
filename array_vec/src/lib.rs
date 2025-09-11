@@ -136,8 +136,6 @@ impl<T, const N: usize> TryFrom<ArrayVec<T, N>> for [T; N] {
 impl<T, const N: usize, const M: usize> TryFrom<[T; M]> for ArrayVec<T, N> {
     type Error = ();
 
-    // TODO
-
     fn try_from(value: [T; M]) -> Result<Self, Self::Error> {
         if M <= N {
             let output = value.into_iter().collect();

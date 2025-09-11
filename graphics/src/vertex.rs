@@ -17,9 +17,9 @@ pub trait Vertex: Copy {
 
     fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT];
 
-    fn from_incomplete_triangle(triangle: [IncompleteVertex; 3]) -> [Self; 3];
-
     const DIMENSIONS: usize;
+
+    fn from_incomplete_triangle(triangle: [IncompleteVertex; 3]) -> [Self; 3];
     fn position(&self) -> Vector<{ Self::DIMENSIONS }>;
 }
 

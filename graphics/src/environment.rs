@@ -13,11 +13,11 @@ pub use input::mouse::Button;
 use utils::error_boilerplate;
 pub use window::Window;
 
-use crate::{ApiError, gl_call};
 use crate::error::ApiResult;
 use crate::framebuffer::{DefaultFramebuffer, FramebufferContext};
 use crate::shader_program::ShaderProgramContext;
 use crate::types::TexDim;
+use crate::{ApiError, gl_call};
 
 #[derive(Debug, Clone)]
 pub enum Error {
@@ -134,10 +134,10 @@ impl<G: ApiState> Environment<G> {
 
         glfw.set_swap_interval(glfw::SwapInterval::None);
 
-        // we need a GL context before we can load OpenGL functions
+        // we need a GL context, above before we can load OpenGL functions
         gl::load_with(|s| glfw.get_proc_address_raw(s));
 
-        let version_ptr = gl_call!{ gl::GetString(gl::VERSION) };
+        let version_ptr = gl_call! { gl::GetString(gl::VERSION) };
         let version_cstring = unsafe { CStr::from_ptr(version_ptr.cast()) };
 
         eprintln!("OpenGL Version: {version_cstring:?}");

@@ -33,6 +33,7 @@ macro_rules! gl_call_inner {
         // Skip all previous errors which have been ignored
         while unsafe { gl::GetError() } != gl::NO_ERROR {}
         // perform the expression
+        #[allow(clippy::macro_metavars_in_unsafe)]
         let output = unsafe {
             //#[expect(clippy::macro_metavars_in_unsafe)]
             $input
@@ -59,6 +60,5 @@ macro_rules! gl_call {
 
     ($input:stmt;) => {{
         $crate::gl_call_inner!($input);
-        ()
     }};
 }

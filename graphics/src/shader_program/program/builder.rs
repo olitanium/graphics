@@ -148,9 +148,11 @@ impl<M, T: Texture, const OUT: usize> Builder<M, T, OUT, VertexShader, FragmentS
                 info_log,
                 vertex_shader: mem::take(&mut self.vertex_shader.0.source),
                 fragment_shader: mem::take(&mut self.fragment_shader.0.source),
-                geometry_shader: self.geometry_shader
-                .map(|mut shader| mem::take(&mut shader.source)),
-            }.into())
+                geometry_shader: self
+                    .geometry_shader
+                    .map(|mut shader| mem::take(&mut shader.source)),
+            }
+            .into())
         } else {
             Ok(ShaderProgram {
                 id: program_id,

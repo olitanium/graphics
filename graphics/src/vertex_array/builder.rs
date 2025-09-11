@@ -53,4 +53,12 @@ where
         let complete_triangle = V::from_incomplete_triangle(incomplete_triangle);
         self.push_triangle(complete_triangle);
     }
+
+    pub fn extend_incomplete_triangles<I: IntoIterator<Item = [IncompleteVertex; 3]>>(&mut self, iter: I) {
+        let vertices = iter.into_iter().map(V::from_incomplete_triangle);
+        // TODO: optimise
+        for triangle in vertices {
+            self.push_triangle(triangle);
+        } 
+    }
 }

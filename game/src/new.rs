@@ -75,11 +75,11 @@ impl State {
             })
             .collect();
 
-        let imported = make_model("backpack")?;
+        let imported = make_model("morgan")?;
         let imported_other = make_model("oliver")?;
         // let imported_third = make_model("morgan")?;
 
-        let imported_bounding_box = BoundingBox::from_cubic(&imported, 1).unwrap();
+        let imported_bounding_box = BoundingBox::from_cubic(&imported, 20).unwrap();
         let bounding_box_level = 0;
         let imported_bounding_box_as_model = imported_bounding_box.make_model(bounding_box_level);
 
@@ -97,26 +97,26 @@ impl State {
             .build();
 
         let light_colour = ColourRGB::new([1.0, 1.0, 1.0].map(|x| x * 1.0));
-        // let light_attenuation_array = [1.0, 0.0, 0.0];
-        // let point_light = ShadowPointLight::new(
-        // PointLight {
-        // position: Vector::default(),
-        // attenuation: light_attenuation_array,
-        // ambient: light_colour.map(|x| x * 0.1),
-        // diffuse: light_colour.map(|x| x * 0.5),
-        // specular: light_colour,
-        // },
-        // 1000.into(),
-        // );
-        //
-        // let ns_point_light = PointLight {
-        // position: Vector::default(),
-        // attenuation: light_attenuation_array,
-        // ambient: light_colour.map(|x| x * 0.1),
-        // diffuse: light_colour.map(|x| x * 0.5),
-        // specular: light_colour,
-        // };
-        //
+        let light_attenuation_array = [1.0, 0.0, 0.0];
+        let point_light = ShadowPointLight::new(
+            PointLight {
+                position: Vector::default(),
+                attenuation: light_attenuation_array,
+                ambient: light_colour.map(|x| x * 0.1),
+                diffuse: light_colour.map(|x| x * 0.5),
+                specular: light_colour,
+            },
+            1000.into(),
+        );
+
+        let ns_point_light = PointLight {
+            position: Vector::default(),
+            attenuation: light_attenuation_array,
+            ambient: light_colour.map(|x| x * 0.1),
+            diffuse: light_colour.map(|x| x * 0.5),
+            specular: light_colour,
+        };
+
         // let sun_colour = ColourRGB::new([1.0, 1.0, 1.0]);
         // let far_light = ShadowFarLight::new(
         // FarLight {
@@ -139,20 +139,20 @@ impl State {
         // (1000.into(), 1000.into()),
         // );
         //
-        // let spotlight_colour = ColourRGB::new([1.0; 3]);
-        // let spotlight = ShadowSpotLight::new(
-        // SpotLight {
-        // position: camera.centre(&()),
-        // direction: camera.direction(&()),
-        // attenuation: [1.0, 0.09, 0.032],
-        // ambient: spotlight_colour.map(|x| x * 0.0),
-        // diffuse: spotlight_colour,
-        // specular: spotlight_colour,
-        // cos_cut_off: 20f32.to_radians().cos(),
-        // cos_outer_cut_off: 25f32.to_radians().cos(),
-        // },
-        // 1000.into(),
-        // );
+        let spotlight_colour = ColourRGB::new([1.0; 3]);
+        let spotlight = ShadowSpotLight::new(
+            SpotLight {
+                position: camera.centre(&()),
+                direction: camera.direction(&()),
+                attenuation: [1.0, 0.09, 0.032],
+                ambient: spotlight_colour.map(|x| x * 0.0),
+                diffuse: spotlight_colour,
+                specular: spotlight_colour,
+                cos_cut_off: 20f32.to_radians().cos(),
+                cos_outer_cut_off: 25f32.to_radians().cos(),
+            },
+            1000.into(),
+        );
 
         let [dark_tex, light_tex] = hdr_fb.get_all_colour();
         let bloom = Bloom::new(dark_tex, light_tex);
@@ -165,8 +165,7 @@ impl State {
             Material::builder().emission(light_emission).build()
         };
 
-        let light = Cubic::cube(1.0, Rc::new(Material::blank()))
-            .material(Rc::new(light_material))
+        let light = Cubic::cube(1.0, Rc::new(light_material))
             .cull_face(CullFace::BackFace)
             .scale(0.2)
             .build();
@@ -206,14 +205,16 @@ impl State {
             bloom,
 
             light_group: ShadowListLights {
-                // point: ArrayVec::try_from([point_light])
-                //    .expect("size leq SHADOW_SHADER_MAX_LIGHTS"),
+                point: ArrayVec::try_from([point_light])
+                    .expect("size leq SHADOW_SHADER_MAX_LIGHTS"),
+                // spot: ArrayVec::try_from([spotlight])
+                //    .expect("size leq MAX"),
                 ..ShadowListLights::default()
             },
 
             ns_light_group: ListLights {
-                // point: ArrayVec::try_from([ns_point_light])
-                //    .expect("size leq SHADOW_SHADER_MAX_LIGHTS"),
+                point: ArrayVec::try_from([ns_point_light])
+                    .expect("size leq SHADOW_SHADER_MAX_LIGHTS"),
                 ..ListLights::default()
             },
 
@@ -244,13 +245,14 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
             "assets/backpack/backpack.obj",
             vec![
                 P::Triangulate,
-                P::GenerateNormals,
-                P::CalculateTangentSpace,
+                // P::GenerateNormals,
+                // P::CalculateTangentSpace,
                 P::FlipUVs,
                 P::OptimizeGraph,
                 P::OptimizeMeshes,
             ],
         )?
+        .material(Rc::new(Material::white()))
         .build(),
         "oliver" => {
             let material = Rc::new(Material::builder().diffuse(FlatTexture::white()).build());
@@ -321,7 +323,7 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
             let animation_rc = Rc::new([animation1, animation2]);
             let mut builder = Cubic::builder();
             let mut current_bone = 0;
-            builder = builder.push_cube(material.clone(), 1.0, current_bone);
+            builder.push_cube(material.clone(), 1.0, current_bone);
 
             const LENGTH_TAIL: usize = 10;
 
@@ -331,7 +333,7 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
                     .build();
 
                 current_bone = skeleton.push_bone(bone).unwrap();
-                builder = builder.push_cube(material, 1.0, current_bone);
+                builder.push_cube(material, 1.0, current_bone);
             }
 
             builder

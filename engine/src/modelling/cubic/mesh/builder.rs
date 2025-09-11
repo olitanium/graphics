@@ -1,0 +1,58 @@
+use std::rc::Rc;
+
+use graphics::{vertex::IncompleteVertex, vertex_array::{self, VertexArray}};
+use utils::{builder, new};
+
+use crate::modelling::cubic::{Mesh, material::Material};
+
+#[derive(Debug, Clone)]
+pub struct Builder {
+    pub triangles: Vec<[IncompleteVertex; 3]>,
+    pub material: Rc<Material>,
+    pub scale: f32,
+    pub bone: usize,
+}
+
+impl Default for Builder {
+    fn default() -> Self {
+        Self {
+            triangles: Default::default(),
+            material: Default::default(),
+            scale: 1.0,
+            bone: 0,
+        }
+    }
+}
+
+
+impl Builder {
+    new!();
+    builder!(scale: f32);
+    builder!(material: Rc<Material>);
+    builder!(bone: usize);
+
+    pub fn push_triangle(&mut self, triangle: [IncompleteVertex; 3]) {
+        self.triangles.push(triangle);
+    }
+    
+    pub fn extend_triangle<I: IntoIterator<Item = [IncompleteVertex; 3]>>(&mut self, triangles: I) {
+        self.triangles.extend(triangles);
+    }
+
+    pub fn build(mut self) -> Mesh {
+        if self.scale != 1.0 {
+            for triangle in &mut self.triangles {
+                for vertex in triangle {
+                    vertex.position *= self.scale;
+                }
+            }
+        }
+    
+        let mut vertex_array_builder = VertexArray::builder();
+        vertex_array_builder.extend_incomplete_triangles(self.triangles);
+
+        let vertex_array = vertex_array_builder.build();
+        
+        Mesh::new(Rc::new(vertex_array), self.material, self.bone)
+    }
+}

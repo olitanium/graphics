@@ -3,7 +3,6 @@ use std::collections::HashSet;
 use std::marker::PhantomPinned;
 use std::pin::Pin;
 
-use glfw::PWindow;
 pub use glfw::{Action, Key};
 
 #[derive(Debug, Default)]
@@ -17,7 +16,7 @@ struct Inner {
 pub struct Keyboard(Pin<Box<Inner>>);
 
 impl Keyboard {
-    pub(crate) fn new(window: &mut PWindow) -> Self {
+    pub(crate) fn new(window: &mut glfw::Window) -> Self {
         let out = Self(Box::pin(Default::default()));
 
         let key_ptr = &raw const out.0.keys;

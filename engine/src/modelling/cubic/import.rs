@@ -11,10 +11,13 @@ use graphics::vertex_array::VertexArray;
 use russimp::material::{PropertyTypeInfo, TextureType};
 use russimp::node::Node;
 use russimp::scene::{PostProcess, Scene};
+use russimp::sys::aiTextureOp_aiTextureOp_SmoothAdd;
 
 use super::material::Material;
-use super::model::{Cubic, Mesh};
+use super::Cubic;
 use crate::error::EngResult;
+use crate::modelling::cubic::Mesh;
+use crate::modelling::cubic::mesh::MeshBuilder;
 
 mod error {
     use std::path::PathBuf;
@@ -94,7 +97,9 @@ pub(super) fn import<NEVER: Clone, P: AsRef<Path>>(
         dir,
         &mut HashMap::new(),
     )?;
-    Ok(Cubic::builder().meshes(out))
+    let mut builder = Cubic::builder();
+    builder.extend_meshes(out);
+    Ok(builder)
 }
 
 fn process_node<NEVER: Clone>(
@@ -102,7 +107,7 @@ fn process_node<NEVER: Clone>(
     node: &Node,
     dir: &Path,
     current_mat: &mut HashMap<u32, EngResult<Rc<Material>, NEVER>>,
-) -> EngResult<Vec<Mesh>, NEVER> {
+) -> EngResult<Vec<MeshBuilder>, NEVER> {
     // process current node and recursively process each in node.children.
     let mut curr_meshes = node
         .meshes
@@ -133,6 +138,8 @@ fn process_node<NEVER: Clone>(
                 .collect();
 
             let opt_normal = (!normals.is_empty()).then_some(normals);
+            // TODO: REMOVE
+            let opt_normal = None;
 
             let tangent: Vec<UnitVector<3>> = mesh
                 .tangents
@@ -141,6 +148,8 @@ fn process_node<NEVER: Clone>(
                 .collect();
 
             let opt_tangent = (!tangent.is_empty()).then_some(tangent);
+            // TODO: REMOVE
+            let opt_tangent = None;
 
             let element_buffer: Vec<ElementArrayElem> = mesh
                 .faces
@@ -148,9 +157,9 @@ fn process_node<NEVER: Clone>(
                 .flat_map(|face| face.0.iter().copied().map(Into::into))
                 .collect();
 
-            let mut vertex_array_builder = VertexArray::builder();
+            //let mut vertex_array_builder = VertexArray::builder();
 
-            fn is_no_vec_or_element_exists<'a, NEVER, T>(
+            fn is_no_vec_or_element_exists<'a, T, NEVER>(
                 name: &'static str,
                 opt_value: &'a Option<Vec<T>>,
                 index: usize,
@@ -169,8 +178,8 @@ fn process_node<NEVER: Clone>(
                 }
             }
 
-            for triangle in element_buffer.as_chunks().0 {
-                let incomplete_triangle = triangle.map(|index| {
+            let mesh_buffer = element_buffer.as_chunks().0.into_iter().map(|triangle| {
+                triangle.try_map(|index| {
                     let index = index.as_usize();
                     let triangle_position =
                         *positions.get(index).ok_or(Error::ElementArrayOverflow {
@@ -189,26 +198,30 @@ fn process_node<NEVER: Clone>(
                     let triangle_tangent =
                         is_no_vec_or_element_exists("tangent", &opt_tangent, index)?.copied();
 
-                    EngResult::Ok(
+                    Ok(
                         IncompleteVertex::new(triangle_position, triangle_texture)
                             .opt_normal(triangle_normal)
                             .opt_tangent(triangle_tangent),
                     )
-                });
+                })//;
 
-                let transpose = incomplete_triangle.try_map(identity)?;
+                //let transpose = incomplete_triangle.try_map(identity)?;
 
-                vertex_array_builder.push_incomplete_triangle(transpose);
-            }
+                //vertex_array_builder.push_incomplete_triangle(incomplete_triangle);
+            }).collect::<EngResult<Vec<_>, _>>();
+            let mesh_buffer = mesh_buffer?;
 
-            let vertex_array = vertex_array_builder.build();
+            //let vertex_array = vertex_array_builder.build();
 
             let mat = current_mat
                 .entry(mesh.material_index)
                 .or_insert_with_key(|key| parse_material(&scene.materials[*key as usize], dir))
                 .clone()?;
 
-            Ok(Mesh::new(Rc::new(vertex_array), mat, 0)) // TODO: bone
+            let mut builder = Mesh::builder().material(mat).bone(0);
+            builder.extend_triangle(mesh_buffer);
+
+            Ok(builder)
         })
         .collect::<EngResult<Vec<_>, NEVER>>()?;
 

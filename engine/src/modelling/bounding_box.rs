@@ -7,6 +7,7 @@ use graphics::texture::FlatTexture;
 use graphics::vertex::Vertex;
 
 use crate::modelling::Cubic;
+use crate::modelling::cubic::{Mesh, material};
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::cubic::material::Material;
 use crate::modelling::test_models::vertex_array_cube;
@@ -65,7 +66,10 @@ impl<const N: usize> BoundingBox<N> {
         Self::new_from_triangles(&new_triangles, depth)
     }
 
-    pub fn new_from_triangles<V: Vertex /*<V::DIMENSIONS=N>*/>(triangles: &[[V; 3]], depth: usize) -> Option<Self>
+    pub fn new_from_triangles<V: Vertex /* <V::DIMENSIONS=N> */>(
+        triangles: &[[V; 3]],
+        depth: usize,
+    ) -> Option<Self>
     where
         [(); V::DIMENSIONS]:,
     {
@@ -95,7 +99,6 @@ impl<const N: usize> BoundingBox<N> {
         let other = if depth != 0 {
             let dimensions = upper_bounds - lower_bounds;
             let (max_index, _) = dimensions
-
                 .into_iter()
                 .enumerate()
                 .max_by(|(_, size), (_, size2)| {
@@ -107,9 +110,13 @@ impl<const N: usize> BoundingBox<N> {
                 .expect("input vector const N > 0");
 
             let centre_point = 0.5 * (upper_bounds + lower_bounds);
-                eprintln!("dimensions = {dimensions:?}");
-                eprintln!("max_index = {max_index}");
-                eprintln!("centre_point = {centre_point:?}");
+            eprintln!("dimensions = {dimensions:?}");
+            eprintln!("max_index = {max_index}");
+            eprintln!("centre_point = {centre_point:?}");
+
+            eprintln!("lower = {:?}", lower_bounds);
+            eprintln!("upper = {:?}", upper_bounds);
+
             // split on the dimension given by max_index
             triangles.sort_unstable_by(|(lhs, _), (rhs, _)| {
                 f32::partial_cmp(&lhs[max_index], &rhs[max_index])
@@ -120,7 +127,7 @@ impl<const N: usize> BoundingBox<N> {
 
             let (lower, upper) = triangles.split_at_mut(partition);
 
-            //eprintln!("lower: {lower:?}, upper:{upper:?}");
+            // eprintln!("lower: {lower:?}, upper:{upper:?}");
 
             let lower_bounding_box = Self::new_from_many_inner(lower, depth - 1).map(Box::new);
             let upper_bounding_box = Self::new_from_many_inner(upper, depth - 1).map(Box::new);
@@ -241,19 +248,19 @@ impl BoundingBox<3> {
     }
 
     fn make_model_this(&self) -> Cubic {
-        Cubic::builder()
-            .push_mesh_from(
-                Rc::new(vertex_array_cube(self.lower_bounds, self.upper_bounds)),
-                Rc::new(
+        let material = 
                     Material::builder()
                         .diffuse(FlatTexture::monochrome(ColourRGBA::new([
                             1.0, 0.0, 0.0, 0.5,
                         ])))
-                        .build(),
-                ),
-                0,
-            )
-            .build()
+                        .build();
+        let mut mesh_builder = Mesh::builder().material(Rc::new(material));
+        mesh_builder.extend_triangle(vertex_array_cube(self.lower_bounds, self.upper_bounds));
+
+        let mut cubic_builder = Cubic::builder();
+        cubic_builder.push_mesh(mesh_builder);
+
+        cubic_builder.build()
     }
 
     pub fn make_model(&self, level: usize) -> Vec<Cubic> {
@@ -270,7 +277,7 @@ impl BoundingBox<3> {
     }
 
     pub fn from_cubic(model: &Cubic, depth: usize) -> Option<Self> {
-        let triangles = model.triangles();
+        let mut triangles = model.triangles();
         Self::new_from_triangles(&triangles, depth)
     }
 }

@@ -1,3 +1,4 @@
+use std::convert::Infallible;
 use std::iter;
 use std::sync::LazyLock;
 
@@ -12,7 +13,7 @@ use crate::modelling::quad::QuadVertex;
 pub fn vertex_array_cube(
     lowerbounds: Vector<3>,
     upperbounds: Vector<3>,
-) -> VertexArray<SimpleVertex> {
+) -> impl Iterator<Item = [IncompleteVertex; 3]> {
     let [low_x, low_y, low_z] = lowerbounds.into_inner();
     let [up_x, up_y, up_z] = upperbounds.into_inner();
     let vertex_positions = [
@@ -41,7 +42,7 @@ pub fn vertex_array_cube(
     ]
     .into_iter()
     .zip(tex_coords)
-    .flat_map(|(position_index, [ta, tb, tc, td])| {
+    .flat_map(move |(position_index, [ta, tb, tc, td])| {
         let [a, b, c, d] =
             position_index.map(|index| *vertex_positions.get(index).expect("well defined"));
 
@@ -56,20 +57,22 @@ pub fn vertex_array_cube(
         [[va, vb, vc], [va, vc, vd]]
     });
 
-    let mut vertex_array_builder = VertexArray::builder();
+    // TODO: Clean Up
+    /*let mut vertex_array_builder = VertexArray::builder();
 
     for incomplete_triangle in triangles {
         vertex_array_builder.push_incomplete_triangle(incomplete_triangle);
     }
 
-    vertex_array_builder.build()
+    vertex_array_builder.build()*/
+    triangles
 }
 
-pub fn origin_unit_cube() -> VertexArray<SimpleVertex> {
+pub fn origin_unit_cube() -> impl Iterator<Item = [IncompleteVertex; 3]> {
     origin_cube(1.0)
 }
 
-pub fn origin_cube(side_length: f32) -> VertexArray<SimpleVertex> {
+pub fn origin_cube(side_length: f32) -> impl Iterator<Item = [IncompleteVertex; 3]> {
     let upperbounds = Vector::new([side_length / 2.0; 3]);
     let lowerbounds = Vector::new([-side_length / 2.0; 3]);
 
@@ -108,7 +111,8 @@ pub fn vertex_array_quad(
             tex_coordinate: Vector::new([0.0, 1.0]),
         },
     ];
-    
+
+    // TODO: FIX this 
     quad_vertices.reverse();
 
     let element_array = [5, 4, 3, 2, 1, 0].map(ElementArrayElem::new);
@@ -120,7 +124,8 @@ pub fn vertex_array_quad(
 }
 
 pub fn screen_quad() -> &'static VertexArray<QuadVertex> {
-    static SCREEN_QUAD: LazyLock<VertexArray<QuadVertex>> = LazyLock::new(|| vertex_array_quad(-1.0, 1.0, -1.0, 1.0));
+    static SCREEN_QUAD: LazyLock<VertexArray<QuadVertex>> =
+        LazyLock::new(|| vertex_array_quad(-1.0, 1.0, -1.0, 1.0));
 
     &SCREEN_QUAD
 }
