@@ -3,8 +3,8 @@ use std::borrow::Borrow;
 use std::fmt::Debug;
 use std::hash::Hash;
 use std::marker::Freeze;
-use std::mem::{self, ManuallyDrop};
-use std::ops::{Deref, Sub};
+use std::mem::ManuallyDrop;
+use std::ops::Deref;
 use std::ptr;
 use std::rc::Rc;
 

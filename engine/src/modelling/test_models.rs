@@ -1,4 +1,3 @@
-use std::convert::Infallible;
 use std::iter;
 use std::sync::LazyLock;
 
@@ -7,7 +6,6 @@ use graphics::types::ElementArrayElem;
 use graphics::vertex::IncompleteVertex;
 use graphics::vertex_array::VertexArray;
 
-use crate::modelling::SimpleVertex;
 use crate::modelling::quad::QuadVertex;
 
 pub fn vertex_array_cube(

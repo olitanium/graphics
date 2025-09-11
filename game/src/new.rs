@@ -9,12 +9,11 @@ use engine::modelling::cubic::camera;
 use engine::modelling::cubic::camera::CameraPose;
 use engine::modelling::cubic::geometry::{Animation, Orientation, Pose};
 use engine::modelling::cubic::lighting::shadow::{
-    ShadowFarLight,
     ShadowListLights,
     ShadowPointLight,
     ShadowSpotLight,
 };
-use engine::modelling::cubic::lighting::simple::{FarLight, ListLights, PointLight, SpotLight};
+use engine::modelling::cubic::lighting::simple::{ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
 use engine::modelling::{Bloom, Bone, BoundingBox, Cubic, Line, Quad, Skeleton, SkyBox};
 use engine::shader_program::CullFace;

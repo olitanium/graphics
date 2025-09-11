@@ -15,20 +15,17 @@ use engine::modelling::{
     BloomGroup,
     BoundingBox,
     Cubic,
-    CubicGroup,
     Line,
-    LineGroup,
     Quad,
     QuadGroup,
     SHADOW_SHADER_MAX_LIGHTS,
     ShadowGroup,
-    SimpleVertex,
     SkyBox,
     SkyBoxGroup,
     TestLineVertex,
 };
 use engine::types::TexDim;
-use engine::{ApiState, EngApiResult, EngError, EngResult, Event, VecDraw, opengl_shaders};
+use engine::{ApiState, EngError, EngResult, Event, VecDraw};
 
 pub struct State {
     pub bin: Vec<Cubic>,

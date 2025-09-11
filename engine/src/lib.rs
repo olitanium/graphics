@@ -1,4 +1,3 @@
-#![feature(iter_chain)]
 #![feature(array_windows)]
 #![feature(type_changing_struct_update)]
 #![expect(incomplete_features)]

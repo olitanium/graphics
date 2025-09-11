@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::convert::identity;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
@@ -7,11 +6,9 @@ use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::texture::{FlatTexture, Image, TextureHasBuilder};
 use graphics::types::ElementArrayElem;
 use graphics::vertex::IncompleteVertex;
-use graphics::vertex_array::VertexArray;
 use russimp::material::{PropertyTypeInfo, TextureType};
 use russimp::node::Node;
 use russimp::scene::{PostProcess, Scene};
-use russimp::sys::aiTextureOp_aiTextureOp_SmoothAdd;
 
 use super::material::Material;
 use super::Cubic;
@@ -138,8 +135,6 @@ fn process_node<NEVER: Clone>(
                 .collect();
 
             let opt_normal = (!normals.is_empty()).then_some(normals);
-            // TODO: REMOVE
-            let opt_normal = None;
 
             let tangent: Vec<UnitVector<3>> = mesh
                 .tangents
@@ -148,8 +143,6 @@ fn process_node<NEVER: Clone>(
                 .collect();
 
             let opt_tangent = (!tangent.is_empty()).then_some(tangent);
-            // TODO: REMOVE
-            let opt_tangent = None;
 
             let element_buffer: Vec<ElementArrayElem> = mesh
                 .faces

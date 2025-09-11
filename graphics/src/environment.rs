@@ -33,7 +33,7 @@ impl<E> From<Error> for crate::error::ApiError<E> {
     }
 }
 
-use std::ffi::{CStr, CString, c_void};
+use std::ffi::{CStr, c_void};
 #[expect(unused_variables)]
 extern "system" fn debug_callback(
     source: u32,

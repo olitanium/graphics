@@ -7,7 +7,7 @@ use graphics::texture::FlatTexture;
 use graphics::vertex::Vertex;
 
 use crate::modelling::Cubic;
-use crate::modelling::cubic::{Mesh, material};
+use crate::modelling::cubic::Mesh;
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::cubic::material::Material;
 use crate::modelling::test_models::vertex_array_cube;
@@ -73,7 +73,7 @@ impl<const N: usize> BoundingBox<N> {
     where
         [(); V::DIMENSIONS]:,
     {
-        let mut triangles_with_mid: Vec<_> = triangles.iter().map(
+        let mut triangles_with_mid: Vec<_> = triangles.into_iter().map(
             |triangle| {
                 let vertices = triangle.map(|vertex| vertex.position().truncate(/* currently required to force the vectors to the correct length */));
                 let mut mid: Vector<_> = vertices.into_iter().sum();
@@ -110,12 +110,12 @@ impl<const N: usize> BoundingBox<N> {
                 .expect("input vector const N > 0");
 
             let centre_point = 0.5 * (upper_bounds + lower_bounds);
-            eprintln!("dimensions = {dimensions:?}");
-            eprintln!("max_index = {max_index}");
-            eprintln!("centre_point = {centre_point:?}");
+            //eprintln!("dimensions = {dimensions:?}");
+            //eprintln!("max_index = {max_index}");
+            //eprintln!("centre_point = {centre_point:?}");
 
-            eprintln!("lower = {:?}", lower_bounds);
-            eprintln!("upper = {:?}", upper_bounds);
+            //eprintln!("lower = {:?}", lower_bounds);
+            //eprintln!("upper = {:?}", upper_bounds);
 
             // split on the dimension given by max_index
             triangles.sort_unstable_by(|(lhs, _), (rhs, _)| {
@@ -277,7 +277,7 @@ impl BoundingBox<3> {
     }
 
     pub fn from_cubic(model: &Cubic, depth: usize) -> Option<Self> {
-        let mut triangles = model.triangles();
+        let triangles = model.triangles();
         Self::new_from_triangles(&triangles, depth)
     }
 }

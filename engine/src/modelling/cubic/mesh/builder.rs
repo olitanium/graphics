@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use graphics::{vertex::IncompleteVertex, vertex_array::{self, VertexArray}};
+use graphics::{vertex::IncompleteVertex, vertex_array::VertexArray};
 use utils::{builder, new};
 
 use crate::modelling::cubic::{Mesh, material::Material};
