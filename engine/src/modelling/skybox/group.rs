@@ -7,7 +7,7 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use super::SkyBox;
 use crate::EngResult;
 use crate::modelling::cubic::Camera;
-use crate::modelling::cubic::geometry::YieldsPose;
+use crate::modelling::cubic::geometry::CameraPose;
 
 #[derive(Debug)]
 pub struct Group<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> {
@@ -20,7 +20,7 @@ pub struct Group<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> {
 }
 
 impl<'a, const OUT: usize, X: FramebufferWithDepth<OUT>> Group<'a, OUT, X> {
-    pub fn new<O: YieldsPose>(
+    pub fn new<O: CameraPose>(
         shader: &'a ShaderProgram<SkyBox, OUT, X::Tex>,
         framebuffer: &'a X,
         skybox: &'a SkyBox,

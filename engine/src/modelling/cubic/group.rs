@@ -6,7 +6,7 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
 
 use super::Camera;
-use super::geometry::YieldsPose;
+use super::geometry::CameraPose;
 use super::lighting::simple::ListLights;
 use super::model::Cubic;
 use crate::EngResult;
@@ -28,7 +28,7 @@ pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth
 impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = FlatTexture>>
     Group<'a, MAX, OUT, D>
 {
-    pub fn new<O: YieldsPose>(
+    pub fn new<O: CameraPose>(
         shader: &'a ShaderProgram<(Cubic, ListLights<MAX>), OUT, FlatTexture>,
         framebuffer: &'a D,
 

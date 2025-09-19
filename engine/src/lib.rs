@@ -7,14 +7,16 @@
 #![feature(never_type)]
 #![feature(option_array_transpose)]
 #![feature(associated_const_equality)]
+#![feature(result_option_map_or_default)]
 
 pub mod eng_state;
+mod entity;
 #[expect(hidden_glob_reexports)]
 mod error;
 pub mod modelling;
 pub mod opengl_shaders;
-
 pub use array_vec;
+pub use entity::Entity;
 pub use error::{EngApiResult, EngError, EngResult};
 pub use graphics::colour::{ColourRGB, ColourRGBA};
 pub use graphics::framebuffer::Builder as FrameBufferBuilder;

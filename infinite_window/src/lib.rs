@@ -34,6 +34,17 @@ impl<'a, T, const N: usize> Iterator for InfiniteWindowIter<'a, T, N> {
 
         Some(output)
     }
+
+    fn find<P>(&mut self, predicate: P) -> Option<Self::Item>
+    where
+        Self: Sized,
+        P: FnMut(&Self::Item) -> bool,
+    {
+        let len = self.backing.len();
+        let max_windows_before_repeat = len + 1;
+
+        self.take(max_windows_before_repeat).find(predicate)
+    }
 }
 
 #[cfg(test)]

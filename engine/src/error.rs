@@ -1,6 +1,5 @@
 use graphics::ApiError;
 
-// pub(crate) type InnerEngResult<T> = EngResult<T, !>;
 pub type EngResult<T, U> = core::result::Result<T, EngError<U>>;
 
 pub type EngApiResult<T, U> = graphics::ApiResult<T, EngError<U>>;

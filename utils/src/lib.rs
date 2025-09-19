@@ -3,8 +3,6 @@ mod error;
 mod ref_or_owned;
 
 pub use ref_or_owned::RefOwned;
-// pub use error::Error;
-// pub use error::Result;
 
 #[macro_export]
 macro_rules! getter {

@@ -3,9 +3,9 @@ use std::sync::LazyLock;
 
 use graphics::linear_algebra::Vector;
 use graphics::types::ElementArrayElem;
-use graphics::vertex::IncompleteVertex;
 use graphics::vertex_array::VertexArray;
 
+use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::quad::QuadVertex;
 
 pub fn vertex_array_cube(
@@ -51,18 +51,9 @@ pub fn vertex_array_cube(
             IncompleteVertex::new(d, td),
         ];
 
-        // [a, b, c], [a, c, d]
         [[va, vb, vc], [va, vc, vd]]
     });
 
-    // TODO: Clean Up
-    /*let mut vertex_array_builder = VertexArray::builder();
-
-    for incomplete_triangle in triangles {
-        vertex_array_builder.push_incomplete_triangle(incomplete_triangle);
-    }
-
-    vertex_array_builder.build()*/
     triangles
 }
 
@@ -83,7 +74,7 @@ pub fn vertex_array_quad(
     lower_y: f32,
     upper_y: f32,
 ) -> VertexArray<QuadVertex> {
-    let mut quad_vertices = [
+    let quad_vertices = [
         QuadVertex {
             position: Vector::new([lower_x, lower_y]),
             tex_coordinate: Vector::new([0.0, 0.0]),
@@ -97,23 +88,12 @@ pub fn vertex_array_quad(
             tex_coordinate: Vector::new([1.0, 1.0]),
         },
         QuadVertex {
-            position: Vector::new([lower_x, lower_y]),
-            tex_coordinate: Vector::new([0.0, 0.0]),
-        },
-        QuadVertex {
-            position: Vector::new([upper_x, upper_y]),
-            tex_coordinate: Vector::new([1.0, 1.0]),
-        },
-        QuadVertex {
             position: Vector::new([lower_x, upper_y]),
             tex_coordinate: Vector::new([0.0, 1.0]),
         },
     ];
 
-    // TODO: FIX this 
-    quad_vertices.reverse();
-
-    let element_array = [5, 4, 3, 2, 1, 0].map(ElementArrayElem::new);
+    let element_array = [0, 1, 2, 0, 2, 3].map(ElementArrayElem::new);
 
     VertexArray::builder()
         .vertices(quad_vertices.to_vec())

@@ -1,9 +1,9 @@
 use graphics::linear_algebra::{UnitVector, Vector};
 
-use crate::modelling::cubic::geometry::{Orientation, Pose, YieldsPose};
+use crate::modelling::cubic::geometry::{CameraPose, Orientation, Pose};
 
 #[derive(Debug, Clone, Copy)]
-pub enum CameraPose {
+pub enum ManualPose {
     FixedUp {
         position: Vector<3>,
         up: UnitVector<3>,
@@ -15,7 +15,7 @@ pub enum CameraPose {
     },
 }
 
-impl CameraPose {
+impl ManualPose {
     const COS_NO_CONE: f32 = 0.99;
 
     pub fn orientation(&self) -> Orientation {
@@ -173,7 +173,7 @@ impl CameraPose {
     }
 }
 
-impl YieldsPose for CameraPose {
+impl CameraPose for ManualPose {
     type Hint = ();
 
     fn get_pose(&self, _: &Self::Hint) -> Pose {

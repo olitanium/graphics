@@ -123,8 +123,7 @@ where
                 let vertices = vertex.vertices();
 
                 let option_vec_triangles: Option<Vec<_>> = triangles
-                    .iter()
-                    .copied()
+                    .into_iter()
                     .map(|index| index.map(|value| vertices.get(value).copied()).transpose())
                     .collect();
 

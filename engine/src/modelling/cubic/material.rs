@@ -1,5 +1,4 @@
 use graphics::colour::ColourRGBA;
-// use crate::modelling::Cubic;
 use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{FlatTexture, Texture};
 use utils::{builder, new};

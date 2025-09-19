@@ -3,7 +3,7 @@ use utils::{builder, new};
 use super::VertexArray;
 use crate::element_array_buffer::ElementArrayBuffer;
 use crate::types::ElementArrayElem;
-use crate::vertex::{IncompleteVertex, Vertex};
+use crate::vertex::Vertex;
 use crate::vertex_buffer::VertexBuffer;
 
 #[derive(Debug, Clone)]
@@ -49,16 +49,9 @@ where
         VertexArray::new(vertex_buffer, Some(element_array_buffer))
     }
 
-    pub fn push_incomplete_triangle(&mut self, incomplete_triangle: [IncompleteVertex; 3]) {
-        let complete_triangle = V::from_incomplete_triangle(incomplete_triangle);
-        self.push_triangle(complete_triangle);
-    }
-
-    pub fn extend_incomplete_triangles<I: IntoIterator<Item = [IncompleteVertex; 3]>>(&mut self, iter: I) {
-        let vertices = iter.into_iter().map(V::from_incomplete_triangle);
-        // TODO: optimise
-        for triangle in vertices {
+    pub fn extend_triangles<I: IntoIterator<Item = [V; 3]>>(&mut self, iter: I) {
+        for triangle in iter {
             self.push_triangle(triangle);
-        } 
+        }
     }
 }

@@ -11,14 +11,11 @@ use crate::modelling::test_models;
 
 #[derive(Debug, Default)]
 pub struct Builder<const N: usize> {
-    // depth: Option<f32>,
     vertex_array: Option<VertexArray<QuadVertex>>,
     texture: Option<[Rc<RefCell<FlatTexture>>; N]>, // Option<Rc<FlatTexture>>,
 }
 
 impl<const N: usize> Builder<N> {
-    // builder!(depth: Option<f32>);
-
     builder!(vertex_array: Option<VertexArray<QuadVertex>>);
 
     builder!(texture: Option<[Rc<RefCell<FlatTexture>>; N]>);
@@ -34,7 +31,6 @@ impl<const N: usize> Builder<N> {
             texture: self.texture.unwrap_or(array::from_fn(|_| {
                 Rc::new(RefCell::new(FlatTexture::default()))
             })),
-            // depth: self.depth.unwrap_or(0.99),
         }
     }
 }

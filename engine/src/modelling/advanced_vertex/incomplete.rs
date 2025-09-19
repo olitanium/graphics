@@ -1,4 +1,4 @@
-use linear_algebra::{UnitVector, Vector};
+use graphics::linear_algebra::{UnitVector, Vector};
 use utils::builder;
 
 #[derive(Debug, Clone, Copy, Default)]

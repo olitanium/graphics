@@ -5,14 +5,14 @@ use std::rc::Rc;
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::texture::{FlatTexture, Image, TextureHasBuilder};
 use graphics::types::ElementArrayElem;
-use graphics::vertex::IncompleteVertex;
 use russimp::material::{PropertyTypeInfo, TextureType};
 use russimp::node::Node;
 use russimp::scene::{PostProcess, Scene};
 
-use super::material::Material;
 use super::Cubic;
+use super::material::Material;
 use crate::error::EngResult;
+use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::cubic::Mesh;
 use crate::modelling::cubic::mesh::MeshBuilder;
 
@@ -150,7 +150,7 @@ fn process_node<NEVER: Clone>(
                 .flat_map(|face| face.0.iter().copied().map(Into::into))
                 .collect();
 
-            //let mut vertex_array_builder = VertexArray::builder();
+            // let mut vertex_array_builder = VertexArray::builder();
 
             fn is_no_vec_or_element_exists<'a, T, NEVER>(
                 name: &'static str,
@@ -171,40 +171,44 @@ fn process_node<NEVER: Clone>(
                 }
             }
 
-            let mesh_buffer = element_buffer.as_chunks().0.into_iter().map(|triangle| {
-                triangle.try_map(|index| {
-                    let index = index.as_usize();
-                    let triangle_position =
-                        *positions.get(index).ok_or(Error::ElementArrayOverflow {
-                            which: "position",
-                            index_asked: index,
-                            actual_len: positions.len(),
-                        })?;
-                    let triangle_texture =
-                        *textures.get(index).ok_or(Error::ElementArrayOverflow {
-                            which: "texture",
-                            index_asked: index,
-                            actual_len: textures.len(),
-                        })?;
-                    let triangle_normal =
-                        is_no_vec_or_element_exists("normal", &opt_normal, index)?.copied();
-                    let triangle_tangent =
-                        is_no_vec_or_element_exists("tangent", &opt_tangent, index)?.copied();
+            let mesh_buffer = element_buffer
+                .as_chunks()
+                .0
+                .into_iter()
+                .map(|triangle| {
+                    triangle.try_map(|index| {
+                        let index = index.as_usize();
+                        let triangle_position =
+                            *positions.get(index).ok_or(Error::ElementArrayOverflow {
+                                which: "position",
+                                index_asked: index,
+                                actual_len: positions.len(),
+                            })?;
+                        let triangle_texture =
+                            *textures.get(index).ok_or(Error::ElementArrayOverflow {
+                                which: "texture",
+                                index_asked: index,
+                                actual_len: textures.len(),
+                            })?;
+                        let triangle_normal =
+                            is_no_vec_or_element_exists("normal", &opt_normal, index)?.copied();
+                        let triangle_tangent =
+                            is_no_vec_or_element_exists("tangent", &opt_tangent, index)?.copied();
 
-                    Ok(
-                        IncompleteVertex::new(triangle_position, triangle_texture)
+                        Ok(IncompleteVertex::new(triangle_position, triangle_texture)
                             .opt_normal(triangle_normal)
-                            .opt_tangent(triangle_tangent),
-                    )
-                })//;
+                            .opt_tangent(triangle_tangent))
+                    }) //;
 
-                //let transpose = incomplete_triangle.try_map(identity)?;
+                    // let transpose = incomplete_triangle.try_map(identity)?;
 
-                //vertex_array_builder.push_incomplete_triangle(incomplete_triangle);
-            }).collect::<EngResult<Vec<_>, _>>();
+                    // vertex_array_builder.
+                    // push_incomplete_triangle(incomplete_triangle);
+                })
+                .collect::<EngResult<Vec<_>, _>>();
             let mesh_buffer = mesh_buffer?;
 
-            //let vertex_array = vertex_array_builder.build();
+            // let vertex_array = vertex_array_builder.build();
 
             let mat = current_mat
                 .entry(mesh.material_index)

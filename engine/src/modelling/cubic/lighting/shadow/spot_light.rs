@@ -39,10 +39,7 @@ impl ShadowSpotLight {
     pub(crate) fn camera(&self) -> Camera<Pose> {
         camera::builder()
             .pose(Pose::new_from_orientation_translation(
-                Orientation::new_forward_up(
-                    self.light.direction,
-                    UnitVector::new_unchecked([0.0, 1.0, 0.0]),
-                ),
+                Orientation::new_forward_up(self.light.direction, UnitVector::Y),
                 self.light.position,
             ))
             .perspective(self.light.cos_outer_cut_off, 1.0, 0.1, 20.0)

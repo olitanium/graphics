@@ -2,7 +2,10 @@ use std::mem;
 
 use graphics::linear_algebra::Vector;
 use graphics::types::VertexAttrType;
-use graphics::vertex::{IncompleteVertex, Vertex};
+use graphics::vertex::Vertex;
+
+use crate::modelling::advanced_vertex::IncompleteVertex;
+use crate::modelling::{CubicVertex, Quad};
 
 #[derive(Debug, Clone, Copy)]
 pub struct QuadVertex {
@@ -11,7 +14,6 @@ pub struct QuadVertex {
 }
 
 impl Vertex for QuadVertex {
-    const DIMENSIONS: usize = 2;
     const ELEMENT_COUNT: usize = 2;
 
     fn offsets() -> [usize; Self::ELEMENT_COUNT] {
@@ -25,21 +27,22 @@ impl Vertex for QuadVertex {
         use VertexAttrType as V;
         [(V::f32, 2), (V::f32, 2)]
     }
-
-    fn from_incomplete_triangle(triangle: [IncompleteVertex; 3]) -> [Self; 3] {
-        triangle.map(
-            |IncompleteVertex {
-                 position, texture, ..
-             }| {
-                Self {
-                    position: position.truncate(),
-                    tex_coordinate: texture,
-                }
-            },
-        )
-    }
-
-    fn position(&self) -> Vector<{ Self::DIMENSIONS }> {
-        self.position
-    }
 }
+// impl CubicVertex<2>  for QuadVertex {
+// fn from_incomplete_triangle(triangle: [IncompleteVertex; 3]) -> [Self; 3] {
+// triangle.map(
+// |IncompleteVertex {
+// position, texture, ..
+// }| {
+// Self {
+// position: position.truncate(),
+// tex_coordinate: texture,
+// }
+// },
+// )
+// }
+//
+// fn position(&self) -> Vector<2> {
+// self.position
+// }
+// }

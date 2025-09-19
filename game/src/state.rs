@@ -4,9 +4,9 @@ use engine::eng_state::EngState;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::framebuffer::{DefaultFramebuffer, Framebuffer};
-use engine::linear_algebra::Vector;
+use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::Camera;
-use engine::modelling::cubic::camera::{CameraPose, Projection};
+use engine::modelling::cubic::camera::{ManualPose, Projection};
 use engine::modelling::cubic::geometry::{Orientation, Pose};
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
 use engine::modelling::cubic::lighting::simple::ListLights;
@@ -25,12 +25,11 @@ use engine::modelling::{
     TestLineVertex,
 };
 use engine::types::TexDim;
-use engine::{ApiState, EngError, EngResult, Event, VecDraw};
+use engine::{ApiState, EngError, EngResult, Entity, Event, VecDraw};
 
 pub struct State {
-    pub bin: Vec<Cubic>,
     pub time: f32,
-    pub camera: Camera<CameraPose>,
+    pub camera: Camera<ManualPose>,
 
     pub exposure: f32,
     pub sensitivity: f32,
@@ -49,13 +48,12 @@ pub struct State {
     pub light: Cubic,
     pub containers: Vec<Cubic>,
     pub testbool: bool,
-    pub imported: Cubic,
-    pub imported_other: Cubic,
-    pub imported_third: Option<Cubic>,
+    pub imported: Entity,
+    pub imported_other: Entity,
     pub blank: Cubic,
 
-    pub imported_bounding_box: BoundingBox<3>,
-    pub imported_bounding_box_model: Vec<Cubic>,
+    pub imported_bounding_box_model: Cubic,
+    pub imported_other_bounding_box_model: Cubic,
     pub bounding_box_level: usize,
 
     pub which_animation: usize,
@@ -133,7 +131,7 @@ impl EngState for State {
 }
 
 impl State {
-    fn physics(&mut self, _frame_time: f32) {
+    fn physics(&mut self, frame_time: f32) {
         let time = self.time;
 
         let light_pos = Vector::new([
@@ -144,14 +142,28 @@ impl State {
 
         if let Some(light) = self.light_group.point.get_mut(0) {
             light.light.position = light_pos;
-            self.light
-                .skeleton
-                .set(
-                    0,
-                    Pose::new_from_orientation_translation(Orientation::default(), light_pos),
-                )
-                .expect("root node at 0");
+            // self.light
+            // .skeleton
+            // .set(
+            // 0,
+            // Pose::new_from_orientation_translation(Orientation::default(), light_pos),
+            // )
+            // .expect("root node at 0");
+            self.light.skeleton.root = Pose::new_from_translation(light_pos);
         }
+
+        // self.imported.get_cubic_mut().skeleton.root =
+        // Pose::new_from_orientation_translation(
+        // Orientation::new_from_to(self.camera.position(&()), imported_pos,
+        // UnitVector::Y), Orientation::new_forward_up(Vector::new([0.0, 1.0,
+        // 1.0]).normalize(), UnitVector::Y), Orientation::default(),
+        // imported_pos,
+        // );
+
+        self.imported.update(frame_time);
+        self.imported_other.update(frame_time);
+
+        self.imported.bounce_off(&mut self.imported_other);
 
         if let Some(light) = self.light_group.spot.get_mut(0) {
             light.light.direction = self.camera.direction(&());
@@ -168,18 +180,16 @@ impl State {
         let mut out = VecDraw::new();
 
         let all_models = {
-            let mut all_models = vec![(&self.imported, self.which_animation, time)];
-            // let all_models = if self.testbool {vec![(&self.imported,
-            // self.which_animation, time)]} else if let Some(model) =
-            // &self.imported_third {vec![(model, self.which_animation, time)]}
-            // else {vec![]};
-            all_models.extend(
-                self.imported_bounding_box_model
-                    .iter()
-                    .map(|x| (x, 0, time)),
-            );
-            // let all_models = vec![(&self.blank, 0, 0.0)];
-            // let all_models = vec![];
+            let mut all_models = vec![
+                (&*self.imported.get_cubic_mut(), self.which_animation, time),
+                (
+                    &*self.imported_other.get_cubic_mut(),
+                    self.which_animation,
+                    time,
+                ),
+            ];
+            // all_models.push((&self.containers[0], 0, 0.0));
+            // all_models.push((&self.imported_bounding_box_model, 0, 0.0));
             all_models
         };
 

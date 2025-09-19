@@ -1,10 +1,16 @@
-use std::{borrow::Cow, rc::Rc};
+use std::borrow::Cow;
+use std::rc::Rc;
 
 mod builder;
 pub use builder::Builder as MeshBuilder;
-use graphics::{ActiveShaderProgram, framebuffer::{ActiveFramebuffer, traits::FramebufferWithDepth}, linear_algebra::Matrix, vertex_array::VertexArray};
+use graphics::ActiveShaderProgram;
+use graphics::framebuffer::ActiveFramebuffer;
+use graphics::framebuffer::traits::FramebufferWithDepth;
+use graphics::vertex_array::VertexArray;
 
-use crate::{EngResult, modelling::{Cubic, SimpleVertex, Skeleton, cubic::{geometry::YieldsPose, material::Material}}};
+use crate::EngResult;
+use crate::modelling::cubic::material::Material;
+use crate::modelling::{Cubic, SimpleVertex, Skeleton};
 
 #[derive(Debug, Clone)]
 pub struct Mesh {
@@ -38,16 +44,14 @@ impl Mesh {
         relative: bool,
         animation: usize,
         time: f32,
-        scale: f32,
     ) -> EngResult<(), !> {
         self.material.register_to(active_shader, "material");
 
         active_shader.set_uniform(
             "model".into(),
-            &(skeleton
-                .get_pose(&(relative, self.bone, animation, time))
-                .as_matrix()
-                * Matrix::transform_scale(scale, scale, scale))
+            &skeleton
+                .get_bone_pose(relative, self.bone, animation, time)
+                .as_matrix(),
         );
 
         self.vertex_array.draw(active_shader, active_framebuffer)?;
@@ -57,5 +61,12 @@ impl Mesh {
 
     pub fn triangles(&self) -> Cow<'_, [[SimpleVertex; 3]]> {
         self.vertex_array.triangles()
+    }
+
+    pub fn triangles_from_vec(vec: &[Self]) -> Vec<[SimpleVertex; 3]> {
+        vec.into_iter()
+            .map(|mesh| mesh.triangles().into_owned())
+            .flatten()
+            .collect()
     }
 }

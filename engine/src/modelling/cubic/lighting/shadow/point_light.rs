@@ -28,7 +28,6 @@ impl ShadowPointLight {
 
     pub fn set_position(&mut self, position: Vector<3>) {
         self.light.position = position;
-        // self.look_at_matrices = get_look_at_matrices(&self.light);
     }
 
     pub const fn far_plane(&self) -> f32 {

@@ -1,5 +1,3 @@
-use std::cell::Cell;
-use std::ops::Mul;
 use std::sync::Mutex;
 
 use localrc::LocalRc;

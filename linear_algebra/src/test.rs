@@ -17,3 +17,14 @@ fn invoke_and_print() {
 
     println!("{:?}", larger);
 }
+
+#[test]
+fn reflect() {
+    use crate::Vector;
+    let vector = Vector::new([1.0, 1.0, -0.5]);
+    let normal = Vector::new([0.0, 0.0, 1.0]).normalize();
+
+    let reflected = vector.reflect(normal);
+
+    assert_eq!(reflected, Vector::new([1.0, 1.0, 0.5]));
+}

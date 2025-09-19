@@ -1,9 +1,13 @@
 use std::rc::Rc;
 
-use graphics::{vertex::IncompleteVertex, vertex_array::VertexArray};
+use graphics::vertex::Vertex;
+use graphics::vertex_array::VertexArray;
 use utils::{builder, new};
 
-use crate::modelling::cubic::{Mesh, material::Material};
+use crate::modelling::CubicVertex;
+use crate::modelling::advanced_vertex::IncompleteVertex;
+use crate::modelling::cubic::Mesh;
+use crate::modelling::cubic::material::Material;
 
 #[derive(Debug, Clone)]
 pub struct Builder {
@@ -24,17 +28,19 @@ impl Default for Builder {
     }
 }
 
-
 impl Builder {
     new!();
+
     builder!(scale: f32);
+
     builder!(material: Rc<Material>);
+
     builder!(bone: usize);
 
     pub fn push_triangle(&mut self, triangle: [IncompleteVertex; 3]) {
         self.triangles.push(triangle);
     }
-    
+
     pub fn extend_triangle<I: IntoIterator<Item = [IncompleteVertex; 3]>>(&mut self, triangles: I) {
         self.triangles.extend(triangles);
     }
@@ -47,12 +53,16 @@ impl Builder {
                 }
             }
         }
-    
+
         let mut vertex_array_builder = VertexArray::builder();
-        vertex_array_builder.extend_incomplete_triangles(self.triangles);
+        vertex_array_builder.extend_triangles(
+            self.triangles
+                .into_iter()
+                .map(CubicVertex::from_incomplete_triangle),
+        );
 
         let vertex_array = vertex_array_builder.build();
-        
+
         Mesh::new(Rc::new(vertex_array), self.material, self.bone)
     }
 }

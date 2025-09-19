@@ -11,24 +11,22 @@ static ERROR_MESSAGE: &str = "Engine defined shader should exist and not have er
 
 macro_rules! make_included {
     ($(: ($first:ident $(, $others:ident )*) ,)? $typ:ty, $fn_name:ident, $vertex:literal, $fragment:literal $(, $geometry:literal)? $(, cull_face: $cull_face:path)? $(,)?) => {
-        //impl$(<$first $(, $others )*>)? $typ {
-            pub fn $fn_name() -> &'static $typ {
-                static PROGRAM: LazyLock<$typ> = LazyLock::new(|| {
-                    let out: $crate::ApiResult<$typ, !> = try {
-                        ShaderProgram::builder()
-                        .vertex_shader($vertex)?
-                        .fragment_shader($fragment)?
-                        $(.geometry_shader($geometry)?)?
-                        $(.force_cull_face($cull_face))?
-                        .build()?
-                    };
+        pub fn $fn_name() -> &'static $typ {
+            static PROGRAM: LazyLock<$typ> = LazyLock::new(|| {
+                let out: $crate::ApiResult<$typ, !> = try {
+                    ShaderProgram::builder()
+                    .vertex_shader($vertex)?
+                    .fragment_shader($fragment)?
+                    $(.geometry_shader($geometry)?)?
+                    $(.force_cull_face($cull_face))?
+                    .build()?
+                };
 
-                    out.expect(ERROR_MESSAGE)
-                });
+                out.expect(ERROR_MESSAGE)
+            });
 
-                &PROGRAM
-            }
-        //}
+            &PROGRAM
+        }
     };
 }
 

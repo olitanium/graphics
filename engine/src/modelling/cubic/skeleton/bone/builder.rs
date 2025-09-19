@@ -36,18 +36,15 @@ impl Builder<Vec<Animation>> {
         self
     }
 
-    pub fn all_animations(self, all_animations: Rc<[Animation]>) -> Builder<Rc<[Animation]>> {
-        Builder {
-            animations: all_animations,
-            ..self
-        }
+    pub fn animations(self, animations: Rc<[Animation]>) -> Builder<Rc<[Animation]>> {
+        Builder { animations, ..self }
     }
 }
 
 impl<T: Into<Rc<[Animation]>>> Builder<T> {
     pub fn build(self) -> Bone {
         Bone {
-            parent: Some(self.parent),
+            parent: self.parent,
             inverse_bind_pose: self.inverse_bind_pose.unwrap_or_default(),
             animation: self.animations.into(),
             last_query: Cell::default(),

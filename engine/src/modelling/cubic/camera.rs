@@ -1,7 +1,7 @@
 use builder::MissingPose;
 use graphics::linear_algebra::{Matrix, UnitVector, Vector};
 
-use super::geometry::{Orientation, YieldsPose};
+use super::geometry::{CameraPose, Orientation};
 
 mod builder;
 mod projection;
@@ -9,10 +9,10 @@ pub use projection::Projection;
 
 mod orientation;
 pub use builder::Builder;
-pub use orientation::CameraPose;
+pub use orientation::ManualPose;
 
 #[derive(Clone, Debug)]
-pub struct Camera<P: YieldsPose> {
+pub struct Camera<P: CameraPose> {
     pub pose: P,
     pub radius: f32, // first or third-person
     pub projection: Projection,
@@ -22,7 +22,7 @@ pub fn builder() -> Builder<MissingPose> {
     Builder::new()
 }
 
-impl<P: YieldsPose> Camera<P> {
+impl<P: CameraPose> Camera<P> {
     pub fn centre(&self, hint: &P::Hint) -> Vector<3> {
         self.pose.get_position(hint)
     }

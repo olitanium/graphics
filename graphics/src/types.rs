@@ -8,27 +8,27 @@ macro_rules! opaque {
     ($name:ident : $type:ident $(, $derives: ident)* $(,)?) => {
         #[derive(Debug, Hash, PartialEq, Eq $(, $derives)*)]
         pub struct $name(gl::types::$type);
+        // TODO: make inner a Self::Primitive
+        // Currently this makes rust-analyzer unhappy
 
         impl From<gl::types::$type> for $name {
-            fn from(value: gl::types::$type) -> Self {
+            fn from(value: Self::Primitive) -> Self {
                 Self::new(value)
             }
         }
 
         impl $name {
             #[allow(dead_code)]
-            pub(crate) type Primitive = gl::types::$type;
-
-            // TODO: make the return type of this `Self::Primitive`
+            pub type Primitive = gl::types::$type;
 
             #[allow(dead_code)]
-            pub(crate) fn to_primitive(&self) -> gl::types::$type {
+            pub(crate) fn to_primitive(&self) -> Self::Primitive {
                 self.0
             }
         }
 
         impl $name {
-            pub const fn new(value: gl::types::$type) -> Self {
+            pub const fn new(value: Self::Primitive) -> Self {
                 Self(value)
             }
         }
@@ -41,29 +41,27 @@ macro_rules! nz_opaque {
         pub struct $name(NonZero<gl::types::$type>);
 
         impl From<gl::types::$type> for $name {
-            fn from(value: gl::types::$type) -> Self {
+            fn from(value: Self::Primitive) -> Self {
                 Self::new(value)
             }
         }
 
         impl $name {
-            pub(crate) fn new(value: gl::types::$type) -> Self {
+            pub(crate) fn new(value: Self::Primitive) -> Self {
                 $name(NonZero::new(value).unwrap())
             }
         }
 
         impl $name {
-            pub fn try_new(value: gl::types::$type) -> Option<Self> {
+            pub fn try_new(value: Self::Primitive) -> Option<Self> {
                 NonZero::new(value).map($name)
             }
         }
 
         impl $name {
-            #[expect(dead_code)]
-            pub(crate) type Primitive = gl::types::$type;
+            pub type Primitive = gl::types::$type;
 
-            // TODO: make the return type of this `Self::Primitive`
-            pub(crate) fn to_primitive(&self) -> gl::types::$type {
+            pub(crate) fn to_primitive(&self) -> Self::Primitive {
                 self.0.get()
             }
         }

@@ -23,7 +23,8 @@ impl UnitQuaternion {
         Self(self.0.conjugate())
     }
 
-    // SAFETY: matrix must be a pure rotation matrix
+    /// #Safety
+    /// matrix must be a pure rotation matrix
     pub fn from_matrix(mat: Matrix<3, 3>) -> Self {
         // courtesy of http://marc-b-reynolds.github.io/quaternions/2017/08/08/QuatRotMatrix.html
         #[rustfmt::ignore]

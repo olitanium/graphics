@@ -1,19 +1,15 @@
 use dual_number::Sclerp;
 
-use crate::modelling::cubic::geometry::{Pose, YieldsPose};
+use crate::modelling::cubic::geometry::Pose;
 pub struct PoseSclerp {
     sclerp: Sclerp,
 }
 
-impl YieldsPose for PoseSclerp {
-    type Hint = f32;
-
-    fn get_pose(&self, hint: &Self::Hint) -> super::Pose {
-        Pose::new_from_dual(self.sclerp.get(*hint))
-    }
-}
-
 impl PoseSclerp {
+    pub fn get_pose(&self, prop: f32) -> super::Pose {
+        Pose::new_from_dual(self.sclerp.get(prop))
+    }
+
     pub fn new_from_sclerp(sclerp: Sclerp) -> Self {
         Self { sclerp }
     }

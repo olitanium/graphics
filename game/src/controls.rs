@@ -1,7 +1,9 @@
 use std::collections::HashSet;
 use std::mem;
+use std::rc::Rc;
 
 use engine::linear_algebra::Vector;
+use engine::modelling::cubic::material::Material;
 use engine::modelling::{Cubic, TestLineVertex};
 use engine::{ApiError, ColourRGB, EngResult, Key};
 
@@ -23,11 +25,9 @@ impl State {
         }
         if keyboard.contains(&Key::A) {
             self.camera.pose.move_left(self.speed[0] * frame_time);
-            // self.camera.move_right(-self.speed[0] * frame_time);
         }
         if keyboard.contains(&Key::D) {
             self.camera.pose.move_left(-self.speed[0] * frame_time)
-            // self.camera.move_right(self.speed[0] * frame_time);
         }
         if keyboard.contains(&Key::S) {
             self.camera.pose.move_forward(-self.speed[2] * frame_time);
@@ -84,32 +84,22 @@ impl State {
                 'o' => {
                     self.bounding_box_level += 1;
                     self.imported_bounding_box_model = self
-                        .imported_bounding_box
-                        .make_model(self.bounding_box_level);
+                        .imported
+                        .get_bounding_box()
+                        .make_model(self.bounding_box_level, Rc::new(Material::white()))
+                        .build();
                 }
                 'i' => {
                     self.bounding_box_level -= 1;
                     self.imported_bounding_box_model = self
-                        .imported_bounding_box
-                        .make_model(self.bounding_box_level);
+                        .imported
+                        .get_bounding_box()
+                        .make_model(self.bounding_box_level, Rc::new(Material::white()))
+                        .build();
                 }
                 other => string.push(other),
             },
             None => {}
-        }
-
-        for test_string in ["m"] {
-            let newlinestr = format!("{test_string}\n");
-            if string.contains(&newlinestr) {
-                eprintln!("{string}");
-                string.clear();
-
-                // let to_forget = mem::swap(&mut self.imported, &mut self.imported_third);
-                // self.imported_third.get_or_insert_default();
-                _ = mem::replace(&mut self.imported, Cubic::default());
-                // self.bin.push(to_forget);
-                // mem::forget(to_forget);
-            }
         }
 
         self.camera

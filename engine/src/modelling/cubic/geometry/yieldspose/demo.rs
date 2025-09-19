@@ -1,12 +1,12 @@
 use graphics::linear_algebra::{UnitVector, Vector};
 
-use super::YieldsPose;
+use super::CameraPose;
 use crate::modelling::cubic::geometry::{Orientation, Pose};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Demo;
 
-impl YieldsPose for Demo {
+impl CameraPose for Demo {
     type Hint = f32;
 
     fn get_pose(&self, hint: &Self::Hint) -> Pose {

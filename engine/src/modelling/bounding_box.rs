@@ -1,78 +1,75 @@
 use std::array;
 use std::rc::Rc;
 
-use graphics::colour::ColourRGBA;
 use graphics::linear_algebra::Vector;
-use graphics::texture::FlatTexture;
-use graphics::vertex::Vertex;
 
-use crate::modelling::Cubic;
+use crate::modelling::advanced_vertex::{ExtendedVertex, IncompleteVertex};
 use crate::modelling::cubic::Mesh;
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::cubic::material::Material;
 use crate::modelling::test_models::vertex_array_cube;
+use crate::modelling::{Cubic, CubicVertex, SimpleVertex};
 
 #[derive(Debug, Clone)]
-pub struct BoundingBox<const N: usize> {
+pub struct BoundingBox<V: ExtendedVertex<N>, const N: usize> {
+    triangles: Vec<[V; 3]>,
+    inner: Vec<BoundingBoxElement<N>>,
+}
+
+#[derive(Debug, Clone)]
+struct BoundingBoxElement<const N: usize> {
     lower_bounds: Vector<N>,
     upper_bounds: Vector<N>,
 
-    children: Option<(Box<Self>, Box<Self>)>,
+    lower_bound_index: usize,
+    upper_bound_index: usize,
+
+    children: Option<[usize; 2]>,
 }
 
-fn make_bound<const N: usize>(
-    vectors: &[Vector<N>],
+fn make_bound<V: ExtendedVertex<N>, const N: usize>(
+    vectors: &[V],
     func: fn(f32, f32) -> f32,
 ) -> Option<Vector<N>> {
-    let bounds =
-        array::from_fn(|index| vectors.into_iter().map(|vec| vec[index]).reduce(func)).transpose();
-    bounds.map(Vector::new)
+    array::from_fn(|index| {
+        vectors
+            .into_iter()
+            .map(|vec| vec.position().truncate::<N>()[index])
+            .reduce(func)
+    })
+    .transpose()
+    .map(Vector::new)
 }
 
-fn make_upper_bound<const N: usize>(vectors: &[Vector<N>]) -> Option<Vector<N>> {
+fn make_upper_bound<V: ExtendedVertex<N>, const N: usize>(vectors: &[V]) -> Option<Vector<N>> {
     make_bound(vectors, f32::max)
 }
 
-fn make_lower_bound<const N: usize>(vectors: &[Vector<N>]) -> Option<Vector<N>> {
+fn make_lower_bound<V: ExtendedVertex<N>, const N: usize>(vectors: &[V]) -> Option<Vector<N>> {
     make_bound(vectors, f32::min)
 }
 
-impl<const N: usize> BoundingBox<N> {
-    pub fn blank() -> Self {
-        let nan_vec = Vector::new([f32::NAN; N]);
-        Self {
-            lower_bounds: nan_vec,
-            upper_bounds: nan_vec,
-
-            children: None,
-        }
+impl<V: ExtendedVertex<N>, const N: usize> BoundingBox<V, N> {
+    fn get(&self, index: usize) -> &BoundingBoxElement<N> {
+        &self.inner[index]
     }
 }
 
-impl<const N: usize> BoundingBox<N> {
-    pub fn new_from_vec_indexes<V: Vertex>(
-        vectors: &[V],
+impl<V: ExtendedVertex<N>, const N: usize> BoundingBox<V, N> {
+    pub fn new_from_vec_indexes(
+        vectors: Vec<V>,
         triangles: &[[usize; 3]],
         depth: usize,
-    ) -> Option<Self>
-    where
-        [(); V::DIMENSIONS]:,
-    {
+    ) -> Option<Self> {
         let new_triangles: Option<Vec<_>> = triangles
             .into_iter()
             .map(|arr| arr.map(|index| vectors.get(index).copied()).transpose())
             .collect();
         let new_triangles = new_triangles?;
-        Self::new_from_triangles(&new_triangles, depth)
+        Self::new_from_triangles(new_triangles, depth)
     }
 
-    pub fn new_from_triangles<V: Vertex /* <V::DIMENSIONS=N> */>(
-        triangles: &[[V; 3]],
-        depth: usize,
-    ) -> Option<Self>
-    where
-        [(); V::DIMENSIONS]:,
-    {
+    pub fn new_from_triangles(triangles: Vec<[V; 3]>, depth: usize) -> Option<Self> {
         let mut triangles_with_mid: Vec<_> = triangles.into_iter().map(
             |triangle| {
                 let vertices = triangle.map(|vertex| vertex.position().truncate(/* currently required to force the vectors to the correct length */));
@@ -80,20 +77,57 @@ impl<const N: usize> BoundingBox<N> {
                 const ONE_THIRD: f32 = 1.0/3.0;
                 mid = mid.scale(ONE_THIRD);
 
-                (mid, vertices)
+                (mid, triangle)
             }
         ).collect();
 
-        Self::new_from_many_inner(&mut triangles_with_mid, depth)
+        let len_triangles_with_mid = triangles_with_mid.len();
+
+        let mut so_far = Vec::new();
+
+        let first_elem_index = BoundingBoxElement::new_from_many_inner(
+            &mut so_far,
+            &mut triangles_with_mid,
+            0,
+            len_triangles_with_mid,
+            depth,
+        )?;
+
+        let discard_cached_mid = triangles_with_mid.into_iter().map(|(_, tri)| tri).collect();
+
+        assert_eq!(first_elem_index, 0);
+
+        Some(BoundingBox {
+            triangles: discard_cached_mid,
+            inner: so_far,
+        })
     }
 
-    fn new_from_many_inner(
-        triangles: &mut [(Vector<N>, [Vector<N>; 3])],
+    pub fn encloses_point(&self, point: Vector<N>) -> bool {
+        self.get(0).encloses_point_and_children(self, point)
+    }
+}
+
+impl<const N: usize> BoundingBoxElement<N> {
+    fn new_from_many_inner<V: ExtendedVertex<N>>(
+        so_far: &mut Vec<Self>,
+        triangles: &mut [(Vector<N>, [V; 3])],
+        lower_bound_index: usize,
+        upper_bound_index: usize,
         depth: usize,
-    ) -> Option<Self> {
+    ) -> Option<usize> {
         let vectors: Vec<_> = triangles.into_iter().flat_map(|(_, arr)| *arr).collect();
         let upper_bounds = make_upper_bound(&vectors)?;
         let lower_bounds = make_lower_bound(&vectors)?;
+
+        let destination_index = so_far.len();
+        so_far.push(Self {
+            lower_bound_index,
+            upper_bound_index,
+            lower_bounds,
+            upper_bounds,
+            children: None,
+        });
 
         // vectors must be populated at this point
         let other = if depth != 0 {
@@ -110,12 +144,6 @@ impl<const N: usize> BoundingBox<N> {
                 .expect("input vector const N > 0");
 
             let centre_point = 0.5 * (upper_bounds + lower_bounds);
-            //eprintln!("dimensions = {dimensions:?}");
-            //eprintln!("max_index = {max_index}");
-            //eprintln!("centre_point = {centre_point:?}");
-
-            //eprintln!("lower = {:?}", lower_bounds);
-            //eprintln!("upper = {:?}", upper_bounds);
 
             // split on the dimension given by max_index
             triangles.sort_unstable_by(|(lhs, _), (rhs, _)| {
@@ -127,47 +155,43 @@ impl<const N: usize> BoundingBox<N> {
 
             let (lower, upper) = triangles.split_at_mut(partition);
 
-            // eprintln!("lower: {lower:?}, upper:{upper:?}");
+            let lower_bounding_box =
+                Self::new_from_many_inner(so_far, lower, lower_bound_index, partition, depth - 1);
+            let upper_bounding_box =
+                Self::new_from_many_inner(so_far, upper, partition, upper_bound_index, depth - 1);
 
-            let lower_bounding_box = Self::new_from_many_inner(lower, depth - 1).map(Box::new);
-            let upper_bounding_box = Self::new_from_many_inner(upper, depth - 1).map(Box::new);
-
-            Option::zip(lower_bounding_box, upper_bounding_box)
+            Option::zip(lower_bounding_box, upper_bounding_box).map(Into::into)
         } else {
             None
         };
 
-        Some(Self {
-            upper_bounds,
-            lower_bounds,
-            children: other,
-        })
-    }
-}
+        so_far[destination_index].children = other;
 
-impl<const N: usize> BoundingBox<N> {
+        Some(destination_index)
+    }
+
     pub fn encloses_point_single(&self, point: Vector<N>) -> bool {
         let offset_from_minimum = point - self.lower_bounds; // if in, all positive
         let offset_from_maximum = self.upper_bounds - point; // if in, all positive
 
-        let is_in = offset_from_maximum
-            .into_inner()
-            .into_iter()
-            .all(|x| x >= 0.0)
-            && offset_from_minimum
-                .into_inner()
-                .into_iter()
-                .all(|x| x >= 0.0);
+        let is_in = offset_from_maximum.into_iter().all(|x| x >= 0.0)
+            && offset_from_minimum.into_iter().all(|x| x >= 0.0);
 
         is_in
     }
 
-    pub fn encloses_point(&self, point: Vector<N>) -> bool {
+    pub fn encloses_point_and_children<V: ExtendedVertex<N>>(
+        &self,
+        bounding_box: &BoundingBox<V, N>,
+        point: Vector<N>,
+    ) -> bool {
         let is_in = self.encloses_point_single(point);
 
-        match &self.children {
-            Some((left, right)) => {
-                is_in && (left.encloses_point(point) || right.encloses_point(point))
+        match self.get_children(bounding_box) {
+            Some([left, right]) => {
+                is_in
+                    && (left.encloses_point_and_children(bounding_box, point)
+                        || right.encloses_point_and_children(bounding_box, point))
             }
             None => is_in,
         }
@@ -178,7 +202,7 @@ impl<const N: usize> BoundingBox<N> {
         // recursively test each child with each otehr child. check if any eight
         // points of one box are within the other box;
         let mut iter = (0..usize::pow(2, N as u32)).map(|bin| {
-            let arr: [_; N] = array::from_fn(|index| {
+            let arr = array::from_fn(|index| {
                 let is_one = (bin & (1 << index)) != 0;
                 if is_one {
                     self.lower_bounds[index]
@@ -193,92 +217,195 @@ impl<const N: usize> BoundingBox<N> {
         iter.any(|point| other.encloses_point_single(point))
     }
 
-    fn overlaps_bounding_box(&self, other: &Self) -> bool {
+    fn overlaps_bounding_box_and_children<'a, 'b, V: ExtendedVertex<N>>(
+        &'a self,
+        self_boundingbox: &'a BoundingBox<V, N>,
+        other: &'b Self,
+        other_boundingbox: &'b BoundingBox<V, N>,
+    ) -> Option<impl Iterator<Item = (&'a BoundingBoxElement<N>, &'b BoundingBoxElement<N>)>> {
         let is_overlap = self.overlaps_bounding_box_single(other);
 
-        match (&self.children, &other.children) {
-            (Some((selfleft, selfright)), Some((otherleft, otherright))) => {
-                is_overlap
-                    && (selfleft.overlaps_bounding_box(otherleft)
-                        || selfleft.overlaps_bounding_box(otherright)
-                        || selfright.overlaps_bounding_box(otherleft)
-                        || selfright.overlaps_bounding_box(otherright))
-            }
-            (None, Some((otherleft, otherright))) => {
-                is_overlap
-                    && (self.overlaps_bounding_box(otherleft)
-                        || self.overlaps_bounding_box(otherright))
-            }
-            (Some((selfleft, selfright)), None) => {
-                is_overlap
-                    && (selfleft.overlaps_bounding_box(other)
-                        || selfright.overlaps_bounding_box(other))
-            }
-            (None, None) => is_overlap,
-        }
+        is_overlap
+            .then(|| {
+                match (
+                    self.get_children(self_boundingbox),
+                    other.get_children(other_boundingbox),
+                ) {
+                    (Some([selfleft, selfright]), Some([otherleft, otherright])) => [
+                        selfleft.overlaps_bounding_box_and_children(
+                            self_boundingbox,
+                            otherleft,
+                            other_boundingbox,
+                        ),
+                        selfleft.overlaps_bounding_box_and_children(
+                            self_boundingbox,
+                            otherright,
+                            other_boundingbox,
+                        ),
+                        selfright.overlaps_bounding_box_and_children(
+                            self_boundingbox,
+                            otherleft,
+                            other_boundingbox,
+                        ),
+                        selfright.overlaps_bounding_box_and_children(
+                            self_boundingbox,
+                            otherright,
+                            other_boundingbox,
+                        ),
+                    ]
+                    .into_iter()
+                    .flatten()
+                    .flatten()
+                    .collect(),
+                    (None, Some([otherleft, otherright])) => [
+                        self.overlaps_bounding_box_and_children(
+                            self_boundingbox,
+                            otherleft,
+                            other_boundingbox,
+                        ),
+                        self.overlaps_bounding_box_and_children(
+                            self_boundingbox,
+                            otherright,
+                            other_boundingbox,
+                        ),
+                    ]
+                    .into_iter()
+                    .flatten()
+                    .flatten()
+                    .collect(),
+                    (Some([selfleft, selfright]), None) => [
+                        selfleft.overlaps_bounding_box_and_children(
+                            self_boundingbox,
+                            other,
+                            other_boundingbox,
+                        ),
+                        selfright.overlaps_bounding_box_and_children(
+                            self_boundingbox,
+                            other,
+                            other_boundingbox,
+                        ),
+                    ]
+                    .into_iter()
+                    .flatten()
+                    .flatten()
+                    .collect(),
+                    (None, None) => vec![(self, other)],
+                }
+            })
+            .filter(Vec::is_empty)
+            .map(IntoIterator::into_iter)
+    }
+
+    pub fn get_triangles<'a, V: ExtendedVertex<N>>(
+        &self,
+        bounding_box: &'a BoundingBox<V, N>,
+    ) -> &'a [[V; 3]] {
+        &bounding_box.triangles[self.lower_bound_index..self.upper_bound_index]
+    }
+
+    fn get_children<'a, V: ExtendedVertex<N>>(
+        &self,
+        // element: &BoundingBoxElement<N>,
+        bounding_box: &'a BoundingBox<V, N>,
+    ) -> Option<[&'a BoundingBoxElement<N>; 2]> {
+        self.children
+            .map(|arr_children| arr_children.map(|index| bounding_box.get(index)))
     }
 }
 
-impl BoundingBox<3> {
+impl<V: CubicVertex> BoundingBox<V, 3> {
     fn transform_by_pose(&self, pose: Pose) -> Self {
-        let lower_bounds = pose.act_on(self.lower_bounds);
-        let upper_bounds = pose.act_on(self.upper_bounds);
+        let inner = self
+            .inner
+            .iter()
+            .map(|inner| {
+                let lower_bounds = pose.act_on(inner.lower_bounds);
+                let upper_bounds = pose.act_on(inner.upper_bounds);
 
-        let children = self.children.as_ref().map(|(lhs, rhs)| {
-            (
-                Box::new(lhs.transform_by_pose(pose)),
-                Box::new(rhs.transform_by_pose(pose)),
-            )
-        });
+                BoundingBoxElement {
+                    upper_bounds,
+                    lower_bounds,
+                    ..inner.clone()
+                }
+            })
+            .collect();
 
-        Self {
-            lower_bounds,
-            upper_bounds,
+        let triangles = self
+            .triangles
+            .iter()
+            .map(|triangle| triangle.map(|vertex| vertex.transform_by_pose(pose)))
+            .collect();
 
-            children,
-        }
+        Self { triangles, inner }
     }
 
-    pub fn detect_collision(&self, self_pose: Pose, other: &Self, other_pose: Pose) -> bool {
+    pub fn detect_collision(
+        &self,
+        self_pose: Pose,
+        other: &Self,
+        other_pose: Pose,
+    ) -> Option<Vec<(Vec<[V; 3]>, Vec<[V; 3]>)>> {
         let transform_other = other_pose.apply_after(self_pose.inverse());
 
         let transformed = other.transform_by_pose(transform_other);
 
-        self.overlaps_bounding_box(&transformed)
+        self.get(0)
+            .overlaps_bounding_box_and_children(self, transformed.get(0), &transformed)
+            .map(Iterator::collect::<Vec<_>>)
+            .map(|vec| {
+                vec.into_iter()
+                    .map(|(lhs, rhs)| {
+                        (
+                            lhs.get_triangles(self).to_vec(),
+                            rhs.get_triangles(&transformed).to_vec(),
+                        )
+                    })
+                    .collect()
+            })
     }
+}
 
-    fn make_model_this(&self) -> Cubic {
-        let material = 
-                    Material::builder()
-                        .diffuse(FlatTexture::monochrome(ColourRGBA::new([
-                            1.0, 0.0, 0.0, 0.5,
-                        ])))
-                        .build();
-        let mut mesh_builder = Mesh::builder().material(Rc::new(material));
-        mesh_builder.extend_triangle(vertex_array_cube(self.lower_bounds, self.upper_bounds));
-
-        let mut cubic_builder = Cubic::builder();
-        cubic_builder.push_mesh(mesh_builder);
-
-        cubic_builder.build()
-    }
-
-    pub fn make_model(&self, level: usize) -> Vec<Cubic> {
-        if let Some((lhs, rhs)) = self.children.as_ref()
-            && level != 0
-        {
-            [lhs.make_model(level - 1), rhs.make_model(level - 1)]
-                .into_iter()
-                .flatten()
-                .collect()
-        } else {
-            vec![self.make_model_this()]
-        }
-    }
-
+impl BoundingBox<SimpleVertex, 3> {
     pub fn from_cubic(model: &Cubic, depth: usize) -> Option<Self> {
         let triangles = model.triangles();
-        Self::new_from_triangles(&triangles, depth)
+        Self::new_from_triangles(triangles, depth)
+    }
+
+    pub fn make_model(&self, level: usize, material: Rc<Material>) -> super::cubic::Builder {
+        let triangles = self.get(0).make_model(self, level);
+        let mut mesh_builder = Mesh::builder().material(material);
+        mesh_builder.extend_triangle(triangles);
+        let mut cubic_builder = Cubic::builder();
+        cubic_builder.push_mesh(mesh_builder);
+        cubic_builder
+    }
+}
+
+impl BoundingBoxElement<3> {
+    fn make_cube(&self) -> impl Iterator<Item = [IncompleteVertex; 3]> {
+        vertex_array_cube(self.lower_bounds, self.upper_bounds)
+    }
+
+    pub fn make_model<'a, V: CubicVertex>(
+        &'a self,
+        bounding_box: &'a BoundingBox<V, 3>,
+        level: usize,
+    ) -> Box<dyn Iterator<Item = [IncompleteVertex; 3]> + 'a> {
+        if let Some([lhs, rhs]) = self.get_children(bounding_box)
+            && level != 0
+        {
+            let iter = [
+                lhs.make_model(bounding_box, level - 1),
+                rhs.make_model(bounding_box, level - 1),
+            ]
+            .into_iter()
+            .flatten();
+            Box::new(iter)
+            //.collect()
+        } else {
+            let triangles = self.make_cube();
+            Box::new(triangles)
+        }
     }
 }
 
@@ -317,7 +444,7 @@ mod test {
 
         let triangles = [[0, 1, 2], [0, 2, 3]];
 
-        let bound = BoundingBox::new_from_vec_indexes(&coords, &triangles, 0).unwrap();
+        let bound = BoundingBox::new_from_vec_indexes(coords.to_vec(), &triangles, 0).unwrap();
 
         println!("{bound:#?}");
 

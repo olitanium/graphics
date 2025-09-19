@@ -22,7 +22,8 @@ impl WrapType {
 pub enum Minification {
     #[default]
     Nearest,
-    Linear,
+    Bilinear,
+    Trilinear,
     MipMap {
         sample_type: MipMapInfo,
         mipmap_choice: MipMapInfo,
@@ -39,7 +40,8 @@ impl Minification {
     pub(crate) fn get_enum(&self) -> GLint {
         match self {
             Self::Nearest => gl::NEAREST as GLint,
-            Self::Linear => gl::LINEAR as GLint,
+            Self::Bilinear => gl::LINEAR as GLint,
+            Self::Trilinear => gl::LINEAR_MIPMAP_LINEAR as GLint,
             Self::MipMap {
                 sample_type,
                 mipmap_choice,

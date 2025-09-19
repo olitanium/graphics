@@ -19,7 +19,7 @@ impl<const N: usize> Default for Vector<N> {
 
 impl<const N: usize> PartialEq for Vector<N> {
     fn eq(&self, other: &Self) -> bool {
-        array_maths::is_zero((self.clone() - other.clone()).inner())
+        array_maths::is_zero((*self - *other).inner())
     }
 }
 
@@ -139,6 +139,12 @@ impl<const N: usize> Vector<N> {
     pub fn truncate<const M: usize>(self) -> Vector<M> {
         let array = array::from_fn(|index| self.0.get(index).copied().unwrap_or(0.0));
         Vector::new(array)
+    }
+
+    pub fn reflect(self, normal: UnitVector<N>) -> Self {
+        let normal = normal.v();
+        let projection = normal.dot(self);
+        self - (2.0 * projection * normal)
     }
 }
 
@@ -350,6 +356,22 @@ impl<const N: usize> Sum for Vector<N> {
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug)]
 pub struct UnitVector<const N: usize>(Vector<N>);
+
+impl<const N: usize> Default for UnitVector<N> {
+    fn default() -> Self {
+        let mut out = [0.0; N];
+        if let Some(x) = out.get_mut(0) {
+            *x = 1.0;
+        }
+        Self::new_unchecked(out)
+    }
+}
+
+impl UnitVector<3> {
+    pub const X: Self = Self::new_unchecked([1.0, 0.0, 0.0]);
+    pub const Y: Self = Self::new_unchecked([0.0, 1.0, 0.0]);
+    pub const Z: Self = Self::new_unchecked([0.0, 0.0, 1.0]);
+}
 
 impl<const N: usize> UnitVector<N> {
     #[inline(always)]

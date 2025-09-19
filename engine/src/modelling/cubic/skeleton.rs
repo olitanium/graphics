@@ -2,10 +2,13 @@ mod bone;
 pub use bone::Bone;
 use graphics::linear_algebra::Matrix;
 
-use super::geometry::{Pose, YieldsPose};
+use super::geometry::Pose;
 
 #[derive(Debug, Clone)]
 pub struct Skeleton {
+    pub root: Pose,
+    // All accesses to `values` is offset by -1, where 0 means accessing the root node above,
+    // 1 means accessing values[0], 2 => values[1] etc...
     values: Vec<Bone>,
 }
 
@@ -16,63 +19,53 @@ impl Default for Skeleton {
 }
 
 impl Skeleton {
+    pub const ROOT_BONE: usize = 0;
+
     pub fn new() -> Self {
         Self {
-            values: vec![Bone::root()],
+            root: Pose::default(),
+            values: vec![],
         }
     }
 
     /// Returns the index of that bone, or `None` if the parent does not exist.
     pub fn push_bone(&mut self, bone: Bone) -> Option<usize> {
-        let parent = bone.parent?;
-
-        self.values.get(parent)?;
+        self.get(bone.parent)?;
 
         self.values.push(bone);
 
-        Some(self.values.len() - 1)
+        // len is one more than the highest index, but this offset is taken care of in
+        // Skeleton::get
+        Some(self.values.len())
     }
 
-    pub fn get_bone_mut(&mut self, index: usize) -> Option<&mut Bone> {
-        self.values.get_mut(index)
-    }
-
-    pub fn set(&mut self, index: usize, pose: Pose) -> Result<(), Pose> {
-        let Some(bone) = self.get_bone_mut(index) else {
-            return Err(pose);
-        };
-        bone.set(pose);
-        Ok(())
-    }
+    // pub fn get_root_mut(&mut self) -> &mut Pose {
+    // &mut self.root
+    // }
 
     pub fn get_all_bones(&self, animation: usize, time: f32) -> Vec<Matrix<4, 4>> {
-        self.values
+        let mut output = vec![self.root.as_matrix()];
+
+        let extend = self
+            .values
             .iter()
-            .map(|bone| bone.get_pose(&(&self.values, animation, time)).as_matrix())
-            .collect()
+            .map(|bone| bone.get_pose(self, animation, time).as_matrix());
+
+        output.extend(extend);
+        output
     }
-}
 
-impl YieldsPose for Skeleton {
-    type Hint = (
-        bool,  // relative
-        usize, // bone
-        usize, // animation
-        f32,   // time
-    );
+    pub(crate) fn get(&self, index: usize) -> Option<Option<&Bone>> {
+        if index == 0 {
+            Some(None)
+        } else {
+            self.values.get(index - 1).map(Some)
+        }
+    }
 
-    fn get_pose(&self, hint: &Self::Hint) -> Pose {
-        let (relative, bone, animation, time) = *hint;
-
-        self.values
-            .get(bone)
-            .map(|bone| {
-                let mut bone_pose = bone.get_pose(&(&self.values, animation, time));
-                if relative {
-                    bone_pose = bone_pose.apply_after(bone.inverse_bind_pose);
-                }
-                bone_pose
-            })
-            .unwrap_or_default()
+    pub fn get_bone_pose(&self, _relative: bool, bone: usize, animation: usize, time: f32) -> Pose {
+        self.get(bone).map_or_default(|maybe_bone| {
+            maybe_bone.map_or(self.root, |bone| bone.get_pose(self, animation, time))
+        })
     }
 }

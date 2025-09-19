@@ -8,18 +8,18 @@ use graphics::shader_program::{ActiveShaderProgram, CullFace};
 use russimp::scene::PostProcess;
 
 use super::material::Material;
-use super::{Builder, Skeleton, import};
+use super::{Builder, Mesh, Skeleton, import};
 use crate::error::EngResult;
-use super::Mesh;
+use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::simple_vertex::SimpleVertex;
 
 #[derive(Clone, Debug)]
 pub struct Cubic {
+    // pub(crate) bounding_box: Option<BoundingBox<3>>,
     pub(crate) meshes: Vec<Mesh>,
     pub cull_face: CullFace,
     pub skeleton: Skeleton,
     pub relative: bool,
-    //pub scale: f32,
 }
 
 impl Default for Cubic {
@@ -30,9 +30,7 @@ impl Default for Cubic {
 
 impl Cubic {
     pub fn empty() -> Self {
-        Self::builder()
-            //.push_mesh_from(Rc::new(VertexArray::empty()), Rc::new(Material::blank()), 0)
-            .build()
+        Self::builder().build()
     }
 
     pub fn builder() -> Builder {
@@ -40,7 +38,6 @@ impl Cubic {
     }
 
     pub fn cube(side_length: f32, material: Rc<Material>) -> Builder {
-        //let vertex_array = Rc::new(test_models::origin_cube(side_length));
         let mut out = Self::builder();
         out.push_cube(material, side_length, 0);
         out
@@ -60,6 +57,14 @@ impl Cubic {
             .collect()
     }
 
+    pub fn root(&self) -> Pose {
+        self.skeleton.root
+    }
+
+    pub fn root_mut(&mut self) -> &mut Pose {
+        &mut self.skeleton.root
+    }
+
     pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, (Self, L), D::Tex, OUT>,
@@ -69,8 +74,7 @@ impl Cubic {
     ) -> EngResult<(), !> {
         // Ignore cull_face error
         let _: ApiResult<_, !> = active_shader.cull_face(self.cull_face);
-
-        for mesh in &self.meshes {
+        for mesh in self.meshes.iter() {
             mesh.draw(
                 active_shader,
                 active_framebuffer,
@@ -78,9 +82,6 @@ impl Cubic {
                 self.relative,
                 animation,
                 time,
-                //self.scale,
-                // TODO: remove
-                1.0,
             )?;
         }
 

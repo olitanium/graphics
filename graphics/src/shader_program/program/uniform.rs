@@ -22,7 +22,6 @@ macro_rules! define_uniform {
         impl Uniform for $typ {
             fn set_uniform(
                 &self,
-                // location: UniformLocation,
                 name: String,
                 shader_program: &dyn IsActiveShaderProgram,
             ) -> Result<(), NameNotFoundError> {
@@ -100,7 +99,6 @@ named_define_uniform!(ColourRGBA => |value, name, s| value.as_ref().set_uniform(
 impl<U: Uniform> Uniform for [U] {
     fn set_uniform(
         &self,
-        // location: UniformLocation,
         name: String,
         shader_program: &dyn IsActiveShaderProgram,
     ) -> Result<(), NameNotFoundError> {

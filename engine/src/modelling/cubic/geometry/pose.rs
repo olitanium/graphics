@@ -6,10 +6,9 @@ mod posesclerp;
 use graphics::linear_algebra::Vector;
 pub use posesclerp::PoseSclerp;
 
-use super::{Orientation, YieldsPose};
+use super::{CameraPose, Orientation};
 
 #[derive(Debug, Clone, Copy)]
-// #[non_exhaustive]
 pub struct Pose {
     dual_quaternion: UnitDualQuaternion,
 }
@@ -37,6 +36,14 @@ impl Pose {
         }
     }
 
+    pub fn new_from_orientation(orientation: Orientation) -> Self {
+        Self::new_from_orientation_translation(orientation, Default::default())
+    }
+
+    pub fn new_from_translation(translation: Vector<3>) -> Self {
+        Self::new_from_orientation_translation(Default::default(), translation)
+    }
+
     pub fn into_inner(self) -> UnitDualQuaternion {
         self.dual_quaternion
     }
@@ -47,8 +54,6 @@ impl Pose {
     }
 
     pub fn translation(self) -> Vector<3> {
-        // let old = self.position;
-
         let dual = self.dual_quaternion.u();
         let qd = dual.real;
         let qrstar = dual.dual.conjugate();
@@ -70,7 +75,7 @@ impl Pose {
     }
 
     pub fn apply_after(self, pose: Self) -> Self {
-        let dual_quaternion = (self.dual_quaternion.u() * pose.dual_quaternion.u()).normalize();
+        let dual_quaternion = (pose.dual_quaternion.u() * self.dual_quaternion.u()).normalize();
 
         Self { dual_quaternion }
     }
@@ -79,13 +84,15 @@ impl Pose {
         let quaternion = DualQuaternion::from_vector(vector);
         let dual_quat_out =
             self.dual_quaternion.u() * quaternion * self.dual_quaternion.u().conjugate();
+
         debug_assert!(dual_quat_out.dual.is_zero());
         debug_assert_eq!(dual_quat_out.real.scalar(), 0.0);
+
         dual_quat_out.real.vector()
     }
 }
 
-impl YieldsPose for Pose {
+impl CameraPose for Pose {
     type Hint = ();
 
     fn get_pose(&self, _: &Self::Hint) -> Pose {
@@ -119,7 +126,7 @@ mod test {
 
         let new_pose = second_pose.apply_after(first_pose);
 
-        let composite_matrix = second_pose.as_matrix() * first_pose.as_matrix();
+        let composite_matrix = first_pose.as_matrix() * second_pose.as_matrix();
         let other_matrix = new_pose.as_matrix();
 
         println!("composite: {composite_matrix:?}, {other_matrix:?}");

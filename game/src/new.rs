@@ -6,8 +6,8 @@ use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::camera;
-use engine::modelling::cubic::camera::CameraPose;
-use engine::modelling::cubic::geometry::{Animation, Orientation, Pose};
+use engine::modelling::cubic::camera::ManualPose;
+use engine::modelling::cubic::geometry::{Animation, CameraPose, Orientation, Pose};
 use engine::modelling::cubic::lighting::shadow::{
     ShadowListLights,
     ShadowPointLight,
@@ -19,7 +19,7 @@ use engine::modelling::{Bloom, Bone, BoundingBox, Cubic, Line, Quad, Skeleton, S
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
-use engine::{ColourRGB, ColourRGBA, EngResult};
+use engine::{ColourRGB, ColourRGBA, EngResult, Entity};
 
 use crate::state::{State, StateError};
 
@@ -48,7 +48,7 @@ impl State {
         );
 
         let cube_positions = [
-            //[0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
             //[2.0, 0.0, 0.0],
             //[-2.0, 0.0, 0.0],
             //[0.0, 2.0, 0.0],
@@ -68,25 +68,36 @@ impl State {
                         .build(),
                 );
 
-                Cubic::cube(0.5, material)
+                Cubic::cube(0.1, material)
                     .cull_face(CullFace::BackFace)
                     .build()
             })
             .collect();
 
-        let imported = make_model("morgan")?;
-        let imported_other = make_model("oliver")?;
-        // let imported_third = make_model("morgan")?;
+        let mut imported = Entity::from_cubic(make_model("morgan")?, 20).unwrap();
+        imported.velocity = Vector::new([0.0, 0.0, 1.0]);
+        *imported.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, -5.0]));
 
-        let imported_bounding_box = BoundingBox::from_cubic(&imported, 20).unwrap();
+        let mut imported_other = Entity::from_cubic(make_model("morgan")?, 20).unwrap();
+        imported_other.velocity = Vector::new([0.0, 0.0, -1.0]);
+        *imported_other.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, 5.0]));
+
         let bounding_box_level = 0;
-        let imported_bounding_box_as_model = imported_bounding_box.make_model(bounding_box_level);
+        let imported_bounding_box_model = imported
+            .get_bounding_box()
+            .make_model(bounding_box_level, Rc::new(Material::white()))
+            .build();
 
-        const START_LOC: [f32; 3] = [0.0, 0.0, -3.0];
+        let imported_other_bounding_box_model = imported_other
+            .get_bounding_box()
+            .make_model(bounding_box_level, Rc::new(Material::white()))
+            .build();
+
+        const START_LOC: [f32; 3] = [5.0, 0.0, 0.0];
 
         let camera = camera::builder()
             .pose(
-                CameraPose::new_fixed_up_from_to(
+                ManualPose::new_fixed_up_from_to(
                     START_LOC.into(),
                     [0.0, 0.0, 0.0].into(),
                     UnitVector::new_unchecked([0.0, 1.0, 0.0]),
@@ -169,13 +180,9 @@ impl State {
             .scale(0.2)
             .build();
 
-        let line = Line::new(vec![
-            //Vector::new([0.0, 1.0, 0.0]),
-            //Vector::new([1.0, 1.0, 1.0]),
-        ]);
+        let line = Line::new(vec![]);
 
         Ok(Self {
-            bin: vec![],
             time: 0.0,
             line,
             angle: 0.0,
@@ -192,9 +199,9 @@ impl State {
             imported,
             imported_other,
             blank: Cubic::empty(),
-            imported_third: None,
-            imported_bounding_box,
-            imported_bounding_box_model: imported_bounding_box_as_model,
+            imported_bounding_box_model,
+            imported_other_bounding_box_model,
+
             bounding_box_level,
 
             which_animation: 0,
@@ -225,27 +232,17 @@ impl State {
 pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
     use engine::PostProcess as P;
     let model = match which_model {
-        "morgan" => {
-            Cubic::import(
-                "assets/Teddy Statue/Teddy Statue.obj",
-                vec![
-                    P::Triangulate,
-                    P::GenerateNormals,
-                    P::CalculateTangentSpace,
-                    // P::FlipUVs,
-                    P::OptimizeGraph,
-                    P::OptimizeMeshes,
-                ],
-            )?
-            .scale(0.01)
-            .build()
-        }
+        "morgan" => Cubic::import(
+            "assets/Teddy Statue/Teddy Statue.obj",
+            vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
+        )?
+        .scale(0.01)
+        .bounding_box(10)
+        .build(),
         "backpack" => Cubic::import(
             "assets/backpack/backpack.obj",
             vec![
                 P::Triangulate,
-                // P::GenerateNormals,
-                // P::CalculateTangentSpace,
                 P::FlipUVs,
                 P::OptimizeGraph,
                 P::OptimizeMeshes,
@@ -254,7 +251,13 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
         .material(Rc::new(Material::white()))
         .build(),
         "oliver" => {
-            let material = Rc::new(Material::builder().diffuse(FlatTexture::white()).build());
+            let material = Rc::new(
+                Material::builder()
+                    .diffuse(FlatTexture::monochrome(ColourRGBA::new([
+                        1.0, 0.0, 0.0, 1.0,
+                    ])))
+                    .build(),
+            );
 
             const TAIL_GRADIENT: f32 = 0.9;
             const TAIL_EPSILON: f32 = 0.1;
@@ -265,7 +268,7 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
                         Pose::new_from_orientation_translation(
                             Orientation::new_forward_up(
                                 Vector::new([0.25, 0.0, 1.0]).normalize(),
-                                Vector::new([0.0, 1.0, 0.0]).normalize(),
+                                UnitVector::Y,
                             ),
                             Vector::new([0.0, 0.0, 0.5 + TAIL_GRADIENT / 2.0 - TAIL_EPSILON]),
                         ),
@@ -277,10 +280,9 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
                         Pose::new_from_orientation_translation(
                             Orientation::new_forward_up(
                                 Vector::new([-0.25, 0.0, 1.0]).normalize(),
-                                Vector::new([0.0, 1.0, 0.0]).normalize(),
+                                UnitVector::Y,
                             ),
                             Vector::new([0.0, 0.0, 0.5 + TAIL_GRADIENT / 2.0 - TAIL_EPSILON]),
-                            // scale: TAIL_GRADIENT
                         ),
                         1.0,
                     )
@@ -310,7 +312,6 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
                                 Vector::new([0.0, 1.0, 0.0]).normalize(),
                             ),
                             Vector::new([0.0, 0.0, 0.5 + TAIL_GRADIENT / 2.0 - TAIL_EPSILON]),
-                            // scale: TAIL_GRADIENT
                         ),
                         1.0,
                     )
@@ -321,17 +322,24 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
             let mut skeleton = Skeleton::default();
             let animation_rc = Rc::new([animation1, animation2]);
             let mut builder = Cubic::builder();
-            let mut current_bone = 0;
-            builder.push_cube(material.clone(), 1.0, current_bone);
+            let mut current_bone = Skeleton::ROOT_BONE;
+            builder.push_cube(material, 1.0, current_bone);
 
             const LENGTH_TAIL: usize = 10;
 
-            for (material, animation) in iter::repeat_n((material, animation_rc), LENGTH_TAIL - 1) {
-                let bone = Bone::builder(current_bone)
-                    .all_animations(animation)
-                    .build();
+            for (index, animation) in iter::repeat_n(animation_rc, LENGTH_TAIL - 1).enumerate() {
+                let bone = Bone::builder(current_bone).animations(animation).build();
 
                 current_bone = skeleton.push_bone(bone).unwrap();
+                let material = Rc::new(
+                    Material::builder()
+                        .diffuse(FlatTexture::grayscale(
+                            index as f32 / LENGTH_TAIL as f32,
+                            1.0,
+                        ))
+                        .build(),
+                );
+
                 builder.push_cube(material, 1.0, current_bone);
             }
 

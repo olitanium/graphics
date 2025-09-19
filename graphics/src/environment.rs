@@ -144,14 +144,6 @@ impl<G: ApiState> Environment<G> {
 
         window.configure();
 
-        // let window2 = Window::builder()
-        // .dims(screen_dims)
-        // .share_with(&window)
-        // .mouse_fix_to_centre(mouse_fix_to_centre)
-        // .title(title)
-        // .raw_motion(true)
-        // .build()?;
-
         let global_state = G::new(window.get_framebuffer_size())?;
 
         Ok(Self {
@@ -185,7 +177,6 @@ impl<G: ApiState> Environment<G> {
                 }
                 Err(error) => return Err(error),
             }
-            //}
         }
 
         Ok(())

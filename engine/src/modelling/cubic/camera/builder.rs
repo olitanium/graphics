@@ -1,7 +1,7 @@
 use utils::{builder, new};
 
 use super::{Camera, Projection};
-use crate::modelling::cubic::geometry::YieldsPose;
+use crate::modelling::cubic::geometry::CameraPose;
 
 #[derive(Debug, Default)]
 pub struct MissingPose;
@@ -20,7 +20,7 @@ impl Builder<MissingPose> {
 impl<P> Builder<P> {
     builder!(radius: f32);
 
-    pub fn pose<PN: YieldsPose>(self, pose: PN) -> Builder<PN> {
+    pub fn pose<PN: CameraPose>(self, pose: PN) -> Builder<PN> {
         Builder { pose, ..self }
     }
 
@@ -45,7 +45,7 @@ impl<P> Builder<P> {
     }
 }
 
-impl<P: YieldsPose> Builder<P> {
+impl<P: CameraPose> Builder<P> {
     pub fn build(self) -> Camera<P> {
         Camera {
             pose: self.pose,

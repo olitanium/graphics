@@ -4,7 +4,7 @@ use crate::types::{VertexBufferId, VertexBufferLen};
 use crate::vertex::Vertex;
 use crate::{gl_call, types};
 
-#[derive(Debug)] // No Clone
+#[derive(Debug)]
 pub struct VertexBuffer<V: Vertex> {
     id: VertexBufferId,
     vertices: Vec<V>,

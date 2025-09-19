@@ -80,7 +80,6 @@ impl<T> Builder<T> {
 
     builder!(mag_filter: Magnification);
 
-    // TODO: WithoutExtra
     pub fn depth_attachment(self, size: TexDim) -> Builder<FramebufferAttachment<CubeWithDepth>> {
         Builder {
             data: FramebufferAttachment {

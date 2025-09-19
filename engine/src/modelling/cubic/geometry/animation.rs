@@ -1,12 +1,11 @@
 use infinite_window::InfiniteWindowIter;
 
-// use super::pose::PoseLerp;
-use super::{Pose, PoseSclerp, YieldsPose};
+use super::{Pose, PoseSclerp};
 
 #[derive(Debug, Clone)]
 pub struct Animation {
     // time is the cumulative START TIME of the keyframe.
-    keyframes: Vec<(f32 /* time */, Pose)>,
+    pub(crate) keyframes: Vec<(f32 /* time */, Pose)>,
     duration: Option<f32>,
 }
 
@@ -25,7 +24,7 @@ impl Animation {
     }
 
     pub fn push(&mut self, pose: Pose, duration: f32) -> Result<(), Pose> {
-        if let Some(total_duration) = self.duration.as_mut() {
+        if let Some(total_duration) = &mut self.duration {
             self.keyframes.push((*total_duration, pose));
             *total_duration += duration;
             Ok(())
@@ -59,11 +58,8 @@ impl Extend<(f32, Pose)> for Animation {
     }
 }
 
-impl YieldsPose for Animation {
-    type Hint = f32;
-
-    fn get_pose(&self, time: &Self::Hint) -> Pose {
-        let time = *time;
+impl Animation {
+    pub fn get_pose(&self, time: f32) -> Pose {
         match (self.keyframes.as_slice(), self.duration) {
             (&[], _) => Pose::default(),
             (&[(_, single)], _) => single,
@@ -85,8 +81,8 @@ impl YieldsPose for Animation {
 
                 end_time = if end_time == 0.0 { duration } else { end_time };
 
-                let lerp = PoseSclerp::new(start_pose, end_pose, end_time - start_time);
-                lerp.get_pose(&(local_time - start_time))
+                let sclerp = PoseSclerp::new(start_pose, end_pose, end_time - start_time);
+                sclerp.get_pose(local_time - start_time)
             }
             (slice @ &[.., (_, final_pose)], None) => slice
                 .array_windows()
@@ -94,8 +90,8 @@ impl YieldsPose for Animation {
                 .map_or(
                     final_pose,
                     |&[(start_time, start_pose), (end_time, end_pose)]| {
-                        let lerp = PoseSclerp::new(start_pose, end_pose, end_time - start_time);
-                        lerp.get_pose(&(time - start_time))
+                        let sclerp = PoseSclerp::new(start_pose, end_pose, end_time - start_time);
+                        sclerp.get_pose(time - start_time)
                     },
                 ),
         }

@@ -8,7 +8,7 @@ use graphics::texture::FlatTexture;
 use graphics::{Draw, ShaderProgramContext};
 
 use super::camera::Camera;
-use super::geometry::YieldsPose;
+use super::geometry::CameraPose;
 use super::lighting::shadow::ShadowListLights;
 use super::model::Cubic;
 use crate::{EngResult, opengl_shaders};
@@ -31,7 +31,7 @@ pub struct Group<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> {
 }
 
 impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
-    pub fn new<O: YieldsPose>(
+    pub fn new<O: CameraPose>(
         output_framebuffer: &'a X,
         camera: &Camera<O>,
         hint: &O::Hint,

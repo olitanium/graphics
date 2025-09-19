@@ -6,7 +6,7 @@ use graphics::texture::FlatTexture;
 
 use crate::modelling::TestLineVertex;
 use crate::modelling::cubic::Camera;
-use crate::modelling::cubic::geometry::YieldsPose;
+use crate::modelling::cubic::geometry::CameraPose;
 use crate::modelling::line::Line;
 use crate::{EngResult, opengl_shaders};
 
@@ -17,7 +17,7 @@ pub struct Group<'a, U, const OUT: usize, F: FramebufferWithoutExtra<OUT>> {
 }
 
 impl<'a, U: Uniform, const OUT: usize, F: FramebufferWithoutExtra<OUT>> Group<'a, U, OUT, F> {
-    pub fn new<P: YieldsPose>(
+    pub fn new<P: CameraPose>(
         framebuffer: &'a F,
         line: &'a Line<U>,
         camera: &Camera<P>,

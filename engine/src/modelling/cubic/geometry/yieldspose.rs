@@ -5,7 +5,7 @@ use graphics::linear_algebra::Vector;
 use super::Orientation;
 use super::pose::Pose;
 
-pub trait YieldsPose {
+pub trait CameraPose {
     type Hint;
 
     fn get_pose(&self, hint: &Self::Hint) -> Pose;

@@ -7,7 +7,6 @@ pub enum ApiError<E> {
     Graphics(Vec<types::GLError>),
     Texture(texture::Error),
     Shader(shader_program::Error),
-    // Buffer(buffers::Error),
     Window(environment::Error),
     Engine(E),
     Close,

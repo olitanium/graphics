@@ -144,11 +144,7 @@ impl<const OUT: usize, X: AttachmentWithStencil> FramebufferWithStencil<OUT>
 
 impl DefaultFramebuffer {
     /// Internal function to generate the default (screen) `FrameBuffer`
-    // pub(crate) fn new(window: &Window) -> Self {
     pub(crate) fn new(size: (TexDim, TexDim)) -> Self {
-        // let size = window.get_framebuffer_size();
-        // let size = (TexDim::new(size.0), TexDim::new(size.1));
-
         Self { size }
     }
 }
@@ -175,12 +171,6 @@ impl<const N: usize, X: Attachment> Framebuffer<N, X> {
         self.textures.clone()
     }
 }
-
-// impl<const N: usize, X: Attachment<Tex = FlatTexture>> Framebuffer<N, X> {
-// pub fn quad(&self) -> Quad<N> {
-// Quad::screen(self.get_all_colour())
-// }
-// }
 
 impl<const N: usize, D: AttachmentWithDepth> Framebuffer<N, D> {
     pub fn get_attachment_texture(&self) -> Rc<RefCell<D::Tex>> {
