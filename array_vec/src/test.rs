@@ -43,7 +43,6 @@ fn rev() {
     }
 }
 
-
 #[test]
 fn size() {
     // len = 3
@@ -52,7 +51,6 @@ fn size() {
     let mut iter = vec.into_iter();
 
     assert_eq!(iter.size_hint(), (3, Some(3)));
-
 
     iter.next();
 

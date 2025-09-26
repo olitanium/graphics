@@ -1,5 +1,5 @@
-use std::{array, iter};
 use std::rc::Rc;
+use std::{array, iter};
 
 use array_vec::ArrayVec;
 use graphics::linear_algebra::Vector;
@@ -121,6 +121,8 @@ impl<const N: usize> BoundingBoxElement<N> {
         let upper_bounds = make_upper_bound(&vectors)?;
         let lower_bounds = make_lower_bound(&vectors)?;
 
+        println!("lb: {lower_bound_index}, ub: {upper_bound_index}");
+        assert!(lower_bound_index <= upper_bound_index);
         let destination_index = so_far.len();
         so_far.push(Self {
             lower_bound_index,
@@ -131,42 +133,50 @@ impl<const N: usize> BoundingBoxElement<N> {
         });
 
         // vectors must be populated at this point
-        let other = if depth != 0 {
-            let dimensions = upper_bounds - lower_bounds;
-            let (max_index, _) = dimensions
-                .into_iter()
-                .enumerate()
-                .max_by(|(_, size), (_, size2)| {
-                    f32::partial_cmp(size, size2).expect(
-                        "`vectors` has values, so has filled the previous step. No NAN in this \
-                         vector",
-                    )
-                })
-                .expect("input vector const N > 0");
+        if depth != 0 {
+            so_far[destination_index].children = try {
+                let dimensions = upper_bounds - lower_bounds;
+                let (max_index, _) = dimensions
+                    .into_iter()
+                    .enumerate()
+                    .max_by(|(_, size), (_, size2)| {
+                        f32::partial_cmp(size, size2).expect(
+                            "`vectors` has values, so has filled the previous step. No NAN in \
+                             this vector",
+                        )
+                    })
+                    .expect("input vector const N > 0");
 
-            let centre_point = 0.5 * (upper_bounds + lower_bounds);
+                let centre_point = 0.5 * (upper_bounds + lower_bounds);
 
-            // split on the dimension given by max_index
-            triangles.sort_unstable_by(|(lhs, _), (rhs, _)| {
-                f32::partial_cmp(&lhs[max_index], &rhs[max_index])
-                    .expect("no NAN in input vectors permitted")
-            });
-            let partition = triangles
-                .partition_point(|(centre, _)| centre[max_index] <= centre_point[max_index]);
+                // split on the dimension given by max_index
+                triangles.sort_unstable_by(|(lhs, _), (rhs, _)| {
+                    f32::partial_cmp(&lhs[max_index], &rhs[max_index])
+                        .expect("no NAN in input vectors permitted")
+                });
+                let partition = triangles
+                    .partition_point(|(centre, _)| centre[max_index] <= centre_point[max_index]);
 
-            let (lower, upper) = triangles.split_at_mut(partition);
+                let (lower, upper) = triangles.split_at_mut(partition);
 
-            let lower_bounding_box =
-                Self::new_from_many_inner(so_far, lower, lower_bound_index, partition, depth - 1);
-            let upper_bounding_box =
-                Self::new_from_many_inner(so_far, upper, partition, upper_bound_index, depth - 1);
+                let lower_bounding_box = Self::new_from_many_inner(
+                    so_far,
+                    lower,
+                    lower_bound_index,
+                    lower_bound_index + partition,
+                    depth - 1,
+                )?;
+                let upper_bounding_box = Self::new_from_many_inner(
+                    so_far,
+                    upper,
+                    lower_bound_index + partition,
+                    upper_bound_index,
+                    depth - 1,
+                )?;
 
-            Option::zip(lower_bounding_box, upper_bounding_box).map(Into::into)
-        } else {
-            None
+                [lower_bounding_box, upper_bounding_box]
+            }
         };
-
-        so_far[destination_index].children = other;
 
         Some(destination_index)
     }
@@ -205,7 +215,6 @@ impl<const N: usize> BoundingBoxElement<N> {
         other_boundingbox: &'b BoundingBox<V, N>,
     ) -> Option<impl Iterator<Item = (&'a BoundingBoxElement<N>, &'b BoundingBoxElement<N>)>> {
         let is_overlap = self.overlaps_bounding_box_single(other);
-        //println!("OVERLAP: {is_overlap}");
         is_overlap
             .then(|| {
                 match (
@@ -270,10 +279,13 @@ impl<const N: usize> BoundingBoxElement<N> {
                     .flatten()
                     .flatten()
                     .collect(),
-                    (None, None) => vec![(self, other)],
+                    (None, None) => {
+                        println!("leaf!");
+                        vec![(self, other)]
+                    }
                 }
             })
-            .filter(Vec::is_empty)
+            .filter(|vec| !vec.is_empty())
             .map(IntoIterator::into_iter)
     }
 
@@ -286,7 +298,6 @@ impl<const N: usize> BoundingBoxElement<N> {
 
     fn get_children<'a, V: ExtendedVertex<N>>(
         &self,
-        // element: &BoundingBoxElement<N>,
         bounding_box: &'a BoundingBox<V, N>,
     ) -> Option<[&'a BoundingBoxElement<N>; 2]> {
         self.children
@@ -344,21 +355,24 @@ impl<V: CubicVertex> BoundingBox<V, 3> {
         other: &Self,
         other_pose: Pose,
     ) -> Option<ArrayVec<(Vec<[V; 3]>, Vec<[V; 3]>), N>> {
-        //let transform_other = other_pose.apply_after(self_pose.inverse());
-
         let self_transformed = self.transform_by_pose(self_pose);
         let other_transformed = other.transform_by_pose(other_pose);
 
-        self_transformed.get(0)
-            .overlaps_bounding_box_and_children(&self_transformed, other_transformed.get(0), &other_transformed)
+        self_transformed
+            .get(0)
+            .overlaps_bounding_box_and_children(
+                &self_transformed,
+                other_transformed.get(0),
+                &other_transformed,
+            )
             .map(Iterator::collect::<ArrayVec<_, _>>)
             .map(|vec| {
                 vec.map(|(lhs, rhs)| {
-                        (
-                            lhs.get_triangles(&self_transformed).to_vec(),
-                            rhs.get_triangles(&other_transformed).to_vec(),
-                        )
-                    })
+                    (
+                        lhs.get_triangles(&self_transformed).to_vec(),
+                        rhs.get_triangles(&other_transformed).to_vec(),
+                    )
+                })
             })
     }
 }
@@ -416,12 +430,15 @@ struct TestBoxVertex {
 }
 
 fn line_overlap(input: TestBoxVertex) -> bool {
-    let TestBoxVertex { one_lb, one_ub, two_lb, two_ub } = input;
+    let TestBoxVertex {
+        one_lb,
+        one_ub,
+        two_lb,
+        two_ub,
+    } = input;
     let fail = (one_ub < two_lb) || (two_ub < one_lb);
     !fail
 }
-
-
 
 mod test {
     use graphics::linear_algebra::Vector;
@@ -452,7 +469,7 @@ mod test {
         let bad_point = Vector::new([2.0, 0.0]);
         let bad_point2 = Vector::new([2.0, 2.0]);
         let bad_point3 = Vector::new([-2.0, -2.0]);
-        
+
         assert!(bound.encloses_point(good_point));
         assert!(bound.encloses_point(good_point2));
         assert!(bound.encloses_point(good_point3));
@@ -460,12 +477,11 @@ mod test {
         assert!(!bound.encloses_point(bad_point2));
         assert!(!bound.encloses_point(bad_point));
     }
-    
-    
+
     #[test]
     fn test_line_overlap() {
         let input = TestBoxVertex {
-            one_lb : -1.0,
+            one_lb: -1.0,
             one_ub: 1.0,
             two_lb: 0.5,
             two_ub: 2.0,
@@ -491,7 +507,6 @@ mod test {
             lower_bound_index: 0,
             upper_bound_index: 0,
         };
-
 
         assert!(bounding_box.overlaps_bounding_box_single(&other_box));
     }

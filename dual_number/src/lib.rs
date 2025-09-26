@@ -1,4 +1,5 @@
-use std::{fmt::Debug, ops::{Add, Mul, Neg, Sub}};
+use std::fmt::Debug;
+use std::ops::{Add, Mul, Neg, Sub};
 
 mod dual_quaternion;
 pub use dual_quaternion::{DualQuaternion, Sclerp, UnitDualQuaternion};

@@ -65,7 +65,7 @@ impl DualQuaternion {
     pub fn from_vector(vector: Vector<3>) -> Self {
         let quaternion = Quaternion::from_vector(vector);
         Self {
-            real: Quaternion::IDENTITY,//quaternion,
+            real: Quaternion::IDENTITY, // quaternion,
             dual: quaternion,
         }
     }

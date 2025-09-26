@@ -1,6 +1,3 @@
-use std::iter::Sum;
-use std::ops::{Add, Div, Mul};
-
 use array_vec::ArrayVec;
 use graphics::linear_algebra::{UnitVector, Vector};
 
@@ -45,7 +42,11 @@ impl Entity {
     }
 
     pub fn bounce_off(&mut self, other: &mut Self) {
-        if let Some((lhs, rhs)) = self.detect_collision::<1>(other).and_then(|mut vec| vec.pop()) {
+        if let Some((lhs, rhs)) = self
+            .detect_collision::<1>(other)
+            .and_then(|mut vec| vec.pop())
+        {
+            println!("collision");
             let lhs_norm = get_average_normal(lhs);
             let rhs_norm = get_average_normal(rhs);
 

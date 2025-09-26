@@ -174,17 +174,24 @@ impl State {
 
         let bounding_box_level = self.bounding_box_level;
 
-
-        self.imported_bounding_box_model = self.imported
+        self.imported_bounding_box_model = self
+            .imported
             .get_bounding_box()
             .transform_by_pose(self.imported.model.root())
-            .make_model(bounding_box_level, Rc::new(Material::from_colour(ColourRGBA::RED)))
+            .make_model(
+                bounding_box_level,
+                Rc::new(Material::from_colour(ColourRGBA::RED)),
+            )
             .build();
 
-        self.imported_other_bounding_box_model = self.imported_other
+        self.imported_other_bounding_box_model = self
+            .imported_other
             .get_bounding_box()
             .transform_by_pose(self.imported_other.model.root())
-            .make_model(bounding_box_level, Rc::new(Material::from_colour(ColourRGBA::BLUE)))
+            .make_model(
+                bounding_box_level,
+                Rc::new(Material::from_colour(ColourRGBA::BLUE)),
+            )
             .build();
     }
 
@@ -204,16 +211,8 @@ impl State {
                     self.which_animation,
                     time,
                 ),
-                /*(
-                    &self.imported_bounding_box_model,
-                    0,
-                    0.0,
-                ),*/
-                (
-                    &self.imported_other_bounding_box_model,
-                    0,
-                    0.0,
-                ),
+                (&self.imported_bounding_box_model, 0, 0.0),
+                (&self.imported_other_bounding_box_model, 0, 0.0),
             ];
             // all_models.push((&self.containers[0], 0, 0.0));
             // all_models.push((&self.imported_bounding_box_model, 0, 0.0));
