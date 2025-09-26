@@ -81,14 +81,9 @@ impl Pose {
     }
 
     pub fn act_on(self, vector: Vector<3>) -> Vector<3> {
-        let quaternion = DualQuaternion::from_vector(vector);
-        let dual_quat_out =
-            self.dual_quaternion.u() * quaternion * self.dual_quaternion.u().conjugate();
-
-        debug_assert!(dual_quat_out.dual.is_zero());
-        debug_assert_eq!(dual_quat_out.real.scalar(), 0.0);
-
-        dual_quat_out.real.vector()
+        let translation_as_pose = Pose::new_from_translation(vector);
+        let current_pos = translation_as_pose.apply_after(self);
+        current_pos.translation()
     }
 }
 
@@ -128,8 +123,6 @@ mod test {
 
         let composite_matrix = first_pose.as_matrix() * second_pose.as_matrix();
         let other_matrix = new_pose.as_matrix();
-
-        println!("composite: {composite_matrix:?}, {other_matrix:?}");
 
         assert_eq!(composite_matrix, other_matrix);
     }

@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul, Neg, Sub};
+use std::{fmt::Debug, ops::{Add, Mul, Neg, Sub}};
 
 mod dual_quaternion;
 pub use dual_quaternion::{DualQuaternion, Sclerp, UnitDualQuaternion};
@@ -38,6 +38,7 @@ where
     fn mul(self, rhs: DualNumber<M>) -> Self::Output {
         let real = self.real.clone() * rhs.real.clone();
         let dual = self.real * rhs.dual + self.dual * rhs.real;
+
         Self::Output { real, dual }
     }
 }

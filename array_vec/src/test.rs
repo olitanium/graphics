@@ -1,3 +1,5 @@
+use crate::ArrayVec;
+
 #[test]
 fn pop_push() {
     use super::ArrayVec;
@@ -39,4 +41,20 @@ fn rev() {
     for (index, item) in vec.into_iter().rev().enumerate() {
         assert_eq!(9 - item, index);
     }
+}
+
+
+#[test]
+fn size() {
+    // len = 3
+    let vec: ArrayVec<_, 10> = (0..3).collect();
+
+    let mut iter = vec.into_iter();
+
+    assert_eq!(iter.size_hint(), (3, Some(3)));
+
+
+    iter.next();
+
+    assert_eq!(iter.size_hint(), (2, Some(2)));
 }

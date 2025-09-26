@@ -1,6 +1,7 @@
-use std::array;
+use std::{array, iter};
 use std::rc::Rc;
 
+use array_vec::ArrayVec;
 use graphics::linear_algebra::Vector;
 
 use crate::modelling::advanced_vertex::{ExtendedVertex, IncompleteVertex};
@@ -197,26 +198,6 @@ impl<const N: usize> BoundingBoxElement<N> {
         }
     }
 
-    fn overlaps_bounding_box_single(&self, other: &Self) -> bool {
-        // test intersection between this bounding box and the other. If pass, then
-        // recursively test each child with each otehr child. check if any eight
-        // points of one box are within the other box;
-        let mut iter = (0..usize::pow(2, N as u32)).map(|bin| {
-            let arr = array::from_fn(|index| {
-                let is_one = (bin & (1 << index)) != 0;
-                if is_one {
-                    self.lower_bounds[index]
-                } else {
-                    self.upper_bounds[index]
-                }
-            });
-
-            Vector::new(arr)
-        });
-
-        iter.any(|point| other.encloses_point_single(point))
-    }
-
     fn overlaps_bounding_box_and_children<'a, 'b, V: ExtendedVertex<N>>(
         &'a self,
         self_boundingbox: &'a BoundingBox<V, N>,
@@ -224,7 +205,7 @@ impl<const N: usize> BoundingBoxElement<N> {
         other_boundingbox: &'b BoundingBox<V, N>,
     ) -> Option<impl Iterator<Item = (&'a BoundingBoxElement<N>, &'b BoundingBoxElement<N>)>> {
         let is_overlap = self.overlaps_bounding_box_single(other);
-
+        //println!("OVERLAP: {is_overlap}");
         is_overlap
             .then(|| {
                 match (
@@ -311,10 +292,28 @@ impl<const N: usize> BoundingBoxElement<N> {
         self.children
             .map(|arr_children| arr_children.map(|index| bounding_box.get(index)))
     }
+
+    pub fn overlaps_bounding_box_single(&self, other: &Self) -> bool {
+        let lines: [_; N] = array::from_fn(|index| {
+            let one_lb = self.lower_bounds[index];
+            let one_ub = self.upper_bounds[index];
+            let two_lb = other.lower_bounds[index];
+            let two_ub = other.upper_bounds[index];
+
+            TestBoxVertex {
+                one_lb,
+                one_ub,
+                two_lb,
+                two_ub,
+            }
+        });
+
+        lines.into_iter().all(line_overlap)
+    }
 }
 
 impl<V: CubicVertex> BoundingBox<V, 3> {
-    fn transform_by_pose(&self, pose: Pose) -> Self {
+    pub fn transform_by_pose(&self, pose: Pose) -> Self {
         let inner = self
             .inner
             .iter()
@@ -339,28 +338,27 @@ impl<V: CubicVertex> BoundingBox<V, 3> {
         Self { triangles, inner }
     }
 
-    pub fn detect_collision(
+    pub fn detect_collision<const N: usize>(
         &self,
         self_pose: Pose,
         other: &Self,
         other_pose: Pose,
-    ) -> Option<Vec<(Vec<[V; 3]>, Vec<[V; 3]>)>> {
-        let transform_other = other_pose.apply_after(self_pose.inverse());
+    ) -> Option<ArrayVec<(Vec<[V; 3]>, Vec<[V; 3]>), N>> {
+        //let transform_other = other_pose.apply_after(self_pose.inverse());
 
-        let transformed = other.transform_by_pose(transform_other);
+        let self_transformed = self.transform_by_pose(self_pose);
+        let other_transformed = other.transform_by_pose(other_pose);
 
-        self.get(0)
-            .overlaps_bounding_box_and_children(self, transformed.get(0), &transformed)
-            .map(Iterator::collect::<Vec<_>>)
+        self_transformed.get(0)
+            .overlaps_bounding_box_and_children(&self_transformed, other_transformed.get(0), &other_transformed)
+            .map(Iterator::collect::<ArrayVec<_, _>>)
             .map(|vec| {
-                vec.into_iter()
-                    .map(|(lhs, rhs)| {
+                vec.map(|(lhs, rhs)| {
                         (
-                            lhs.get_triangles(self).to_vec(),
-                            rhs.get_triangles(&transformed).to_vec(),
+                            lhs.get_triangles(&self_transformed).to_vec(),
+                            rhs.get_triangles(&other_transformed).to_vec(),
                         )
                     })
-                    .collect()
             })
     }
 }
@@ -409,26 +407,26 @@ impl BoundingBoxElement<3> {
     }
 }
 
+#[derive(Debug, Clone, Copy)]
+struct TestBoxVertex {
+    one_lb: f32,
+    one_ub: f32,
+    two_lb: f32,
+    two_ub: f32,
+}
+
+fn line_overlap(input: TestBoxVertex) -> bool {
+    let TestBoxVertex { one_lb, one_ub, two_lb, two_ub } = input;
+    let fail = (one_ub < two_lb) || (two_ub < one_lb);
+    !fail
+}
+
+
+
 mod test {
-    #[test]
-    fn test1() {
-        use std::array;
+    use graphics::linear_algebra::Vector;
 
-        use graphics::linear_algebra::Vector;
-
-        const N: usize = 3;
-        let iter = (0..usize::pow(2, N as u32)).map(|bin| {
-            let arr: [_; N] = array::from_fn(|index| {
-                let is_one = (bin & (1 << index)) != 0;
-                if is_one { 1.0 } else { 0.0 }
-            });
-
-            Vector::new(arr)
-        });
-
-        let vec: Vec<_> = iter.collect();
-        assert_eq!(vec.len(), 8);
-    }
+    use crate::modelling::bounding_box::{BoundingBoxElement, TestBoxVertex, line_overlap};
 
     #[test]
     fn test_point_in_square() {
@@ -454,12 +452,47 @@ mod test {
         let bad_point = Vector::new([2.0, 0.0]);
         let bad_point2 = Vector::new([2.0, 2.0]);
         let bad_point3 = Vector::new([-2.0, -2.0]);
-
+        
         assert!(bound.encloses_point(good_point));
         assert!(bound.encloses_point(good_point2));
         assert!(bound.encloses_point(good_point3));
         assert!(!bound.encloses_point(bad_point3));
         assert!(!bound.encloses_point(bad_point2));
         assert!(!bound.encloses_point(bad_point));
+    }
+    
+    
+    #[test]
+    fn test_line_overlap() {
+        let input = TestBoxVertex {
+            one_lb : -1.0,
+            one_ub: 1.0,
+            two_lb: 0.5,
+            two_ub: 2.0,
+        };
+
+        assert!(line_overlap(input))
+    }
+
+    #[test]
+    fn test_overlap() {
+        let bounding_box = BoundingBoxElement {
+            upper_bounds: Vector::new([1.0, 1.0]),
+            lower_bounds: Vector::new([-1.0, -1.0]),
+            children: None,
+            lower_bound_index: 0,
+            upper_bound_index: 0,
+        };
+
+        let other_box = BoundingBoxElement {
+            upper_bounds: Vector::new([2.0, 0.5]),
+            lower_bounds: Vector::new([-2.0, -0.5]),
+            children: None,
+            lower_bound_index: 0,
+            upper_bound_index: 0,
+        };
+
+
+        assert!(bounding_box.overlaps_bounding_box_single(&other_box));
     }
 }

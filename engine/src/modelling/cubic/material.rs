@@ -1,4 +1,4 @@
-use graphics::colour::ColourRGBA;
+use graphics::colour::{self, ColourRGBA};
 use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{FlatTexture, Texture};
 use utils::{builder, new};
@@ -31,16 +31,18 @@ impl Material {
         Self::builder().build()
     }
 
-    pub fn black() -> Self {
+    pub fn from_colour(colour: ColourRGBA) -> Self {
         Self::builder()
-            .diffuse(FlatTexture::grayscale(0.0, 1.0))
+            .diffuse(FlatTexture::monochrome(colour))
             .build()
     }
 
+    pub fn black() -> Self {
+        Self::from_colour(ColourRGBA::BLACK)
+    }
+
     pub fn white() -> Self {
-        Self::builder()
-            .diffuse(FlatTexture::grayscale(1.0, 1.0))
-            .build()
+        Self::from_colour(ColourRGBA::WHITE)
     }
 
     pub fn register_to<'a, 'b, 'c, const N: usize, L, T: Texture>(

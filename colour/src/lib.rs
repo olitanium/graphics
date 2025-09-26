@@ -13,6 +13,13 @@ macro_rules! get_colour {
 }
 
 impl ColourRGBA {
+    pub const BLACK: Self = Self::grayscale(0.0, 1.0);
+    pub const WHITE: Self = Self::grayscale(1.0, 1.0);
+
+    pub const RED: Self = Self::new([1.0, 0.0, 0.0, 1.0]);
+    pub const GREEN: Self = Self::new([0.0, 1.0, 0.0, 1.0]);
+    pub const BLUE: Self = Self::new([0.0, 0.0, 1.0, 1.0]);
+
     get_colour!(r, 0);
 
     get_colour!(g, 1);
@@ -23,6 +30,10 @@ impl ColourRGBA {
 
     pub const fn new(input: [f32; 4]) -> Self {
         Self(input)
+    }
+
+    pub const fn grayscale(input: f32, alpha: f32) -> Self {
+        Self::new([input, input, input, alpha])
     }
 
     pub const fn new_from_arr_alpha(input: [f32; 3], alpha: f32) -> Self {

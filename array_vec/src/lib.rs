@@ -96,6 +96,10 @@ impl<T, const N: usize> ArrayVec<T, N> {
             Ok(unsafe { MaybeUninit::array_assume_init(array) })
         }
     }
+
+    pub fn map<U, F: FnMut(T) -> U>(self, f: F) -> ArrayVec<U, N> {
+        self.into_iter().map(f).collect()
+    }
 }
 
 impl<T, const N: usize> Deref for ArrayVec<T, N> {

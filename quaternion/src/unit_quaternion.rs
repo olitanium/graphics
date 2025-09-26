@@ -74,7 +74,7 @@ impl UnitQuaternion {
 
 impl Default for UnitQuaternion {
     fn default() -> Self {
-        Self(Quaternion::identity())
+        Self(Quaternion::IDENTITY)
     }
 }
 

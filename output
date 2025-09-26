@@ -1,0 +1,4685 @@
+warning: unused import: `crate::ArrayVec`
+ --> array_vec/src/test.rs:1:5
+  |
+1 | use crate::ArrayVec;
+  |     ^^^^^^^^^^^^^^^
+  |
+help: if this is a test module, consider adding a `#[cfg(test)]` to the containing module
+ --> array_vec/src/lib.rs:7:1
+  |
+7 | mod test;
+  | ^^^^^^^^^
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `array_vec` (lib) generated 1 warning (run `cargo fix --lib -p array_vec` to apply 1 suggestion)
+   Compiling quaternion v0.1.0 (/home/oliver/Documents/programming/rust/projects/graphics/quaternion)
+warning: unused import: `draw_state::DrawState`
+  --> graphics/src/shader_program/program.rs:28:9
+   |
+28 | pub use draw_state::DrawState;
+   |         ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `set_cursor_mode` is never used
+  --> graphics/src/environment/window.rs:69:12
+   |
+26 | impl Window {
+   | ----------- method in this implementation
+...
+69 |     pub fn set_cursor_mode(&mut self, mode: CursorMode) {
+   |            ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: struct `DrawState` is never constructed
+ --> graphics/src/shader_program/program/draw_state.rs:1:12
+  |
+1 | pub struct DrawState {}
+  |            ^^^^^^^^^
+
+warning: `graphics` (lib) generated 3 warnings (run `cargo fix --lib -p graphics` to apply 1 suggestion)
+   Compiling dual_number v0.1.0 (/home/oliver/Documents/programming/rust/projects/graphics/dual_number)
+   Compiling engine v0.1.0 (/home/oliver/Documents/programming/rust/projects/graphics/engine)
+warning: unused imports: `Add`, `Div`, and `Mul`
+ --> engine/src/entity.rs:2:16
+  |
+2 | use std::ops::{Add, Div, Mul};
+  |                ^^^  ^^^  ^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `graphics::vertex::Vertex`
+ --> engine/src/modelling/cubic/mesh/builder.rs:3:5
+  |
+3 | use graphics::vertex::Vertex;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::modelling::advanced_vertex::IncompleteVertex`
+ --> engine/src/modelling/quad/quad_vertex.rs:7:5
+  |
+7 | use crate::modelling::advanced_vertex::IncompleteVertex;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `CubicVertex` and `Quad`
+ --> engine/src/modelling/quad/quad_vertex.rs:8:24
+  |
+8 | use crate::modelling::{CubicVertex, Quad};
+  |                        ^^^^^^^^^^^  ^^^^
+
+warning: unused import: `iter`
+ --> engine/src/modelling/bounding_box.rs:1:18
+  |
+1 | use std::{array, iter};
+  |                  ^^^^
+
+warning: unused import: `graphics::linear_algebra::Vector`
+   --> engine/src/modelling/bounding_box.rs:427:9
+    |
+427 |     use graphics::linear_algebra::Vector;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `BoundingBoxElement`, `TestBoxVertex`, and `line_overlap`
+   --> engine/src/modelling/bounding_box.rs:429:42
+    |
+429 |     use crate::modelling::bounding_box::{BoundingBoxElement, TestBoxVertex, line_overlap};
+    |                                          ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused import: `graphics::vertex::Vertex`
+ --> engine/src/modelling/advanced_vertex/impls.rs:2:5
+  |
+2 | use graphics::vertex::Vertex;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `std::iter::Sum`
+ --> engine/src/entity.rs:1:5
+  |
+1 | use std::iter::Sum;
+  |     ^^^^^^^^^^^^^^
+
+warning: `engine` (lib) generated 9 warnings (run `cargo fix --lib -p engine` to apply 8 suggestions)
+   Compiling game v0.1.0 (/home/oliver/Documents/programming/rust/projects/graphics/game)
+warning: unused import: `std::mem`
+ --> game/src/controls.rs:2:5
+  |
+2 | use std::mem;
+  |     ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `Cubic`
+ --> game/src/controls.rs:7:25
+  |
+7 | use engine::modelling::{Cubic, TestLineVertex};
+  |                         ^^^^^
+
+warning: unused import: `CameraPose`
+  --> game/src/new.rs:10:53
+   |
+10 | use engine::modelling::cubic::geometry::{Animation, CameraPose, Orientation, Pose};
+   |                                                     ^^^^^^^^^^
+
+warning: unused import: `BoundingBox`
+  --> game/src/new.rs:18:38
+   |
+18 | use engine::modelling::{Bloom, Bone, BoundingBox, Cubic, Line, Quad, Skeleton, SkyBox};
+   |                                      ^^^^^^^^^^^
+
+warning: unused import: `UnitVector`
+ --> game/src/state.rs:8:30
+  |
+8 | use engine::linear_algebra::{UnitVector, Vector};
+  |                              ^^^^^^^^^^
+
+warning: unused import: `Orientation`
+  --> game/src/state.rs:11:42
+   |
+11 | use engine::modelling::cubic::geometry::{Orientation, Pose};
+   |                                          ^^^^^^^^^^^
+
+warning: unused import: `BoundingBox`
+  --> game/src/state.rs:18:5
+   |
+18 |     BoundingBox,
+   |     ^^^^^^^^^^^
+
+warning: unused variable: `spotlight`
+   --> game/src/new.rs:153:13
+    |
+153 |         let spotlight = ShadowSpotLight::new(
+    |             ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_spotlight`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> game/src/state.rs:200:17
+    |
+200 |             let mut all_models = vec![
+    |                 ----^^^^^^^^^^
+    |                 |
+    |                 help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `ns_light_group`, `containers`, `testbool`, and `blank` are never read
+  --> game/src/state.rs:48:9
+   |
+32 | pub struct State {
+   |            ----- fields in this struct
+...
+48 |     pub ns_light_group: ListLights<SHADOW_SHADER_MAX_LIGHTS>,
+   |         ^^^^^^^^^^^^^^
+...
+51 |     pub containers: Vec<Cubic>,
+   |         ^^^^^^^^^^
+52 |     pub testbool: bool,
+   |         ^^^^^^^^
+...
+55 |     pub blank: Cubic,
+   |         ^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `game` (bin "game") generated 10 warnings (run `cargo fix --bin "game"` to apply 8 suggestions)
+    Finished `release` profile [optimized] target(s) in 4.79s
+     Running `target/release/game`
+OpenGL Version: "4.6 (Core Profile) Mesa 25.2.0"
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: 1.0,
+    dual: 0.0,
+} = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: 1.0,
+    dual: 0.0,
+} = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -2.5,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -2.5,
+        ],
+    ),
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                -2.5,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                2.5,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            2.5,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            2.5,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -2.5,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -2.5,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                -2.5,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: 1.0,
+    dual: 0.0,
+} = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                -2.5,
+            ],
+        ),
+    },
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: 1.0,
+    dual: 0.0,
+} = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            2.5,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            2.5,
+        ],
+    ),
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                2.5,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -2.5,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -2.5,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -2.5,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            2.5,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            2.5,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                2.5,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: 1.0,
+    dual: 0.0,
+} = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                2.5,
+            ],
+        ),
+    },
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: 1.0,
+    dual: 0.0,
+} = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: 1.0,
+    dual: 0.0,
+} = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            2.5,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.70710677,
+    vector: Vector(
+        [
+            0.0,
+            -0.70710677,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            1.767767,
+            0.0,
+            -1.767767,
+        ],
+    ),
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 0.70710677,
+        vector: Vector(
+            [
+                0.0,
+                -0.70710677,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                1.767767,
+                0.0,
+                -1.767767,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 0.70710677,
+        vector: Vector(
+            [
+                -0.0,
+                0.70710677,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -1.767767,
+                -0.0,
+                1.767767,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 0.70710677,
+    vector: Vector(
+        [
+            0.0,
+            -0.70710677,
+            -0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.70710677,
+    vector: Vector(
+        [
+            -0.0,
+            0.70710677,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.99999994,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.70710677,
+    vector: Vector(
+        [
+            0.0,
+            -0.70710677,
+            -0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -1.767767,
+            -0.0,
+            1.767767,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -2.5,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            1.767767,
+            0.0,
+            -1.767767,
+        ],
+    ),
+} * Quaternion {
+    real: 0.70710677,
+    vector: Vector(
+        [
+            -0.0,
+            0.70710677,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            2.5,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 0.99999994,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 0.70710677,
+        vector: Vector(
+            [
+                0.0,
+                -0.70710677,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                1.767767,
+                0.0,
+                -1.767767,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: 1.0000001,
+    dual: 0.0,
+} = DualNumber {
+    real: Quaternion {
+        real: 0.7071068,
+        vector: Vector(
+            [
+                0.0,
+                -0.7071068,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                1.7677672,
+                0.0,
+                -1.7677672,
+            ],
+        ),
+    },
+}
+
+
+quat_mul Quaternion {
+    real: 1.4142137,
+    vector: Vector(
+        [
+            0.0,
+            -1.4142137,
+            -0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -1.7677672,
+            -0.0,
+            1.7677672,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -5.000001,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            2.5,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.70710677,
+    vector: Vector(
+        [
+            0.0,
+            -0.70710677,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            1.767767,
+            0.0,
+            -1.767767,
+        ],
+    ),
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 0.70710677,
+        vector: Vector(
+            [
+                0.0,
+                -0.70710677,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                1.767767,
+                0.0,
+                -1.767767,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 0.70710677,
+        vector: Vector(
+            [
+                -0.0,
+                0.70710677,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -1.767767,
+                -0.0,
+                1.767767,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 0.70710677,
+    vector: Vector(
+        [
+            0.0,
+            -0.70710677,
+            -0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.70710677,
+    vector: Vector(
+        [
+            -0.0,
+            0.70710677,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.99999994,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.70710677,
+    vector: Vector(
+        [
+            0.0,
+            -0.70710677,
+            -0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -1.767767,
+            -0.0,
+            1.767767,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -2.5,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            1.767767,
+            0.0,
+            -1.767767,
+        ],
+    ),
+} * Quaternion {
+    real: 0.70710677,
+    vector: Vector(
+        [
+            -0.0,
+            0.70710677,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            2.5,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 0.99999994,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 0.70710677,
+        vector: Vector(
+            [
+                0.0,
+                -0.70710677,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                1.767767,
+                0.0,
+                -1.767767,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: 1.0000001,
+    dual: 0.0,
+} = DualNumber {
+    real: Quaternion {
+        real: 0.7071068,
+        vector: Vector(
+            [
+                0.0,
+                -0.7071068,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                1.7677672,
+                0.0,
+                -1.7677672,
+            ],
+        ),
+    },
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: 1.0,
+    dual: 0.0,
+} = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: 1.0,
+    dual: 0.0,
+} = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.70710677,
+    vector: Vector(
+        [
+            0.0,
+            -0.70710677,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.70710677,
+    vector: Vector(
+        [
+            0.0,
+            -0.70710677,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.7071068,
+    vector: Vector(
+        [
+            0.0,
+            -0.7071068,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.7071068,
+    vector: Vector(
+        [
+            0.0,
+            -0.7071068,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.26289648,
+            0.26289648,
+            2.4861386,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.26289648,
+            0.26289648,
+            2.4861386,
+        ],
+    ),
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.26289648,
+                0.26289648,
+                2.4861386,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -0.26289648,
+                -0.26289648,
+                -2.4861386,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -0.26289648,
+            -0.26289648,
+            -2.4861386,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -0.26289648,
+            -0.26289648,
+            -2.4861386,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.26289648,
+            0.26289648,
+            2.4861386,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.26289648,
+            0.26289648,
+            2.4861386,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.26289648,
+                0.26289648,
+                2.4861386,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: 1.0,
+    dual: 0.0,
+} = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.26289648,
+                0.26289648,
+                2.4861386,
+            ],
+        ),
+    },
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.5267669,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.5267669,
+        ],
+    ),
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.5267669,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.5267669,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.5267669,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -0.5267669,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.5267669,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.5267669,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.5267669,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: 1.0,
+    dual: 0.0,
+} = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.5267669,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.5267669,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                -2.5,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -2.5,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -2.5,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.5267669,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.5267669,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                -1.9732331,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                -1.9732331,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                1.9732331,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            1.9732331,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            1.9732331,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -1.9732331,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -1.9732331,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                -1.9732331,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: 1.0,
+    dual: 0.0,
+} = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                -1.9732331,
+            ],
+        ),
+    },
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -0.5267669,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -0.5267669,
+        ],
+    ),
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                -0.5267669,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                0.5267669,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            0.5267669,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.5267669,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -0.5267669,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -0.5267669,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                -0.5267669,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: 1.0,
+    dual: 0.0,
+} = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                -0.5267669,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                -0.5267669,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                2.5,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            2.5,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            2.5,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -0.5267669,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -0.5267669,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                1.9732331,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                1.9732331,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -1.9732331,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -1.9732331,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -1.9732331,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            1.9732331,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            1.9732331,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                1.9732331,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: 1.0,
+    dual: 0.0,
+} = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                1.9732331,
+            ],
+        ),
+    },
+}
+
+
+vector: Vector([-1.1121031, 0.44867474, -1.2400357])
+transform: Pose {
+    dual_quaternion: UnitDualQuaternion(
+        DualNumber {
+            real: Quaternion {
+                real: 1.0,
+                vector: Vector(
+                    [
+                        0.0,
+                        0.0,
+                        0.0,
+                    ],
+                ),
+            },
+            dual: Quaternion {
+                real: 0.0,
+                vector: Vector(
+                    [
+                        0.0,
+                        0.0,
+                        -1.9732331,
+                    ],
+                ),
+            },
+        },
+    ),
+}
+quaternion: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -1.1121031,
+                0.44867474,
+                -1.2400357,
+            ],
+        ),
+    },
+}
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -1.1121031,
+                0.44867474,
+                -1.2400357,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                -0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -0.0,
+                -0.0,
+                1.9732331,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            1.9732331,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            1.9732331,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -1.1121031,
+            0.44867474,
+            -1.2400357,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            -0.0,
+            -0.0,
+            -0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -1.1121031,
+            0.44867474,
+            -1.2400357,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -1.1121031,
+                0.44867474,
+                0.73319745,
+            ],
+        ),
+    },
+}
+
+
+dualmul: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                -1.9732331,
+            ],
+        ),
+    },
+} * DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -1.1121031,
+                0.44867474,
+                0.73319745,
+            ],
+        ),
+    },
+}quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+} * Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -1.1121031,
+            0.44867474,
+            0.73319745,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            -1.1121031,
+            0.44867474,
+            0.73319745,
+        ],
+    ),
+}
+
+
+quat_mul Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -1.9732331,
+        ],
+    ),
+} * Quaternion {
+    real: 1.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            0.0,
+        ],
+    ),
+}= Quaternion {
+    real: 0.0,
+    vector: Vector(
+        [
+            0.0,
+            0.0,
+            -1.9732331,
+        ],
+    ),
+}
+
+
+ = DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -1.1121031,
+                0.44867474,
+                -1.2400357,
+            ],
+        ),
+    },
+}
+
+
+output: DualNumber {
+    real: Quaternion {
+        real: 1.0,
+        vector: Vector(
+            [
+                0.0,
+                0.0,
+                0.0,
+            ],
+        ),
+    },
+    dual: Quaternion {
+        real: 0.0,
+        vector: Vector(
+            [
+                -1.1121031,
+                0.44867474,
+                -1.2400357,
+            ],
+        ),
+    },
+}
+
+thread 'main' (19012) panicked at engine/src/modelling/cubic/geometry/pose.rs:92:9:
+assertion failed: dual_quat_out.dual.is_zero()
+stack backtrace:
+   0:     0x555555830892 - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::hf5c071f3d4d6a673
+   1:     0x55555584340f - core::fmt::write::h64fea00ae71370e8
+   2:     0x555555807861 - std::io::Write::write_fmt::ha55b41ddcc107117
+   3:     0x55555580f0f2 - std::sys::backtrace::BacktraceLock::print::h389e77e20d4ee0c2
+   4:     0x555555813a4f - std::panicking::default_hook::{{closure}}::h651d615136fd3f3b
+   5:     0x5555558138a9 - std::panicking::default_hook::h8e12d412917b3552
+   6:     0x5555558140d5 - std::panicking::panic_with_hook::h5f7ef3efbb7c445c
+   7:     0x555555813f36 - std::panicking::panic_handler::{{closure}}::h7bc4d3cbd7b0aab4
+   8:     0x55555580f229 - std::sys::backtrace::__rust_end_short_backtrace::h4ede48052c8c6d63
+   9:     0x5555557fb9dd - __rustc[8dad1328f75840d5]::rust_begin_unwind
+  10:     0x55555584cda0 - core::panicking::panic_fmt::h77f0421126830b9b
+  11:     0x55555584cd7c - core::panicking::panic::h8718f0924cce3d63
+  12:     0x555555728a8b - engine::modelling::cubic::geometry::pose::Pose::act_on::hbb259a76deba4d8d
+  13:     0x55555571c627 - <core::iter::adapters::map::Map<I,F> as core::iter::traits::iterator::Iterator>::fold::h91d913c7dd0e7a77
+  14:     0x555555719e2b - <alloc::vec::Vec<T> as alloc::vec::spec_from_iter::SpecFromIter<T,I>>::from_iter::h7204e1195274afc5
+  15:     0x555555717137 - engine::modelling::bounding_box::BoundingBox<V,3_usize>::detect_collision::h5d5d93b1c3a4c53e
+  16:     0x55555571e704 - engine::entity::Entity::bounce_off::h0220f1d46a3c1987
+  17:     0x5555556f8cf6 - game::main::h6c114f5dcd912120
+  18:     0x555555704553 - std::sys::backtrace::__rust_begin_short_backtrace::ha059b8ed2e30d0fd
+  19:     0x5555556e5679 - std::rt::lang_start::{{closure}}::h9e3bfd5f5d415745
+  20:     0x555555809230 - std::rt::lang_start_internal::h161b22de8ce80149
+  21:     0x5555556fe4a5 - main
+  22:     0x7ffff6e2a4d8 - __libc_start_call_main
+  23:     0x7ffff6e2a59b - __libc_start_main_alias_1
+  24:     0x555555660225 - _start
+  25:                0x0 - <unknown>

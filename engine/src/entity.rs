@@ -1,6 +1,7 @@
 use std::iter::Sum;
 use std::ops::{Add, Div, Mul};
 
+use array_vec::ArrayVec;
 use graphics::linear_algebra::{UnitVector, Vector};
 
 use crate::modelling::cubic::geometry::{Orientation, Pose};
@@ -32,10 +33,10 @@ impl Entity {
         &self.bounding_box
     }
 
-    pub fn detect_collision(
+    pub fn detect_collision<const N: usize>(
         &self,
         other: &Self,
-    ) -> Option<Vec<(Vec<[SimpleVertex; 3]>, Vec<[SimpleVertex; 3]>)>> {
+    ) -> Option<ArrayVec<(Vec<[SimpleVertex; 3]>, Vec<[SimpleVertex; 3]>), N>> {
         self.bounding_box.detect_collision(
             self.model.root(),
             &other.bounding_box,
@@ -44,7 +45,7 @@ impl Entity {
     }
 
     pub fn bounce_off(&mut self, other: &mut Self) {
-        if let Some((lhs, rhs)) = self.detect_collision(other).and_then(|mut vec| vec.pop()) {
+        if let Some((lhs, rhs)) = self.detect_collision::<1>(other).and_then(|mut vec| vec.pop()) {
             let lhs_norm = get_average_normal(lhs);
             let rhs_norm = get_average_normal(rhs);
 

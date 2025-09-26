@@ -153,9 +153,9 @@ impl Vector<3> {
     #[must_use]
     pub fn cross(self, rhs: Self) -> Self {
         let out = [
-            self.0[1].mul_add(rhs[2], -(self[2] * rhs[1])), // self[1] * rhs[2] - self[2] * rhs[1],
-            self.0[2].mul_add(rhs[0], -(self[0] * rhs[2])), // self[2] * rhs[0] - self[0] * rhs[2],
-            self.0[0].mul_add(rhs[1], -(self[1] * rhs[0])), // self[0] * rhs[1] - self[1] * rhs[0],
+            self[1].mul_add(rhs[2], -(self[2] * rhs[1])), // self[1] * rhs[2] - self[2] * rhs[1],
+            self[2].mul_add(rhs[0], -(self[0] * rhs[2])), // self[2] * rhs[0] - self[0] * rhs[2],
+            self[0].mul_add(rhs[1], -(self[1] * rhs[0])), // self[0] * rhs[1] - self[1] * rhs[0],
         ];
         Self::new(out)
     }

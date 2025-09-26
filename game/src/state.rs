@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::rc::Rc;
 
 use engine::eng_state::EngState;
 use engine::framebuffer::attachments::WithDepth;
@@ -10,6 +11,7 @@ use engine::modelling::cubic::camera::{ManualPose, Projection};
 use engine::modelling::cubic::geometry::{Orientation, Pose};
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
 use engine::modelling::cubic::lighting::simple::ListLights;
+use engine::modelling::cubic::material::Material;
 use engine::modelling::{
     Bloom,
     BloomGroup,
@@ -25,7 +27,7 @@ use engine::modelling::{
     TestLineVertex,
 };
 use engine::types::TexDim;
-use engine::{ApiState, EngError, EngResult, Entity, Event, VecDraw};
+use engine::{ApiState, ColourRGBA, EngError, EngResult, Entity, Event, VecDraw};
 
 pub struct State {
     pub time: f32,
@@ -169,6 +171,21 @@ impl State {
             light.light.direction = self.camera.direction(&());
             light.light.position = self.camera.position(&());
         }
+
+        let bounding_box_level = self.bounding_box_level;
+
+
+        self.imported_bounding_box_model = self.imported
+            .get_bounding_box()
+            .transform_by_pose(self.imported.model.root())
+            .make_model(bounding_box_level, Rc::new(Material::from_colour(ColourRGBA::RED)))
+            .build();
+
+        self.imported_other_bounding_box_model = self.imported_other
+            .get_bounding_box()
+            .transform_by_pose(self.imported_other.model.root())
+            .make_model(bounding_box_level, Rc::new(Material::from_colour(ColourRGBA::BLUE)))
+            .build();
     }
 
     fn prep_draw<'a>(
@@ -186,6 +203,16 @@ impl State {
                     &*self.imported_other.get_cubic_mut(),
                     self.which_animation,
                     time,
+                ),
+                /*(
+                    &self.imported_bounding_box_model,
+                    0,
+                    0.0,
+                ),*/
+                (
+                    &self.imported_other_bounding_box_model,
+                    0,
+                    0.0,
                 ),
             ];
             // all_models.push((&self.containers[0], 0, 0.0));

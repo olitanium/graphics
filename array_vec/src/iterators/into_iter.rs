@@ -41,9 +41,7 @@ impl<T, const N: usize> Iterator for IntoIter<T, N> {
         // 0123456789
         // xx!2345678
 
-        // 9 - 2 + 1 = 8
-
-        let difference = self.vec.len - self.next_index + 1;
+        let difference = self.vec.len() - self.next_index;
         (difference, Some(difference))
     }
 }

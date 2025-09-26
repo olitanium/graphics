@@ -15,6 +15,7 @@ pub struct Quaternion {
 
 impl Quaternion {
     pub const ZERO: Self = Self::new(0.0, 0.0, 0.0, 0.0);
+    pub const IDENTITY: Self = Self::new(1.0, 0.0, 0.0, 0.0);
 
     pub const fn new(real: f32, i: f32, j: f32, k: f32) -> Self {
         Self {
@@ -68,12 +69,12 @@ impl Quaternion {
         Self { real: 0.0, vector }
     }
 
-    pub const fn identity() -> Self {
+    /*pub const fn identity() -> Self {
         Self {
             real: 1.0,
             vector: Vector::new_zero(),
         }
-    }
+    }*/
 
     pub fn scale(self, scalar: f32) -> Self {
         Self {
