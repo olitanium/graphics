@@ -84,9 +84,9 @@ impl CubicVertex for SimpleVertex {
 
     fn transform_by_pose(&self, pose: Pose) -> Self {
         Self {
-            position: pose.act_on(self.position),
-            normal: pose.act_on(self.normal.v()).normalize(),
-            tangent: pose.act_on(self.tangent.v()).normalize(),
+            position: pose.apply_to(self.position),
+            normal: pose.apply_to(self.normal),
+            tangent: pose.apply_to(self.tangent),
             ..*self
         }
     }

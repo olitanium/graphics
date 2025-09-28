@@ -6,6 +6,9 @@ mod posesclerp;
 use graphics::linear_algebra::Vector;
 pub use posesclerp::PoseSclerp;
 
+mod apply_pose;
+pub use apply_pose::ApplyPose;
+
 use super::{CameraPose, Orientation};
 
 #[derive(Debug, Clone, Copy)]
@@ -74,16 +77,19 @@ impl Pose {
         Matrix::transform_translate(self.translation()) * self.orientation().as_matrix()
     }
 
-    pub fn apply_after(self, pose: Self) -> Self {
-        let dual_quaternion = (pose.dual_quaternion.u() * self.dual_quaternion.u()).normalize();
+    // pub fn apply_after(self, pose: Self) -> Self {
+    // let dual_quaternion = (pose.dual_quaternion.u() *
+    // self.dual_quaternion.u()).normalize();
+    //
+    // Self { dual_quaternion }
+    // }
 
-        Self { dual_quaternion }
+    pub fn push_change(&mut self, pose: Self) {
+        *self = pose.apply_to(*self);
     }
 
-    pub fn act_on(self, vector: Vector<3>) -> Vector<3> {
-        let translation_as_pose = Pose::new_from_translation(vector);
-        let current_pos = translation_as_pose.apply_after(self);
-        current_pos.translation()
+    pub fn apply_to<V: ApplyPose>(self, value: V) -> V {
+        value.apply_pose(self)
     }
 }
 
@@ -119,7 +125,7 @@ mod test {
             Vector::new([0.0, 0.5, 0.5]),
         );
 
-        let new_pose = second_pose.apply_after(first_pose);
+        let new_pose = second_pose.apply_to(first_pose);
 
         let composite_matrix = first_pose.as_matrix() * second_pose.as_matrix();
         let other_matrix = new_pose.as_matrix();

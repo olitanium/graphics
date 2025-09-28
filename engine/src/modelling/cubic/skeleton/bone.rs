@@ -61,7 +61,7 @@ impl Bone {
             .map(|anim| anim.get_pose(time))
             .unwrap_or_default();
 
-        let total_pose = own_pose.apply_after(parent_pose);
+        let total_pose = own_pose.apply_to(parent_pose);
 
         self.last_query.set(Some(((animation, time), total_pose)));
 

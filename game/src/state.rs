@@ -162,10 +162,10 @@ impl State {
         // imported_pos,
         // );
 
-        self.imported.update(frame_time);
-        self.imported_other.update(frame_time);
-
-        self.imported.bounce_off(&mut self.imported_other);
+        if !self.imported.bounce_off(&mut self.imported_other) {
+            self.imported_other.update(frame_time);
+            self.imported.update(frame_time);
+        }
 
         if let Some(light) = self.light_group.spot.get_mut(0) {
             light.light.direction = self.camera.direction(&());
@@ -205,14 +205,10 @@ impl State {
 
         let all_models = {
             let mut all_models = vec![
-                (&*self.imported.get_cubic_mut(), self.which_animation, time),
-                (
-                    &*self.imported_other.get_cubic_mut(),
-                    self.which_animation,
-                    time,
-                ),
-                (&self.imported_bounding_box_model, 0, 0.0),
-                (&self.imported_other_bounding_box_model, 0, 0.0),
+                (&self.imported.model, self.which_animation, time),
+                (&self.imported_other.model, self.which_animation, time),
+                // (&self.imported_bounding_box_model, 0, 0.0),
+                // (&self.imported_other_bounding_box_model, 0, 0.0),
             ];
             // all_models.push((&self.containers[0], 0, 0.0));
             // all_models.push((&self.imported_bounding_box_model, 0, 0.0));

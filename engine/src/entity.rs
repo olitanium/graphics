@@ -22,18 +22,14 @@ impl Entity {
         })
     }
 
-    pub fn get_cubic_mut(&mut self) -> &mut Cubic {
-        &mut self.model
-    }
-
     pub fn get_bounding_box(&self) -> &BoundingBox<SimpleVertex, 3> {
         &self.bounding_box
     }
 
-    pub fn detect_collision<const N: usize>(
+    pub fn detect_collision(
         &self,
         other: &Self,
-    ) -> Option<ArrayVec<(Vec<[SimpleVertex; 3]>, Vec<[SimpleVertex; 3]>), N>> {
+    ) -> Option<Vec<(Vec<[SimpleVertex; 3]>, Vec<[SimpleVertex; 3]>)>> {
         self.bounding_box.detect_collision(
             self.model.root(),
             &other.bounding_box,
@@ -41,33 +37,48 @@ impl Entity {
         )
     }
 
-    pub fn bounce_off(&mut self, other: &mut Self) {
-        if let Some((lhs, rhs)) = self
-            .detect_collision::<1>(other)
-            .and_then(|mut vec| vec.pop())
-        {
-            println!("collision");
+    pub fn bounce_off(&mut self, other: &mut Self) -> bool {
+        if let Some(vec) = self.detect_collision(other) {
+            // println!("vec: {vec:#?}");
+            let (lhs_manyvec, rhs_manyvec): (Vec<Vec<_>>, Vec<Vec<_>>) = vec.into_iter().unzip();
+
+            let lhs = lhs_manyvec.into_iter().flatten();
+            let rhs = rhs_manyvec.into_iter().flatten();
+
             let lhs_norm = get_average_normal(lhs);
             let rhs_norm = get_average_normal(rhs);
 
-            // lhs entity is reflected about rhs norm;
-            // rhs entity is reflected about lhs norm;
-            self.velocity = self.velocity.reflect(rhs_norm);
-            other.velocity = other.velocity.reflect(lhs_norm);
+            let average = (lhs_norm.v() - rhs_norm.v()).normalize();
+
+            // lhs entity is reflected about rhs norm
+            // rhs entity is reflected about lhs norm
+            self.velocity = self.velocity.reflect(-average);
+            other.velocity = other.velocity.reflect(average);
+
+            // TODO: make neater without magic SMALL_TIMESTEP
+            const SMALL_TIMESTEP: f32 = 0.1;
+            let other_push = Pose::new_from_translation(other.velocity.scale(SMALL_TIMESTEP));
+            let self_push = Pose::new_from_translation(self.velocity.scale(SMALL_TIMESTEP));
+            other.model.root_mut().push_change(other_push);
+            self.model.root_mut().push_change(self_push);
+            while let Some(_) = self.detect_collision(other) {
+                other.model.root_mut().push_change(other_push);
+                self.model.root_mut().push_change(self_push);
+            }
+
+            true
+        } else {
+            false
         }
     }
 
     pub fn update(&mut self, timestep: f32) {
-        let delta_pose = Pose::new_from_orientation_translation(
-            Orientation::default(),
-            self.velocity.scale(timestep),
-        );
-        let new_pose = self.model.root().apply_after(delta_pose);
-        *self.model.root_mut() = new_pose;
+        let delta_pose = Pose::new_from_translation(self.velocity.scale(timestep));
+        self.model.root_mut().push_change(delta_pose);
     }
 }
 
-fn get_average_normal(input: Vec<[SimpleVertex; 3]>) -> UnitVector<3> {
+fn get_average_normal<I: IntoIterator<Item = [SimpleVertex; 3]>>(input: I) -> UnitVector<3> {
     let all_normals = input
         .into_iter()
         .map(|triangle| triangle.map(|vertex| vertex.normal.v()))

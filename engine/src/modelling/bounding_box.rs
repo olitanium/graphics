@@ -121,9 +121,8 @@ impl<const N: usize> BoundingBoxElement<N> {
         let upper_bounds = make_upper_bound(&vectors)?;
         let lower_bounds = make_lower_bound(&vectors)?;
 
-        println!("lb: {lower_bound_index}, ub: {upper_bound_index}");
-        assert!(lower_bound_index <= upper_bound_index);
         let destination_index = so_far.len();
+
         so_far.push(Self {
             lower_bound_index,
             upper_bound_index,
@@ -132,7 +131,6 @@ impl<const N: usize> BoundingBoxElement<N> {
             children: None,
         });
 
-        // vectors must be populated at this point
         if depth != 0 {
             so_far[destination_index].children = try {
                 let dimensions = upper_bounds - lower_bounds;
@@ -280,7 +278,7 @@ impl<const N: usize> BoundingBoxElement<N> {
                     .flatten()
                     .collect(),
                     (None, None) => {
-                        println!("leaf!");
+                        //                        println!("leaf!");
                         vec![(self, other)]
                     }
                 }
@@ -329,8 +327,8 @@ impl<V: CubicVertex> BoundingBox<V, 3> {
             .inner
             .iter()
             .map(|inner| {
-                let lower_bounds = pose.act_on(inner.lower_bounds);
-                let upper_bounds = pose.act_on(inner.upper_bounds);
+                let lower_bounds = pose.apply_to(inner.lower_bounds);
+                let upper_bounds = pose.apply_to(inner.upper_bounds);
 
                 BoundingBoxElement {
                     upper_bounds,
@@ -349,12 +347,12 @@ impl<V: CubicVertex> BoundingBox<V, 3> {
         Self { triangles, inner }
     }
 
-    pub fn detect_collision<const N: usize>(
+    pub fn detect_collision(
         &self,
         self_pose: Pose,
         other: &Self,
         other_pose: Pose,
-    ) -> Option<ArrayVec<(Vec<[V; 3]>, Vec<[V; 3]>), N>> {
+    ) -> Option<Vec<(Vec<[V; 3]>, Vec<[V; 3]>)>> {
         let self_transformed = self.transform_by_pose(self_pose);
         let other_transformed = other.transform_by_pose(other_pose);
 
@@ -365,14 +363,16 @@ impl<V: CubicVertex> BoundingBox<V, 3> {
                 other_transformed.get(0),
                 &other_transformed,
             )
-            .map(Iterator::collect::<ArrayVec<_, _>>)
+            .map(Iterator::collect::<Vec<_>>)
             .map(|vec| {
-                vec.map(|(lhs, rhs)| {
-                    (
-                        lhs.get_triangles(&self_transformed).to_vec(),
-                        rhs.get_triangles(&other_transformed).to_vec(),
-                    )
-                })
+                vec.into_iter()
+                    .map(|(lhs, rhs)| {
+                        (
+                            lhs.get_triangles(&self_transformed).to_vec(),
+                            rhs.get_triangles(&other_transformed).to_vec(),
+                        )
+                    })
+                    .collect()
             })
     }
 }

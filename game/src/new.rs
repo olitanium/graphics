@@ -75,12 +75,12 @@ impl State {
             .collect();
 
         let mut imported = Entity::from_cubic(make_model("morgan")?, 20).unwrap();
-        imported.velocity = Vector::new([0.0, 0.0, 1.0]);
-        *imported.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, -5.0]));
+        imported.velocity = Vector::new([0.0, 0.0, 0.05]);
+        *imported.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, -1.5]));
 
         let mut imported_other = Entity::from_cubic(make_model("morgan")?, 20).unwrap();
-        imported_other.velocity = Vector::new([0.0, 0.0, -1.0]);
-        *imported_other.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, 5.0]));
+        imported_other.velocity = Vector::new([0.0, 0.0, -0.05]);
+        *imported_other.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.5]));
 
         let bounding_box_level = 0;
         let imported_bounding_box_model = imported
@@ -93,7 +93,7 @@ impl State {
             .make_model(bounding_box_level, Rc::new(Material::white()))
             .build();
 
-        const START_LOC: [f32; 3] = [5.0, 0.0, 0.0];
+        const START_LOC: [f32; 3] = [2.0, 0.0, 0.0];
 
         let camera = camera::builder()
             .pose(
