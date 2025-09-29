@@ -4,9 +4,6 @@ use graphics::linear_algebra::Vector;
 use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
 
-use crate::modelling::advanced_vertex::IncompleteVertex;
-use crate::modelling::{CubicVertex, Quad};
-
 #[derive(Debug, Clone, Copy)]
 pub struct QuadVertex {
     pub position: Vector<2>,

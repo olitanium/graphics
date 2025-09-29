@@ -1,22 +1,23 @@
-use array_vec::ArrayVec;
 use graphics::linear_algebra::{UnitVector, Vector};
 
-use crate::modelling::cubic::geometry::{Orientation, Pose};
+use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{BoundingBox, Cubic, SimpleVertex};
 
 #[derive(Debug)]
 pub struct Entity {
     pub model: Cubic,
+    pub mass: f32,
     bounding_box: BoundingBox<SimpleVertex, 3>,
     pub velocity: Vector<3>,
 }
 
 impl Entity {
-    pub fn from_cubic(model: Cubic, depth: usize) -> Option<Self> {
+    pub fn from_cubic(model: Cubic, depth: usize, mass: f32) -> Option<Self> {
         let bounding_box = BoundingBox::from_cubic(&model, depth)?;
 
         Some(Self {
             model,
+            mass,
             bounding_box,
             velocity: Default::default(),
         })
@@ -37,7 +38,7 @@ impl Entity {
         )
     }
 
-    pub fn bounce_off(&mut self, other: &mut Self) -> bool {
+    pub fn elastic_collision_no_rotation(&mut self, other: &mut Self) -> bool {
         if let Some(vec) = self.detect_collision(other) {
             // println!("vec: {vec:#?}");
             let (lhs_manyvec, rhs_manyvec): (Vec<Vec<_>>, Vec<Vec<_>>) = vec.into_iter().unzip();
@@ -52,11 +53,16 @@ impl Entity {
 
             // lhs entity is reflected about rhs norm
             // rhs entity is reflected about lhs norm
-            self.velocity = self.velocity.reflect(-average);
-            other.velocity = other.velocity.reflect(average);
+            let self_change = 2.0 / (1.0 + other.mass / self.mass)
+                * average.v().dot(other.velocity - self.velocity);
+            let other_change = 2.0 / (1.0 + self.mass / other.mass)
+                * average.v().dot(self.velocity - other.velocity);
+
+            self.velocity = self.velocity + average.v() * self_change; //.reflect(-average);
+            other.velocity = other.velocity + average.v() * other_change; //.reflect(average);
 
             // TODO: make neater without magic SMALL_TIMESTEP
-            const SMALL_TIMESTEP: f32 = 0.1;
+            const SMALL_TIMESTEP: f32 = 0.05;
             let other_push = Pose::new_from_translation(other.velocity.scale(SMALL_TIMESTEP));
             let self_push = Pose::new_from_translation(self.velocity.scale(SMALL_TIMESTEP));
             other.model.root_mut().push_change(other_push);

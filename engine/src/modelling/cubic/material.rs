@@ -1,4 +1,4 @@
-use graphics::colour::{self, ColourRGBA};
+use graphics::colour::ColourRGBA;
 use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{FlatTexture, Texture};
 use utils::{builder, new};

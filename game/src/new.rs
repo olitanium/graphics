@@ -7,7 +7,7 @@ use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::camera;
 use engine::modelling::cubic::camera::ManualPose;
-use engine::modelling::cubic::geometry::{Animation, CameraPose, Orientation, Pose};
+use engine::modelling::cubic::geometry::{Animation, Orientation, Pose};
 use engine::modelling::cubic::lighting::shadow::{
     ShadowListLights,
     ShadowPointLight,
@@ -15,7 +15,7 @@ use engine::modelling::cubic::lighting::shadow::{
 };
 use engine::modelling::cubic::lighting::simple::{ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
-use engine::modelling::{Bloom, Bone, BoundingBox, Cubic, Line, Quad, Skeleton, SkyBox};
+use engine::modelling::{Bloom, Bone, Cubic, Line, Quad, Skeleton, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
@@ -74,13 +74,13 @@ impl State {
             })
             .collect();
 
-        let mut imported = Entity::from_cubic(make_model("morgan")?, 20).unwrap();
+        let mut imported = Entity::from_cubic(make_model("morgan")?, 20, 1.0).unwrap();
         imported.velocity = Vector::new([0.0, 0.0, 0.05]);
-        *imported.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, -1.5]));
+        *imported.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, -1.1]));
 
-        let mut imported_other = Entity::from_cubic(make_model("morgan")?, 20).unwrap();
+        let mut imported_other = Entity::from_cubic(make_model("morgan")?, 20, 3.0).unwrap();
         imported_other.velocity = Vector::new([0.0, 0.0, -0.05]);
-        *imported_other.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.5]));
+        *imported_other.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.1]));
 
         let bounding_box_level = 0;
         let imported_bounding_box_model = imported
@@ -93,14 +93,14 @@ impl State {
             .make_model(bounding_box_level, Rc::new(Material::white()))
             .build();
 
-        const START_LOC: [f32; 3] = [2.0, 0.0, 0.0];
+        const START_LOC: [f32; 3] = [0.5, 1.0, -0.2];
 
         let camera = camera::builder()
             .pose(
-                ManualPose::new_fixed_up_from_to(
-                    START_LOC.into(),
-                    [0.0, 0.0, 0.0].into(),
-                    UnitVector::new_unchecked([0.0, 1.0, 0.0]),
+                ManualPose::new_fixed_forward_up(
+                    Vector::new(START_LOC),
+                    -UnitVector::X,
+                    UnitVector::Y,
                 ), // Demo
             )
             .perspective(90.0, hdr_fb.aspect_ratio(), 0.01, 100.0)

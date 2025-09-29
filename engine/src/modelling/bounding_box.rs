@@ -1,7 +1,6 @@
+use std::array;
 use std::rc::Rc;
-use std::{array, iter};
 
-use array_vec::ArrayVec;
 use graphics::linear_algebra::Vector;
 
 use crate::modelling::advanced_vertex::{ExtendedVertex, IncompleteVertex};
@@ -441,9 +440,6 @@ fn line_overlap(input: TestBoxVertex) -> bool {
 }
 
 mod test {
-    use graphics::linear_algebra::Vector;
-
-    use crate::modelling::bounding_box::{BoundingBoxElement, TestBoxVertex, line_overlap};
 
     #[test]
     fn test_point_in_square() {
@@ -480,6 +476,8 @@ mod test {
 
     #[test]
     fn test_line_overlap() {
+        use crate::modelling::bounding_box::{TestBoxVertex, line_overlap};
+
         let input = TestBoxVertex {
             one_lb: -1.0,
             one_ub: 1.0,
@@ -492,6 +490,10 @@ mod test {
 
     #[test]
     fn test_overlap() {
+        use graphics::linear_algebra::Vector;
+
+        use crate::modelling::bounding_box::BoundingBoxElement;
+
         let bounding_box = BoundingBoxElement {
             upper_bounds: Vector::new([1.0, 1.0]),
             lower_bounds: Vector::new([-1.0, -1.0]),

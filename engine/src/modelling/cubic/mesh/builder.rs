@@ -1,6 +1,5 @@
 use std::rc::Rc;
 
-use graphics::vertex::Vertex;
 use graphics::vertex_array::VertexArray;
 use utils::{builder, new};
 

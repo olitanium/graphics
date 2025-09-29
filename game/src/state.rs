@@ -5,17 +5,16 @@ use engine::eng_state::EngState;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::framebuffer::{DefaultFramebuffer, Framebuffer};
-use engine::linear_algebra::{UnitVector, Vector};
+use engine::linear_algebra::Vector;
 use engine::modelling::cubic::Camera;
 use engine::modelling::cubic::camera::{ManualPose, Projection};
-use engine::modelling::cubic::geometry::{Orientation, Pose};
+use engine::modelling::cubic::geometry::Pose;
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::cubic::material::Material;
 use engine::modelling::{
     Bloom,
     BloomGroup,
-    BoundingBox,
     Cubic,
     Line,
     Quad,
@@ -162,7 +161,10 @@ impl State {
         // imported_pos,
         // );
 
-        if !self.imported.bounce_off(&mut self.imported_other) {
+        if !self
+            .imported
+            .elastic_collision_no_rotation(&mut self.imported_other)
+        {
             self.imported_other.update(frame_time);
             self.imported.update(frame_time);
         }
@@ -204,7 +206,7 @@ impl State {
         let mut out = VecDraw::new();
 
         let all_models = {
-            let mut all_models = vec![
+            let all_models = vec![
                 (&self.imported.model, self.which_animation, time),
                 (&self.imported_other.model, self.which_animation, time),
                 // (&self.imported_bounding_box_model, 0, 0.0),
