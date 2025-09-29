@@ -1,56 +1,25 @@
-use std::iter::FusedIterator;
-use std::mem::{self, MaybeUninit};
+use std::mem::MaybeUninit;
 
 use crate::ArrayVec;
-
-pub struct IntoIter<T, const N: usize> {
-    pub(super) vec: ArrayVec<T, N>,
-    pub(super) next_index: usize,
-}
 
 impl<T, const N: usize> IntoIterator for ArrayVec<T, N> {
     type IntoIter = IntoIter<T, N>;
     type Item = T;
 
     fn into_iter(self) -> Self::IntoIter {
-        IntoIter {
-            vec: self,
-            next_index: 0,
-        }
+        get_iter(self)
     }
 }
 
-impl<T, const N: usize> Iterator for IntoIter<T, N> {
-    type Item = T;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.next_index < self.vec.len {
-            let mut output = MaybeUninit::uninit();
-            mem::swap(&mut output, &mut self.vec.array[self.next_index]);
-            self.next_index += 1;
-
-            let output = unsafe { MaybeUninit::assume_init(output) };
-
-            Some(output)
-        } else {
-            None
-        }
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        // 0123456789
-        // xx!2345678
-
-        let difference = self.vec.len() - self.next_index;
-        (difference, Some(difference))
-    }
+fn assume_init_without_unsafe<T>(init: MaybeUninit<T>) -> T {
+    // SAFETY: as in `get_iter`
+    unsafe { init.assume_init() }
 }
 
-impl<T, const N: usize> DoubleEndedIterator for IntoIter<T, N> {
-    fn next_back(&mut self) -> Option<Self::Item> {
-        self.vec.pop_unsecure()
-    }
+fn get_iter<T, const N: usize>(vec: ArrayVec<T, N>) -> IntoIter<T, N> {
+    let (len, array) = vec.as_raw_parts();
+    // SAFETY: taking `len` ensures that only init values are assumed_init
+    array.into_iter().take(len).map(assume_init_without_unsafe)
 }
 
-impl<T, const N: usize> FusedIterator for IntoIter<T, N> {}
-impl<T, const N: usize> ExactSizeIterator for IntoIter<T, N> {}
+pub type IntoIter<T, const N: usize> = std::iter::Map<std::iter::Take<std::array::IntoIter<MaybeUninit<T>, N>>, fn(MaybeUninit<T>) -> T>;

@@ -78,9 +78,10 @@ impl<T, const N: usize> ArrayVec<T, N> {
     }
 
     fn as_raw_parts(mut self) -> (usize, [MaybeUninit<T>; N]) {
-        let len = self.len;
-        let array = unsafe { ManuallyDrop::take(&mut self.array) };
-
+        let len = mem::replace(&mut self.len, 0);
+        let uninit_array = ManuallyDrop::new([const {MaybeUninit::uninit()}; N]);
+        let md_array = mem::replace(&mut self.array, uninit_array);
+        let array = ManuallyDrop::into_inner(md_array);
         (len, array)
     }
 
@@ -99,6 +100,14 @@ impl<T, const N: usize> ArrayVec<T, N> {
 
     pub fn map<U, F: FnMut(T) -> U>(self, f: F) -> ArrayVec<U, N> {
         self.into_iter().map(f).collect()
+    }
+
+    pub fn iter(&self) -> <&Self as IntoIterator>::IntoIter {
+        self.into_iter()
+    }
+
+    pub fn iter_mut(&mut self) -> <&mut Self as IntoIterator>::IntoIter {
+        self.into_iter()
     }
 }
 
