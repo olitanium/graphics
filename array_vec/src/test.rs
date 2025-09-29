@@ -1,8 +1,6 @@
-use crate::ArrayVec;
-
 #[test]
 fn pop_push() {
-    use super::ArrayVec;
+    use crate::ArrayVec;
 
     let mut vec: ArrayVec<_, 10> = ArrayVec::new();
     vec.push(10_u32);
@@ -21,7 +19,7 @@ fn pop_push() {
 
 #[test]
 fn iter() {
-    use super::ArrayVec;
+    use crate::ArrayVec;
 
     let mut vec: ArrayVec<_, 10> = (0..20_usize).collect();
 
@@ -34,7 +32,7 @@ fn iter() {
 
 #[test]
 fn rev() {
-    use super::ArrayVec;
+    use crate::ArrayVec;
 
     let vec: ArrayVec<_, 10> = (0..10_usize).collect();
 
@@ -46,6 +44,7 @@ fn rev() {
 #[test]
 fn size() {
     // len = 3
+    use crate::ArrayVec;
     let vec: ArrayVec<_, 10> = (0..3).collect();
 
     let mut iter = vec.into_iter();

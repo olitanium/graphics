@@ -7,7 +7,7 @@ mod iterators;
 mod test;
 
 pub use ArrayVec as StackVec;
-pub use iterators::{IntoIter, Iter};
+pub use iterators::{IntoIter, Iter, IterMut};
 
 #[derive(Debug)]
 pub struct ArrayVec<T, const N: usize> {
