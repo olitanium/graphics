@@ -79,7 +79,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
 
     fn as_raw_parts(mut self) -> (usize, [MaybeUninit<T>; N]) {
         let len = mem::replace(&mut self.len, 0);
-        let uninit_array = ManuallyDrop::new([const {MaybeUninit::uninit()}; N]);
+        let uninit_array = ManuallyDrop::new([const { MaybeUninit::uninit() }; N]);
         let md_array = mem::replace(&mut self.array, uninit_array);
         let array = ManuallyDrop::into_inner(md_array);
         (len, array)

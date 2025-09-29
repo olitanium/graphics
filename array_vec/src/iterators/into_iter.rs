@@ -22,4 +22,7 @@ fn get_iter<T, const N: usize>(vec: ArrayVec<T, N>) -> IntoIter<T, N> {
     array.into_iter().take(len).map(assume_init_without_unsafe)
 }
 
-pub type IntoIter<T, const N: usize> = std::iter::Map<std::iter::Take<std::array::IntoIter<MaybeUninit<T>, N>>, fn(MaybeUninit<T>) -> T>;
+pub type IntoIter<T, const N: usize> = std::iter::Map<
+    std::iter::Take<std::array::IntoIter<MaybeUninit<T>, N>>,
+    fn(MaybeUninit<T>) -> T,
+>;
