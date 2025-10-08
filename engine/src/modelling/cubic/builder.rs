@@ -16,7 +16,6 @@ pub struct Builder {
     skeleton: Option<Skeleton>,
     scale: f32,
     relative: bool,
-    bounding_box: Option<usize>,
 }
 
 impl Default for Builder {
@@ -27,7 +26,6 @@ impl Default for Builder {
             skeleton: Default::default(),
             scale: 1.0,
             relative: false,
-            bounding_box: Default::default(),
         }
     }
 }
@@ -42,8 +40,6 @@ impl Builder {
     builder!(skeleton: Option<Skeleton>);
 
     builder!(scale: f32);
-
-    builder!(bounding_box: Option<usize>);
 
     pub fn push_mesh(&mut self, mesh: MeshBuilder) {
         self.mesh_builders.push(mesh);
@@ -73,13 +69,7 @@ impl Builder {
             .map(|builder| builder.scale(self.scale).build())
             .collect::<Vec<_>>();
 
-        // let bounding_box = self.bounding_box.and_then(|depth| {
-        // let triangle_iter = Mesh::triangles_from_vec(&meshes);
-        // BoundingBox::new_from_triangles(triangle_iter, depth)
-        // });
-
         Cubic {
-            // bounding_box,
             meshes,
             cull_face: self.cull_face,
             skeleton: self.skeleton.unwrap_or_default(),

@@ -5,9 +5,11 @@ use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
 
+use crate::TransformBy;
 use crate::modelling::CubicVertex;
 use crate::modelling::advanced_vertex::{ExtendedVertex, IncompleteVertex};
 use crate::modelling::cubic::geometry::Pose;
+use crate::transform::Transform;
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
@@ -41,52 +43,52 @@ impl Vertex for SimpleVertex {
 }
 
 impl CubicVertex for SimpleVertex {
-    fn from_incomplete_triangle(incomplete_triangle: [IncompleteVertex; 3]) -> [Self; 3] {
-        let new_normal = //if incomplete_triangle.iter().any(|v| v.normal.is_none()) {
-        LazyCell::new( || {
+    fn from_incomplete_triangle(incomplete_triangle: [IncompleteVertex; 3]) -> Option<[Self; 3]> {
+        let new_normal = LazyCell::new(|| {
             let ab = incomplete_triangle[1].position - incomplete_triangle[0].position;
             let ac = incomplete_triangle[2].position - incomplete_triangle[0].position;
-            ab.cross(ac).normalize()
-        }); // else {
-        //    UnitVector::new_unchecked([0.0, 0.0, 1.0])
-        //};
+            ab.cross(ac).try_normalize()
+        });
 
-        let new_tangent = LazyCell::new(
-            //= if incomplete_triangle.iter().any(|v| v.tangent.is_none()) {
-            || {
-                let ab = incomplete_triangle[1].position - incomplete_triangle[0].position;
-                let ac = incomplete_triangle[2].position - incomplete_triangle[0].position;
-                let z = incomplete_triangle[1].texture - incomplete_triangle[0].texture;
-                let g = incomplete_triangle[2].texture - incomplete_triangle[0].texture;
+        let new_tangent = LazyCell::new(|| {
+            let ab = incomplete_triangle[1].position - incomplete_triangle[0].position;
+            let ac = incomplete_triangle[2].position - incomplete_triangle[0].position;
+            let z = incomplete_triangle[1].texture - incomplete_triangle[0].texture;
+            let g = incomplete_triangle[2].texture - incomplete_triangle[0].texture;
 
-                (ab.scale(g[1]) - ac.scale(z[1])) // .scale(1.0/(g[1]*z[0] - g[0]*z[1]))
-                    .normalize() // change of basis
-            },
-        ); // else {
-        //    UnitVector::new_unchecked([0.0, 0.0, 1.0])
-        //};
+            (ab.scale(g[1]) - ac.scale(z[1])) // .scale(1.0/(g[1]*z[0] - g[0]*z[1]))
+                .try_normalize() // change of basis
+        });
 
-        incomplete_triangle.map(
+        incomplete_triangle.try_map(
             |IncompleteVertex {
                  position,
                  texture,
                  normal,
                  tangent,
                  ..
-             }| Self {
-                position,
-                texture,
-                normal: normal.unwrap_or(new_normal.clone()),
-                tangent: tangent.unwrap_or(new_tangent.clone()),
+             }| {
+                let final_normal = normal.or_else(|| *new_normal)?;
+                let final_tangent = tangent.or_else(|| *new_tangent)?;
+
+                Some(Self {
+                    position,
+                    texture,
+                    normal: final_normal,
+                    tangent: final_tangent,
+                })
             },
         )
     }
 
-    fn transform_by_pose(&self, pose: Pose) -> Self {
+}
+
+impl TransformBy<Pose> for SimpleVertex {
+    fn transform_by(&self, pose: &Pose) -> Self {
         Self {
-            position: pose.apply_to(self.position),
-            normal: pose.apply_to(self.normal),
-            tangent: pose.apply_to(self.tangent),
+            position: pose.transform(&self.position),
+            normal: pose.transform(&self.normal),
+            tangent: pose.transform(&self.tangent),
             ..*self
         }
     }

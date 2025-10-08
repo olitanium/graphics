@@ -26,10 +26,11 @@ use engine::modelling::{
     TestLineVertex,
 };
 use engine::types::TexDim;
-use engine::{ApiState, ColourRGBA, EngError, EngResult, Entity, Event, VecDraw};
+use engine::{ApiState, ColourRGB, ColourRGBA, EngError, EngResult, Entity, Event, VecDraw};
 
 pub struct State {
     pub time: f32,
+    pub game_start: Option<f32>,
     pub camera: Camera<ManualPose>,
 
     pub exposure: f32,
@@ -114,9 +115,6 @@ impl EngState for State {
             }
         }
 
-        // println!("framerate: {}", 1.0 / frame_time);
-        // println!("string: {}", local_string);
-
         self.controls(mouse_delta, keyboard, local_string, frame_time)?;
 
         self.physics(frame_time);
@@ -133,7 +131,8 @@ impl EngState for State {
 
 impl State {
     fn physics(&mut self, frame_time: f32) {
-        let time = self.time;
+        let game_start = *self.game_start.get_or_insert(self.time);
+        let time = self.time - game_start;
 
         let light_pos = Vector::new([
             5.0 * (time / 10.0).sin(),
@@ -143,30 +142,20 @@ impl State {
 
         if let Some(light) = self.light_group.point.get_mut(0) {
             light.light.position = light_pos;
-            // self.light
-            // .skeleton
-            // .set(
-            // 0,
-            // Pose::new_from_orientation_translation(Orientation::default(), light_pos),
-            // )
-            // .expect("root node at 0");
-            self.light.skeleton.root = Pose::new_from_translation(light_pos);
+            *self.light.root_mut() = Pose::new_from_translation(light_pos);
         }
 
-        // self.imported.get_cubic_mut().skeleton.root =
-        // Pose::new_from_orientation_translation(
-        // Orientation::new_from_to(self.camera.position(&()), imported_pos,
-        // UnitVector::Y), Orientation::new_forward_up(Vector::new([0.0, 1.0,
-        // 1.0]).normalize(), UnitVector::Y), Orientation::default(),
-        // imported_pos,
-        // );
-
-        if !self
+        /*if !self
             .imported
             .elastic_collision_no_rotation(&mut self.imported_other)
-        {
+    {}
+            */
             self.imported_other.update(frame_time);
             self.imported.update(frame_time);
+
+        if self.imported.elastic_collision_no_rotation(&mut self.imported_other) {
+            self.imported.velocity = Vector::new_zero();
+            self.imported_other.velocity = Vector::new_zero();
         }
 
         if let Some(light) = self.light_group.spot.get_mut(0) {
@@ -182,7 +171,7 @@ impl State {
             .transform_by_pose(self.imported.model.root())
             .make_model(
                 bounding_box_level,
-                Rc::new(Material::from_colour(ColourRGBA::RED)),
+                Rc::new(Material::from_colour_alpha(ColourRGB::RED, 0.5)),
             )
             .build();
 
@@ -209,21 +198,11 @@ impl State {
             let all_models = vec![
                 (&self.imported.model, self.which_animation, time),
                 (&self.imported_other.model, self.which_animation, time),
-                // (&self.imported_bounding_box_model, 0, 0.0),
-                // (&self.imported_other_bounding_box_model, 0, 0.0),
+                (&self.imported_bounding_box_model, 0, 0.0),
+                (&self.imported_other_bounding_box_model, 0, 0.0),
             ];
-            // all_models.push((&self.containers[0], 0, 0.0));
-            // all_models.push((&self.imported_bounding_box_model, 0, 0.0));
             all_models
         };
-
-        // let transparent_models = self
-        // .imported_bounding_box_model
-        // .iter()
-        // .map(|x| (x, 0, time))
-        // .collect(); //vec![]; // vec![(&self.light, time)];
-
-        // let transparent_models = vec![];
 
         out.push(SkyBoxGroup::new(
             engine::opengl_shaders::skybox_hdr(),
@@ -243,18 +222,6 @@ impl State {
             vec![],
             vec![],
         ));
-
-        // out.push(ShadowGroup::new(
-        // &self.hdr_fb,
-        // &self.camera,
-        // &(),
-        // &self.light_group,
-        // all_models,
-        // transparent_models,
-        // vec![],
-        // ));
-
-        // out.push(LineGroup::new(&self.hdr_fb, &self.line, &self.camera, &()));
 
         if self.do_bloom {
             // println!("bloom_on");

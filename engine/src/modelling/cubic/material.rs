@@ -1,4 +1,4 @@
-use graphics::colour::ColourRGBA;
+use graphics::colour::{ColourRGB, ColourRGBA};
 use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{FlatTexture, Texture};
 use utils::{builder, new};
@@ -35,6 +35,11 @@ impl Material {
         Self::builder()
             .diffuse(FlatTexture::monochrome(colour))
             .build()
+    }
+
+    pub fn from_colour_alpha(colour: ColourRGB, alpha: f32) -> Self {
+        let rgba_colour = ColourRGBA::new_from_arr_alpha(colour.as_array(), alpha);
+        Self::from_colour(rgba_colour)
     }
 
     pub fn black() -> Self {

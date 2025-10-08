@@ -17,7 +17,9 @@ impl SkyBox {
     pub fn new(texture: CubeMap) -> Self {
         let mut model_builder = VertexArray::builder();
         model_builder.extend_triangles(
-            test_models::origin_unit_cube().map(CubicVertex::from_incomplete_triangle),
+            test_models::origin_unit_cube()
+                .map(CubicVertex::from_incomplete_triangle)
+                .flatten(),
         );
         let model = model_builder.build();
         Self { model, texture }

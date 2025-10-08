@@ -57,7 +57,8 @@ impl Builder {
         vertex_array_builder.extend_triangles(
             self.triangles
                 .into_iter()
-                .map(CubicVertex::from_incomplete_triangle),
+                .map(CubicVertex::from_incomplete_triangle)
+                .flatten(),
         );
 
         let vertex_array = vertex_array_builder.build();

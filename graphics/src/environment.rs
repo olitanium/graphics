@@ -100,7 +100,7 @@ pub enum Event<'a> {
 pub struct Environment<G: ApiState> {
     global_state: G,
     window: Window,
-    old_frame: f64,
+    old_frame: Option<f64>,
     glfw: glfw::Glfw,
 }
 
@@ -152,7 +152,7 @@ impl<G: ApiState> Environment<G> {
             // window2,
             global_state,
 
-            old_frame: 0.0,
+            old_frame: None,
         })
     }
 
@@ -184,8 +184,8 @@ impl<G: ApiState> Environment<G> {
 
     fn poll(&mut self) -> ApiResult<Vec<Box<dyn Draw + '_>>, G::Error> {
         let curr_time = self.glfw.get_time();
-        let frametime = curr_time - self.old_frame;
-        self.old_frame = curr_time;
+        let frametime = curr_time - *self.old_frame.get_or_insert(curr_time);
+        self.old_frame = Some(curr_time);
 
         let window = &mut self.window;
         let mut events = window.poll_events();

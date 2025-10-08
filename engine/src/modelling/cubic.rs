@@ -6,6 +6,7 @@ mod model;
 pub use model::Cubic;
 mod mesh;
 pub use mesh::Mesh;
+pub use mesh::MeshBuilder;
 mod import;
 pub use import::Error as ImportError;
 mod builder;

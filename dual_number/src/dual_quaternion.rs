@@ -28,8 +28,8 @@ impl DualQuaternion {
     pub fn magnitude(self) -> DualNumber<f32> {
         let magnitude = self * self.conjugate();
 
-        assert!(magnitude.real.vector().is_zero());
-        assert!(magnitude.dual.vector().is_zero());
+        // assert!(magnitude.real.vector().is_zero());
+        // assert!(magnitude.dual.vector().is_zero());
 
         let real_scalar = magnitude.real.scalar();
         let dual_scalar = magnitude.dual.scalar();

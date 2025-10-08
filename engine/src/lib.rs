@@ -8,6 +8,7 @@
 #![feature(option_array_transpose)]
 #![feature(associated_const_equality)]
 #![feature(result_option_map_or_default)]
+#![feature(iter_map_windows)]
 
 pub mod eng_state;
 mod entity;
@@ -22,5 +23,7 @@ pub use graphics::colour::{ColourRGB, ColourRGBA};
 pub use graphics::framebuffer::Builder as FrameBufferBuilder;
 pub use graphics::{types, *};
 pub use russimp::scene::PostProcess;
+mod transform;
+pub use transform::TransformBy;
 
 pub type VecDraw<'a> = Vec<Box<dyn Draw + 'a>>;

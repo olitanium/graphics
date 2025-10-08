@@ -74,11 +74,13 @@ impl State {
             })
             .collect();
 
-        let mut imported = Entity::from_cubic(make_model("morgan")?, 20, 1.0).unwrap();
+        let mut imported = Entity::from_cubic(make_model("morgan")?, 10, 1.0).unwrap();
+        // let imported = Entity::from_cubic(Cubic::cube(1.0,
+        // Rc::new(Material::white())).build(), 10, 1.0).unwrap();
         imported.velocity = Vector::new([0.0, 0.0, 0.05]);
         *imported.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, -1.1]));
 
-        let mut imported_other = Entity::from_cubic(make_model("morgan")?, 20, 3.0).unwrap();
+        let mut imported_other = Entity::from_cubic(make_model("morgan")?, 10, 3.0).unwrap();
         imported_other.velocity = Vector::new([0.0, 0.0, -0.05]);
         *imported_other.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.1]));
 
@@ -93,13 +95,13 @@ impl State {
             .make_model(bounding_box_level, Rc::new(Material::white()))
             .build();
 
-        const START_LOC: [f32; 3] = [0.5, 1.0, -0.2];
+        const START_LOC: [f32; 3] = [0.0, 0.0, -2.0];
 
         let camera = camera::builder()
             .pose(
                 ManualPose::new_fixed_forward_up(
                     Vector::new(START_LOC),
-                    -UnitVector::X,
+                    UnitVector::Z,
                     UnitVector::Y,
                 ), // Demo
             )
@@ -184,6 +186,7 @@ impl State {
 
         Ok(Self {
             time: 0.0,
+            game_start: None,
             line,
             angle: 0.0,
             camera,
@@ -237,7 +240,6 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
             vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
         )?
         .scale(0.01)
-        .bounding_box(10)
         .build(),
         "backpack" => Cubic::import(
             "assets/backpack/backpack.obj",

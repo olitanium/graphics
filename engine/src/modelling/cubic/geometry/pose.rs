@@ -9,11 +9,13 @@ pub use posesclerp::PoseSclerp;
 mod apply_pose;
 pub use apply_pose::ApplyPose;
 
+use crate::{TransformBy, transform::Transform};
+
 use super::{CameraPose, Orientation};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Pose {
-    dual_quaternion: UnitDualQuaternion,
+    pub(crate) dual_quaternion: UnitDualQuaternion,
 }
 
 impl Default for Pose {
@@ -88,8 +90,9 @@ impl Pose {
         *self = pose.apply_to(*self);
     }
 
-    pub fn apply_to<V: ApplyPose>(self, value: V) -> V {
-        value.apply_pose(self)
+    pub fn apply_to<V: TransformBy<Pose>>(self, value: V) -> V {
+        self.transform(&value)
+        //value.transform_by(&self)
     }
 }
 
@@ -103,6 +106,8 @@ impl CameraPose for Pose {
 
 #[cfg(test)]
 mod test {
+    use graphics::linear_algebra::UnitVector;
+
     use super::*;
 
     #[test]
@@ -111,7 +116,7 @@ mod test {
             Orientation::new_from_to(
                 [0.0, 0.0, 0.0].into(),
                 [0.0, 0.0, 1.0].into(),
-                Vector::from([0.0, 1.0, 0.0]).normalize(),
+                UnitVector::Y,
             ),
             Vector::new([1.0, 1.0, 1.0]),
         );
@@ -120,7 +125,7 @@ mod test {
             Orientation::new_from_to(
                 [0.0, 0.0, 0.0].into(),
                 [1.0, 0.0, 0.0].into(),
-                Vector::from([0.0, 1.0, 0.0]).normalize(),
+                UnitVector::Y,
             ),
             Vector::new([0.0, 0.5, 0.5]),
         );

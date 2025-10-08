@@ -60,8 +60,11 @@ macro_rules! get_colour {
 }
 
 impl ColourRGB {
-    pub const BLACK: Self = ColourRGB::new([0.0, 0.0, 0.0]);
-    pub const WHITE: Self = ColourRGB::new([1.0, 1.0, 1.0]);
+    pub const BLACK: Self = ColourRGB::new([0.0; 3]);
+    pub const BLUE: Self = ColourRGB::new([0.0, 0.0, 1.0]);
+    pub const GREEN: Self = ColourRGB::new([0.0, 1.0, 0.0]);
+    pub const RED: Self = ColourRGB::new([1.0, 0.0, 0.0]);
+    pub const WHITE: Self = ColourRGB::new([1.0; 3]);
 
     get_colour!(r, 0);
 

@@ -82,7 +82,7 @@ impl State {
                 }
                 'b' | 'B' => self.do_bloom = !self.do_bloom,
                 'o' => {
-                    self.bounding_box_level += 1;
+                    self.bounding_box_level = self.bounding_box_level.wrapping_add(1);
                     self.imported_bounding_box_model = self
                         .imported
                         .get_bounding_box()
@@ -90,7 +90,7 @@ impl State {
                         .build();
                 }
                 'i' => {
-                    self.bounding_box_level -= 1;
+                    self.bounding_box_level = self.bounding_box_level.wrapping_sub(1);
                     self.imported_bounding_box_model = self
                         .imported
                         .get_bounding_box()

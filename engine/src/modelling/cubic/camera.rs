@@ -7,9 +7,9 @@ mod builder;
 mod projection;
 pub use projection::Projection;
 
-mod orientation;
+mod manual_pose;
 pub use builder::Builder;
-pub use orientation::ManualPose;
+pub use manual_pose::ManualPose;
 
 #[derive(Clone, Debug)]
 pub struct Camera<P: CameraPose> {

@@ -4,6 +4,7 @@ use core::array;
 use core::ops::{Index, IndexMut};
 use std::iter::Sum;
 use std::ops::{Add, AddAssign, Mul, MulAssign, SubAssign};
+use std::slice::SliceIndex;
 
 use super::matrix::Matrix;
 
@@ -19,7 +20,7 @@ impl<const N: usize> Default for Vector<N> {
 
 impl<const N: usize> PartialEq for Vector<N> {
     fn eq(&self, other: &Self) -> bool {
-        array_maths::is_zero((*self - *other).inner())
+        array_maths::is_zero((*self - *other).into_inner())
     }
 }
 
@@ -62,6 +63,10 @@ impl<const N: usize> Vector<N> {
         N
     }
 
+    pub fn get<I: SliceIndex<[f32]>>(&self, index: I) -> Option<&<I as SliceIndex<[f32]>>::Output> {
+        self.0.get(index)
+    }
+
     #[must_use]
     #[inline]
     pub const fn inner_mut(&mut self) -> &mut [f32; N] {
@@ -92,14 +97,23 @@ impl<const N: usize> Vector<N> {
     #[must_use]
     #[inline]
     pub fn normalize(self) -> UnitVector<N> {
+        let Some(vec) = self.try_normalize() else {
+            panic!("tried normalizing a zero vector");
+        };
+        vec
+    }
+
+    pub fn try_normalize(self) -> Option<UnitVector<N>> {
         let one_len = 1.0 / self.magnitude();
-        unsafe { Self::new_normal_unchecked(self.0.map(|x| x * one_len)) }
+        one_len
+            .is_finite()
+            .then(|| unsafe { Self::new_normal_unchecked(self.0.map(|x| x * one_len)) })
     }
 
     #[inline]
     #[must_use]
     pub fn is_zero(self) -> bool {
-        array_maths::is_zero(self.inner())
+        array_maths::is_zero(self.into_inner())
     }
 
     #[inline]
@@ -306,11 +320,14 @@ impl<const N: usize> AsMut<Self> for Vector<N> {
     }
 }
 
-impl<const N: usize> Index<usize> for Vector<N> {
-    type Output = f32;
+impl<I, const N: usize> Index<I> for Vector<N>
+where
+    [f32]: Index<I>,
+{
+    type Output = <[f32] as Index<I>>::Output;
 
     #[inline]
-    fn index(&self, index: usize) -> &Self::Output {
+    fn index(&self, index: I) -> &Self::Output {
         self.inner().index(index)
     }
 }
