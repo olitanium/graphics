@@ -1,12 +1,25 @@
-use std::{array, cell::Cell, rc::Rc};
+use std::array;
+use std::num::NonZeroUsize;
 
-use graphics::{colour::ColourRGBA, linear_algebra::Vector};
+use graphics::ActiveShaderProgram;
+use graphics::framebuffer::ActiveFramebuffer;
+use graphics::framebuffer::traits::FramebufferWithDepth;
+use graphics::linear_algebra::Vector;
+use graphics::texture::{FlatTexture, Texture};
+use graphics::vertex::Vertex;
+use graphics::vertex_array::VertexArray;
 
-use crate::modelling::{BoundingBox, CubicVertex, advanced_vertex::{ExtendedVertex, IncompleteVertex}, cubic::{Mesh, MeshBuilder, material::Material}, test_models};
+use crate::EngResult;
+use crate::modelling::cubic::geometry::Pose;
+use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
 
-#[derive(Debug, Clone)]
-pub struct BoundingBoxElement<const DIMS: usize> {
-    pub(crate) collision: Cell<bool>,
+#[derive(Debug)]
+pub struct BoundingBoxElement<const DIMS: usize>
+where
+    Vector<DIMS>: Vertex,
+{
+    pub(crate) vertex_array: VertexArray<Vector<DIMS>>,
+    pub(crate) texture_choice: usize,
 
     pub(crate) lower_bound: Vector<DIMS>,
     pub(crate) upper_bound: Vector<DIMS>,
@@ -14,7 +27,7 @@ pub struct BoundingBoxElement<const DIMS: usize> {
     pub(crate) lower_bound_index: usize,
     pub(crate) upper_bound_index: usize,
 
-    pub(crate) children: Option<[usize; 2]>,
+    pub(crate) children: Option<[NonZeroUsize; 2]>,
 }
 
 fn make_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
@@ -43,22 +56,37 @@ fn make_lower_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
     make_bound(vectors, f32::min)
 }
 
-impl<const DIMS: usize> BoundingBoxElement<DIMS> {
+impl<const DIMS: usize> BoundingBoxElement<DIMS>
+where
+    Vector<DIMS>: Volume<DIMS>,
+    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+{
     pub fn new_from_many_inner<V: ExtendedVertex<DIMS>>(
         so_far: &mut Vec<Self>,
         triangles: &mut [(Vector<DIMS>, [V; 3])],
         lower_bound_index: usize,
         upper_bound_index: usize,
         depth: usize,
-    ) -> Option<usize> {
-        let vectors: Vec<_> = triangles.into_iter().flat_map(|(_, arr)| *arr).collect();
+    ) -> Option<NonZeroUsize> {
+        let vectors: Vec<_> = triangles
+            .into_iter()
+            .flat_map(|&mut (_, arr)| arr)
+            .collect();
+
         let upper_bounds = make_upper_bound(&vectors)?;
         let lower_bounds = make_lower_bound(&vectors)?;
 
         let destination_index = so_far.len();
 
+        let positions_triangles = Volume::volume(lower_bounds, upper_bounds)
+            .map(|triangle| Vector::<DIMS>::from_incomplete_triangle(triangle).unwrap());
+        let mut vertex_array_builder = VertexArray::builder();
+        vertex_array_builder.extend_triangles(positions_triangles);
+        let vertex_array = vertex_array_builder.build();
+
         so_far.push(Self {
-            collision: Cell::new(false),
+            vertex_array,
+            texture_choice: 0,
             lower_bound_index,
             upper_bound_index,
             lower_bound: lower_bounds,
@@ -127,7 +155,7 @@ impl<const DIMS: usize> BoundingBoxElement<DIMS> {
             }
         };
 
-        Some(destination_index)
+        Some(NonZeroUsize::new(destination_index)?)
     }
 
     pub fn get_triangles<'a, V: ExtendedVertex<DIMS>>(
@@ -137,37 +165,50 @@ impl<const DIMS: usize> BoundingBoxElement<DIMS> {
         &bounding_box.triangles[self.lower_bound_index..self.upper_bound_index]
     }
 
-}
-
-
-impl BoundingBoxElement<3> {
-    fn make_cube(&self) -> impl Iterator<Item = [IncompleteVertex; 3]> {
-        test_models::vertex_array_cube(self.lower_bound, self.upper_bound)
-    }
-
-    pub fn make_model<'a, V: CubicVertex>(
-        &'a self,
-        bounding_box: &'a BoundingBox<V, 3>,
+    pub fn draw_recursive<
+        'a,
+        V: ExtendedVertex<DIMS>,
+        M,
+        D: FramebufferWithDepth<OUT>,
+        const OUT: usize,
+    >(
+        &self,
+        bounding_box: &BoundingBox<V, DIMS>,
         level: usize,
-    ) -> Box<dyn Iterator<Item = MeshBuilder> + 'a> {
+        root: Pose,
+        textures: &'a [FlatTexture],
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, V, M, D::Tex, OUT>,
+        active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
+    ) -> EngResult<(), !> {
         if let Some([lhs, rhs]) = self.get_children(bounding_box)
             && level != 0
         {
-            let iter = [
-                lhs.make_model(bounding_box, level - 1),
-                rhs.make_model(bounding_box, level - 1),
-            ]
-            .into_iter()
-            .flatten();
-            Box::new(iter)
-            //.collect()
+            lhs.draw_recursive(
+                bounding_box,
+                level - 1,
+                root,
+                textures,
+                active_shader,
+                active_framebuffer,
+            )?;
+            rhs.draw_recursive(
+                bounding_box,
+                level - 1,
+                root,
+                textures,
+                active_shader,
+                active_framebuffer,
+            )?;
+            Ok(())
         } else {
-            let triangles = self.make_cube();
-            //TODO: Horribly inefficient
-            let material = if self.collision.get() {Rc::new(Material::from_colour(ColourRGBA::RED))} else {Rc::new(Material::from_colour(ColourRGBA::BLACK))};
-            let mut mesh = Mesh::builder().material(material);
-            mesh.extend_triangle(triangles);
-            Box::new(Some(mesh).into_iter())
+            // TODO: remoe unwrap
+            let texture = textures
+                .get(self.texture_choice)
+                .or_else(|| textures.get(0))
+                .unwrap();
+            active_shader.register_texture([("texture".into(), texture as &dyn Texture)]);
+
+            Ok(())
         }
     }
 }

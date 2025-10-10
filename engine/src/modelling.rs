@@ -12,9 +12,9 @@ mod line;
 pub use line::{Line, LineGroup, TestLineVertex};
 
 mod quad;
-pub use quad::{Quad, QuadGroup};
+pub use quad::{Quad, QuadGroup, QuadVertex};
 mod skybox;
-pub use skybox::{SkyBox, SkyBoxGroup};
+pub use skybox::{SkyBox, SkyBoxGroup, SkyBoxVertex};
 mod bloom;
 pub use bloom::{Bloom, BloomGroup};
 mod simple_vertex;
@@ -26,4 +26,7 @@ mod bounding_box;
 pub use bounding_box::BoundingBox;
 
 mod advanced_vertex;
-pub use advanced_vertex::CubicVertex;
+pub use advanced_vertex::{CubicVertex, ExtendedVertex, VertexHasTangent};
+
+mod volumes;
+pub use volumes::Volume;

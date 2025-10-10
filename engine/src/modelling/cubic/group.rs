@@ -10,10 +10,11 @@ use super::geometry::CameraPose;
 use super::lighting::simple::ListLights;
 use super::model::Cubic;
 use crate::EngResult;
+use crate::modelling::SimpleVertex;
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
-    shader: &'a ShaderProgram<(Cubic, ListLights<MAX>), OUT, D::Tex>,
+    shader: &'a ShaderProgram<SimpleVertex, (Cubic, ListLights<MAX>), OUT, D::Tex>,
     framebuffer: &'a D,
 
     camera_pos: Vector<3>,
@@ -29,7 +30,7 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
     Group<'a, MAX, OUT, D>
 {
     pub fn new<O: CameraPose>(
-        shader: &'a ShaderProgram<(Cubic, ListLights<MAX>), OUT, FlatTexture>,
+        shader: &'a ShaderProgram<SimpleVertex, (Cubic, ListLights<MAX>), OUT, FlatTexture>,
         framebuffer: &'a D,
 
         camera: &Camera<O>,

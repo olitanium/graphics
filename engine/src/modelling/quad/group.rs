@@ -5,10 +5,11 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 
 use super::Quad;
 use crate::EngResult;
+use crate::modelling::quad::QuadVertex;
 
 #[derive(Debug)]
 pub struct Group<'a, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> {
-    shader: &'a ShaderProgram<Quad<N>, OUT, D::Tex>,
+    shader: &'a ShaderProgram<QuadVertex, Quad<N>, OUT, D::Tex>,
     framebuffer: &'a D,
 
     quads: Vec<&'a Quad<N>>,
@@ -17,7 +18,7 @@ pub struct Group<'a, const N: usize, const OUT: usize, D: FramebufferWithoutExtr
 
 impl<'a, const N: usize, const OUT: usize, X: FramebufferWithoutExtra<OUT>> Group<'a, N, OUT, X> {
     pub fn new(
-        shader: &'a ShaderProgram<Quad<N>, OUT, X::Tex>,
+        shader: &'a ShaderProgram<QuadVertex, Quad<N>, OUT, X::Tex>,
         framebuffer: &'a X,
 
         quads: Vec<&'a Quad<N>>,

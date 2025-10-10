@@ -6,12 +6,12 @@ use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{FlatTexture, Magnification, Texture, WrapType};
 use graphics::types::TexDim;
 
-use crate::modelling::Cubic;
 use crate::modelling::cubic::camera;
 use crate::modelling::cubic::camera::Camera;
 use crate::modelling::cubic::geometry::{Orientation, Pose};
 use crate::modelling::cubic::lighting::simple::FarLight;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
+use crate::modelling::{Cubic, VertexHasTangent};
 
 #[derive(Debug)]
 pub struct ShadowFarLight {
@@ -64,9 +64,11 @@ impl ShadowFarLight {
         const MAX: usize,
         L: ShadowLightCompatible<MAX>,
         T: Texture,
+        M,
+        V: VertexHasTangent,
     >(
         &'c self,
-        shader: &mut ActiveShaderProgram<'_, '_, 'c, (Cubic, L), T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, 'c, V, (M, L), T, N>,
         name: &str,
         index: usize,
         target: Vector<3>,
@@ -91,8 +93,10 @@ impl ShadowFarLight {
         const MAX: usize,
         L: ShadowLightCompatible<MAX>,
         T: Texture,
+        M,
+        V: VertexHasTangent,
     >(
-        shader: &mut ActiveShaderProgram<'a, 'b, 'c, (Cubic, L), T, N>,
+        shader: &mut ActiveShaderProgram<'a, 'b, 'c, V, (M, L), T, N>,
         name: &str,
         index: usize,
     ) {

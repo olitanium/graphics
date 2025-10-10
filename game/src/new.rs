@@ -77,24 +77,24 @@ impl State {
         let mut imported = Entity::from_cubic(make_model("morgan")?, 10, 1.0).unwrap();
         // let imported = Entity::from_cubic(Cubic::cube(1.0,
         // Rc::new(Material::white())).build(), 10, 1.0).unwrap();
-        imported.velocity = Vector::new([0.0, 0.0, 0.05]);
+        // imported.velocity = Vector::new([0.0, 0.0, 0.05]);
         *imported.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, -1.1]));
 
         let mut imported_other = Entity::from_cubic(make_model("morgan")?, 10, 3.0).unwrap();
-        imported_other.velocity = Vector::new([0.0, 0.0, -0.05]);
+        // imported_other.velocity = Vector::new([0.0, 0.0, -0.05]);
         *imported_other.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.1]));
 
         let bounding_box_level = 0;
-        let imported_bounding_box_model = imported
-            .get_bounding_box()
-            .make_model(bounding_box_level, Rc::new(Material::white()))
-            .build();
-
-        let imported_other_bounding_box_model = imported_other
-            .get_bounding_box()
-            .make_model(bounding_box_level, Rc::new(Material::white()))
-            .build();
-
+        /*let imported_bounding_box_model = imported.bounding_box().map_or_default(|bbox| {
+            bbox.make_model(bounding_box_level, Rc::new(Material::white()))
+                .build()
+        });
+        let imported_other_bounding_box_model =
+            imported_other.bounding_box().map_or_default(|bbox| {
+                bbox.make_model(bounding_box_level, Rc::new(Material::white()))
+                    .build()
+            });
+*/
         const START_LOC: [f32; 3] = [0.0, 0.0, -2.0];
 
         let camera = camera::builder()
@@ -185,6 +185,7 @@ impl State {
         let line = Line::new(vec![]);
 
         Ok(Self {
+            show_bbs: true,
             time: 0.0,
             game_start: None,
             line,
@@ -202,8 +203,8 @@ impl State {
             imported,
             imported_other,
             blank: Cubic::empty(),
-            imported_bounding_box_model,
-            imported_other_bounding_box_model,
+            /*imported_bounding_box_model,
+            imported_other_bounding_box_model,*/
 
             bounding_box_level,
 

@@ -2,6 +2,7 @@ use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::shader_program::Uniform;
 use graphics::types::ElementArrayLen;
+use graphics::vertex::NoVertex;
 use graphics::{ActiveShaderProgram, vertex_array};
 
 use crate::EngResult;
@@ -28,7 +29,7 @@ impl<U: Uniform> Line<U> {
 impl<U: Uniform> Line<U> {
     pub(crate) fn draw<'a, const OUT: usize, F: FramebufferWithoutExtra<OUT>>(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, F::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, NoVertex, Self, F::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, F>,
     ) -> EngResult<(), !> {
         active_shader.set_uniform("vertex".to_string(), &self.vertices);

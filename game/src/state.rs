@@ -37,6 +37,7 @@ pub struct State {
     pub sensitivity: f32,
 
     pub do_bloom: bool,
+    pub show_bbs: bool,
 
     pub speed: [f32; 3],
 
@@ -54,8 +55,8 @@ pub struct State {
     pub imported_other: Entity,
     pub blank: Cubic,
 
-    pub imported_bounding_box_model: Cubic,
-    pub imported_other_bounding_box_model: Cubic,
+    /*pub imported_bounding_box_model: Cubic,
+    pub imported_other_bounding_box_model: Cubic,*/
     pub bounding_box_level: usize,
 
     pub which_animation: usize,
@@ -115,6 +116,8 @@ impl EngState for State {
             }
         }
 
+        eprintln!("fps: {}", 1.0 / frame_time);
+
         self.controls(mouse_delta, keyboard, local_string, frame_time)?;
 
         self.physics(frame_time);
@@ -145,17 +148,19 @@ impl State {
             *self.light.root_mut() = Pose::new_from_translation(light_pos);
         }
 
-        /*if !self
+        // if !self
+        // .imported
+        // .elastic_collision_no_rotation(&mut self.imported_other)
+        // {}
+        self.imported_other.update(frame_time);
+        self.imported.update(frame_time);
+
+        if self
             .imported
             .elastic_collision_no_rotation(&mut self.imported_other)
-    {}
-            */
-            self.imported_other.update(frame_time);
-            self.imported.update(frame_time);
-
-        if self.imported.elastic_collision_no_rotation(&mut self.imported_other) {
-            self.imported.velocity = Vector::new_zero();
-            self.imported_other.velocity = Vector::new_zero();
+        {
+            self.imported.velocity = Vector::ZERO;
+            self.imported_other.velocity = Vector::ZERO;
         }
 
         if let Some(light) = self.light_group.spot.get_mut(0) {
@@ -165,25 +170,25 @@ impl State {
 
         let bounding_box_level = self.bounding_box_level;
 
-        self.imported_bounding_box_model = self
-            .imported
-            .get_bounding_box()
-            .transform_by_pose(self.imported.model.root())
-            .make_model(
-                bounding_box_level,
-                Rc::new(Material::from_colour_alpha(ColourRGB::RED, 0.5)),
-            )
-            .build();
+        /*if let Some(bbox) = self.imported.bounding_box() {
+            self.imported_bounding_box_model = bbox
+                .transform_by_pose(self.imported.model.root())
+                .make_model(
+                    bounding_box_level,
+                    Rc::new(Material::from_colour_alpha(ColourRGB::RED, 0.5)),
+                )
+                .build();
+        }*/
 
-        self.imported_other_bounding_box_model = self
-            .imported_other
-            .get_bounding_box()
-            .transform_by_pose(self.imported_other.model.root())
-            .make_model(
-                bounding_box_level,
-                Rc::new(Material::from_colour(ColourRGBA::BLUE)),
-            )
-            .build();
+        /*if let Some(bbox) = self.imported_other.bounding_box() {
+            self.imported_other_bounding_box_model = bbox
+                .transform_by_pose(self.imported_other.model.root())
+                .make_model(
+                    bounding_box_level,
+                    Rc::new(Material::from_colour(ColourRGBA::BLUE)),
+                )
+                .build();
+        }*/
     }
 
     fn prep_draw<'a>(
@@ -195,12 +200,17 @@ impl State {
         let mut out = VecDraw::new();
 
         let all_models = {
-            let all_models = vec![
+            let mut all_models = vec![
                 (&self.imported.model, self.which_animation, time),
                 (&self.imported_other.model, self.which_animation, time),
-                (&self.imported_bounding_box_model, 0, 0.0),
-                (&self.imported_other_bounding_box_model, 0, 0.0),
             ];
+
+            /*if self.show_bbs {
+                all_models.extend(vec![
+                    (&self.imported_bounding_box_model, 0, 0.0),
+                    (&self.imported_other_bounding_box_model, 0, 0.0),
+                ]);
+            }*/
             all_models
         };
 

@@ -9,9 +9,9 @@ pub use posesclerp::PoseSclerp;
 mod apply_pose;
 pub use apply_pose::ApplyPose;
 
-use crate::{TransformBy, transform::Transform};
-
 use super::{CameraPose, Orientation};
+use crate::TransformBy;
+use crate::transform::Transform;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Pose {
@@ -92,7 +92,7 @@ impl Pose {
 
     pub fn apply_to<V: TransformBy<Pose>>(self, value: V) -> V {
         self.transform(&value)
-        //value.transform_by(&self)
+        // value.transform_by(&self)
     }
 }
 

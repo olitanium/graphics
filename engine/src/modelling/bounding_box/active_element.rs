@@ -1,13 +1,25 @@
-use std::{array, ops::Bound};
+use std::array;
 
 use graphics::linear_algebra::Vector;
+use graphics::vertex::Vertex;
 
-use crate::{TransformBy, modelling::{BoundingBox, advanced_vertex::ExtendedVertex, bounding_box::BoundingBoxElement, cubic::geometry::{ApplyPose, Pose}}, transform::Transform};
+use crate::modelling::advanced_vertex::ExtendedVertex;
+use crate::modelling::bounding_box::BoundingBoxElement;
+use crate::modelling::{BoundingBox, Volume};
+use crate::transform::Transform;
 
-impl<const DIMS: usize> BoundingBoxElement<DIMS> {
-    pub fn overlaps_bounding_box_single<T: Transform<Vector<DIMS>>>(&self, self_transform: &T, other: &Self, other_transform: &T) -> bool {
-        let self_lower_bound  = self_transform.transform(&self.lower_bound);
-        let self_upper_bound  = self_transform.transform(&self.upper_bound);
+impl<const DIMS: usize> BoundingBoxElement<DIMS>
+where
+    Vector<DIMS>: Volume<DIMS>,
+{
+    pub fn overlaps_bounding_box_single<T: Transform<Vector<DIMS>>>(
+        &self,
+        self_transform: &T,
+        other: &Self,
+        other_transform: &T,
+    ) -> bool {
+        let self_lower_bound = self_transform.transform(&self.lower_bound);
+        let self_upper_bound = self_transform.transform(&self.upper_bound);
         let other_lower_bound = other_transform.transform(&other.lower_bound);
         let other_upper_bound = other_transform.transform(&other.upper_bound);
 
@@ -16,7 +28,7 @@ impl<const DIMS: usize> BoundingBoxElement<DIMS> {
             let one_ub = f32::max(self_lower_bound[index], self_upper_bound[index]);
             let two_lb = f32::min(other_lower_bound[index], other_upper_bound[index]);
             let two_ub = f32::max(other_lower_bound[index], other_upper_bound[index]);
-            
+
             TestBoxVertex {
                 one_lb,
                 one_ub,
@@ -42,7 +54,10 @@ impl<const DIMS: usize> BoundingBoxElement<DIMS> {
         &self,
         bounding_box: &BoundingBox<V, DIMS>,
         point: Vector<DIMS>,
-    ) -> bool {
+    ) -> bool
+    where
+        [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+    {
         let is_in = self.encloses_point_single(point);
 
         match self.get_children(bounding_box) {
@@ -54,10 +69,13 @@ impl<const DIMS: usize> BoundingBoxElement<DIMS> {
             None => is_in,
         }
     }
-}
 
-impl<const DIMS: usize> BoundingBoxElement<DIMS> {
-    pub fn overlaps_bounding_box_and_children<'c, 'b, V: ExtendedVertex<DIMS>, T: Transform<Vector<DIMS>>>(
+    pub fn overlaps_bounding_box_and_children<
+        'c,
+        'b,
+        V: ExtendedVertex<DIMS>,
+        T: Transform<Vector<DIMS>>,
+    >(
         this: &'c Self,
         this_boundingbox: &'c BoundingBox<V, DIMS>,
         this_transform: &T,
@@ -65,24 +83,38 @@ impl<const DIMS: usize> BoundingBoxElement<DIMS> {
         other_boundingbox: &'b BoundingBox<V, DIMS>,
         other_transform: &T,
         depth: usize,
-    ) -> impl Iterator<Item = (&'c BoundingBoxElement<DIMS>, &'b BoundingBoxElement<DIMS>)> {
+    ) -> impl Iterator<Item = (&'c BoundingBoxElement<DIMS>, &'b BoundingBoxElement<DIMS>)>
+    where
+        [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+    {
         let is_overlap = this.overlaps_bounding_box_single(this_transform, other, other_transform);
 
         if is_overlap {
-            this.collision.set(true);
-            other.collision.set(true);
             match (
                 this.get_children(this_boundingbox),
                 other.get_children(other_boundingbox),
             ) {
-                (Some([thisleft, thisright]), Some([otherleft, otherright])) => {
-                    eprintln!("{:depth$}fourway", "");
-                    [
-                        (thisleft, otherleft),
-                        (thisleft, otherright),
-                        (thisright, otherleft),
-                        (thisright, otherright),
-                    ]
+                (Some([thisleft, thisright]), Some([otherleft, otherright])) => [
+                    (thisleft, otherleft),
+                    (thisleft, otherright),
+                    (thisright, otherleft),
+                    (thisright, otherright),
+                ]
+                .map(|(new_this, new_other)| {
+                    BoundingBoxElement::overlaps_bounding_box_and_children(
+                        new_this,
+                        this_boundingbox,
+                        this_transform,
+                        new_other,
+                        other_boundingbox,
+                        other_transform,
+                        depth + 1,
+                    )
+                })
+                .into_iter()
+                .flatten()
+                .collect(),
+                (None, Some([otherleft, otherright])) => [(this, otherleft), (this, otherright)]
                     .map(|(new_this, new_other)| {
                         BoundingBoxElement::overlaps_bounding_box_and_children(
                             new_this,
@@ -96,46 +128,23 @@ impl<const DIMS: usize> BoundingBoxElement<DIMS> {
                     })
                     .into_iter()
                     .flatten()
-                    .collect()
-                }
-                (None, Some([otherleft, otherright])) => {
-                    eprintln!("{:depth$}self_leaf other_not", "");
-                    [(this, otherleft), (this, otherright)]
-                        .map(|(new_this, new_other)| {
-                            BoundingBoxElement::overlaps_bounding_box_and_children(
-                                new_this,
-                                this_boundingbox,
-                                this_transform,
-                                new_other,
-                                other_boundingbox,
-                                other_transform,
-                                depth + 1,
-                            )
-                        })
-                        .into_iter()
-                        .flatten()
-                        .collect()
-                }
-                (Some([thisleft, thisright]), None) => {
-                    eprintln!("{:depth$}this_not other_leaf", "");
-                    [(thisleft, other), (thisright, other)]
-                        .map(|(new_this, new_other)| {
-                            BoundingBoxElement::overlaps_bounding_box_and_children(
-                                new_this,
-                                this_boundingbox,
-                                this_transform,
-                                new_other,
-                                other_boundingbox,
-                                other_transform,
-                                depth + 1,
-                            )
-                        })
-                        .into_iter()
-                        .flatten()
-                        .collect()
-                }
+                    .collect(),
+                (Some([thisleft, thisright]), None) => [(thisleft, other), (thisright, other)]
+                    .map(|(new_this, new_other)| {
+                        BoundingBoxElement::overlaps_bounding_box_and_children(
+                            new_this,
+                            this_boundingbox,
+                            this_transform,
+                            new_other,
+                            other_boundingbox,
+                            other_transform,
+                            depth + 1,
+                        )
+                    })
+                    .into_iter()
+                    .flatten()
+                    .collect(),
                 (None, None) => {
-                    eprintln!("{:depth$}leaf!", "");
                     vec![(this, other)]
                 }
             }
@@ -144,14 +153,16 @@ impl<const DIMS: usize> BoundingBoxElement<DIMS> {
         }
         .into_iter()
     }
-    
-    pub fn get_children<'b, V: ExtendedVertex<DIMS>> (
+
+    pub fn get_children<'b, V: ExtendedVertex<DIMS>>(
         &self,
         bounding_box: &'b BoundingBox<V, DIMS>,
     ) -> Option<[&'b Self; 2]>
+    where
+        [(); Vector::<DIMS>::ELEMENT_COUNT]:,
     {
         self.children
-            .map(|arr_children| arr_children.map(|index| bounding_box.get(index)))
+            .map(|arr_children| arr_children.map(|index| bounding_box.get(index.get())))
     }
 }
 
@@ -188,7 +199,7 @@ fn cartesian_product<'a, 'b, T, U>(
 }
 
 mod test {
-    
+
     #[test]
     fn test_line_overlap() {
         use crate::modelling::bounding_box::active_element::{TestBoxVertex, line_overlap};

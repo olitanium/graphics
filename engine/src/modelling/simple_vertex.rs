@@ -6,9 +6,9 @@ use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
 
 use crate::TransformBy;
-use crate::modelling::CubicVertex;
 use crate::modelling::advanced_vertex::{ExtendedVertex, IncompleteVertex};
 use crate::modelling::cubic::geometry::Pose;
+use crate::modelling::{CubicVertex, VertexHasTangent};
 use crate::transform::Transform;
 
 #[repr(C)]
@@ -42,8 +42,33 @@ impl Vertex for SimpleVertex {
     }
 }
 
-impl CubicVertex for SimpleVertex {
-    fn from_incomplete_triangle(incomplete_triangle: [IncompleteVertex; 3]) -> Option<[Self; 3]> {
+impl CubicVertex for SimpleVertex {}
+
+impl VertexHasTangent for SimpleVertex {
+    fn into_simplevertex(self) -> SimpleVertex {
+        self
+    }
+}
+
+impl TransformBy<Pose> for SimpleVertex {
+    fn transform_by(&self, pose: &Pose) -> Self {
+        Self {
+            position: pose.transform(&self.position),
+            normal: pose.transform(&self.normal),
+            tangent: pose.transform(&self.tangent),
+            ..*self
+        }
+    }
+}
+
+impl ExtendedVertex<3> for SimpleVertex {
+    fn position(&self) -> Vector<3> {
+        self.position
+    }
+
+    fn from_incomplete_triangle(
+        incomplete_triangle: [IncompleteVertex<3>; 3],
+    ) -> Option<[Self; 3]> {
         let new_normal = LazyCell::new(|| {
             let ab = incomplete_triangle[1].position - incomplete_triangle[0].position;
             let ac = incomplete_triangle[2].position - incomplete_triangle[0].position;
@@ -53,8 +78,8 @@ impl CubicVertex for SimpleVertex {
         let new_tangent = LazyCell::new(|| {
             let ab = incomplete_triangle[1].position - incomplete_triangle[0].position;
             let ac = incomplete_triangle[2].position - incomplete_triangle[0].position;
-            let z = incomplete_triangle[1].texture - incomplete_triangle[0].texture;
-            let g = incomplete_triangle[2].texture - incomplete_triangle[0].texture;
+            let z = incomplete_triangle[1].texture? - incomplete_triangle[0].texture?;
+            let g = incomplete_triangle[2].texture? - incomplete_triangle[0].texture?;
 
             (ab.scale(g[1]) - ac.scale(z[1])) // .scale(1.0/(g[1]*z[0] - g[0]*z[1]))
                 .try_normalize() // change of basis
@@ -73,29 +98,11 @@ impl CubicVertex for SimpleVertex {
 
                 Some(Self {
                     position,
-                    texture,
+                    texture: texture?,
                     normal: final_normal,
                     tangent: final_tangent,
                 })
             },
         )
-    }
-
-}
-
-impl TransformBy<Pose> for SimpleVertex {
-    fn transform_by(&self, pose: &Pose) -> Self {
-        Self {
-            position: pose.transform(&self.position),
-            normal: pose.transform(&self.normal),
-            tangent: pose.transform(&self.tangent),
-            ..*self
-        }
-    }
-}
-
-impl ExtendedVertex<3> for SimpleVertex {
-    fn position(&self) -> Vector<3> {
-        self.position
     }
 }

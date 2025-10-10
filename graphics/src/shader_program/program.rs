@@ -7,6 +7,7 @@ pub use super::Error;
 use crate::gl_call;
 use crate::texture::Texture;
 use crate::types::{ShaderProgramId, UniformLocation};
+use crate::vertex::Vertex;
 
 mod active_shader;
 mod utils;
@@ -28,21 +29,20 @@ mod draw_state;
 pub use draw_state::DrawState;
 
 #[derive(Debug)]
-pub struct ShaderProgram<M, const OUT: usize, T: Texture> {
+pub struct ShaderProgram<V: Vertex, M, const OUT: usize, T: Texture> {
     pub(crate) id: ShaderProgramId,
     uniform_locations: RefCell<HashMap<CString, i32>>,
     force_cull_face: Option<CullFace>,
-    _phantom_model: PhantomData<fn(M)>,
-    _phantom_tex: PhantomData<fn(T)>,
+    _phantom_model: PhantomData<fn(M, V, T)>,
 }
 
 /// # SAFETY
 /// This is safe because only one ActiveShaderProgram can exist,
 /// which is the only way of accessing the internal RefCell
-unsafe impl<M, const OUT: usize, T: Texture> Sync for ShaderProgram<M, OUT, T> {}
+unsafe impl<V: Vertex, M, const OUT: usize, T: Texture> Sync for ShaderProgram<V, M, OUT, T> {}
 
-impl<M, const OUT: usize, T: Texture> ShaderProgram<M, OUT, T> {
-    pub fn builder() -> Builder<M, T, OUT, MissingVertexShader, MissingFragmentShader> {
+impl<V: Vertex, M, const OUT: usize, T: Texture> ShaderProgram<V, M, OUT, T> {
+    pub fn builder() -> Builder<V, M, T, OUT, MissingVertexShader, MissingFragmentShader> {
         Builder::new()
     }
 
@@ -53,7 +53,7 @@ impl<M, const OUT: usize, T: Texture> ShaderProgram<M, OUT, T> {
     pub fn use_program<'a, 'b, 'c>(
         &'a self,
         marker: &'b mut ShaderProgramContext,
-    ) -> ActiveShaderProgram<'a, 'b, 'c, M, T, OUT> {
+    ) -> ActiveShaderProgram<'a, 'b, 'c, V, M, T, OUT> {
         gl_call! {
             gl::UseProgram(self.id.to_primitive());
         }
@@ -81,7 +81,7 @@ impl<M, const OUT: usize, T: Texture> ShaderProgram<M, OUT, T> {
     }
 }
 
-impl<M, T: Texture, const OUT: usize> Drop for ShaderProgram<M, OUT, T> {
+impl<V: Vertex, M, T: Texture, const OUT: usize> Drop for ShaderProgram<V, M, OUT, T> {
     fn drop(&mut self) {
         gl_call! {
             gl::DeleteProgram(self.id.to_primitive());

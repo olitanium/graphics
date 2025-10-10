@@ -5,13 +5,14 @@ use graphics::linear_algebra::Vector;
 use graphics::types::ElementArrayElem;
 use graphics::vertex_array::VertexArray;
 
+use crate::modelling::ExtendedVertex;
 use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::quad::QuadVertex;
 
-pub fn vertex_array_cube(
+pub fn cube_triangles(
     lowerbounds: Vector<3>,
     upperbounds: Vector<3>,
-) -> impl Iterator<Item = [IncompleteVertex; 3]> {
+) -> impl Iterator<Item = [IncompleteVertex<3>; 3]> {
     let [low_x, low_y, low_z] = lowerbounds.into_inner();
     let [up_x, up_y, up_z] = upperbounds.into_inner();
     let vertex_positions = [
@@ -45,10 +46,10 @@ pub fn vertex_array_cube(
             position_index.map(|index| *vertex_positions.get(index).expect("well defined"));
 
         let [va, vb, vc, vd] = [
-            IncompleteVertex::new(a, ta),
-            IncompleteVertex::new(b, tb),
-            IncompleteVertex::new(c, tc),
-            IncompleteVertex::new(d, td),
+            IncompleteVertex::new(a).texture(ta),
+            IncompleteVertex::new(b).texture(tb),
+            IncompleteVertex::new(c).texture(tc),
+            IncompleteVertex::new(d).texture(td),
         ];
 
         [[va, vb, vc], [va, vc, vd]]
@@ -57,53 +58,83 @@ pub fn vertex_array_cube(
     triangles
 }
 
-pub fn origin_unit_cube() -> impl Iterator<Item = [IncompleteVertex; 3]> {
+pub fn origin_unit_cube() -> impl Iterator<Item = [IncompleteVertex<3>; 3]> {
     origin_cube(1.0)
 }
 
-pub fn origin_cube(side_length: f32) -> impl Iterator<Item = [IncompleteVertex; 3]> {
+pub fn origin_cube(side_length: f32) -> impl Iterator<Item = [IncompleteVertex<3>; 3]> {
     let upperbounds = Vector::new([side_length / 2.0; 3]);
     let lowerbounds = Vector::new([-side_length / 2.0; 3]);
 
-    vertex_array_cube(lowerbounds, upperbounds)
+    cube_triangles(lowerbounds, upperbounds)
 }
 
 pub fn vertex_array_quad(
-    lower_x: f32,
-    upper_x: f32,
-    lower_y: f32,
-    upper_y: f32,
+    lower_bound: Vector<2>,
+    upper_bound: Vector<2>,
 ) -> VertexArray<QuadVertex> {
-    let quad_vertices = [
-        QuadVertex {
-            position: Vector::new([lower_x, lower_y]),
-            tex_coordinate: Vector::new([0.0, 0.0]),
-        },
-        QuadVertex {
-            position: Vector::new([upper_x, lower_y]),
-            tex_coordinate: Vector::new([1.0, 0.0]),
-        },
-        QuadVertex {
-            position: Vector::new([upper_x, upper_y]),
-            tex_coordinate: Vector::new([1.0, 1.0]),
-        },
-        QuadVertex {
-            position: Vector::new([lower_x, upper_y]),
-            tex_coordinate: Vector::new([0.0, 1.0]),
-        },
-    ];
+    // let [lower_x, lower_y] = lower_bound.into_inner();
+    // let [upper_x, upper_y] = upper_bound.into_inner();
+    //
+    // let quad_vertices = [
+    // QuadVertex {
+    // position: Vector::new([lower_x, lower_y]),
+    // tex_coordinate: Vector::new([0.0, 0.0]),
+    // },
+    // QuadVertex {
+    // position: Vector::new([upper_x, lower_y]),
+    // tex_coordinate: Vector::new([1.0, 0.0]),
+    // },
+    // QuadVertex {
+    // position: Vector::new([upper_x, upper_y]),
+    // tex_coordinate: Vector::new([1.0, 1.0]),
+    // },
+    // QuadVertex {
+    // position: Vector::new([lower_x, upper_y]),
+    // tex_coordinate: Vector::new([0.0, 1.0]),
+    // },
+    // ];
+    //
+    // let element_array = [0, 1, 2, 0, 2, 3].map(ElementArrayElem::new);
+    //
+    // VertexArray::builder()
+    // .vertices(quad_vertices.to_vec())
+    // .element_array(element_array.to_vec())
+    // .build()
 
-    let element_array = [0, 1, 2, 0, 2, 3].map(ElementArrayElem::new);
+    let mut builder = VertexArray::builder();
+    builder.extend_triangles(quad_triangles(lower_bound, upper_bound).map(|triangle| {
+        ExtendedVertex::from_incomplete_triangle(triangle).expect(
+            "filled with rec coords and positions, which are the requirements of the QuadVertex",
+        )
+    }));
+    builder.build()
+}
 
-    VertexArray::builder()
-        .vertices(quad_vertices.to_vec())
-        .element_array(element_array.to_vec())
-        .build()
+pub fn quad_triangles(
+    lower_bound: Vector<2>,
+    upper_bound: Vector<2>,
+) -> impl Iterator<Item = [IncompleteVertex<2>; 3]> {
+    let [lower_x, lower_y] = lower_bound.into_inner();
+    let [upper_x, upper_y] = upper_bound.into_inner();
+    let vertices = [
+        ([lower_x, lower_y], [0.0, 0.0]),
+        ([upper_x, lower_y], [1.0, 0.0]),
+        ([upper_x, upper_y], [1.0, 1.0]),
+        ([lower_x, upper_y], [0.0, 1.0]),
+    ]
+    .map(|(position, texture)| {
+        IncompleteVertex::new(Vector::new(position)).texture(Vector::new(texture))
+    });
+
+    let triangles = [[0, 1, 2], [0, 2, 3]].map(|arr_index| arr_index.map(|index| vertices[index]));
+
+    triangles.into_iter()
 }
 
 pub fn screen_quad() -> &'static VertexArray<QuadVertex> {
     static SCREEN_QUAD: LazyLock<VertexArray<QuadVertex>> =
-        LazyLock::new(|| vertex_array_quad(-1.0, 1.0, -1.0, 1.0));
+        LazyLock::new(|| vertex_array_quad(Vector::from([-1.0, -1.0]), Vector::new([1.0, 1.0])));
 
     &SCREEN_QUAD
 }

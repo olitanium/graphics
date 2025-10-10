@@ -5,6 +5,7 @@ use std::{array, mem};
 use graphics::ApiResult;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
+use graphics::linear_algebra::Vector;
 use graphics::shader_program::{ActiveShaderProgram, CullFace};
 use graphics::texture::{FlatTexture, Texture};
 use graphics::vertex_array::VertexArray;
@@ -26,14 +27,12 @@ impl<const N: usize> Quad<N> {
     }
 
     pub fn new(
-        left: f32,
-        right: f32,
-        bottom: f32,
-        top: f32,
+        lower_bound: Vector<2>,
+        upper_bound: Vector<2>,
         texture: [Rc<RefCell<FlatTexture>>; N],
     ) -> Self {
         Self::builder()
-            .vertex_array(test_models::vertex_array_quad(left, right, bottom, top))
+            .vertex_array(test_models::vertex_array_quad(lower_bound, upper_bound))
             .texture(texture)
             .build()
     }
@@ -56,7 +55,7 @@ impl<const N: usize> Quad<N> {
 
     pub(crate) fn draw<'a, const OUT: usize, I: FramebufferWithoutExtra<OUT>>(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, I::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, QuadVertex, Self, I::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, I>,
     ) -> EngResult<(), !> {
         let _: ApiResult<_, !> = active_shader.cull_face(CullFace::BackFace);

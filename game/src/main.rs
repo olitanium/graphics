@@ -1,4 +1,7 @@
 #![feature(never_type)]
+#![feature(result_option_map_or_default)]
+#![expect(incomplete_features)]
+#![feature(generic_const_exprs)]
 
 use engine::Environment;
 

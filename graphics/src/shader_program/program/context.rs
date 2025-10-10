@@ -4,6 +4,7 @@ use super::{CullFace, Error, ShaderProgram};
 use crate::error::ApiResult;
 use crate::gl_call;
 use crate::texture::Texture;
+use crate::vertex::Vertex;
 
 #[derive(Debug)]
 pub struct ShaderProgramContext {
@@ -29,9 +30,9 @@ impl ShaderProgramContext {
         }
     }
 
-    pub fn use_program<M, const OUT: usize, T: Texture>(
+    pub fn use_program<V: Vertex, M, const OUT: usize, T: Texture>(
         &mut self,
-        program: &ShaderProgram<M, OUT, T>,
+        program: &ShaderProgram<V, M, OUT, T>,
     ) {
         gl_call! {
             gl::UseProgram(program.id().to_primitive());

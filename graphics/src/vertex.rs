@@ -18,7 +18,10 @@ pub trait Vertex: Copy {
     fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT];
 }
 
-impl Vertex for () {
+#[derive(Debug, Clone, Copy)]
+pub struct NoVertex;
+
+impl Vertex for NoVertex {
     const ELEMENT_COUNT: usize = 0;
 
     fn offsets() -> [usize; Self::ELEMENT_COUNT] {
@@ -39,5 +42,17 @@ impl Vertex for Vector<2> {
 
     fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
         [(VertexAttrType::f32, 2)]
+    }
+}
+
+impl Vertex for Vector<3> {
+    const ELEMENT_COUNT: usize = 1;
+
+    fn offsets() -> [usize; Self::ELEMENT_COUNT] {
+        [0]
+    }
+
+    fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
+        [(VertexAttrType::f32, 3)]
     }
 }

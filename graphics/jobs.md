@@ -3,8 +3,8 @@
 * Vertex Array auto-generated normals smooth option
 * Renderbuffer Objects (like textures for Framebuffer attachments. Might cause issues for shadows because they are unreadable)
 * Light uniform location cacheing without strings
-* Sort out ActiveFrambuffer and ActiveShaderProgram lifetimes, including elision when possible in other impls.
 * Skeletal Animation / Skinning
+* Keyboard and Mouse use Arc and Clone rather than Box and pointers
 
 ## Skeletal Animation Notes
 

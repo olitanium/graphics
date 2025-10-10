@@ -4,6 +4,9 @@ use graphics::linear_algebra::Vector;
 use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
 
+use crate::modelling::ExtendedVertex;
+use crate::modelling::advanced_vertex::IncompleteVertex;
+
 #[derive(Debug, Clone, Copy)]
 pub struct QuadVertex {
     pub position: Vector<2>,
@@ -25,21 +28,22 @@ impl Vertex for QuadVertex {
         [(V::f32, 2), (V::f32, 2)]
     }
 }
-// impl CubicVertex<2>  for QuadVertex {
-// fn from_incomplete_triangle(triangle: [IncompleteVertex; 3]) -> [Self; 3] {
-// triangle.map(
-// |IncompleteVertex {
-// position, texture, ..
-// }| {
-// Self {
-// position: position.truncate(),
-// tex_coordinate: texture,
-// }
-// },
-// )
-// }
-//
-// fn position(&self) -> Vector<2> {
-// self.position
-// }
-// }
+
+impl ExtendedVertex<2> for QuadVertex {
+    fn from_incomplete_triangle(triangle: [IncompleteVertex<2>; 3]) -> Option<[Self; 3]> {
+        triangle.try_map(
+            |IncompleteVertex {
+                 position, texture, ..
+             }| {
+                Some(Self {
+                    position,
+                    tex_coordinate: texture?,
+                })
+            },
+        )
+    }
+
+    fn position(&self) -> Vector<2> {
+        self.position
+    }
+}

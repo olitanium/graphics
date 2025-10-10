@@ -14,7 +14,7 @@ pub struct Vector<const N: usize>([f32; N]);
 
 impl<const N: usize> Default for Vector<N> {
     fn default() -> Self {
-        Self::new_zero()
+        Self::ZERO
     }
 }
 
@@ -25,16 +25,12 @@ impl<const N: usize> PartialEq for Vector<N> {
 }
 
 impl<const N: usize> Vector<N> {
+    pub const ZERO: Self = Self::new([0.0; N]);
+
     #[must_use]
     #[inline]
     pub const fn new(input: [f32; N]) -> Self {
         Self(input)
-    }
-
-    #[must_use]
-    #[inline]
-    pub const fn new_zero() -> Self {
-        Self::new([0.0; N])
     }
 
     /// # Safety
@@ -366,7 +362,7 @@ impl<const N: usize> Sum<Vector<N>> for Option<Vector<N>> {
 
 impl<const N: usize> Sum for Vector<N> {
     fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
-        iter.reduce(Add::add).unwrap_or_else(Vector::new_zero)
+        iter.reduce(Add::add).unwrap_or_default()
     }
 }
 

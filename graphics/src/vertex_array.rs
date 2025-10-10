@@ -10,7 +10,7 @@ use crate::error::ApiResult;
 use crate::framebuffer::traits::FramebufferWithoutExtra;
 use crate::shader_program::ActiveShaderProgram;
 use crate::types::{ElementArrayLen, VertexArrayId};
-use crate::vertex::Vertex;
+use crate::vertex::{NoVertex, Vertex};
 use crate::vertex_buffer::VertexBuffer;
 use crate::{gl_call, types};
 
@@ -136,7 +136,7 @@ where
 
     pub fn draw<NEVER, M, const OUT: usize, D: FramebufferWithoutExtra<OUT>>(
         &self,
-        active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, D::Tex, OUT>,
+        active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, V, M, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
     ) -> ApiResult<(), NEVER> {
         self.bind();
@@ -180,15 +180,16 @@ where
     }
 }
 
-pub fn dummy_vertex_array() -> &'static VertexArray<()> {
-    static DUMMY_VERTEX_ARRAY: LazyLock<VertexArray<()>> = LazyLock::new(|| VertexArray::empty());
+pub fn dummy_vertex_array() -> &'static VertexArray<NoVertex> {
+    static DUMMY_VERTEX_ARRAY: LazyLock<VertexArray<NoVertex>> =
+        LazyLock::new(|| VertexArray::empty());
     &DUMMY_VERTEX_ARRAY
 }
 
-impl VertexArray<()> {
+impl VertexArray<NoVertex> {
     pub fn draw_len<NEVER, M, const OUT: usize, D: FramebufferWithoutExtra<OUT>>(
         &self,
-        active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, D::Tex, OUT>,
+        active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, NoVertex, M, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         len: ElementArrayLen,
     ) -> ApiResult<(), NEVER> {

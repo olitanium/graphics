@@ -104,7 +104,7 @@ fn process_node<NEVER: Clone>(
     node: &Node,
     dir: &Path,
     current_mat: &mut HashMap<u32, EngResult<Rc<Material>, NEVER>>,
-) -> EngResult<Vec<MeshBuilder>, NEVER> {
+) -> EngResult<Vec<(usize, MeshBuilder)>, NEVER> {
     // process current node and recursively process each in node.children.
     let mut curr_meshes = node
         .meshes
@@ -195,7 +195,8 @@ fn process_node<NEVER: Clone>(
                         let triangle_tangent =
                             is_no_vec_or_element_exists("tangent", &opt_tangent, index)?.copied();
 
-                        Ok(IncompleteVertex::new(triangle_position, triangle_texture)
+                        Ok(IncompleteVertex::new(triangle_position)
+                            .texture(triangle_texture)
                             .opt_normal(triangle_normal)
                             .opt_tangent(triangle_tangent))
                     }) //;
@@ -215,10 +216,10 @@ fn process_node<NEVER: Clone>(
                 .or_insert_with_key(|key| parse_material(&scene.materials[*key as usize], dir))
                 .clone()?;
 
-            let mut builder = Mesh::builder().material(mat).bone(0);
+            let mut builder = MeshBuilder::new().material(mat);
             builder.extend_triangle(mesh_buffer);
 
-            Ok(builder)
+            Ok((0, builder))
         })
         .collect::<EngResult<Vec<_>, NEVER>>()?;
 

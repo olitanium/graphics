@@ -11,7 +11,7 @@ use crate::modelling::test_models;
 
 #[derive(Debug, Clone)]
 pub struct Builder {
-    mesh_builders: Vec<MeshBuilder>,
+    mesh_builders: Vec<(usize, MeshBuilder)>,
     cull_face: CullFace,
     skeleton: Option<Skeleton>,
     scale: f32,
@@ -35,28 +35,28 @@ impl Builder {
 
     builder!(cull_face: CullFace);
 
-    builder!(relative: bool);
+    // builder!(relative: bool);
 
     builder!(skeleton: Option<Skeleton>);
 
     builder!(scale: f32);
 
-    pub fn push_mesh(&mut self, mesh: MeshBuilder) {
-        self.mesh_builders.push(mesh);
+    pub fn push_mesh(&mut self, bone: usize, mesh: MeshBuilder) {
+        self.mesh_builders.push((bone, mesh));
     }
 
-    pub fn extend_meshes<I: IntoIterator<Item = MeshBuilder>>(&mut self, meshes: I) {
+    pub fn extend_meshes<I: IntoIterator<Item = (usize, MeshBuilder)>>(&mut self, meshes: I) {
         self.mesh_builders.extend(meshes);
     }
 
     pub fn push_cube(&mut self, material: Rc<Material>, side_length: f32, bone: usize) {
-        let mut mesh_builder = Mesh::builder().material(material).bone(bone);
+        let mut mesh_builder = MeshBuilder::new().material(material);
         mesh_builder.extend_triangle(test_models::origin_cube(side_length));
-        self.mesh_builders.push(mesh_builder);
+        self.mesh_builders.push((bone, mesh_builder));
     }
 
     pub fn material(mut self, material: Rc<Material>) -> Self {
-        for mesh in &mut self.mesh_builders {
+        for (_, mesh) in &mut self.mesh_builders {
             mesh.material = material.clone();
         }
         self
@@ -66,14 +66,13 @@ impl Builder {
         let meshes = self
             .mesh_builders
             .into_iter()
-            .map(|builder| builder.scale(self.scale).build())
+            .map(|(bone, builder)| (bone, builder.scale(self.scale).build()))
             .collect::<Vec<_>>();
 
         Cubic {
             meshes,
             cull_face: self.cull_face,
             skeleton: self.skeleton.unwrap_or_default(),
-            relative: self.relative,
         }
     }
 }

@@ -3,22 +3,24 @@ use utils::builder;
 
 #[derive(Debug, Clone, Copy, Default)]
 #[non_exhaustive]
-pub struct IncompleteVertex {
-    pub position: Vector<3>,
-    pub texture: Vector<2>,
+pub struct IncompleteVertex<const N: usize> {
+    pub position: Vector<N>,
+    pub texture: Option<Vector<2>>,
     pub normal: Option<UnitVector<3>>,
     pub tangent: Option<UnitVector<3>>,
 }
 
-impl IncompleteVertex {
+impl<const N: usize> IncompleteVertex<N> {
     builder!(normal, opt_normal: Option<UnitVector<3>>);
 
     builder!(tangent, opt_tangent: Option<UnitVector<3>>);
 
-    pub const fn new(position: Vector<3>, texture: Vector<2>) -> Self {
+    builder!(texture, opt_texture: Option<Vector<2>>);
+
+    pub const fn new(position: Vector<N>) -> Self {
         Self {
             position,
-            texture,
+            texture: None,
             normal: None,
             tangent: None,
         }

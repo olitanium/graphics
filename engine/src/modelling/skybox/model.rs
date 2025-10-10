@@ -5,11 +5,12 @@ use graphics::texture::{CubeMap, Texture};
 use graphics::vertex_array::VertexArray;
 
 use crate::EngResult;
-use crate::modelling::{CubicVertex, SimpleVertex, test_models};
+use crate::modelling::skybox::SkyBoxVertex;
+use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex, test_models};
 
 #[derive(Debug)]
 pub struct SkyBox {
-    pub model: VertexArray<SimpleVertex>,
+    pub model: VertexArray<SkyBoxVertex>,
     pub texture: CubeMap,
 }
 
@@ -18,7 +19,7 @@ impl SkyBox {
         let mut model_builder = VertexArray::builder();
         model_builder.extend_triangles(
             test_models::origin_unit_cube()
-                .map(CubicVertex::from_incomplete_triangle)
+                .map(ExtendedVertex::from_incomplete_triangle)
                 .flatten(),
         );
         let model = model_builder.build();
@@ -27,7 +28,7 @@ impl SkyBox {
 
     pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>>(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, SkyBoxVertex, SkyBox, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
     ) -> EngResult<(), !> {
         active_shader.cull_face(CullFace::DoNotCull)?;

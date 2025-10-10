@@ -3,7 +3,7 @@ use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{FlatTexture, Texture};
 use utils::{builder, new};
 
-use crate::modelling::Cubic;
+use crate::modelling::{Cubic, CubicVertex, ExtendedVertex};
 
 #[derive(Debug)]
 pub struct Material {
@@ -50,9 +50,9 @@ impl Material {
         Self::from_colour(ColourRGBA::WHITE)
     }
 
-    pub fn register_to<'a, 'b, 'c, const N: usize, L, T: Texture>(
+    pub fn register_to<'c, const N: usize, T: Texture, V: ExtendedVertex<3>, M>(
         &'c self,
-        shader: &mut ActiveShaderProgram<'a, 'b, 'c, (Cubic, L), T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, 'c, V, M, T, N>,
         name: &str,
     ) {
         shader.set_uniform(format!("{name}.shininess"), &self.shininess);

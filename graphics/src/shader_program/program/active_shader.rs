@@ -10,15 +10,16 @@ use crate::error::ApiResult;
 use crate::gl_call;
 use crate::texture::{self, Texture};
 use crate::types::{self, UniformLocation};
+use crate::vertex::Vertex;
 
-pub struct ActiveShaderProgram<'a, 'b, 'c, M, T: Texture, const OUT: usize> {
-    shader_program: &'a ShaderProgram<M, OUT, T>,
+pub struct ActiveShaderProgram<'a, 'b, 'c, V: Vertex, M, T: Texture, const OUT: usize> {
+    shader_program: &'a ShaderProgram<V, M, OUT, T>,
     texture_list: HashMap<String, &'c dyn Texture>,
     context: &'b mut ShaderProgramContext,
 }
 
-impl<M: Debug, T: Texture + Debug, const OUT: usize> Debug
-    for ActiveShaderProgram<'_, '_, '_, M, T, OUT>
+impl<M: Debug, V: Vertex + Debug, T: Texture + Debug, const OUT: usize> Debug
+    for ActiveShaderProgram<'_, '_, '_, V, M, T, OUT>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ActiveShaderProgram")
@@ -36,9 +37,11 @@ impl<M: Debug, T: Texture + Debug, const OUT: usize> Debug
     }
 }
 
-impl<'a, 'b, M, T: Texture, const OUT: usize> ActiveShaderProgram<'a, 'b, '_, M, T, OUT> {
+impl<'a, 'b, V: Vertex, M, T: Texture, const OUT: usize>
+    ActiveShaderProgram<'a, 'b, '_, V, M, T, OUT>
+{
     pub fn new(
-        shader_program: &'a ShaderProgram<M, OUT, T>,
+        shader_program: &'a ShaderProgram<V, M, OUT, T>,
         context: &'b mut ShaderProgramContext,
     ) -> Self {
         Self {
@@ -49,7 +52,7 @@ impl<'a, 'b, M, T: Texture, const OUT: usize> ActiveShaderProgram<'a, 'b, '_, M,
     }
 }
 
-impl<'c, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, T, OUT> {
+impl<'c, V: Vertex, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, V, M, T, OUT> {
     pub fn context(&self) -> &ShaderProgramContext {
         self.context
     }
@@ -139,8 +142,8 @@ pub trait IsActiveShaderProgram {
     fn get_uniform_location(&self, name: String) -> Option<UniformLocation>;
 }
 
-impl<'a, 'b, 'c, M, T: Texture, const OUT: usize> IsActiveShaderProgram
-    for ActiveShaderProgram<'a, 'b, 'c, M, T, OUT>
+impl<'a, 'b, 'c, V: Vertex, M, T: Texture, const OUT: usize> IsActiveShaderProgram
+    for ActiveShaderProgram<'a, 'b, 'c, V, M, T, OUT>
 {
     fn get_uniform_location(&self, name: String) -> Option<UniformLocation> {
         self.shader_program.get_uniform_location(name)

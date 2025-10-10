@@ -1,33 +1,31 @@
-use core::slice;
-use std::array;
-use std::rc::Rc;
-use std::sync::Mutex;
-use std::sync::atomic::AtomicU64;
-
-use graphics::colour::ColourRGBA;
 use graphics::linear_algebra::Vector;
-use russimp::node;
 
 mod element;
 pub use element::BoundingBoxElement;
+use graphics::vertex::Vertex;
 
 mod active_element;
 
-
-use crate::modelling::advanced_vertex::{ExtendedVertex, IncompleteVertex};
-use crate::modelling::cubic::{Mesh, MeshBuilder};
+use crate::TransformBy;
+use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::cubic::geometry::Pose;
-use crate::modelling::cubic::material::Material;
-use crate::modelling::{Cubic, CubicVertex, SimpleVertex};
-use crate::transform::Transform;
+use crate::modelling::{Cubic, CubicVertex, SimpleVertex, Volume};
 
-#[derive(Debug, Clone)]
-pub struct BoundingBox<V: ExtendedVertex<DIMS>, const DIMS: usize> {
+#[derive(Debug)]
+pub struct BoundingBox<V: ExtendedVertex<DIMS>, const DIMS: usize>
+where
+    Vector<DIMS>: Volume<DIMS>,
+    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+{
     triangles: Vec<[V; 3]>,
     inner: Vec<BoundingBoxElement<DIMS>>,
 }
 
-impl<V: ExtendedVertex<DIMS>, const DIMS: usize> BoundingBox<V, DIMS> {
+impl<V: ExtendedVertex<DIMS>, const DIMS: usize> BoundingBox<V, DIMS>
+where
+    Vector<DIMS>: Volume<DIMS>,
+    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+{
     pub fn len(&self) -> usize {
         self.inner.len()
     }
@@ -83,68 +81,32 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize> BoundingBox<V, DIMS> {
     }
 }
 
-
 impl<V: CubicVertex> BoundingBox<V, 3> {
-    pub fn transform_by_pose(&self, pose: Pose) -> Self {
-        let inner = self
-            .inner
-            .iter()
-            .map(|this_elem| {
-                let lower_bounds = pose.apply_to(this_elem.lower_bound);
-                let upper_bounds = pose.apply_to(this_elem.upper_bound);
-
-                //TODO: sort above and below
-                let lower_bounds = pose.transform(&this_elem.lower_bound);
-                let upper_bounds = pose.transform(&this_elem.upper_bound);
-
-                BoundingBoxElement {
-                    upper_bound: upper_bounds,
-                    lower_bound: lower_bounds,
-                    children: this_elem.children,
-                    lower_bound_index: this_elem.lower_bound_index,
-                    upper_bound_index: this_elem.upper_bound_index,
-                    collision: this_elem.collision.clone(),
-                }
-            })
-            .collect();
-
-        let triangles = self
-            .triangles
-            .iter()
-            .map(|triangle| triangle.map(|vertex| vertex.transform_by(&pose)))
-            .collect();
-
-        Self { triangles, inner }
-    }
-
     pub fn detect_collision(
         &self,
         self_pose: Pose,
         other: &Self,
         other_pose: Pose,
     ) -> Vec<(Vec<[V; 3]>, Vec<[V; 3]>)> {
-        //let self_transformed = self.transform_by_pose(self_pose);
-        //let other_transformed = other.transform_by_pose(other_pose);
-
         BoundingBoxElement::overlaps_bounding_box_and_children(
-            //self_transformed.get(0),
-            //&self_transformed,
             self.get(0),
             self,
             &self_pose,
-            //other_transformed.get(0),
-            //&other_transformed,
             other.get(0),
             other,
             &other_pose,
-            0
+            0,
         )
         .map(|(lhs, rhs)| {
             (
-                lhs.get_triangles(&self).to_vec(),
-                rhs.get_triangles(&other).to_vec(),
-                //lhs.get_triangles(&self_transformed).to_vec(),
-                //rhs.get_triangles(&other_transformed).to_vec(),
+                lhs.get_triangles(&self)
+                    .into_iter()
+                    .map(|triangle| triangle.transform_by(&self_pose))
+                    .collect(),
+                rhs.get_triangles(&other)
+                    .into_iter()
+                    .map(|triangle| triangle.transform_by(&other_pose))
+                    .collect(),
             )
         })
         .collect()
@@ -153,24 +115,30 @@ impl<V: CubicVertex> BoundingBox<V, 3> {
 
 impl BoundingBox<SimpleVertex, 3> {
     pub fn from_cubic(model: &Cubic, depth: usize) -> Option<Self> {
-        let triangles = model.triangles();
+        let triangles = model
+            .triangles()
+            .into_iter()
+            .map(|(_, triangle)| triangle)
+            .collect();
         Self::new_from_triangles(triangles, depth)
     }
 
-    pub fn make_model(&self, level: usize, _: Rc<Material>) -> super::cubic::Builder {
-        let mesh_builder = self.get(0).make_model(self, level);
-        //let mut mesh_builder = Mesh::builder().material(material);
-        //mesh_builder.extend_triangle(triangles);
-        let mut cubic_builder = Cubic::builder();
-        cubic_builder.extend_meshes(mesh_builder);
-        cubic_builder
-    }
+    // pub fn make_model(&self, level: usize, _: Rc<Material>) ->
+    // super::cubic::Builder { let default_material =
+    // Rc::new(Material::black()); let collision_material =
+    // Rc::new(Material::from_colour(ColourRGBA::RED)); let mesh_builder =
+    // self.get(0)
+    // .draw_recursive(self, level, &default_material, &collision_material);
+    // let mut mesh_builder = Mesh::builder().material(material);
+    // mesh_builder.extend_triangle(triangles);
+    // let mut cubic_builder = Cubic::builder();
+    // cubic_builder.extend_meshes((0, mesh_builder));
+    // cubic_builder
+    // }
 }
 
 mod test {
-    use std::cell::Cell;
-
-    use crate::transform::NoTransform;
+    use graphics::vertex_array::VertexArray;
 
     #[test]
     fn test_point_in_square() {
@@ -178,7 +146,7 @@ mod test {
         use crate::modelling::BoundingBox;
 
         let coords = [
-            Vector::new_zero(),
+            Vector::ZERO,
             Vector::new([0.0, 1.0]),
             Vector::new([1.0, 1.0]),
             Vector::new([1.0, 0.0]),
@@ -205,12 +173,14 @@ mod test {
         assert!(!bound.encloses_point(bad_point));
     }
 
-
     #[test]
     fn test_overlap() {
+        use std::cell::Cell;
+
         use graphics::linear_algebra::Vector;
 
         use crate::modelling::bounding_box::BoundingBoxElement;
+        use crate::transform::NoTransform;
 
         let bounding_box = BoundingBoxElement {
             upper_bound: Vector::new([1.0, 1.0]),
@@ -218,7 +188,8 @@ mod test {
             children: None,
             lower_bound_index: 0,
             upper_bound_index: 0,
-            collision: Cell::default(),
+            vertex_array: VertexArray::empty(),
+            texture_choice: 0,
         };
 
         let other_box = BoundingBoxElement {
@@ -227,7 +198,8 @@ mod test {
             children: None,
             lower_bound_index: 0,
             upper_bound_index: 0,
-            collision: Cell::default(),
+            vertex_array: VertexArray::empty(),
+            texture_choice: 0,
         };
 
         assert!(bounding_box.overlaps_bounding_box_single(&NoTransform, &other_box, &NoTransform));

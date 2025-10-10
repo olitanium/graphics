@@ -15,11 +15,10 @@ use crate::modelling::simple_vertex::SimpleVertex;
 
 #[derive(Clone, Debug)]
 pub struct Cubic {
-    // pub(crate) bounding_box: Option<BoundingBox<3>>,
-    pub(crate) meshes: Vec<Mesh>,
+    pub(crate) meshes: Vec<(usize, Mesh<SimpleVertex>)>,
     pub cull_face: CullFace,
     pub skeleton: Skeleton,
-    pub relative: bool,
+    // pub relative: bool,
 }
 
 impl Default for Cubic {
@@ -46,13 +45,18 @@ impl Cubic {
     pub fn temp_set_all_material(&mut self, mat: Rc<Material>) {
         self.meshes
             .iter_mut()
-            .for_each(|mesh| mesh.material = mat.clone());
+            .for_each(|(_, mesh)| mesh.material = mat.clone());
     }
 
-    pub fn triangles(&self) -> Vec<[SimpleVertex; 3]> {
+    pub fn triangles(&self) -> Vec<(usize, [SimpleVertex; 3])> {
         self.meshes
             .iter()
-            .map(|mesh| mesh.triangles().into_owned())
+            .map(|&(bone, ref mesh)| {
+                mesh.triangles()
+                    .into_owned()
+                    .into_iter()
+                    .map(move |triangles| (bone, triangles))
+            })
             .flatten()
             .collect()
     }
@@ -67,22 +71,23 @@ impl Cubic {
 
     pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, (Self, L), D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, SimpleVertex, (Self, L), D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         animation: usize,
         time: f32,
     ) -> EngResult<(), !> {
         // Ignore cull_face error
         let _: ApiResult<_, !> = active_shader.cull_face(self.cull_face);
-        for mesh in self.meshes.iter() {
-            mesh.draw(
-                active_shader,
-                active_framebuffer,
-                &self.skeleton,
-                self.relative,
-                animation,
-                time,
-            )?;
+        for &(bone, ref mesh) in self.meshes.iter() {
+            active_shader.set_uniform(
+                "model".into(),
+                &self
+                    .skeleton
+                    .get_bone_pose(false, bone, animation, time)
+                    .as_matrix(),
+            );
+
+            mesh.draw(active_shader, active_framebuffer)?;
         }
 
         Ok(())

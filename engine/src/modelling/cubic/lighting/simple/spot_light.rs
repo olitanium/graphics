@@ -4,7 +4,7 @@ use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::Texture;
 
 use super::super::traits::ListLightCompatible;
-use crate::modelling::Cubic;
+use crate::modelling::{Cubic, CubicVertex};
 
 #[derive(Clone, Debug)]
 pub struct SpotLight {
@@ -26,9 +26,12 @@ impl SpotLight {
         const MAX: usize,
         L: ListLightCompatible<MAX>,
         T: Texture,
+        M,
+        //TODO: make valid for lighting
+        V: CubicVertex,
     >(
         &self,
-        shader: &mut ActiveShaderProgram<'_, '_, '_, (Cubic, L), T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, '_, V, (M, L), T, N>,
         name: &str,
         index: usize,
     ) {

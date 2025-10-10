@@ -3,17 +3,16 @@ use std::rc::Rc;
 use graphics::vertex_array::VertexArray;
 use utils::{builder, new};
 
-use crate::modelling::CubicVertex;
 use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::cubic::Mesh;
 use crate::modelling::cubic::material::Material;
+use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex};
 
 #[derive(Debug, Clone)]
 pub struct Builder {
-    pub triangles: Vec<[IncompleteVertex; 3]>,
+    pub triangles: Vec<[IncompleteVertex<3>; 3]>,
     pub material: Rc<Material>,
     pub scale: f32,
-    pub bone: usize,
 }
 
 impl Default for Builder {
@@ -22,7 +21,6 @@ impl Default for Builder {
             triangles: Default::default(),
             material: Default::default(),
             scale: 1.0,
-            bone: 0,
         }
     }
 }
@@ -34,17 +32,43 @@ impl Builder {
 
     builder!(material: Rc<Material>);
 
-    builder!(bone: usize);
-
-    pub fn push_triangle(&mut self, triangle: [IncompleteVertex; 3]) {
+    pub fn push_triangle(&mut self, triangle: [IncompleteVertex<3>; 3]) {
         self.triangles.push(triangle);
     }
 
-    pub fn extend_triangle<I: IntoIterator<Item = [IncompleteVertex; 3]>>(&mut self, triangles: I) {
+    pub fn extend_triangle<I: IntoIterator<Item = [IncompleteVertex<3>; 3]>>(
+        &mut self,
+        triangles: I,
+    ) {
         self.triangles.extend(triangles);
     }
 
-    pub fn build(mut self) -> Mesh {
+    pub fn extend_complete_triangle<I: IntoIterator<Item = [SimpleVertex; 3]>>(
+        &mut self,
+        triangles: I,
+    ) {
+        self.extend_triangle(triangles.into_iter().map(|arr| {
+            arr.map(
+                |SimpleVertex {
+                     position,
+                     texture,
+                     normal,
+                     tangent,
+                 }| IncompleteVertex {
+                    position,
+                    texture: Some(texture),
+                    normal: Some(normal),
+                    tangent: Some(tangent),
+                    ..IncompleteVertex::<3>::default()
+                },
+            )
+        }));
+    }
+
+    pub fn build<V: ExtendedVertex<3>>(mut self) -> Mesh<V>
+    where
+        [(); V::ELEMENT_COUNT]:,
+    {
         if self.scale != 1.0 {
             for triangle in &mut self.triangles {
                 for vertex in triangle {
@@ -57,12 +81,12 @@ impl Builder {
         vertex_array_builder.extend_triangles(
             self.triangles
                 .into_iter()
-                .map(CubicVertex::from_incomplete_triangle)
+                .map(ExtendedVertex::from_incomplete_triangle)
                 .flatten(),
         );
 
         let vertex_array = vertex_array_builder.build();
 
-        Mesh::new(Rc::new(vertex_array), self.material, self.bone)
+        Mesh::new(Rc::new(vertex_array), self.material)
     }
 }

@@ -8,10 +8,11 @@ use super::SkyBox;
 use crate::EngResult;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::geometry::CameraPose;
+use crate::modelling::skybox::SkyBoxVertex;
 
 #[derive(Debug)]
 pub struct Group<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> {
-    shader: &'a ShaderProgram<SkyBox, OUT, D::Tex>,
+    shader: &'a ShaderProgram<SkyBoxVertex, SkyBox, OUT, D::Tex>,
     framebuffer: &'a D,
 
     skybox: &'a SkyBox,
@@ -21,7 +22,7 @@ pub struct Group<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> {
 
 impl<'a, const OUT: usize, X: FramebufferWithDepth<OUT>> Group<'a, OUT, X> {
     pub fn new<O: CameraPose>(
-        shader: &'a ShaderProgram<SkyBox, OUT, X::Tex>,
+        shader: &'a ShaderProgram<SkyBoxVertex, SkyBox, OUT, X::Tex>,
         framebuffer: &'a X,
         skybox: &'a SkyBox,
         camera: &Camera<O>,

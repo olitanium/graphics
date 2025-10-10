@@ -6,8 +6,8 @@ use graphics::shader_program::{ActiveShaderProgram, ShaderProgramContext, Unifor
 use graphics::texture::Texture;
 
 use super::{ShadowFarLight, ShadowPointLight, ShadowSpotLight};
-use crate::modelling::Cubic;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
+use crate::modelling::{Cubic, VertexHasTangent};
 use crate::{EngResult, opengl_shaders};
 
 #[derive(Debug, Default)]
@@ -107,9 +107,16 @@ impl<const MAX: usize> ShadowListLights<MAX> {
     /// # Safety
     /// `active_shader` must be dropped before any changes to the light's
     /// internal framebuffers is applied
-    pub(crate) unsafe fn bind<'a, const N: usize, L: ShadowLightCompatible<MAX>, T: Texture>(
+    pub(crate) unsafe fn bind<
+        'a,
+        const N: usize,
+        L: ShadowLightCompatible<MAX>,
+        T: Texture,
+        M,
+        V: VertexHasTangent,
+    >(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, (Cubic, L), T, N>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, V, (M, L), T, N>,
         target: Vector<3>,
     ) {
         const FAR_LIGHT_NAME: &str = "far";

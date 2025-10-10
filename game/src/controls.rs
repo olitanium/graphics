@@ -80,22 +80,22 @@ impl State {
                     });
                     self.angle += 0.1;
                 }
-                'b' | 'B' => self.do_bloom = !self.do_bloom,
+                'b' | 'B' => self.show_bbs = !self.show_bbs,
                 'o' => {
                     self.bounding_box_level = self.bounding_box_level.wrapping_add(1);
-                    self.imported_bounding_box_model = self
-                        .imported
-                        .get_bounding_box()
-                        .make_model(self.bounding_box_level, Rc::new(Material::white()))
-                        .build();
+                    /*if let Some(bbox) = self.imported.bounding_box() {
+                        self.imported_bounding_box_model = bbox
+                            .make_model(self.bounding_box_level, Rc::new(Material::white()))
+                            .build();
+                    }*/
                 }
                 'i' => {
                     self.bounding_box_level = self.bounding_box_level.wrapping_sub(1);
-                    self.imported_bounding_box_model = self
-                        .imported
-                        .get_bounding_box()
-                        .make_model(self.bounding_box_level, Rc::new(Material::white()))
-                        .build();
+                    /*if let Some(bbox) = self.imported.bounding_box() {
+                        self.imported_bounding_box_model = bbox
+                            .make_model(self.bounding_box_level, Rc::new(Material::white()))
+                            .build();
+                    }*/
                 }
                 other => string.push(other),
             },

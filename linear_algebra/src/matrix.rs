@@ -133,7 +133,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
             .into_inner()
             .map(Vector::truncate)
             .into_iter()
-            .chain(iter::repeat_with(Vector::new_zero))
+            .chain(iter::repeat(Vector::ZERO))
             .take(C2)
             .collect::<Box<_>>();
         Matrix::new_from_slice(x.as_ref())

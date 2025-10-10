@@ -6,11 +6,11 @@ use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{FlatTexture, Magnification, Texture, WrapType};
 use graphics::types::TexDim;
 
-use crate::modelling::Cubic;
 use crate::modelling::cubic::camera::{self, Camera};
 use crate::modelling::cubic::geometry::{Orientation, Pose};
 use crate::modelling::cubic::lighting::simple::SpotLight;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
+use crate::modelling::{Cubic, VertexHasTangent};
 
 #[derive(Debug)]
 pub struct ShadowSpotLight {
@@ -52,9 +52,11 @@ impl ShadowSpotLight {
         const MAX: usize,
         L: ShadowLightCompatible<MAX>,
         T: Texture,
+        M,
+        V: VertexHasTangent,
     >(
         &'c self,
-        shader: &mut ActiveShaderProgram<'_, '_, 'c, (Cubic, L), T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, 'c, V, (M, L), T, N>,
         name: &str,
         index: usize,
     ) {
@@ -71,8 +73,10 @@ impl ShadowSpotLight {
         const MAX: usize,
         L: ShadowLightCompatible<MAX>,
         T: Texture,
+        M,
+        V: VertexHasTangent,
     >(
-        shader: &mut ActiveShaderProgram<'_, '_, '_, (Cubic, L), T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, '_, V, (M, L), T, N>,
         name: &str,
         index: usize,
     ) {
