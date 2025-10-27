@@ -13,7 +13,6 @@ use super::Cubic;
 use super::material::Material;
 use crate::error::EngResult;
 use crate::modelling::advanced_vertex::IncompleteVertex;
-use crate::modelling::cubic::Mesh;
 use crate::modelling::cubic::mesh::MeshBuilder;
 
 mod error {
@@ -138,8 +137,6 @@ fn process_node<NEVER: Clone>(
                 .collect();
 
             let opt_normal = (!normals.is_empty() && load_tangent_space).then_some(normals);
-            // TODO: Remove
-            let opt_normal = None;
 
             let tangent: Vec<UnitVector<3>> = mesh
                 .tangents
@@ -148,16 +145,12 @@ fn process_node<NEVER: Clone>(
                 .collect();
 
             let opt_tangent = (!tangent.is_empty() && load_tangent_space).then_some(tangent);
-            // TODO: remove
-            let opt_tangent = None;
 
             let element_buffer: Vec<ElementArrayElem> = mesh
                 .faces
                 .iter()
                 .flat_map(|face| face.0.iter().copied().map(Into::into))
                 .collect();
-
-            // let mut vertex_array_builder = VertexArray::builder();
 
             fn is_no_vec_or_element_exists<'a, T, NEVER>(
                 name: &'static str,
@@ -207,16 +200,9 @@ fn process_node<NEVER: Clone>(
                             .opt_normal(triangle_normal)
                             .opt_tangent(triangle_tangent))
                     }) //;
-
-                    // let transpose = incomplete_triangle.try_map(identity)?;
-
-                    // vertex_array_builder.
-                    // push_incomplete_triangle(incomplete_triangle);
                 })
                 .collect::<EngResult<Vec<_>, _>>();
             let mesh_buffer = mesh_buffer?;
-
-            // let vertex_array = vertex_array_builder.build();
 
             let mat = current_mat
                 .entry(mesh.material_index)

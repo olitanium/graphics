@@ -1,6 +1,6 @@
 mod incomplete;
 use graphics::linear_algebra::{UnitVector, Vector};
-use graphics::vertex::{NoVertex, Vertex};
+use graphics::vertex::Vertex;
 pub use incomplete::IncompleteVertex;
 
 mod impls;

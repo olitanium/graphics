@@ -1,14 +1,13 @@
 use std::fmt::Debug;
 
+use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
-use graphics::framebuffer::traits::{FramebufferWithDepth, FramebufferWithoutExtra};
+use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
-use graphics::{ActiveShaderProgram, ApiResult};
 
 mod element;
 pub use element::BoundingBoxElement;
-use graphics::texture::FlatTexture;
 use graphics::vertex::Vertex;
 
 mod active_element;
@@ -19,7 +18,7 @@ pub use group::Group as BoundingBoxGroup;
 use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{Cubic, CubicVertex, SimpleVertex, Skeleton, Volume};
-use crate::{EngApiResult, EngResult, TransformBy};
+use crate::{EngResult, TransformBy};
 
 #[derive(Debug)]
 pub struct BoundingBox<V: ExtendedVertex<DIMS>, const DIMS: usize, T>
@@ -27,7 +26,6 @@ where
     Vector<DIMS>: Volume<DIMS>,
     [(); Vector::<DIMS>::ELEMENT_COUNT]:,
 {
-    triangles: Vec<[V; 3]>,
     inner: Vec<BoundingBoxElement<V, DIMS, T>>,
 }
 
@@ -74,23 +72,16 @@ where
             }
         ).collect();
 
-        let len_triangles = triangles.len();
-
         let mut accumulator = Vec::new();
 
         BoundingBoxElement::new_from_many_inner(
             &mut accumulator,
             &mut triangles_with_mid,
-            0,
-            len_triangles,
             depth,
             &mut init,
         )?;
 
-        Some(BoundingBox {
-            triangles,
-            inner: accumulator,
-        })
+        Some(BoundingBox { inner: accumulator })
     }
 
     pub fn encloses_point(&self, point: Vector<DIMS>) -> bool {
@@ -133,12 +124,12 @@ impl<V: CubicVertex, T> BoundingBox<V, 3, T> {
         )
         .map(|(lhs, rhs)| {
             (
-                lhs.get_triangles(&self)
+                lhs.get_triangles()
                     .into_iter()
                     .map(|triangle| triangle.transform_by(&self_pose))
                     //.copied()
                     .collect(),
-                rhs.get_triangles(&other)
+                rhs.get_triangles()
                     .into_iter()
                     .map(|triangle| triangle.transform_by(&other_pose))
                     //.copied()
@@ -165,8 +156,6 @@ impl<T> BoundingBox<SimpleVertex, 3, T> {
 }
 
 mod test {
-    use graphics::vertex::NoVertex;
-
     #[test]
     fn test_point_in_square() {
         use crate::linear_algebra::Vector;
@@ -203,10 +192,7 @@ mod test {
 
     #[test]
     fn test_overlap() {
-        use std::cell::RefCell;
-
         use graphics::linear_algebra::Vector;
-        use graphics::vertex_array::VertexArray;
 
         use crate::modelling::bounding_box::BoundingBoxElement;
         use crate::transform::NoTransform;

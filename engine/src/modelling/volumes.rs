@@ -1,5 +1,4 @@
 use graphics::linear_algebra::Vector;
-use graphics::vertex::Vertex;
 
 use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::{ExtendedVertex, test_models};

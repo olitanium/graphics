@@ -6,12 +6,11 @@ pub use builder::Builder as MeshBuilder;
 use graphics::ActiveShaderProgram;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
-use graphics::vertex::Vertex;
 use graphics::vertex_array::VertexArray;
 
 use crate::EngResult;
 use crate::modelling::cubic::material::Material;
-use crate::modelling::{CubicVertex, ExtendedVertex};
+use crate::modelling::ExtendedVertex;
 
 #[derive(Debug, Clone)]
 pub struct Mesh<V: ExtendedVertex<3>> {

@@ -1,5 +1,5 @@
 use std::array;
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 use std::num::NonZeroUsize;
 
 use graphics::ActiveShaderProgram;
@@ -7,12 +7,10 @@ use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
-use graphics::texture::{FlatTexture, Texture};
 use graphics::vertex::Vertex;
 use graphics::vertex_array::VertexArray;
 
 use crate::EngResult;
-use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
 
 #[derive(Debug)]
@@ -25,9 +23,6 @@ where
 
     pub(crate) lower_bound: Vector<DIMS>,
     pub(crate) upper_bound: Vector<DIMS>,
-
-    pub(crate) lower_bound_index: usize,
-    pub(crate) upper_bound_index: usize,
 
     pub(crate) triangles: Vec<[V; 3]>,
 
@@ -44,8 +39,6 @@ where
             vertex_array: VertexArray::default(),
             lower_bound: -Vector::X,
             upper_bound: Vector::X,
-            lower_bound_index: 0,
-            upper_bound_index: 0,
             meta: Default::default(),
             triangles: Default::default(),
             children: None,
@@ -87,8 +80,6 @@ where
     pub fn new_from_many_inner<F: FnMut(&[(Vector<DIMS>, [V; 3])]) -> T>(
         so_far: &mut Vec<Self>,
         triangles: &mut [(Vector<DIMS>, [V; 3])],
-        lower_bound_index: usize,
-        upper_bound_index: usize,
         depth: usize,
         init: &mut F,
     ) -> Option<usize> {
@@ -113,8 +104,6 @@ where
         so_far.push(Self {
             vertex_array,
             meta: RefCell::new(init(triangles)),
-            lower_bound_index,
-            upper_bound_index,
             triangles: vec_triangles,
             lower_bound: lower_bounds,
             upper_bound: upper_bounds,
@@ -163,17 +152,8 @@ where
                     .then(|| {
                         let children = partitions.try_map(|(lower_bound_partition, partition)| {
                             let bb_triangle = &mut triangles[lower_bound_partition..partition];
-                            let new_lower_bound_index = lower_bound_index + lower_bound_partition;
-                            let new_upper_bound_index = lower_bound_index + partition;
-
-                            let out = Self::new_from_many_inner(
-                                so_far,
-                                bb_triangle,
-                                new_lower_bound_index,
-                                new_upper_bound_index,
-                                depth - 1,
-                                init,
-                            );
+                            let out =
+                                Self::new_from_many_inner(so_far, bb_triangle, depth - 1, init);
                             out.and_then(NonZeroUsize::new)
                         });
 
@@ -186,8 +166,7 @@ where
         Some(destination_index)
     }
 
-    pub fn get_triangles(&self, bounding_box: &BoundingBox<V, DIMS, T>) -> &[[V; 3]] {
-        //&bounding_box.triangles[self.lower_bound_index..self.upper_bound_index]
+    pub fn get_triangles(&self) -> &[[V; 3]] {
         &self.triangles
     }
 

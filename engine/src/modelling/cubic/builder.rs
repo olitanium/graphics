@@ -5,7 +5,6 @@ use utils::{builder, new};
 
 use super::material::Material;
 use super::{Cubic, Skeleton};
-use crate::modelling::cubic::Mesh;
 use crate::modelling::cubic::mesh::MeshBuilder;
 use crate::modelling::test_models;
 
@@ -34,8 +33,6 @@ impl Builder {
     new!();
 
     builder!(cull_face: CullFace);
-
-    // builder!(relative: bool);
 
     builder!(skeleton: Option<Skeleton>);
 

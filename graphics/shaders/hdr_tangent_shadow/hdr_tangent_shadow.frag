@@ -97,7 +97,6 @@ uniform int num_spot;
 
 in vec3 tangent_view_direction;
 in vec3 frag_pos_world_space;
-in vec3 global_normal;
 
 float calculate_shadow(mat4 matrix, vec4 frag_pos_light_space, sampler2D depth_map);
 float calculate_shadow_point(vec3 frag_to_light, samplerCube depth, float far_plane);
@@ -138,9 +137,7 @@ void main() {
     //    discard;
     //}
 
-    //TODO: fix
-    //frag_colour = colour;
-    frag_colour = vec4(global_normal, 1.0);
+    frag_colour = colour;
     if (dot(colour.rgb, vec3(0.2126, 0.7152, 0.0722)) > 1.0) {
         bright_colour = vec4(colour.rgb, 1.0);
     } else {

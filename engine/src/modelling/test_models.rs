@@ -2,7 +2,6 @@ use std::iter;
 use std::sync::LazyLock;
 
 use graphics::linear_algebra::Vector;
-use graphics::types::ElementArrayElem;
 use graphics::vertex_array::VertexArray;
 
 use crate::modelling::ExtendedVertex;

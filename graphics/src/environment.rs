@@ -1,3 +1,4 @@
+use std::cell::RefMut;
 use std::collections::HashSet;
 
 mod draw;
@@ -87,7 +88,7 @@ pub enum Event<'a> {
     FrameTime(f64),
     ActualTime(f64),
     WindowResize((TexDim, TexDim)),
-    TextBuffer(&'a mut String),
+    TextBuffer(RefMut<'a, String>),
     Keyboard(HashSet<Key>),
     Mouse {
         buttons: HashSet<Button>,

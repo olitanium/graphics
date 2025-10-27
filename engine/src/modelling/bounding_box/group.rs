@@ -1,15 +1,15 @@
 use graphics::colour::ColourRGBA;
+use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
-use graphics::framebuffer::{self, FramebufferContext};
 use graphics::linear_algebra::{Matrix, Vector};
-use graphics::texture::{FlatTexture, Texture};
+use graphics::texture::FlatTexture;
 use graphics::vertex::Vertex;
-use graphics::{Draw, ShaderProgram, ShaderProgramContext};
+use graphics::{Draw, ShaderProgramContext};
 
 use crate::EngResult;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::geometry::CameraPose;
-use crate::modelling::{BoundingBox, ExtendedVertex, Skeleton, Volume, bounding_box};
+use crate::modelling::{BoundingBox, ExtendedVertex, Skeleton, Volume};
 use crate::opengl_shaders::BoundingBoxShaderProgram;
 
 pub struct Group<

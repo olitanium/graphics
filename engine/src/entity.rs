@@ -1,11 +1,8 @@
-use std::collections::btree_map::Entry;
-
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::vertex::Vertex;
 
-use crate::TransformBy;
 use crate::modelling::cubic::geometry::Pose;
-use crate::modelling::{BoundingBox, Cubic, QuadVertex, SimpleVertex, Volume};
+use crate::modelling::{BoundingBox, Cubic, SimpleVertex, Volume};
 
 #[derive(Debug)]
 pub struct Entity<T> {
@@ -77,55 +74,36 @@ impl<T> Entity<T> {
         other_alter_meta: O,
     ) -> bool {
         if let Some(mut vec) = self.detect_collision(&self_alter_meta, other, &other_alter_meta) {
+            // TODO: do stuff
             // find the best place to work out the collision.
-            // const SMALL_TIMESTEP: f32 = 0.00005;
-            // let other_push =
-            // Pose::new_from_translation(-other.velocity.scale(SMALL_TIMESTEP));
-            // let self_push =
-            // Pose::new_from_translation(-self.velocity.scale(SMALL_TIMESTEP));
-            //
-            // self.model.root_mut().push_change(self_push);
-            // other.model.root_mut().push_change(other_push);
-            //
-            // let mut index = 0;
-            // while let Some(new_vec) =
-            // self.detect_collision(&self_alter_meta, other, &other_alter_meta)
-            // {
-            // index += 1;
-            // vec = new_vec;
-            //
-            // self.model.root_mut().push_change(self_push);
-            // other.model.root_mut().push_change(other_push);
-            // }
+            const SMALL_TIMESTEP: f32 = 0.00005;
+            let other_push = Pose::new_from_translation(-other.velocity.scale(SMALL_TIMESTEP));
+            let self_push = Pose::new_from_translation(-self.velocity.scale(SMALL_TIMESTEP));
 
-            eprintln!("len {:?}", vec.len());
+            self.model.root_mut().push_change(self_push);
+            other.model.root_mut().push_change(other_push);
 
-            let count_vec: Vec<_> = vec.iter().map(|vec| (vec.0.len(), vec.1.len())).collect();
-            // eprintln!("count {}", index);
-            eprintln!("vec_lens {:?}", count_vec);
+            while let Some(new_vec) =
+                self.detect_collision(&self_alter_meta, other, &other_alter_meta)
+            {
+                vec = new_vec;
+
+                self.model.root_mut().push_change(self_push);
+                other.model.root_mut().push_change(other_push);
+            }
 
             let (lhs_manyvec, rhs_manyvec): (Vec<Vec<_>>, Vec<Vec<_>>) = vec.into_iter().unzip();
 
             let lhs = lhs_manyvec.into_iter().flatten();
             let rhs = rhs_manyvec.into_iter().flatten();
 
-            eprintln!("================ LHS =============  (nose)");
-            let lhs_norm = get_average_normal(lhs, false);
-            eprintln!("================ RHS =============  (back)");
-            let rhs_norm = get_average_normal(rhs, false);
-
-            eprintln!("lhs: {lhs_norm:?}");
-            eprintln!("rhs: {rhs_norm:?}");
+            let lhs_norm = get_average_normal(lhs);
+            let rhs_norm = get_average_normal(rhs);
 
             // TODO: remove unwrap and test special case of convex shape in box
             let Some(average) = (lhs_norm.v() - rhs_norm.v()).try_normalize() else {
                 return false;
             };
-
-            eprintln!("average: {average:?}");
-
-            // let original_momentum = self.mass * self.velocity + other.mass *
-            // other.velocity; let original_energy = self.
 
             // elastic collision
             let self_change = 2.0 * other.mass / (other.mass + self.mass)
@@ -149,24 +127,13 @@ impl<T> Entity<T> {
     }
 }
 
-pub fn get_average_normal<I: IntoIterator<Item = [SimpleVertex; 3]>>(
-    input: I,
-    suppress: bool,
-) -> UnitVector<3> {
+pub fn get_average_normal<I: IntoIterator<Item = [SimpleVertex; 3]>>(input: I) -> UnitVector<3> {
     input
         .into_iter()
         .map(|triangle| {
             triangle
                 .into_iter()
                 .map(|vertex| vertex.normal.v())
-                // TODO: remove
-                .map(|vec| {
-                    if !suppress {
-                        eprintln!("get_avg: {vec:?}");
-                    }
-                    vec
-                })
-                // END TODO
                 .sum::<Vector<3>>()
                 .normalize()
                 .v()

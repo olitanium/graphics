@@ -3,7 +3,7 @@ use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{FlatTexture, Texture};
 use utils::{builder, new};
 
-use crate::modelling::{Cubic, CubicVertex, ExtendedVertex};
+use crate::modelling::ExtendedVertex;
 
 #[derive(Debug)]
 pub struct Material {

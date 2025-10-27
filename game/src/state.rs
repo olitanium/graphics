@@ -1,3 +1,4 @@
+use std::cell::RefMut;
 use std::collections::HashSet;
 use std::rc::Rc;
 
@@ -88,8 +89,7 @@ impl EngState for State {
         let mut frame_time = 0.0;
         let mut keyboard = HashSet::new();
         let mut mouse_delta = (0.0, 0.0);
-        let mut string = String::new();
-        let mut local_string = &mut string;
+        let mut local_string = None;
         let mut default_fb = None;
         for event in events {
             match event {
@@ -107,7 +107,7 @@ impl EngState for State {
                     };
                 }
                 Event::Keyboard(kb) => keyboard = kb,
-                Event::TextBuffer(string) => local_string = string,
+                Event::TextBuffer(mut string) => local_string = Some(string),
                 Event::Mouse {
                     buttons: _,
                     position: _,
@@ -119,9 +119,11 @@ impl EngState for State {
             }
         }
 
+        let mut string = local_string.unwrap();
+
         // eprintln!("fps: {}", 1.0 / frame_time);
 
-        self.controls(mouse_delta, keyboard, local_string, frame_time)?;
+        self.controls(mouse_delta, keyboard, &mut *string, frame_time)?;
 
         self.physics(frame_time);
 

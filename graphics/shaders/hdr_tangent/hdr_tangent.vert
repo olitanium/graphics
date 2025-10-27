@@ -46,8 +46,7 @@ void main() {
     texture_coord = in_texture_coord;
     
     // Normal matrix adjusts normals after non-uniform transformation
-    mat3 normal_matrix = mat3(transpose(inverse(model))); // TODO: replace with CPU-side calc
-    //mat3 normal_matrix = mat3(model);
+    mat3 normal_matrix = mat3(model);
     vec3 world_normal = normal_matrix * normalize(in_normal);
     vec3 world_tangent = mat3(model) * normalize(in_tangent); // unsure if this is the right correction matrix
 

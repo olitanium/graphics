@@ -1,4 +1,6 @@
-use std::cell::RefCell;
+use std::cell::RefMut;
+use std::ops::DerefMut;
+use std::{cell::RefCell, rc::Rc};
 use std::collections::HashSet;
 use std::marker::PhantomPinned;
 use std::pin::Pin;
@@ -7,36 +9,31 @@ pub use glfw::{Action, Key};
 
 #[derive(Debug, Default)]
 struct Inner {
-    keys: RefCell<HashSet<Key>>,
-    buffer: RefCell<String>,
-    _phantom_pinned: PhantomPinned,
+    keys: HashSet<Key>,
+    buffer: String,
 }
 
 #[derive(Debug)]
-pub struct Keyboard(Pin<Box<Inner>>);
+pub struct Keyboard(Rc<RefCell<Inner>>);
 
 impl Keyboard {
     pub(crate) fn new(window: &mut glfw::Window) -> Self {
-        let out = Self(Box::pin(Default::default()));
+        let out = Self(Default::default());
 
-        let key_ptr = &raw const out.0.keys;
-        let backspace_ptr = &raw const out.0.buffer;
-        let buffer_ptr = &raw const out.0.buffer;
+        let key_ptr = out.0.clone();
+        let backspace_ptr = out.0.clone();
+        let buffer_ptr = out.0.clone();
 
-        const ERROR_MESSAGE: &str =
-            "Pointer was created based on box, and so is valid for reads and writes";
         window.set_key_callback(move |_, key, _, action, _| {
             match action {
                 Action::Press => {
-                    unsafe { key_ptr.as_ref() }
-                        .expect(ERROR_MESSAGE)
-                        .borrow_mut()
+                    key_ptr.borrow_mut()
+                        .keys
                         .insert(key);
                 }
                 Action::Release => {
-                    unsafe { key_ptr.as_ref() }
-                        .expect(ERROR_MESSAGE)
-                        .borrow_mut()
+                    key_ptr.borrow_mut()
+                        .keys
                         .remove(&key);
                 }
                 _ => {}
@@ -45,15 +42,15 @@ impl Keyboard {
             match (key, action) {
                 // Perfom on Press or Repeat
                 (Key::Backspace, Action::Press | Action::Repeat) => {
-                    unsafe { backspace_ptr.as_ref() }
-                        .expect(ERROR_MESSAGE)
+                    backspace_ptr
                         .borrow_mut()
+                        .buffer
                         .pop();
                 }
                 (Key::Enter, Action::Press | Action::Repeat) => {
-                    unsafe { backspace_ptr.as_ref() }
-                        .expect(ERROR_MESSAGE)
+                        backspace_ptr
                         .borrow_mut()
+                        .buffer
                         .push('\n');
                 }
                 // Do not act on other keys
@@ -61,25 +58,21 @@ impl Keyboard {
             }
         });
 
-        window.set_char_callback(move |_, char| {
-            unsafe { buffer_ptr.as_ref() }
-                .expect(ERROR_MESSAGE)
+        window.set_char_callback(move |_, ch| {
+                buffer_ptr
                 .borrow_mut()
-                .push(char);
+                .buffer
+                .push(ch);
         });
 
         out
     }
 
-    pub(crate) fn get_buffer(&mut self) -> &mut String {
-        // SAFETY: the inner_ref never moves the RefCell. A mut ref to the buffer
-        // is released, but it's movement is not possible
-        let inner_ref = unsafe { self.0.as_mut().get_unchecked_mut() };
-
-        inner_ref.buffer.get_mut()
+    pub(crate) fn get_buffer(&mut self) -> RefMut<'_, String> {
+        RefMut::map(self.0.borrow_mut(), |inner| &mut inner.buffer)
     }
 
     pub fn get_depressed_keys(&self) -> HashSet<Key> {
-        self.0.keys.borrow().clone()
+        self.0.borrow().keys.clone()
     }
 }
