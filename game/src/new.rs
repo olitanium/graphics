@@ -24,7 +24,7 @@ use engine::{ColourRGB, ColourRGBA, EngResult, Entity};
 use crate::state::{State, StateError};
 
 impl State {
-    pub fn new_(size: (TexDim, TexDim)) -> EngResult<Self, StateError> {
+    pub fn new_internal(size: (TexDim, TexDim)) -> EngResult<Self, StateError> {
         let speed = [1.0, 1.0, 1.0];
         let exposure = 1.0;
 
@@ -74,37 +74,27 @@ impl State {
             })
             .collect();
 
-        let mut imported = Entity::from_cubic(make_model("morgan")?, 10, 1.0).unwrap();
-        // let imported = Entity::from_cubic(Cubic::cube(1.0,
-        // Rc::new(Material::white())).build(), 10, 1.0).unwrap();
-        // imported.velocity = Vector::new([0.0, 0.0, 0.05]);
-        *imported.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, -1.1]));
+        let mut imported = Entity::from_cubic(make_model("morgan")?, 20, 1.0).unwrap();
+        imported.velocity = Vector::new([0.0, 0.0, 0.05]);
+        *imported.model.root_mut() = Pose::new_from_orientation_translation(
+            Orientation::new_forward_up(UnitVector::Z, UnitVector::Y),
+            Vector::new([0.0, 0.0, -1.1]),
+        );
 
-        let mut imported_other = Entity::from_cubic(make_model("morgan")?, 10, 3.0).unwrap();
-        // imported_other.velocity = Vector::new([0.0, 0.0, -0.05]);
+        let mut imported_other = Entity::from_cubic(make_model("morgan")?, 20, 3.0).unwrap();
+        imported_other.velocity = Vector::new([0.0, 0.0, -0.05]);
         *imported_other.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.1]));
 
         let bounding_box_level = 0;
-        /*let imported_bounding_box_model = imported.bounding_box().map_or_default(|bbox| {
-            bbox.make_model(bounding_box_level, Rc::new(Material::white()))
-                .build()
-        });
-        let imported_other_bounding_box_model =
-            imported_other.bounding_box().map_or_default(|bbox| {
-                bbox.make_model(bounding_box_level, Rc::new(Material::white()))
-                    .build()
-            });
-*/
-        const START_LOC: [f32; 3] = [0.0, 0.0, -2.0];
+
+        const START_LOC: Vector<3> = Vector::new([-2.0, 1.7, 0.0]);
 
         let camera = camera::builder()
-            .pose(
-                ManualPose::new_fixed_forward_up(
-                    Vector::new(START_LOC),
-                    UnitVector::Z,
-                    UnitVector::Y,
-                ), // Demo
-            )
+            .pose(ManualPose::new_fixed_forward_up(
+                START_LOC,
+                UnitVector::X,
+                UnitVector::Y,
+            ))
             .perspective(90.0, hdr_fb.aspect_ratio(), 0.01, 100.0)
             .build();
 
@@ -203,10 +193,12 @@ impl State {
             imported,
             imported_other,
             blank: Cubic::empty(),
-            /*imported_bounding_box_model,
-            imported_other_bounding_box_model,*/
-
+            // imported_bounding_box_model,
+            // textures,
+            // imported_other_bounding_box_model,
             bounding_box_level,
+            has_collided: false,
+            prep_to_print: false,
 
             which_animation: 0,
 
@@ -239,7 +231,9 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
         "morgan" => Cubic::import(
             "assets/Teddy Statue/Teddy Statue.obj",
             vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
+            false,
         )?
+        .cull_face(CullFace::BackFace)
         .scale(0.01)
         .build(),
         "backpack" => Cubic::import(
@@ -250,6 +244,7 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
                 P::OptimizeGraph,
                 P::OptimizeMeshes,
             ],
+            false,
         )?
         .material(Rc::new(Material::white()))
         .build(),

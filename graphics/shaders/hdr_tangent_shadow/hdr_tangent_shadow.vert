@@ -78,10 +78,12 @@ out SpotLightVarying out_spot_vary[MAX_LIGHTS];
 out vec3 tangent_view_direction;
 out vec2 texture_coord;
 out vec3 frag_pos_world_space;
+out vec3 global_normal;
 
 
 void main() {
     texture_coord = in_texture_coord;
+    global_normal = vec3(model * vec4(normalize(in_normal), 0.0));
     
     // Normal matrix adjusts normals after non-uniform transformation
     mat3 normal_matrix = mat3(transpose(inverse(model))); // TODO: replace with CPU-side calc

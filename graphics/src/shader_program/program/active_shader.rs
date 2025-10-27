@@ -114,8 +114,8 @@ impl<'c, V: Vertex, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_,
         }
     }
 
-    pub fn set_uniform<U: Uniform + ?Sized>(&mut self, name: String, value: &U) {
-        let _ = value.set_uniform(name, self);
+    pub fn set_uniform<U: Uniform + ?Sized, S: Into<String>>(&mut self, name: S, value: &U) {
+        let _ = value.set_uniform(name.into(), self);
     }
 
     pub fn set_uniform_dyn(&mut self, values: Vec<(String, &dyn Uniform)>) {

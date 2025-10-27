@@ -1,7 +1,7 @@
-use graphics::Event;
 use graphics::types::TexDim;
+use graphics::{ApiResult, Draw, Event};
 
-use crate::{EngResult, VecDraw};
+use crate::{EngError, EngResult, VecDraw};
 
 pub trait EngState: Sized {
     type Error: core::error::Error;
@@ -32,3 +32,21 @@ macro_rules! derive_api_state {
         }
     };
 }
+
+// use graphics::ApiState;
+// impl<T: EngState> ApiState for T {
+// type Error = EngError<<Self as EngState>::Error>;
+//
+// fn new(initial_size: (TexDim, TexDim)) -> ApiResult<Self, Self::Error> {
+// let out = <Self as EngState>::new(initial_size)?;
+// Ok(out)
+// }
+//
+// fn poll<'a>(
+// &'a mut self,
+// events: Vec<Event<'a>>,
+// ) -> ApiResult<Vec<Box<dyn Draw + 'a>>, Self::Error> {
+// let out = <Self as EngState>::poll(self, events)?;
+// Ok(out)
+// }
+// }

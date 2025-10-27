@@ -1,5 +1,6 @@
 use std::sync::LazyLock;
 
+use graphics::linear_algebra::Vector;
 use graphics::shader_program::{CullFace, ShaderProgram};
 use graphics::texture::{CubeMap, FlatTexture};
 use graphics::vertex::NoVertex;
@@ -7,6 +8,7 @@ use graphics::vertex::NoVertex;
 use crate::modelling::cubic::lighting::shadow::ShadowListLights;
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::{
+    BoundingBox,
     Cubic,
     Line,
     Quad,
@@ -15,6 +17,7 @@ use crate::modelling::{
     SkyBox,
     SkyBoxVertex,
     TestLineVertex,
+    Volume,
 };
 
 static ERROR_MESSAGE: &str = "Engine defined shader should exist and not have errors";
@@ -128,3 +131,32 @@ make_included! {
 }
 
 pub const LINE_SHADER_MAX_VERTICES: usize = 100;
+
+pub trait BoundingBoxShaderProgram<const DIMS: usize>: Volume<DIMS> {
+    fn shader_program() -> &'static ShaderProgram<Self, (), 1, FlatTexture>;
+}
+
+impl BoundingBoxShaderProgram<3> for Vector<3> {
+    fn shader_program() -> &'static ShaderProgram<Self, (), 1, FlatTexture> {
+        static PROGRAM: LazyLock<ShaderProgram<Vector<3>, (), 1, FlatTexture>> =
+            LazyLock::new(|| {
+                let out: crate::ApiResult<_, !> = try {
+                    ShaderProgram::builder()
+                        .vertex_shader("shaders/bounding_box/bounding_box.vert")?
+                        .fragment_shader("shaders/bounding_box/bounding_box.frag")?
+                        .build()?
+                };
+
+                out.expect(ERROR_MESSAGE)
+            });
+
+        &PROGRAM
+    }
+}
+
+impl BoundingBoxShaderProgram<2> for Vector<2> {
+    fn shader_program() -> &'static ShaderProgram<Self, (), 1, FlatTexture> {
+        // TODO
+        todo!();
+    }
+}

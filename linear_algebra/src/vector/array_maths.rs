@@ -21,7 +21,7 @@ pub fn is_zero<const N: usize>(v1: [f32; N]) -> bool {
     if (1.0 / dot(v1, v1)).is_finite() {
         true
     } else {
-        println!("{v1:?}");
+        // println!("{v1:?}");
         false
     }
 }

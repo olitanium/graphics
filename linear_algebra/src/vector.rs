@@ -25,7 +25,14 @@ impl<const N: usize> PartialEq for Vector<N> {
 }
 
 impl<const N: usize> Vector<N> {
+    pub const X: Self = Self::x();
     pub const ZERO: Self = Self::new([0.0; N]);
+
+    pub const fn x() -> Self {
+        let mut vec = Self::ZERO;
+        vec.inner_mut()[0] = 1.0;
+        vec
+    }
 
     #[must_use]
     #[inline]

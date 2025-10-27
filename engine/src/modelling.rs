@@ -23,7 +23,7 @@ pub use simple_vertex::SimpleVertex;
 pub mod test_models;
 
 mod bounding_box;
-pub use bounding_box::BoundingBox;
+pub use bounding_box::{BoundingBox, BoundingBoxGroup};
 
 mod advanced_vertex;
 pub use advanced_vertex::{CubicVertex, ExtendedVertex, VertexHasTangent};

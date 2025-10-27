@@ -23,7 +23,8 @@ pub struct Cubic {
 
 impl Default for Cubic {
     fn default() -> Self {
-        Self::cube(1.0, Default::default()).build()
+        // Self::cube(1.0, Default::default()).build()
+        Self::empty()
     }
 }
 
@@ -80,7 +81,7 @@ impl Cubic {
         let _: ApiResult<_, !> = active_shader.cull_face(self.cull_face);
         for &(bone, ref mesh) in self.meshes.iter() {
             active_shader.set_uniform(
-                "model".into(),
+                "model",
                 &self
                     .skeleton
                     .get_bone_pose(false, bone, animation, time)
@@ -96,7 +97,8 @@ impl Cubic {
     pub fn import<NEVER: Clone, PA: AsRef<Path>>(
         path: PA,
         post_process: Vec<PostProcess>,
+        load_tangent_space: bool,
     ) -> EngResult<Builder, NEVER> {
-        import::import(path, post_process)
+        import::import(path, post_process, load_tangent_space)
     }
 }

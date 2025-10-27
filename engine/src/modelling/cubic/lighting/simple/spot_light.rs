@@ -27,7 +27,7 @@ impl SpotLight {
         L: ListLightCompatible<MAX>,
         T: Texture,
         M,
-        //TODO: make valid for lighting
+        // TODO: make valid for lighting
         V: CubicVertex,
     >(
         &self,

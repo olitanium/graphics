@@ -25,17 +25,17 @@ impl<const MAX: usize> ListLights<MAX> {
         &self,
         shader_program: &mut ActiveShaderProgram<'_, '_, '_, V, (M, L), T, N>,
     ) {
-        shader_program.set_uniform("num_point".into(), &(self.point.len() as i32));
+        shader_program.set_uniform("num_point", &(self.point.len() as i32));
         for (index, light) in self.point.iter().enumerate() {
             light.bind_to(shader_program, "point", index);
         }
 
-        shader_program.set_uniform("num_spot".into(), &(self.spot.len() as i32));
+        shader_program.set_uniform("num_spot", &(self.spot.len() as i32));
         for (index, light) in self.spot.iter().enumerate() {
             light.bind_to(shader_program, "spot", index);
         }
 
-        shader_program.set_uniform("num_far".into(), &(self.far.len() as i32));
+        shader_program.set_uniform("num_far", &(self.far.len() as i32));
         for (index, light) in self.far.iter().enumerate() {
             light.bind_to(shader_program, "far", index);
         }

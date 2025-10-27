@@ -43,7 +43,7 @@ where
     ) -> EngResult<(), !> {
         self.material.register_to(active_shader, "material");
 
-        (*self.vertex_array).draw(active_shader, active_framebuffer)?;
+        self.vertex_array.draw(active_shader, active_framebuffer)?;
 
         Ok(())
     }

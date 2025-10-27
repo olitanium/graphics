@@ -15,16 +15,19 @@ use engine::modelling::cubic::material::Material;
 use engine::modelling::{
     Bloom,
     BloomGroup,
+    BoundingBoxGroup,
     Cubic,
     Line,
     Quad,
     QuadGroup,
     SHADOW_SHADER_MAX_LIGHTS,
     ShadowGroup,
+    SimpleVertex,
     SkyBox,
     SkyBoxGroup,
     TestLineVertex,
 };
+use engine::texture::FlatTexture;
 use engine::types::TexDim;
 use engine::{ApiState, ColourRGB, ColourRGBA, EngError, EngResult, Entity, Event, VecDraw};
 
@@ -51,13 +54,13 @@ pub struct State {
     pub light: Cubic,
     pub containers: Vec<Cubic>,
     pub testbool: bool,
-    pub imported: Entity,
-    pub imported_other: Entity,
+    pub imported: Entity<(bool, Vec<[SimpleVertex; 3]>)>,
+    pub imported_other: Entity<(bool, Vec<[SimpleVertex; 3]>)>,
     pub blank: Cubic,
 
-    /*pub imported_bounding_box_model: Cubic,
-    pub imported_other_bounding_box_model: Cubic,*/
     pub bounding_box_level: usize,
+    pub has_collided: bool,
+    pub prep_to_print: bool,
 
     pub which_animation: usize,
 
@@ -116,7 +119,7 @@ impl EngState for State {
             }
         }
 
-        eprintln!("fps: {}", 1.0 / frame_time);
+        // eprintln!("fps: {}", 1.0 / frame_time);
 
         self.controls(mouse_delta, keyboard, local_string, frame_time)?;
 
@@ -127,125 +130,7 @@ impl EngState for State {
     }
 
     fn new(initial_size: (TexDim, TexDim)) -> EngResult<Self, StateError> {
-        let output = Self::new_(initial_size)?;
+        let output = Self::new_internal(initial_size)?;
         Ok(output)
-    }
-}
-
-impl State {
-    fn physics(&mut self, frame_time: f32) {
-        let game_start = *self.game_start.get_or_insert(self.time);
-        let time = self.time - game_start;
-
-        let light_pos = Vector::new([
-            5.0 * (time / 10.0).sin(),
-            5.0 * (time / 10.0).sin(),
-            5.0 * (time / 10.0).cos(),
-        ]);
-
-        if let Some(light) = self.light_group.point.get_mut(0) {
-            light.light.position = light_pos;
-            *self.light.root_mut() = Pose::new_from_translation(light_pos);
-        }
-
-        // if !self
-        // .imported
-        // .elastic_collision_no_rotation(&mut self.imported_other)
-        // {}
-        self.imported_other.update(frame_time);
-        self.imported.update(frame_time);
-
-        if self
-            .imported
-            .elastic_collision_no_rotation(&mut self.imported_other)
-        {
-            self.imported.velocity = Vector::ZERO;
-            self.imported_other.velocity = Vector::ZERO;
-        }
-
-        if let Some(light) = self.light_group.spot.get_mut(0) {
-            light.light.direction = self.camera.direction(&());
-            light.light.position = self.camera.position(&());
-        }
-
-        let bounding_box_level = self.bounding_box_level;
-
-        /*if let Some(bbox) = self.imported.bounding_box() {
-            self.imported_bounding_box_model = bbox
-                .transform_by_pose(self.imported.model.root())
-                .make_model(
-                    bounding_box_level,
-                    Rc::new(Material::from_colour_alpha(ColourRGB::RED, 0.5)),
-                )
-                .build();
-        }*/
-
-        /*if let Some(bbox) = self.imported_other.bounding_box() {
-            self.imported_other_bounding_box_model = bbox
-                .transform_by_pose(self.imported_other.model.root())
-                .make_model(
-                    bounding_box_level,
-                    Rc::new(Material::from_colour(ColourRGBA::BLUE)),
-                )
-                .build();
-        }*/
-    }
-
-    fn prep_draw<'a>(
-        &'a mut self,
-        default_framebuffer: &'a DefaultFramebuffer,
-    ) -> EngResult<VecDraw<'a>, StateError> {
-        let time = self.time;
-
-        let mut out = VecDraw::new();
-
-        let all_models = {
-            let mut all_models = vec![
-                (&self.imported.model, self.which_animation, time),
-                (&self.imported_other.model, self.which_animation, time),
-            ];
-
-            /*if self.show_bbs {
-                all_models.extend(vec![
-                    (&self.imported_bounding_box_model, 0, 0.0),
-                    (&self.imported_other_bounding_box_model, 0, 0.0),
-                ]);
-            }*/
-            all_models
-        };
-
-        out.push(SkyBoxGroup::new(
-            engine::opengl_shaders::skybox_hdr(),
-            &self.hdr_fb,
-            &self.skybox,
-            &self.camera,
-            &(),
-            vec![],
-        ));
-
-        out.push(ShadowGroup::new(
-            &self.hdr_fb,
-            &self.camera,
-            &(),
-            &self.light_group,
-            all_models,
-            vec![],
-            vec![],
-        ));
-
-        if self.do_bloom {
-            // println!("bloom_on");
-            out.push(BloomGroup::new(default_framebuffer, &self.bloom));
-        } else {
-            // println!("bloom_off");
-            out.push(QuadGroup::new(
-                engine::opengl_shaders::exposure(),
-                default_framebuffer,
-                vec![&self.quad_to_draw],
-                vec![(String::from("exposure"), &self.exposure)],
-            ));
-        }
-
-        Ok(out)
     }
 }

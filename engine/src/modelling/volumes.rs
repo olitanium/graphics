@@ -16,7 +16,6 @@ impl Volume<2> for Vector<2> {
         lower_bound: Self,
         upper_bound: Self,
     ) -> impl Iterator<Item = [IncompleteVertex<2>; 3]> {
-        // Quad
         test_models::quad_triangles(lower_bound, upper_bound)
     }
 }

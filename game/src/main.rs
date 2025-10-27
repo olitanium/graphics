@@ -7,6 +7,8 @@ use engine::Environment;
 
 mod controls;
 mod new;
+mod physics;
+mod prep_draw;
 mod state;
 
 fn main() {

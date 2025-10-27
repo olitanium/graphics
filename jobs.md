@@ -4,7 +4,11 @@
 * Renderbuffer Objects (like textures for Framebuffer attachments. Might cause issues for shadows because they are unreadable)
 * Light uniform location cacheing without strings
 * Skeletal Animation / Skinning
-* Keyboard and Mouse use Arc and Clone rather than Box and pointers
+* Keyboard and Mouse use Rc and Clone rather than Box and pointers
+* ExtendedVertex no longer generic, instead has associated const DIMS
+* One bounding-box root per bone
+  * Use skeleton to look up pose when drawing
+  * Triangles contained within based on whether they have any tie to a 
 
 ## Skeletal Animation Notes
 

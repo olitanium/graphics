@@ -83,19 +83,19 @@ impl State {
                 'b' | 'B' => self.show_bbs = !self.show_bbs,
                 'o' => {
                     self.bounding_box_level = self.bounding_box_level.wrapping_add(1);
-                    /*if let Some(bbox) = self.imported.bounding_box() {
-                        self.imported_bounding_box_model = bbox
-                            .make_model(self.bounding_box_level, Rc::new(Material::white()))
-                            .build();
-                    }*/
+                    // if let Some(bbox) = self.imported.bounding_box() {
+                    // self.imported_bounding_box_model = bbox
+                    // .make_model(self.bounding_box_level,
+                    // Rc::new(Material::white())) .build();
+                    // }
                 }
                 'i' => {
                     self.bounding_box_level = self.bounding_box_level.wrapping_sub(1);
-                    /*if let Some(bbox) = self.imported.bounding_box() {
-                        self.imported_bounding_box_model = bbox
-                            .make_model(self.bounding_box_level, Rc::new(Material::white()))
-                            .build();
-                    }*/
+                    // if let Some(bbox) = self.imported.bounding_box() {
+                    // self.imported_bounding_box_model = bbox
+                    // .make_model(self.bounding_box_level,
+                    // Rc::new(Material::white())) .build();
+                    // }
                 }
                 other => string.push(other),
             },

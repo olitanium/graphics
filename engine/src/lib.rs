@@ -11,7 +11,7 @@
 #![feature(iter_map_windows)]
 
 pub mod eng_state;
-mod entity;
+pub mod entity;
 #[expect(hidden_glob_reexports)]
 mod error;
 pub mod modelling;

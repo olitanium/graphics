@@ -74,7 +74,7 @@ extern "system" fn debug_callback(
         _ => "ERROR SEVERITY NOT FOUND",
     };
 
-    println!(
+    eprintln!(
         "GL Callback:\n\tsource =  \t{source}\n\ttype =    \t{gltype}\n\tseverity \
          =\t{severity}\n\tmessage = \t{message:#?}",
     );

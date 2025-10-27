@@ -1,6 +1,6 @@
 mod incomplete;
-use graphics::linear_algebra::Vector;
-use graphics::vertex::Vertex;
+use graphics::linear_algebra::{UnitVector, Vector};
+use graphics::vertex::{NoVertex, Vertex};
 pub use incomplete::IncompleteVertex;
 
 mod impls;
@@ -17,6 +17,7 @@ pub trait ExtendedVertex<const N: usize>: Vertex {
 pub trait CubicVertex: ExtendedVertex<3> + TransformBy<Pose> {}
 
 pub trait VertexHasTangent: CubicVertex {
+    fn normal(self) -> UnitVector<3>;
     fn into_simplevertex(self) -> SimpleVertex;
 }
 

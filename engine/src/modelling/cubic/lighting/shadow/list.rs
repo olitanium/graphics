@@ -82,9 +82,8 @@ impl<const MAX: usize> ShadowListLights<MAX> {
             for (index, matrix) in light.get_look_at_matrices().into_iter().enumerate() {
                 active_depth_only_shader_point.set_uniform(format!("matrix[{index}]"), &matrix);
             }
-            active_depth_only_shader_point
-                .set_uniform("light_position".into(), &light.light.position);
-            active_depth_only_shader_point.set_uniform("far_plane".into(), &light.far_plane());
+            active_depth_only_shader_point.set_uniform("light_position", &light.light.position);
+            active_depth_only_shader_point.set_uniform("far_plane", &light.far_plane());
 
             let mut active_light_framebuffer = light.framebuffer.bind(fb_context);
 

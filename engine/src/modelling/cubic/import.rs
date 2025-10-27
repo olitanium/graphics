@@ -68,6 +68,7 @@ use super::Builder;
 pub(super) fn import<NEVER: Clone, P: AsRef<Path>>(
     path: P,
     post_process: Vec<PostProcess>,
+    load_tangent_space: bool,
 ) -> EngResult<Builder, NEVER> {
     let path = path.as_ref();
 
@@ -93,6 +94,7 @@ pub(super) fn import<NEVER: Clone, P: AsRef<Path>>(
             .ok_or_else(|| Error::NoRootNode { path: path.into() })?,
         dir,
         &mut HashMap::new(),
+        load_tangent_space,
     )?;
     let mut builder = Cubic::builder();
     builder.extend_meshes(out);
@@ -104,6 +106,7 @@ fn process_node<NEVER: Clone>(
     node: &Node,
     dir: &Path,
     current_mat: &mut HashMap<u32, EngResult<Rc<Material>, NEVER>>,
+    load_tangent_space: bool,
 ) -> EngResult<Vec<(usize, MeshBuilder)>, NEVER> {
     // process current node and recursively process each in node.children.
     let mut curr_meshes = node
@@ -134,7 +137,9 @@ fn process_node<NEVER: Clone>(
                 .map(|vec3d| Vector::new([vec3d.x, vec3d.y, vec3d.z]).normalize())
                 .collect();
 
-            let opt_normal = (!normals.is_empty()).then_some(normals);
+            let opt_normal = (!normals.is_empty() && load_tangent_space).then_some(normals);
+            // TODO: Remove
+            let opt_normal = None;
 
             let tangent: Vec<UnitVector<3>> = mesh
                 .tangents
@@ -142,7 +147,9 @@ fn process_node<NEVER: Clone>(
                 .map(|vec3d| Vector::new([vec3d.x, vec3d.y, vec3d.z]).normalize())
                 .collect();
 
-            let opt_tangent = (!tangent.is_empty()).then_some(tangent);
+            let opt_tangent = (!tangent.is_empty() && load_tangent_space).then_some(tangent);
+            // TODO: remove
+            let opt_tangent = None;
 
             let element_buffer: Vec<ElementArrayElem> = mesh
                 .faces
@@ -226,7 +233,7 @@ fn process_node<NEVER: Clone>(
     let children = node.children.borrow();
     let child_meshes = children
         .iter()
-        .map(|node| process_node(scene, node, dir, current_mat))
+        .map(|node| process_node(scene, node, dir, current_mat, load_tangent_space))
         .collect::<EngResult<Vec<_>, NEVER>>()?
         .into_iter()
         .flatten();

@@ -6,8 +6,7 @@ in vec3 tex_coords;
 
 uniform samplerCube skybox;
 
-void main()
-{    
+void main() {    
     vec4 colour = texture(skybox, tex_coords);
 
     if (dot(colour.rgb, vec3(0.2126, 0.7152, 0.0722)) > 1.0) {

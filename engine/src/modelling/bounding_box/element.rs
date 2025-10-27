@@ -1,7 +1,9 @@
 use std::array;
+use std::cell::{Cell, RefCell};
 use std::num::NonZeroUsize;
 
 use graphics::ActiveShaderProgram;
+use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
@@ -14,12 +16,12 @@ use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
 
 #[derive(Debug)]
-pub struct BoundingBoxElement<const DIMS: usize>
+pub struct BoundingBoxElement<V: Vertex, const DIMS: usize, T>
 where
     Vector<DIMS>: Vertex,
 {
     pub(crate) vertex_array: VertexArray<Vector<DIMS>>,
-    pub(crate) texture_choice: usize,
+    pub(crate) meta: RefCell<T>,
 
     pub(crate) lower_bound: Vector<DIMS>,
     pub(crate) upper_bound: Vector<DIMS>,
@@ -27,7 +29,28 @@ where
     pub(crate) lower_bound_index: usize,
     pub(crate) upper_bound_index: usize,
 
+    pub(crate) triangles: Vec<[V; 3]>,
+
     pub(crate) children: Option<[NonZeroUsize; 2]>,
+}
+
+impl<V: Vertex, const DIMS: usize, T: Default> Default for BoundingBoxElement<V, DIMS, T>
+where
+    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+    Vector<DIMS>: Vertex,
+{
+    fn default() -> Self {
+        Self {
+            vertex_array: VertexArray::default(),
+            lower_bound: -Vector::X,
+            upper_bound: Vector::X,
+            lower_bound_index: 0,
+            upper_bound_index: 0,
+            meta: Default::default(),
+            triangles: Default::default(),
+            children: None,
+        }
+    }
 }
 
 fn make_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
@@ -56,22 +79,25 @@ fn make_lower_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
     make_bound(vectors, f32::min)
 }
 
-impl<const DIMS: usize> BoundingBoxElement<DIMS>
+impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T>
 where
     Vector<DIMS>: Volume<DIMS>,
     [(); Vector::<DIMS>::ELEMENT_COUNT]:,
 {
-    pub fn new_from_many_inner<V: ExtendedVertex<DIMS>>(
+    pub fn new_from_many_inner<F: FnMut(&[(Vector<DIMS>, [V; 3])]) -> T>(
         so_far: &mut Vec<Self>,
         triangles: &mut [(Vector<DIMS>, [V; 3])],
         lower_bound_index: usize,
         upper_bound_index: usize,
         depth: usize,
-    ) -> Option<NonZeroUsize> {
+        init: &mut F,
+    ) -> Option<usize> {
         let vectors: Vec<_> = triangles
             .into_iter()
             .flat_map(|&mut (_, arr)| arr)
             .collect();
+
+        let vec_triangles = triangles.into_iter().map(|&mut (_, arr)| arr).collect();
 
         let upper_bounds = make_upper_bound(&vectors)?;
         let lower_bounds = make_lower_bound(&vectors)?;
@@ -86,9 +112,10 @@ where
 
         so_far.push(Self {
             vertex_array,
-            texture_choice: 0,
+            meta: RefCell::new(init(triangles)),
             lower_bound_index,
             upper_bound_index,
+            triangles: vec_triangles,
             lower_bound: lower_bounds,
             upper_bound: upper_bounds,
             children: None,
@@ -145,8 +172,9 @@ where
                                 new_lower_bound_index,
                                 new_upper_bound_index,
                                 depth - 1,
+                                init,
                             );
-                            out
+                            out.and_then(NonZeroUsize::new)
                         });
 
                         children
@@ -155,30 +183,26 @@ where
             }
         };
 
-        Some(NonZeroUsize::new(destination_index)?)
+        Some(destination_index)
     }
 
-    pub fn get_triangles<'a, V: ExtendedVertex<DIMS>>(
-        &self,
-        bounding_box: &'a BoundingBox<V, DIMS>,
-    ) -> &'a [[V; 3]] {
-        &bounding_box.triangles[self.lower_bound_index..self.upper_bound_index]
+    pub fn get_triangles(&self, bounding_box: &BoundingBox<V, DIMS, T>) -> &[[V; 3]] {
+        //&bounding_box.triangles[self.lower_bound_index..self.upper_bound_index]
+        &self.triangles
     }
 
     pub fn draw_recursive<
         'a,
-        V: ExtendedVertex<DIMS>,
-        M,
         D: FramebufferWithDepth<OUT>,
         const OUT: usize,
+        F: Fn(&T) -> ColourRGBA,
     >(
         &self,
-        bounding_box: &BoundingBox<V, DIMS>,
+        bounding_box: &BoundingBox<V, DIMS, T>,
         level: usize,
-        root: Pose,
-        textures: &'a [FlatTexture],
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, V, M, D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Vector<DIMS>, (), D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
+        colour: &F,
     ) -> EngResult<(), !> {
         if let Some([lhs, rhs]) = self.get_children(bounding_box)
             && level != 0
@@ -186,27 +210,24 @@ where
             lhs.draw_recursive(
                 bounding_box,
                 level - 1,
-                root,
-                textures,
                 active_shader,
                 active_framebuffer,
+                colour,
             )?;
             rhs.draw_recursive(
                 bounding_box,
                 level - 1,
-                root,
-                textures,
                 active_shader,
                 active_framebuffer,
+                colour,
             )?;
             Ok(())
         } else {
-            // TODO: remoe unwrap
-            let texture = textures
-                .get(self.texture_choice)
-                .or_else(|| textures.get(0))
-                .unwrap();
-            active_shader.register_texture([("texture".into(), texture as &dyn Texture)]);
+            let chosen_colour = colour(&*self.meta.borrow());
+
+            active_shader.set_uniform("colour", &chosen_colour);
+
+            self.vertex_array.draw(active_shader, active_framebuffer)?;
 
             Ok(())
         }

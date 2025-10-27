@@ -8,15 +8,15 @@ use crate::modelling::bounding_box::BoundingBoxElement;
 use crate::modelling::{BoundingBox, Volume};
 use crate::transform::Transform;
 
-impl<const DIMS: usize> BoundingBoxElement<DIMS>
+impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T>
 where
     Vector<DIMS>: Volume<DIMS>,
 {
-    pub fn overlaps_bounding_box_single<T: Transform<Vector<DIMS>>>(
+    pub fn overlaps_bounding_box_single<P: Transform<Vector<DIMS>>>(
         &self,
-        self_transform: &T,
+        self_transform: &P,
         other: &Self,
-        other_transform: &T,
+        other_transform: &P,
     ) -> bool {
         let self_lower_bound = self_transform.transform(&self.lower_bound);
         let self_upper_bound = self_transform.transform(&self.upper_bound);
@@ -50,9 +50,9 @@ where
         is_in
     }
 
-    pub fn encloses_point_and_children<V: ExtendedVertex<DIMS>>(
+    pub fn encloses_point_and_children(
         &self,
-        bounding_box: &BoundingBox<V, DIMS>,
+        bounding_box: &BoundingBox<V, DIMS, T>,
         point: Vector<DIMS>,
     ) -> bool
     where
@@ -71,25 +71,35 @@ where
     }
 
     pub fn overlaps_bounding_box_and_children<
-        'c,
+        'a,
         'b,
-        V: ExtendedVertex<DIMS>,
-        T: Transform<Vector<DIMS>>,
+        P: Transform<Vector<DIMS>>,
+        F: Fn(&mut T),
+        O: Fn(&mut T),
     >(
-        this: &'c Self,
-        this_boundingbox: &'c BoundingBox<V, DIMS>,
-        this_transform: &T,
+        this: &'a Self,
+        this_boundingbox: &'a BoundingBox<V, DIMS, T>,
+        this_transform: &P,
+        this_alter_meta: &F,
         other: &'b Self,
-        other_boundingbox: &'b BoundingBox<V, DIMS>,
-        other_transform: &T,
+        other_boundingbox: &'b BoundingBox<V, DIMS, T>,
+        other_transform: &P,
         depth: usize,
-    ) -> impl Iterator<Item = (&'c BoundingBoxElement<DIMS>, &'b BoundingBoxElement<DIMS>)>
+        other_alter_meta: &O,
+    ) -> impl Iterator<
+        Item = (
+            &'a BoundingBoxElement<V, DIMS, T>,
+            &'b BoundingBoxElement<V, DIMS, T>,
+        ),
+    >
     where
         [(); Vector::<DIMS>::ELEMENT_COUNT]:,
     {
         let is_overlap = this.overlaps_bounding_box_single(this_transform, other, other_transform);
 
         if is_overlap {
+            this_alter_meta(&mut *this.meta.borrow_mut());
+            other_alter_meta(&mut *other.meta.borrow_mut());
             match (
                 this.get_children(this_boundingbox),
                 other.get_children(other_boundingbox),
@@ -105,10 +115,12 @@ where
                         new_this,
                         this_boundingbox,
                         this_transform,
+                        this_alter_meta,
                         new_other,
                         other_boundingbox,
                         other_transform,
                         depth + 1,
+                        other_alter_meta,
                     )
                 })
                 .into_iter()
@@ -120,10 +132,12 @@ where
                             new_this,
                             this_boundingbox,
                             this_transform,
+                            this_alter_meta,
                             new_other,
                             other_boundingbox,
                             other_transform,
                             depth + 1,
+                            other_alter_meta,
                         )
                     })
                     .into_iter()
@@ -135,10 +149,12 @@ where
                             new_this,
                             this_boundingbox,
                             this_transform,
+                            this_alter_meta,
                             new_other,
                             other_boundingbox,
                             other_transform,
                             depth + 1,
+                            other_alter_meta,
                         )
                     })
                     .into_iter()
@@ -154,10 +170,10 @@ where
         .into_iter()
     }
 
-    pub fn get_children<'b, V: ExtendedVertex<DIMS>>(
+    pub fn get_children<'a>(
         &self,
-        bounding_box: &'b BoundingBox<V, DIMS>,
-    ) -> Option<[&'b Self; 2]>
+        bounding_box: &'a BoundingBox<V, DIMS, T>,
+    ) -> Option<[&'a Self; 2]>
     where
         [(); Vector::<DIMS>::ELEMENT_COUNT]:,
     {

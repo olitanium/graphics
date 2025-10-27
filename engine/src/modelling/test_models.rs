@@ -10,11 +10,11 @@ use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::quad::QuadVertex;
 
 pub fn cube_triangles(
-    lowerbounds: Vector<3>,
-    upperbounds: Vector<3>,
+    lower_bound: Vector<3>,
+    upper_bound: Vector<3>,
 ) -> impl Iterator<Item = [IncompleteVertex<3>; 3]> {
-    let [low_x, low_y, low_z] = lowerbounds.into_inner();
-    let [up_x, up_y, up_z] = upperbounds.into_inner();
+    let [low_x, low_y, low_z] = lower_bound.into_inner();
+    let [up_x, up_y, up_z] = upper_bound.into_inner();
     let vertex_positions = [
         // x    y    z
         [low_x, low_y, low_z], // 0

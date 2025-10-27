@@ -48,6 +48,10 @@ impl VertexHasTangent for SimpleVertex {
     fn into_simplevertex(self) -> SimpleVertex {
         self
     }
+
+    fn normal(self) -> UnitVector<3> {
+        self.normal
+    }
 }
 
 impl TransformBy<Pose> for SimpleVertex {
