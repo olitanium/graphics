@@ -1,9 +1,9 @@
-use std::cell::RefMut;
-use std::ops::DerefMut;
-use std::{cell::RefCell, rc::Rc};
+use std::cell::{RefCell, RefMut};
 use std::collections::HashSet;
 use std::marker::PhantomPinned;
+use std::ops::DerefMut;
 use std::pin::Pin;
+use std::rc::Rc;
 
 pub use glfw::{Action, Key};
 
@@ -27,14 +27,10 @@ impl Keyboard {
         window.set_key_callback(move |_, key, _, action, _| {
             match action {
                 Action::Press => {
-                    key_ptr.borrow_mut()
-                        .keys
-                        .insert(key);
+                    key_ptr.borrow_mut().keys.insert(key);
                 }
                 Action::Release => {
-                    key_ptr.borrow_mut()
-                        .keys
-                        .remove(&key);
+                    key_ptr.borrow_mut().keys.remove(&key);
                 }
                 _ => {}
             };
@@ -42,16 +38,10 @@ impl Keyboard {
             match (key, action) {
                 // Perfom on Press or Repeat
                 (Key::Backspace, Action::Press | Action::Repeat) => {
-                    backspace_ptr
-                        .borrow_mut()
-                        .buffer
-                        .pop();
+                    backspace_ptr.borrow_mut().buffer.pop();
                 }
                 (Key::Enter, Action::Press | Action::Repeat) => {
-                        backspace_ptr
-                        .borrow_mut()
-                        .buffer
-                        .push('\n');
+                    backspace_ptr.borrow_mut().buffer.push('\n');
                 }
                 // Do not act on other keys
                 _ => {}
@@ -59,10 +49,7 @@ impl Keyboard {
         });
 
         window.set_char_callback(move |_, ch| {
-                buffer_ptr
-                .borrow_mut()
-                .buffer
-                .push(ch);
+            buffer_ptr.borrow_mut().buffer.push(ch);
         });
 
         out
