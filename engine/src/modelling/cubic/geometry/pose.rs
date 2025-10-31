@@ -20,11 +20,15 @@ pub struct Pose {
 
 impl Default for Pose {
     fn default() -> Self {
-        Self::new_from_orientation_translation(Default::default(), Default::default())
+        Self::identity()
     }
 }
 
 impl Pose {
+    pub fn identity() -> Self {
+        Self::new_from_orientation_translation(Orientation::IDENTITY, Vector::ZERO)
+    }
+
     pub fn new_from_dual(dual_quaternion: UnitDualQuaternion) -> Self {
         Self { dual_quaternion }
     }
@@ -42,11 +46,11 @@ impl Pose {
     }
 
     pub fn new_from_orientation(orientation: Orientation) -> Self {
-        Self::new_from_orientation_translation(orientation, Default::default())
+        Self::new_from_orientation_translation(orientation, Vector::ZERO)
     }
 
     pub fn new_from_translation(translation: Vector<3>) -> Self {
-        Self::new_from_orientation_translation(Default::default(), translation)
+        Self::new_from_orientation_translation(Orientation::IDENTITY, translation)
     }
 
     pub fn into_inner(self) -> UnitDualQuaternion {
@@ -79,20 +83,14 @@ impl Pose {
         Matrix::transform_translate(self.translation()) * self.orientation().as_matrix()
     }
 
-    // pub fn apply_after(self, pose: Self) -> Self {
-    // let dual_quaternion = (pose.dual_quaternion.u() *
-    // self.dual_quaternion.u()).normalize();
-    //
-    // Self { dual_quaternion }
-    // }
-
     pub fn push_change(&mut self, pose: Self) {
-        *self = pose.apply_to(*self);
+        //*self = pose.apply_to(*self);
+        *self = pose.transform(self);
     }
 
+    #[deprecated(note = "use Transform")]
     pub fn apply_to<V: TransformBy<Pose>>(self, value: V) -> V {
         self.transform(&value)
-        // value.transform_by(&self)
     }
 }
 
@@ -130,7 +128,7 @@ mod test {
             Vector::new([0.0, 0.5, 0.5]),
         );
 
-        let new_pose = second_pose.apply_to(first_pose);
+        let new_pose = second_pose.transform(&first_pose);
 
         let composite_matrix = first_pose.as_matrix() * second_pose.as_matrix();
         let other_matrix = new_pose.as_matrix();

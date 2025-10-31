@@ -1,10 +1,7 @@
 use std::collections::HashSet;
-use std::mem;
-use std::rc::Rc;
 
 use engine::linear_algebra::Vector;
-use engine::modelling::cubic::material::Material;
-use engine::modelling::{Cubic, TestLineVertex};
+use engine::modelling::TestLineVertex;
 use engine::{ApiError, ColourRGB, EngResult, Key};
 
 use crate::state::{State, StateError};
@@ -81,6 +78,7 @@ impl State {
                     self.angle += 0.1;
                 }
                 'b' | 'B' => self.show_bbs = !self.show_bbs,
+                'm' | 'M' => self.draw_models = !self.draw_models,
                 'o' => {
                     self.bounding_box_level = self.bounding_box_level.wrapping_add(1);
                     // if let Some(bbox) = self.imported.bounding_box() {

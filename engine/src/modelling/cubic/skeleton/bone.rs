@@ -3,6 +3,7 @@ use std::rc::Rc;
 
 use crate::modelling::Skeleton;
 use crate::modelling::cubic::geometry::{Animation, Pose};
+use crate::transform::Transform;
 
 mod builder;
 pub use builder::Builder;
@@ -11,12 +12,12 @@ pub use builder::Builder;
 pub struct Bone {
     pub(crate) parent: usize,
     pub(crate) inverse_bind_pose: Pose,
-    pub(crate) animation: Rc<[Animation]>,
+    pub(crate) animations: Rc<[Animation]>,
     pub(crate) last_query: Cell<Option<((usize /* Animation index */, f32 /* time */), Pose)>>,
 }
 
 impl Bone {
-    pub fn builder(parent: usize) -> Builder<Vec<Animation>> {
+    pub fn builder(parent: usize) -> Builder {
         Builder::new(parent)
     }
 
@@ -39,7 +40,7 @@ impl Bone {
             .push_final_non_repeat(pose)
             .expect("Fresh animation above");
 
-        self.animation = Rc::new([animation]);
+        self.animations = Rc::new([animation]);
     }
 }
 
@@ -56,12 +57,12 @@ impl Bone {
         let parent_pose = skeleton.get_bone_pose(false, self.parent, animation, time);
 
         let own_pose = self
-            .animation
+            .animations
             .get(animation)
             .map(|anim| anim.get_pose(time))
             .unwrap_or_default();
 
-        let total_pose = own_pose.apply_to(parent_pose);
+        let total_pose = parent_pose.transform(&own_pose);
 
         self.last_query.set(Some(((animation, time), total_pose)));
 

@@ -39,7 +39,7 @@ impl Cubic {
 
     pub fn cube(side_length: f32, material: Rc<Material>) -> Builder {
         let mut out = Self::builder();
-        out.push_cube(material, side_length, 0);
+        out.push_cube(Pose::identity(), material, side_length, 0);
         out
     }
 
@@ -84,7 +84,7 @@ impl Cubic {
                 "model",
                 &self
                     .skeleton
-                    .get_bone_pose(false, bone, animation, time)
+                    .get_bone_pose(true, bone, animation, time)
                     .as_matrix(),
             );
 

@@ -2,6 +2,7 @@ use std::iter;
 use std::rc::Rc;
 
 use engine::array_vec::ArrayVec;
+use engine::entity::SkeletonEntity;
 use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
@@ -19,7 +20,7 @@ use engine::modelling::{Bloom, Bone, Cubic, Line, Quad, Skeleton, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
-use engine::{ColourRGB, ColourRGBA, EngResult, Entity};
+use engine::{ColourRGB, ColourRGBA, EngResult, Entity, TransformBy};
 
 use crate::state::{State, StateError};
 
@@ -74,16 +75,17 @@ impl State {
             })
             .collect();
 
-        let mut imported = Entity::from_cubic(make_model("morgan")?, 20, 1.0).unwrap();
-        imported.velocity = Vector::new([0.0, 0.0, 0.05]);
+        let mut imported = SkeletonEntity::from_cubic(make_model("oliver")?, 20, 1.0).unwrap();
+        imported.velocity = Vector::new([0.0, 0.0, 0.5]);
         *imported.model.root_mut() = Pose::new_from_orientation_translation(
             Orientation::new_forward_up(UnitVector::Z, UnitVector::Y),
             Vector::new([0.0, 0.0, -1.1]),
         );
 
-        let mut imported_other = Entity::from_cubic(make_model("morgan")?, 20, 3.0).unwrap();
-        imported_other.velocity = Vector::new([0.0, 0.0, -0.05]);
-        *imported_other.model.root_mut() = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.1]));
+        // let mut imported_other = Entity::from_cubic(make_model("")?, 20,
+        // 3.0).unwrap(); imported_other.velocity = Vector::new([0.0, 0.0,
+        // -0.05]); imported_other.model.root_mut() =
+        // Pose::new_from_translation(Vector::new([0.0, 0.0, 1.1]));
 
         let bounding_box_level = 0;
 
@@ -191,14 +193,14 @@ impl State {
 
             testbool: false,
             imported,
-            imported_other,
+            // imported_other,
             blank: Cubic::empty(),
             // imported_bounding_box_model,
             // textures,
             // imported_other_bounding_box_model,
             bounding_box_level,
             has_collided: false,
-            prep_to_print: false,
+            draw_models: true,
 
             which_animation: 0,
 
@@ -318,16 +320,27 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
             };
 
             let mut skeleton = Skeleton::default();
-            let animation_rc = Rc::new([animation1, animation2]);
+            let animation_rc = vec![animation1, animation2];
             let mut builder = Cubic::builder();
             let mut current_bone = Skeleton::ROOT_BONE;
-            builder.push_cube(material, 1.0, current_bone);
 
             const LENGTH_TAIL: usize = 10;
+            let cube_push = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.0]));
+            let mut cube_pose = Pose::identity();
+
+            builder.push_cube(cube_pose, material, 1.0, current_bone);
 
             for (index, animation) in iter::repeat_n(animation_rc, LENGTH_TAIL - 1).enumerate() {
-                let bone = Bone::builder(current_bone).animations(animation).build();
+                // TODO: remove unwrap
+                let bone = Bone::builder(current_bone)
+                    .animations(animation)
+                    .bind_pose_relative_to_parent(Pose::new_from_translation(Vector::new([
+                        0.0, 0.0, 1.0,
+                    ])))
+                    .build(&skeleton)
+                    .expect("parent bone always exists");
 
+                cube_pose = cube_pose.transform_by(&cube_push);
                 current_bone = skeleton.push_bone(bone).unwrap();
                 let material = Rc::new(
                     Material::builder()
@@ -338,7 +351,7 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
                         .build(),
                 );
 
-                builder.push_cube(material, 1.0, current_bone);
+                builder.push_cube(cube_pose, material, 1.0, current_bone);
             }
 
             builder

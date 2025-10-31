@@ -7,11 +7,13 @@ pub struct Orientation {
 }
 
 impl Orientation {
-    pub fn into_quaternion(self) -> UnitQuaternion {
+    pub const IDENTITY: Self = Self::from_quaternion(UnitQuaternion::IDENTITY);
+
+    pub const fn into_quaternion(self) -> UnitQuaternion {
         self.quaternion
     }
 
-    pub fn from_quaternion(quaternion: UnitQuaternion) -> Self {
+    pub const fn from_quaternion(quaternion: UnitQuaternion) -> Self {
         Self { quaternion }
     }
 

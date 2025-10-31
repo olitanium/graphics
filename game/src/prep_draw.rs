@@ -2,7 +2,14 @@ use core::num;
 
 use engine::framebuffer::DefaultFramebuffer;
 use engine::linear_algebra::Vector;
-use engine::modelling::{BloomGroup, BoundingBoxGroup, QuadGroup, ShadowGroup, SkyBoxGroup};
+use engine::modelling::{
+    BloomGroup,
+    BoundingBoxGroup,
+    QuadGroup,
+    ShadowGroup,
+    SkeletonBbGroup,
+    SkyBoxGroup,
+};
 use engine::{ColourRGBA, EngResult, TransformBy, VecDraw, entity};
 
 use crate::state::{State, StateError};
@@ -18,7 +25,7 @@ impl State {
 
         let all_models = vec![
             (&self.imported.model, self.which_animation, time),
-            (&self.imported_other.model, self.which_animation, time),
+            //(&self.imported_other.model, self.which_animation, time),
         ];
 
         out.push(SkyBoxGroup::new(
@@ -32,33 +39,21 @@ impl State {
 
         if self.show_bbs {
             if let Some(bb) = self.imported.bounding_box() {
-                out.push(BoundingBoxGroup::new(
+                out.push(SkeletonBbGroup::new(
                     &self.hdr_fb,
                     bb,
                     &self.imported.model.skeleton,
+                    self.which_animation,
+                    time,
                     &self.camera,
                     &(),
                     self.bounding_box_level,
                     |(has_collided, vec)| {
-                        let num_vertices = vec.len() * 3;
-                        let transform = self.imported.model.root();
-                        let array = vec
-                            .into_iter()
-                            .flat_map(|triangle| {
-                                triangle
-                                    .transform_by(&transform)
-                                    .into_iter()
-                                    .map(|vertex| vertex.position)
-                            })
-                            .sum::<Vector<3>>()
-                            .scale(1.0 / (num_vertices as f32))
-                            .into_inner();
-
-                        ColourRGBA::new_from_arr_alpha(array, 1.0)
+                        ColourRGBA::BLUE
                     },
                 ));
             }
-            if let Some(bb) = self.imported_other.bounding_box() {
+            /*if let Some(bb) = self.imported_other.bounding_box() {
                 out.push(BoundingBoxGroup::new(
                     &self.hdr_fb,
                     bb,
@@ -102,17 +97,20 @@ impl State {
                         // ColourRGBA::new_from_arr_alpha(array, 1.0)
                     },
                 ));
-            }
+            }*/
         }
-        out.push(ShadowGroup::new(
-            &self.hdr_fb,
-            &self.camera,
-            &(),
-            &self.light_group,
-            all_models,
-            vec![],
-            vec![],
-        ));
+
+        if self.draw_models {
+            out.push(ShadowGroup::new(
+                &self.hdr_fb,
+                &self.camera,
+                &(),
+                &self.light_group,
+                all_models,
+                vec![],
+                vec![],
+            ));
+        }
 
         if self.do_bloom {
             // println!("bloom_on");

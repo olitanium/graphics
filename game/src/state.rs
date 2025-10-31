@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use engine::eng_state::EngState;
+use engine::entity::SkeletonEntity;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::framebuffer::{DefaultFramebuffer, Framebuffer};
@@ -55,13 +56,13 @@ pub struct State {
     pub light: Cubic,
     pub containers: Vec<Cubic>,
     pub testbool: bool,
-    pub imported: Entity<(bool, Vec<[SimpleVertex; 3]>)>,
-    pub imported_other: Entity<(bool, Vec<[SimpleVertex; 3]>)>,
+    pub imported: SkeletonEntity<(bool, Vec<[SimpleVertex; 3]>)>,
+    // pub imported_other: Entity<(bool, Vec<[SimpleVertex; 3]>)>,
     pub blank: Cubic,
 
     pub bounding_box_level: usize,
     pub has_collided: bool,
-    pub prep_to_print: bool,
+    pub draw_models: bool,
 
     pub which_animation: usize,
 

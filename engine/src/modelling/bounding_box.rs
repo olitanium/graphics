@@ -15,6 +15,9 @@ mod active_element;
 mod group;
 pub use group::Group as BoundingBoxGroup;
 
+mod skeleton_bb;
+pub use skeleton_bb::{SkeletonBb, SkeletonBbGroup};
+
 use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{Cubic, CubicVertex, SimpleVertex, Skeleton, Volume};
@@ -34,15 +37,11 @@ where
     Vector<DIMS>: Volume<DIMS>,
     [(); Vector::<DIMS>::ELEMENT_COUNT]:,
 {
-    pub fn len(&self) -> usize {
-        self.inner.len()
-    }
-
     fn get(&self, index: usize) -> &BoundingBoxElement<V, DIMS, T> {
         &self.inner[index]
     }
 
-    pub fn new_from_vec_indexes<F: FnMut(&[(Vector<DIMS>, [V; 3])]) -> T>(
+    pub(crate) fn new_from_vec_indexes<F: FnMut(&[(Vector<DIMS>, [V; 3])]) -> T>(
         vectors: Vec<V>,
         triangles: &[[usize; 3]],
         depth: usize,
@@ -56,7 +55,7 @@ where
         Self::new_from_triangles(new_triangles, depth, init)
     }
 
-    pub fn new_from_triangles<F: FnMut(&[(Vector<DIMS>, [V; 3])]) -> T>(
+    pub(crate) fn new_from_triangles<F: FnMut(&[(Vector<DIMS>, [V; 3])]) -> T>(
         triangles: Vec<[V; 3]>,
         depth: usize,
         mut init: F,
@@ -88,15 +87,15 @@ where
         self.get(0).encloses_point_and_children(self, point)
     }
 
-    pub(crate) fn draw<'a, D: FramebufferWithDepth<1>, F: Fn(&T) -> ColourRGBA>(
+    pub(crate) fn draw<D: FramebufferWithDepth<1>, F: Fn(&T) -> ColourRGBA>(
         &self,
         level: usize,
-        skeleton: &Skeleton,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Vector<DIMS>, (), D::Tex, 1>,
+        pose: Pose,
+        active_shader: &mut ActiveShaderProgram<'_, '_, '_, Vector<DIMS>, (), D::Tex, 1>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
         colour: F,
     ) -> EngResult<(), !> {
-        active_shader.set_uniform("model", &skeleton.root.as_matrix());
+        active_shader.set_uniform("model", &pose.as_matrix());
         self.get(0)
             .draw_recursive(self, level, active_shader, active_framebuffer, &colour)
     }
@@ -104,34 +103,34 @@ where
 
 impl<V: CubicVertex, T> BoundingBox<V, 3, T> {
     pub fn detect_collision<F: Fn(&mut T), O: Fn(&mut T)>(
-        &self,
-        self_pose: Pose,
-        self_alter_meta: F,
-        other: &Self,
-        other_pose: Pose,
-        this_alter_meta: O,
+        lhs: &Self,
+        lhs_pose: Pose,
+        lhs_alter_meta: F,
+        rhs: &Self,
+        rhs_pose: Pose,
+        rhs_alter_meta: O,
     ) -> Vec<(Vec<[V; 3]>, Vec<[V; 3]>)> {
         BoundingBoxElement::overlaps_bounding_box_and_children(
-            self.get(0),
-            self,
-            &self_pose,
-            &self_alter_meta,
-            other.get(0),
-            other,
-            &other_pose,
+            lhs.get(0),
+            lhs,
+            &lhs_pose,
+            &lhs_alter_meta,
+            rhs.get(0),
+            rhs,
+            &rhs_pose,
             0,
-            &this_alter_meta,
+            &rhs_alter_meta,
         )
         .map(|(lhs, rhs)| {
             (
                 lhs.get_triangles()
                     .into_iter()
-                    .map(|triangle| triangle.transform_by(&self_pose))
+                    .map(|triangle| triangle.transform_by(&lhs_pose))
                     //.copied()
                     .collect(),
                 rhs.get_triangles()
                     .into_iter()
-                    .map(|triangle| triangle.transform_by(&other_pose))
+                    .map(|triangle| triangle.transform_by(&rhs_pose))
                     //.copied()
                     .collect(),
             )

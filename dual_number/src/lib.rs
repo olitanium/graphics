@@ -11,7 +11,7 @@ pub struct DualNumber<Z> {
 }
 
 impl<T> DualNumber<T> {
-    pub fn new(real: T, dual: T) -> Self {
+    pub const fn new(real: T, dual: T) -> Self {
         Self { real, dual }
     }
 }

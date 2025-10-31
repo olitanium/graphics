@@ -5,6 +5,8 @@ use utils::{builder, new};
 
 use super::material::Material;
 use super::{Cubic, Skeleton};
+use crate::TransformBy;
+use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::cubic::mesh::MeshBuilder;
 use crate::modelling::test_models;
 
@@ -14,7 +16,6 @@ pub struct Builder {
     cull_face: CullFace,
     skeleton: Option<Skeleton>,
     scale: f32,
-    relative: bool,
 }
 
 impl Default for Builder {
@@ -24,7 +25,6 @@ impl Default for Builder {
             cull_face: Default::default(),
             skeleton: Default::default(),
             scale: 1.0,
-            relative: false,
         }
     }
 }
@@ -46,9 +46,11 @@ impl Builder {
         self.mesh_builders.extend(meshes);
     }
 
-    pub fn push_cube(&mut self, material: Rc<Material>, side_length: f32, bone: usize) {
+    pub fn push_cube(&mut self, pose: Pose, material: Rc<Material>, side_length: f32, bone: usize) {
         let mut mesh_builder = MeshBuilder::new().material(material);
-        mesh_builder.extend_triangle(test_models::origin_cube(side_length));
+        mesh_builder.extend_triangle(
+            test_models::origin_cube(side_length).map(|triangle| triangle.transform_by(&pose)),
+        );
         self.mesh_builders.push((bone, mesh_builder));
     }
 

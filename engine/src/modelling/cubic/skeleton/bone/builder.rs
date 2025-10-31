@@ -1,33 +1,28 @@
 use std::cell::Cell;
-use std::rc::Rc;
 
 use utils::builder;
 
 use super::Bone;
+use crate::modelling::Skeleton;
 use crate::modelling::cubic::geometry::{Animation, Pose};
+use crate::modelling::cubic::skeleton::GetBone;
+use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
-pub struct Builder<T> {
+pub struct Builder {
     parent: usize,
-    inverse_bind_pose: Option<Pose>,
-    animations: T,
+    inverse_bind_pose_relative_to_parent: Option<Pose>,
+    animations: Vec<Animation>,
 }
 
-impl Builder<Vec<Animation>> {
-    builder!(inverse_bind_pose: Option<Pose>);
+impl Builder {
+    builder!(inverse_bind_pose_relative_to_parent: Option<Pose>);
 
     pub fn new(parent: usize) -> Self {
         Self {
             parent,
-            inverse_bind_pose: Default::default(),
+            inverse_bind_pose_relative_to_parent: Default::default(),
             animations: vec![],
-        }
-    }
-
-    pub fn bind_pose(self, bind_pose: Pose) -> Self {
-        Self {
-            inverse_bind_pose: Some(bind_pose.inverse()),
-            ..self
         }
     }
 
@@ -36,18 +31,36 @@ impl Builder<Vec<Animation>> {
         self
     }
 
-    pub fn animations(self, animations: Rc<[Animation]>) -> Builder<Rc<[Animation]>> {
+    pub fn animations(self, animations: Vec<Animation>) -> Self {
         Builder { animations, ..self }
     }
-}
 
-impl<T: Into<Rc<[Animation]>>> Builder<T> {
-    pub fn build(self) -> Bone {
-        Bone {
-            parent: self.parent,
-            inverse_bind_pose: self.inverse_bind_pose.unwrap_or_default(),
-            animation: self.animations.into(),
-            last_query: Cell::default(),
+    pub fn bind_pose_relative_to_parent(self, bind_pose: Pose) -> Self {
+        Self {
+            inverse_bind_pose_relative_to_parent: Some(bind_pose.inverse()),
+            ..self
         }
+    }
+
+    pub fn build(self, skeleton: &Skeleton) -> Option<Bone> {
+        let inverse_bind_pose = match (
+            self.inverse_bind_pose_relative_to_parent,
+            skeleton.get(self.parent),
+        ) {
+            (None, GetBone::Bone(parent)) => parent.inverse_bind_pose(),
+            (None, GetBone::RootBone) => Pose::default(),
+            (_, GetBone::NoBone) => return None,
+            (Some(self_inverse), GetBone::Bone(parent)) => {
+                parent.inverse_bind_pose().transform(&self_inverse)
+            }
+            (Some(self_inverse), GetBone::RootBone) => self_inverse,
+        };
+
+        Some(Bone {
+            parent: self.parent,
+            inverse_bind_pose,
+            animations: self.animations.into(),
+            last_query: Cell::default(),
+        })
     }
 }

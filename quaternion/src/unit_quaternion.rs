@@ -8,6 +8,8 @@ use super::Quaternion;
 pub struct UnitQuaternion(Quaternion);
 
 impl UnitQuaternion {
+    pub const IDENTITY: Self = Self(Quaternion::IDENTITY);
+
     pub fn normalize_quaternion(input: Quaternion) -> Self {
         let one_magnitude = 1.0 / input.magnitude();
         let quaternion = input.scale(one_magnitude);
@@ -15,7 +17,7 @@ impl UnitQuaternion {
         Self(quaternion)
     }
 
-    pub fn q(self) -> Quaternion {
+    pub const fn q(self) -> Quaternion {
         self.0
     }
 

@@ -74,12 +74,13 @@ impl<
             let mut active_framebuffer = self.framebuffer.bind(register);
             let mut active_shader = Vector::shader_program().use_program(marker);
 
-            // only valid for DIMS = 3
             active_shader.set_uniform("projtimesview", &self.look_at);
+
+            let pose = self.skeleton.root;
 
             self.bounding_box.draw(
                 self.level,
-                self.skeleton,
+                pose,
                 &mut active_shader,
                 &mut active_framebuffer,
                 self.colour,

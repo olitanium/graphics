@@ -5,8 +5,8 @@ use crate::modelling::cubic::geometry::{CameraPose, Orientation, Pose};
 #[derive(Debug, Clone, Copy)]
 pub enum ManualPose {
     FixedUp {
-        position: Vector<3>,
         up: UnitVector<3>,
+        position: Vector<3>,
         orientation: Orientation,
     },
     Flexible {
