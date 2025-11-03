@@ -73,17 +73,19 @@ impl ExtendedVertex<3> for SimpleVertex {
     fn from_incomplete_triangle(
         incomplete_triangle: [IncompleteVertex<3>; 3],
     ) -> Option<[Self; 3]> {
+        let temp_incomplete_triangle = incomplete_triangle.clone();
+
         let new_normal = LazyCell::new(|| {
-            let ab = incomplete_triangle[1].position - incomplete_triangle[0].position;
-            let ac = incomplete_triangle[2].position - incomplete_triangle[0].position;
+            let ab = temp_incomplete_triangle[1].position - temp_incomplete_triangle[0].position;
+            let ac = temp_incomplete_triangle[2].position - temp_incomplete_triangle[0].position;
             ab.cross(ac).try_normalize()
         });
 
         let new_tangent = LazyCell::new(|| {
-            let ab = incomplete_triangle[1].position - incomplete_triangle[0].position;
-            let ac = incomplete_triangle[2].position - incomplete_triangle[0].position;
-            let z = incomplete_triangle[1].texture? - incomplete_triangle[0].texture?;
-            let g = incomplete_triangle[2].texture? - incomplete_triangle[0].texture?;
+            let ab = temp_incomplete_triangle[1].position - temp_incomplete_triangle[0].position;
+            let ac = temp_incomplete_triangle[2].position - temp_incomplete_triangle[0].position;
+            let z = temp_incomplete_triangle[1].texture? - temp_incomplete_triangle[0].texture?;
+            let g = temp_incomplete_triangle[2].texture? - temp_incomplete_triangle[0].texture?;
 
             (ab.scale(g[1]) - ac.scale(z[1])) // .scale(1.0/(g[1]*z[0] - g[0]*z[1]))
                 .try_normalize() // change of basis

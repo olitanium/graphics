@@ -16,12 +16,12 @@ macro_rules! getter {
 #[macro_export]
 macro_rules! builder {
     ($name:ident, $optname:ident : Option < $typ:ty >) => {
-        pub const fn $name(mut self, $name: $typ) -> Self {
+        pub fn $name(mut self, $name: $typ) -> Self {
             self.$name = Some($name);
             self
         }
 
-        pub const fn $optname(mut self, $optname: Option<$typ>) -> Self {
+        pub fn $optname(mut self, $optname: Option<$typ>) -> Self {
             self.$name = $optname;
             self
         }

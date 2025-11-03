@@ -2,11 +2,11 @@ use graphics::linear_algebra::Vector;
 use graphics::vertex::Vertex;
 
 use crate::modelling::cubic::geometry::Pose;
-use crate::modelling::{Cubic, SimpleVertex, SkeletonBb, Volume};
+use crate::modelling::{SimpleCubic, SimpleVertex, SkeletonBb, Volume};
 
 #[derive(Debug)]
 pub struct SkeletonEntity<T> {
-    pub model: Cubic,
+    pub model: SimpleCubic,
     pub pose: Pose,
     pub mass: f32,
     bounding_box: Option<SkeletonBb<SimpleVertex, T>>,
@@ -27,7 +27,7 @@ impl<T: Default> Default for SkeletonEntity<T> {
 
 // TODO: more generic, let the user give init
 impl SkeletonEntity<(bool, Vec<[SimpleVertex; 3]>)> {
-    pub fn from_cubic(model: Cubic, depth: usize, mass: f32) -> Option<Self> {
+    pub fn from_cubic(model: SimpleCubic, depth: usize, mass: f32) -> Option<Self> {
         let bounding_box = SkeletonBb::from_cubic_simplevertex(&model, depth, |input| {
             (
                 false,

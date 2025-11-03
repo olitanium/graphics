@@ -7,6 +7,7 @@
 * Mouse use Rc and Clone rather than Box and pointers
 * ExtendedVertex no longer generic, instead has associated const DIMS
 * BoneAnimation don't store poses, store ScLERPS
+* Animations signature matching with skeletons to remove unwraps
 * Camera ManualPose use Pose
 
 ## Skeletal Animation Notes

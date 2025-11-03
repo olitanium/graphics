@@ -9,28 +9,37 @@ use graphics::shader_program::{ActiveShaderProgram, CullFace};
 use russimp::scene::PostProcess;
 
 use super::material::Material;
-use super::{Builder, Mesh, Skeleton, import};
+use super::{Mesh, Skeleton, import};
 use crate::error::EngResult;
-use crate::modelling::Bone;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::modelling::simple_vertex::SimpleVertex;
 
+mod group;
+pub use group::Group;
+
+mod builder;
+pub use builder::Builder;
+
 #[derive(Clone, Debug)]
-pub struct Cubic {
-    pub(crate) meshes: Vec<(usize, Mesh<SimpleVertex>)>,
+pub struct SimpleCubic {
+    pub(crate) meshes: Vec<BoneAndMesh>,
     pub cull_face: CullFace,
     pub skeleton: Skeleton,
-    // pub relative: bool,
 }
 
-impl Default for Cubic {
+#[derive(Debug, Clone)]
+pub struct BoneAndMesh {
+    pub(crate) bone: usize,
+    pub(crate) mesh: Mesh<SimpleVertex>,
+}
+
+impl Default for SimpleCubic {
     fn default() -> Self {
-        // Self::cube(1.0, Default::default()).build()
         Self::empty()
     }
 }
 
-impl Cubic {
+impl SimpleCubic {
     pub fn empty() -> Self {
         Self::builder().build()
     }
@@ -48,17 +57,17 @@ impl Cubic {
     pub fn temp_set_all_material(&mut self, mat: Rc<Material>) {
         self.meshes
             .iter_mut()
-            .for_each(|(_, mesh)| mesh.material = mat.clone());
+            .for_each(|BoneAndMesh { mesh, .. }| mesh.material = mat.clone());
     }
 
     pub fn triangles(&self) -> Vec<(usize, [SimpleVertex; 3])> {
         self.meshes
             .iter()
-            .map(|&(bone, ref mesh)| {
+            .map(|BoneAndMesh { bone, mesh }| {
                 mesh.triangles()
                     .into_owned()
                     .into_iter()
-                    .map(move |triangles| (bone, triangles))
+                    .map(move |triangles| (*bone, triangles))
             })
             .flatten()
             .collect()
@@ -74,12 +83,12 @@ impl Cubic {
     ) -> EngResult<(), !> {
         // Ignore cull_face error
         let _: ApiResult<_, !> = active_shader.cull_face(self.cull_face);
-        for &(bone, ref mesh) in self.meshes.iter() {
+        for BoneAndMesh { bone, mesh } in self.meshes.iter() {
             active_shader.set_uniform(
                 "model",
                 &self
                     .skeleton
-                    .get_bone_pose(root, true, bone, animation, time)
+                    .get_bone_pose(root, true, *bone, animation, time)
                     .map_or_else(Matrix::identity, Pose::as_matrix),
             );
 

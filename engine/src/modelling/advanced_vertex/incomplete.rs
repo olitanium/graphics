@@ -1,16 +1,18 @@
+use array_vec::ArrayVec;
 use graphics::linear_algebra::{UnitVector, Vector};
 use utils::builder;
 
 use crate::TransformBy;
 use crate::modelling::cubic::geometry::Pose;
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Default)]
 #[non_exhaustive]
 pub struct IncompleteVertex<const N: usize> {
     pub position: Vector<N>,
     pub texture: Option<Vector<2>>,
     pub normal: Option<UnitVector<3>>,
     pub tangent: Option<UnitVector<3>>,
+    pub weights: Option<ArrayVec<(usize, f32), 4>>
 }
 
 impl TransformBy<Pose> for IncompleteVertex<3> {
@@ -20,13 +22,14 @@ impl TransformBy<Pose> for IncompleteVertex<3> {
             texture: self.texture,
             normal: self.normal.map(|unit| unit.transform_by(operator)),
             tangent: self.tangent.map(|unit| unit.transform_by(operator)),
+            weights: self.weights.clone(),
         }
     }
 }
 
 impl TransformBy<Pose> for [IncompleteVertex<3>; 3] {
     fn transform_by(&self, operator: &Pose) -> Self {
-        self.map(|ver| ver.transform_by(operator))
+        self.clone().map(|ver| ver.transform_by(operator))
     }
 }
 
@@ -37,12 +40,15 @@ impl<const N: usize> IncompleteVertex<N> {
 
     builder!(texture, opt_texture: Option<Vector<2>>);
 
+    builder!(weights, opt_weights: Option<ArrayVec<(usize, f32), 4>>);
+
     pub const fn new(position: Vector<N>) -> Self {
         Self {
             position,
             texture: None,
             normal: None,
             tangent: None,
+            weights: None,
         }
     }
 }

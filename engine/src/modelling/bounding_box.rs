@@ -20,7 +20,7 @@ pub use skeleton_bb::{SkeletonBb, SkeletonBbGroup};
 
 use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::cubic::geometry::Pose;
-use crate::modelling::{Cubic, CubicVertex, SimpleVertex, Volume};
+use crate::modelling::{SimpleCubic, CubicVertex, SimpleVertex, Volume};
 use crate::{EngResult, TransformBy};
 
 #[derive(Debug)]
@@ -141,7 +141,7 @@ impl<V: CubicVertex, T> BoundingBox<V, 3, T> {
 
 impl<T> BoundingBox<SimpleVertex, 3, T> {
     pub fn from_cubic<F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
-        model: &Cubic,
+        model: &SimpleCubic,
         depth: usize,
         init: F,
     ) -> Option<Self> {

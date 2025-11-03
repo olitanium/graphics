@@ -1,8 +1,8 @@
 pub mod cubic;
 pub use cubic::{
     Bone,
-    Cubic,
-    CubicGroup,
+    SimpleCubic,
+    SimpleCubicGroup,
     ImportError,
     SHADOW_SHADER_MAX_LIGHTS,
     ShadowGroup,
@@ -19,6 +19,9 @@ mod bloom;
 pub use bloom::{Bloom, BloomGroup};
 mod simple_vertex;
 pub use simple_vertex::SimpleVertex;
+
+mod skeletal_vertex;
+pub use skeletal_vertex::SkeletalVertex;
 
 pub mod test_models;
 

@@ -3,10 +3,11 @@ use std::rc::Rc;
 use graphics::shader_program::CullFace;
 use utils::{builder, new};
 
-use super::material::Material;
-use super::{Cubic, Skeleton};
+use super::{SimpleCubic, Skeleton};
 use crate::TransformBy;
+use crate::modelling::cubic::BoneAndMesh;
 use crate::modelling::cubic::geometry::Pose;
+use crate::modelling::cubic::material::Material;
 use crate::modelling::cubic::mesh::MeshBuilder;
 use crate::modelling::test_models;
 
@@ -61,14 +62,14 @@ impl Builder {
         self
     }
 
-    pub fn build(self) -> Cubic {
+    pub fn build(self) -> SimpleCubic {
         let meshes = self
             .mesh_builders
             .into_iter()
-            .map(|(bone, builder)| (bone, builder.scale(self.scale).build()))
+            .map(|(bone, builder)| BoneAndMesh {bone, mesh: builder.scale(self.scale).build()})
             .collect::<Vec<_>>();
 
-        Cubic {
+        SimpleCubic {
             meshes,
             cull_face: self.cull_face,
             skeleton: self.skeleton.unwrap_or_default(),

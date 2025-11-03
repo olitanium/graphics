@@ -6,7 +6,7 @@ use graphics::linear_algebra::Vector;
 
 use crate::EngResult;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
-use crate::modelling::{BoundingBox, Cubic, CubicVertex, SimpleVertex, Skeleton};
+use crate::modelling::{BoundingBox, SimpleCubic, CubicVertex, SimpleVertex, Skeleton};
 
 mod group;
 pub use group::Group as SkeletonBbGroup;
@@ -18,7 +18,7 @@ pub struct SkeletonBb<V: CubicVertex, T> {
 
 impl<T> SkeletonBb<SimpleVertex, T> {
     pub fn from_cubic_simplevertex<F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
-        cubic: &Cubic,
+        cubic: &SimpleCubic,
         depth: usize,
         mut init: F,
     ) -> Option<Self> {

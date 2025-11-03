@@ -27,7 +27,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
     }
 
     pub fn push_within_capacity(&mut self, elem: T) -> Result<(), T> {
-        if self.len == N {
+        if self.len >= N {
             return Err(elem);
         }
 
@@ -50,19 +50,6 @@ impl<T, const N: usize> ArrayVec<T, N> {
 
         // security replaces with zeroes to obscure previous values
         let mut output = MaybeUninit::zeroed();
-        mem::swap(&mut output, &mut self.array[self.len - 1]);
-        self.len -= 1;
-
-        Some(unsafe { output.assume_init() })
-    }
-
-    pub fn pop_unsecure(&mut self) -> Option<T> {
-        if self.len == 0 {
-            return None;
-        }
-
-        // security replaces with uninit
-        let mut output = MaybeUninit::uninit();
         mem::swap(&mut output, &mut self.array[self.len - 1]);
         self.len -= 1;
 
@@ -161,7 +148,7 @@ impl<T, const N: usize, const M: usize> TryFrom<[T; M]> for ArrayVec<T, N> {
 
 impl<T, const N: usize> Drop for ArrayVec<T, N> {
     fn drop(&mut self) {
-        while let Some(_) = self.pop_unsecure() {}
+        while let Some(_) = self.pop() {}
     }
 }
 

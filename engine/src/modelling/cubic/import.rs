@@ -9,10 +9,11 @@ use russimp::material::{PropertyTypeInfo, TextureType};
 use russimp::node::Node;
 use russimp::scene::{PostProcess, Scene};
 
-use super::Cubic;
+use super::SimpleCubic;
 use super::material::Material;
 use crate::error::EngResult;
 use crate::modelling::advanced_vertex::IncompleteVertex;
+use crate::modelling::cubic::SimpleCubicBuilder;
 use crate::modelling::cubic::mesh::MeshBuilder;
 
 mod error {
@@ -62,13 +63,12 @@ mod error {
 
 pub use error::Error;
 
-use super::Builder;
 
 pub(super) fn import<NEVER: Clone, P: AsRef<Path>>(
     path: P,
     post_process: Vec<PostProcess>,
     load_tangent_space: bool,
-) -> EngResult<Builder, NEVER> {
+) -> EngResult<SimpleCubicBuilder, NEVER> {
     let path = path.as_ref();
 
     let dir = path
@@ -95,7 +95,7 @@ pub(super) fn import<NEVER: Clone, P: AsRef<Path>>(
         &mut HashMap::new(),
         load_tangent_space,
     )?;
-    let mut builder = Cubic::builder();
+    let mut builder = SimpleCubic::builder();
     builder.extend_meshes(out);
     Ok(builder)
 }

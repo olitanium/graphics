@@ -1,15 +1,9 @@
-mod group;
-pub use group::Group as CubicGroup;
 mod shadow;
 pub use shadow::{Group as ShadowGroup, SHADOW_SHADER_MAX_LIGHTS};
-mod model;
-pub use model::Cubic;
 mod mesh;
 pub use mesh::{Mesh, MeshBuilder};
 mod import;
 pub use import::Error as ImportError;
-mod builder;
-pub use builder::Builder;
 
 mod skeleton;
 pub use skeleton::{Bone, Skeleton};
@@ -22,3 +16,9 @@ pub mod geometry;
 pub mod lighting;
 
 pub mod material;
+
+mod simple_cubic;
+pub use simple_cubic::Group as SimpleCubicGroup;
+pub use simple_cubic::SimpleCubic;
+pub use simple_cubic::BoneAndMesh;
+pub use simple_cubic::Builder as SimpleCubicBuilder;

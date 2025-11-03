@@ -18,7 +18,7 @@ use engine::modelling::{
     Bloom,
     BloomGroup,
     BoundingBoxGroup,
-    Cubic,
+    SimpleCubic,
     Line,
     Quad,
     QuadGroup,
@@ -53,8 +53,8 @@ pub struct State {
     pub light_group: ShadowListLights<SHADOW_SHADER_MAX_LIGHTS>,
     pub ns_light_group: ListLights<SHADOW_SHADER_MAX_LIGHTS>,
 
-    pub light: Cubic,
-    pub containers: Vec<Cubic>,
+    pub light: SimpleCubic,
+    pub containers: Vec<SimpleCubic>,
     pub testbool: bool,
     pub imported: SkeletonEntity<(bool, Vec<[SimpleVertex; 3]>)>,
 

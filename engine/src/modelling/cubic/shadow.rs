@@ -9,7 +9,7 @@ use graphics::{Draw, ShaderProgramContext};
 
 use super::camera::Camera;
 use super::lighting::shadow::ShadowListLights;
-use super::model::Cubic;
+use crate::modelling::SimpleCubic;
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::{EngResult, opengl_shaders};
@@ -26,13 +26,13 @@ pub struct Group<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> {
     output_framebuffer: &'a X,
 
     opaque: Vec<(
-        &'a Cubic,
+        &'a SimpleCubic,
         Pose,
         &'a SkeletalAnimation, // animation
         f32,                   // time
     )>,
     transparent: Vec<(
-        &'a Cubic,
+        &'a SimpleCubic,
         Pose,
         &'a SkeletalAnimation, // animation
         f32,                   // time
@@ -48,13 +48,13 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
         hint: &O::Hint,
         list_light: &'a ShadowListLights<2>,
         opaque: Vec<(
-            &'a Cubic,
+            &'a SimpleCubic,
             Pose,
             &'a SkeletalAnimation, // animation
             f32,                   // time
         )>,
         transparent: Vec<(
-            &'a Cubic,
+            &'a SimpleCubic,
             Pose,
             &'a SkeletalAnimation, // animation
             f32,                   // time

@@ -4,7 +4,7 @@ use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::Texture;
 
 use super::super::traits::ListLightCompatible;
-use crate::modelling::{Cubic, CubicVertex};
+use crate::modelling::{SimpleCubic, CubicVertex};
 
 #[derive(Clone, Debug)]
 pub struct FarLight {

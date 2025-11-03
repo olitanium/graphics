@@ -8,7 +8,7 @@ use graphics::texture::Texture;
 use super::{ShadowFarLight, ShadowPointLight, ShadowSpotLight};
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
-use crate::modelling::{Cubic, VertexHasTangent};
+use crate::modelling::{SimpleCubic, VertexHasTangent};
 use crate::{EngResult, opengl_shaders};
 
 #[derive(Debug, Default)]
@@ -24,7 +24,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         sp_context: &mut ShaderProgramContext,
         fb_context: &mut FramebufferContext,
         complete_models: &[(
-            &Cubic,
+            &SimpleCubic,
             Pose,
             &SkeletalAnimation, // animation
             f32,                // time

@@ -5,17 +5,16 @@ use graphics::linear_algebra::{Matrix, Vector};
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
 
-use super::Camera;
-use super::lighting::simple::ListLights;
-use super::model::Cubic;
 use crate::EngResult;
-use crate::modelling::SimpleVertex;
+use crate::modelling::cubic::Camera;
+use crate::modelling::cubic::lighting::simple::ListLights;
+use crate::modelling::{SimpleCubic, SimpleVertex};
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
-    shader: &'a ShaderProgram<SimpleVertex, (Cubic, ListLights<MAX>), OUT, D::Tex>,
+    shader: &'a ShaderProgram<SimpleVertex, (SimpleCubic, ListLights<MAX>), OUT, D::Tex>,
     framebuffer: &'a D,
 
     camera_pos: Vector<3>,
@@ -23,7 +22,7 @@ pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth
 
     lights: &'a ListLights<MAX>,
     opaque: Vec<(
-        &'a Cubic,
+        &'a SimpleCubic,
         Pose,
         &'a SkeletalAnimation, // animation
         f32,                   // time
@@ -36,14 +35,14 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
     Group<'a, MAX, OUT, D>
 {
     pub fn new<O: CameraPose>(
-        shader: &'a ShaderProgram<SimpleVertex, (Cubic, ListLights<MAX>), OUT, FlatTexture>,
+        shader: &'a ShaderProgram<SimpleVertex, (SimpleCubic, ListLights<MAX>), OUT, FlatTexture>,
         framebuffer: &'a D,
 
         camera: &Camera<O>,
         hint: &O::Hint,
         lights: &'a ListLights<MAX>,
         opaque: Vec<(
-            &'a Cubic,
+            &'a SimpleCubic,
             Pose,
             &'a SkeletalAnimation, // animation
             f32,                   // time

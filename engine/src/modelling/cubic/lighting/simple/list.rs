@@ -5,7 +5,7 @@ use graphics::texture::Texture;
 use super::super::shadow::ShadowListLights;
 use super::super::traits::ListLightCompatible;
 use super::{FarLight, PointLight, SpotLight};
-use crate::modelling::{Cubic, CubicVertex};
+use crate::modelling::{SimpleCubic, CubicVertex};
 
 #[derive(Clone, Debug, Default)]
 pub struct ListLights<const MAX: usize> {

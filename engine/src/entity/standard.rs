@@ -2,11 +2,11 @@ use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::vertex::Vertex;
 
 use crate::modelling::cubic::geometry::Pose;
-use crate::modelling::{BoundingBox, Cubic, SimpleVertex, Volume};
+use crate::modelling::{BoundingBox, SimpleCubic, SimpleVertex, Volume};
 
 #[derive(Debug)]
 pub struct Entity<T> {
-    pub model: Cubic,
+    pub model: SimpleCubic,
     pub pose: Pose,
     pub mass: f32,
     bounding_box: Option<BoundingBox<SimpleVertex, 3, T>>,
@@ -26,7 +26,7 @@ impl<T: Default> Default for Entity<T> {
 }
 
 impl Entity<(bool, Vec<[SimpleVertex; 3]>)> {
-    pub fn from_cubic(model: Cubic, depth: usize, mass: f32) -> Option<Self> {
+    pub fn from_cubic(model: SimpleCubic, depth: usize, mass: f32) -> Option<Self> {
         let bounding_box = BoundingBox::from_cubic(&model, depth, |input| {
             (
                 false,

@@ -15,7 +15,7 @@ use engine::modelling::cubic::lighting::shadow::{
 };
 use engine::modelling::cubic::lighting::simple::{ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
-use engine::modelling::{Bloom, Bone, Cubic, Line, Quad, Skeleton, SkyBox};
+use engine::modelling::{Bloom, Bone, SimpleCubic, Line, Quad, Skeleton, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
@@ -68,7 +68,7 @@ impl State {
                         .build(),
                 );
 
-                Cubic::cube(0.1, material)
+                SimpleCubic::cube(0.1, material)
                     .cull_face(CullFace::BackFace)
                     .build()
             })
@@ -169,7 +169,7 @@ impl State {
             Material::builder().emission(light_emission).build()
         };
 
-        let light = Cubic::cube(1.0, Rc::new(light_material))
+        let light = SimpleCubic::cube(1.0, Rc::new(light_material))
             .cull_face(CullFace::BackFace)
             .scale(0.2)
             .build();
@@ -221,12 +221,12 @@ impl State {
     }
 }
 
-pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, Cubic), StateError> {
+pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, SimpleCubic), StateError> {
     use engine::PostProcess as P;
     let model = match which_model {
         "morgan" => (
             SkeletalAnimation::new(),
-            Cubic::import(
+            SimpleCubic::import(
                 "assets/Teddy Statue/Teddy Statue.obj",
                 vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
                 false,
@@ -237,7 +237,7 @@ pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, Cubic), St
         ),
         "backpack" => (
             SkeletalAnimation::new(),
-            Cubic::import(
+            SimpleCubic::import(
                 "assets/backpack/backpack.obj",
                 vec![
                     P::Triangulate,
@@ -322,7 +322,7 @@ pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, Cubic), St
             let mut skeleton = Skeleton::default();
             let mut animation_1 = SkeletalAnimation::new();
 
-            let mut builder = Cubic::builder();
+            let mut builder = SimpleCubic::builder();
             let mut current_bone = Skeleton::ROOT_BONE;
             // animation_1.push_animation(animation1.clone(), current_bone).unwrap();
 
@@ -364,7 +364,7 @@ pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, Cubic), St
                     .build(),
             )
         }
-        _ => (SkeletalAnimation::new(), Cubic::empty()),
+        _ => (SkeletalAnimation::new(), SimpleCubic::empty()),
     };
     Ok(model)
 }

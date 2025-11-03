@@ -8,7 +8,7 @@ use graphics::vertex::NoVertex;
 use crate::modelling::cubic::lighting::shadow::ShadowListLights;
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::{
-    Cubic,
+    SimpleCubic,
     Line,
     Quad,
     QuadVertex,
@@ -43,14 +43,14 @@ macro_rules! make_included {
 }
 
 make_included! {
-    ShaderProgram<SimpleVertex, (Cubic, ListLights<2>), 2, FlatTexture>,
+    ShaderProgram<SimpleVertex, (SimpleCubic, ListLights<2>), 2, FlatTexture>,
     hdr,
     "shaders/hdr_tangent/hdr_tangent.vert",
     "shaders/hdr_tangent/hdr_tangent.frag",
 }
 
 make_included! {
-    ShaderProgram<SimpleVertex, (Cubic, ListLights<2>), 1, FlatTexture>,
+    ShaderProgram<SimpleVertex, (SimpleCubic, ListLights<2>), 1, FlatTexture>,
     hdr_without_bright,
     "shaders/hdr_tangent/hdr_tangent.vert",
     "shaders/hdr_tangent/hdr_tangent.frag",
@@ -78,14 +78,14 @@ make_included! {
 }
 
 make_included! {
-    ShaderProgram<SimpleVertex, (Cubic, ShadowListLights<2>), 2, FlatTexture>,
+    ShaderProgram<SimpleVertex, (SimpleCubic, ShadowListLights<2>), 2, FlatTexture>,
     shadow,
     "shaders/hdr_tangent_shadow/hdr_tangent_shadow.vert",
     "shaders/hdr_tangent_shadow/hdr_tangent_shadow.frag",
 }
 
 make_included! {
-    ShaderProgram<SimpleVertex, (Cubic, ()), 0, FlatTexture>,
+    ShaderProgram<SimpleVertex, (SimpleCubic, ()), 0, FlatTexture>,
     far_light_depth,
     "shaders/depth_testing/farspot_light_depth/farspot_light_depth.vert",
     "shaders/depth_testing/farspot_light_depth/farspot_light_depth.frag",
@@ -114,7 +114,7 @@ make_included! {
 }
 
 make_included! {
-    ShaderProgram<SimpleVertex, (Cubic, ()), 0, CubeMap>,
+    ShaderProgram<SimpleVertex, (SimpleCubic, ()), 0, CubeMap>,
     point_depth,
     "shaders/depth_testing/point_light_depth/point_light_depth.vert",
     "shaders/depth_testing/point_light_depth/point_light_depth.frag",
