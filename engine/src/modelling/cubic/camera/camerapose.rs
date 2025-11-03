@@ -2,8 +2,7 @@ pub mod demo;
 
 use graphics::linear_algebra::Vector;
 
-use super::Orientation;
-use super::pose::Pose;
+use crate::modelling::cubic::geometry::{Orientation, Pose};
 
 pub trait CameraPose {
     type Hint;

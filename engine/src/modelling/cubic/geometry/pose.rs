@@ -6,9 +6,9 @@ mod posesclerp;
 use graphics::linear_algebra::Vector;
 pub use posesclerp::PoseSclerp;
 
-
-use super::{CameraPose, Orientation};
+use super::{Orientation};
 use crate::TransformBy;
+use crate::modelling::cubic::camera::CameraPose;
 use crate::transform::Transform;
 
 #[derive(Debug, Clone, Copy)]

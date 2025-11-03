@@ -205,15 +205,6 @@ fn line_overlap(
     !fail
 }
 
-fn cartesian_product<'a, 'b, T, U>(
-    slice_one: &'a [T],
-    slice_two: &'b [U],
-) -> impl Iterator<Item = (&'a T, &'b U)> {
-    slice_one
-        .into_iter()
-        .flat_map(move |value1| slice_two.into_iter().map(move |value2| (value1, value2)))
-}
-
 mod test {
 
     #[test]

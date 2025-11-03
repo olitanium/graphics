@@ -5,7 +5,8 @@ pub use bone::Bone;
 use graphics::linear_algebra::Matrix;
 
 use super::geometry::Pose;
-use crate::{modelling::cubic::geometry::SkeletalAnimation, transform::Transform};
+use crate::modelling::cubic::geometry::SkeletalAnimation;
+use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
 pub struct Skeleton {
@@ -33,7 +34,7 @@ impl Skeleton {
 
     /// Returns the index of that bone, or `None` if the parent does not exist.
     pub fn push_bone(&mut self, bone: Bone) -> Option<usize> {
-        let (GetBone::RootBone | GetBone::Bone(_)) = self.get(bone.parent) else {
+        let (GetBone::RootBone | GetBone::Bone { .. }) = self.get(bone.parent) else {
             return None;
         };
 
@@ -61,28 +62,36 @@ impl Skeleton {
     }
 
     pub fn get_all_bones(&self, root: Pose, animation: &SkeletalAnimation, time: f32) -> Vec<Pose> {
-        /*let mut output = vec![root];
+        // let mut output = vec![root];
+        //
+        // let extend = self
+        // .values
+        // .iter()
+        // .enumerate()
+        // .map(|(bone_index, bone)| bone.get_pose(NonZeroUsize::new(bone_index +
+        // 1).unwrap(), root, self, animation, time));
+        //
+        // output.extend(extend);
+        // output
 
-        let extend = self
-            .values
-            .iter()
-            .enumerate()
-            .map(|(bone_index, bone)| bone.get_pose(NonZeroUsize::new(bone_index + 1).unwrap(), root, self, animation, time));
-
-        output.extend(extend);
-        output*/
-
-        (0..).filter_map(|index| self.get_bone_pose(root, false, index, animation, time)).fuse().collect()
+        (0..)
+            .filter_map(|index| self.get_bone_pose(root, false, index, animation, time))
+            .fuse()
+            .collect()
     }
 
     pub(crate) fn get(&self, index: usize) -> GetBone<'_> {
-        if index == 0 {
-            GetBone::RootBone
-        } else {
+        if let Some(non_zero_index) = NonZeroUsize::new(index) {
             match self.values.get(index - 1) {
-                Some(bone) => GetBone::Bone(bone),
+                Some(bone) => GetBone::Bone {
+                    bone_index: non_zero_index,
+                    bone,
+                },
                 None => GetBone::NoBone,
             }
+        } else {
+            // i.e. index == 0
+            GetBone::RootBone
         }
     }
 
@@ -95,8 +104,8 @@ impl Skeleton {
         time: f32,
     ) -> Option<Pose> {
         match self.get(bone_index) {
-            GetBone::Bone(bone) => {
-                let pose = bone.get_pose(NonZeroUsize::new(bone_index).unwrap(), root, self, animation, time);
+            GetBone::Bone { bone_index, bone } => {
+                let pose = bone.get_pose(bone_index, root, self, animation, time)?;
 
                 if relative {
                     Some(pose.transform(&bone.inverse_bind_pose))
@@ -108,10 +117,18 @@ impl Skeleton {
             GetBone::NoBone => None,
         }
     }
+
+    /// Used to determine whether a skeleton and an animation are compatible
+    pub(crate) fn signature(&self) -> Vec<usize> {
+        self.values.iter().map(|bone| bone.parent).collect()
+    }
 }
 
 pub enum GetBone<'a> {
     NoBone,
     RootBone,
-    Bone(&'a Bone),
+    Bone {
+        bone_index: NonZeroUsize,
+        bone: &'a Bone,
+    },
 }

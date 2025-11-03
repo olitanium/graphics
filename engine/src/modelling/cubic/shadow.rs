@@ -8,9 +8,9 @@ use graphics::texture::FlatTexture;
 use graphics::{Draw, ShaderProgramContext};
 
 use super::camera::Camera;
-use super::geometry::CameraPose;
 use super::lighting::shadow::ShadowListLights;
 use super::model::Cubic;
+use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::{EngResult, opengl_shaders};
 
@@ -29,13 +29,13 @@ pub struct Group<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> {
         &'a Cubic,
         Pose,
         &'a SkeletalAnimation, // animation
-        f32,   // time
+        f32,                   // time
     )>,
     transparent: Vec<(
         &'a Cubic,
         Pose,
         &'a SkeletalAnimation, // animation
-        f32,   // time
+        f32,                   // time
     )>,
 
     uniforms: Vec<(String, &'a dyn Uniform)>,
@@ -51,13 +51,13 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
             &'a Cubic,
             Pose,
             &'a SkeletalAnimation, // animation
-            f32,   // time
+            f32,                   // time
         )>,
         transparent: Vec<(
             &'a Cubic,
             Pose,
             &'a SkeletalAnimation, // animation
-            f32,   // time
+            f32,                   // time
         )>,
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Box<Self> {

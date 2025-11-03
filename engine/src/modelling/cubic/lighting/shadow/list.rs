@@ -27,7 +27,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
             &Cubic,
             Pose,
             &SkeletalAnimation, // animation
-            f32,   // time
+            f32,                // time
         )],
         target_position: Vector<3>,
         uniforms: Vec<(String, &dyn Uniform)>,

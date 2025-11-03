@@ -8,8 +8,9 @@ use graphics::{Draw, ShaderProgramContext};
 
 use crate::EngResult;
 use crate::modelling::cubic::Camera;
-use crate::modelling::cubic::geometry::{CameraPose, Pose};
-use crate::modelling::{BoundingBox, ExtendedVertex, Skeleton, Volume};
+use crate::modelling::cubic::camera::CameraPose;
+use crate::modelling::cubic::geometry::{Pose};
+use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
 use crate::opengl_shaders::BoundingBoxShaderProgram;
 
 pub struct Group<
@@ -26,7 +27,6 @@ pub struct Group<
 {
     framebuffer: &'a D,
     bounding_box: &'a BoundingBox<V, DIMS, T>,
-    skeleton: &'a Skeleton,
     pose: Pose,
     look_at: Matrix<4, 4>,
     level: usize,
@@ -44,7 +44,6 @@ impl<
     pub fn new<P: CameraPose>(
         framebuffer: &'a D,
         bounding_box: &'a BoundingBox<V, 3, T>,
-        skeleton: &'a Skeleton,
         pose: Pose,
         camera: &Camera<P>,
         hint: &P::Hint,
@@ -55,7 +54,6 @@ impl<
         Box::new(Self {
             framebuffer,
             bounding_box,
-            skeleton,
             pose,
             look_at,
             level,

@@ -1,5 +1,4 @@
 use std::cell::Cell;
-use std::ops::{Deref, DerefMut};
 use std::ptr;
 
 use glfw::{Context, Glfw, GlfwReceiver, PWindow, WindowEvent};

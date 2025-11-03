@@ -1,7 +1,6 @@
 use builder::MissingPose;
 use graphics::linear_algebra::{Matrix, UnitVector, Vector};
 
-use super::geometry::{CameraPose, Orientation};
 
 mod builder;
 mod projection;
@@ -10,6 +9,11 @@ pub use projection::Projection;
 mod manual_pose;
 pub use builder::Builder;
 pub use manual_pose::ManualPose;
+
+pub mod camerapose;
+pub use camerapose::CameraPose;
+
+use crate::modelling::cubic::geometry::Orientation;
 
 #[derive(Clone, Debug)]
 pub struct Camera<P: CameraPose> {

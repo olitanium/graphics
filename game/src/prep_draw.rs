@@ -1,16 +1,12 @@
-use core::num;
-
 use engine::framebuffer::DefaultFramebuffer;
-use engine::linear_algebra::Vector;
 use engine::modelling::{
     BloomGroup,
-    BoundingBoxGroup,
     QuadGroup,
     ShadowGroup,
     SkeletonBbGroup,
     SkyBoxGroup,
 };
-use engine::{ColourRGBA, EngResult, TransformBy, VecDraw, entity};
+use engine::{ColourRGBA, EngResult, VecDraw};
 
 use crate::state::{State, StateError};
 
@@ -24,7 +20,12 @@ impl State {
         let mut out = VecDraw::new();
 
         let all_models = vec![
-            (&self.imported.model, self.imported.pose, &self.which_animation, time),
+            (
+                &self.imported.model,
+                self.imported.pose,
+                &self.which_animation,
+                time,
+            ),
             //(&self.imported_other.model, self.which_animation, time),
         ];
 
@@ -49,7 +50,7 @@ impl State {
                     &self.camera,
                     &(),
                     self.bounding_box_level,
-                    |(has_collided, vec)| {
+                    |_| {
                         ColourRGBA::BLUE
                     },
                 ));

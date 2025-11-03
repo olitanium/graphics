@@ -9,8 +9,8 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::vertex_array::VertexArray;
 
 use crate::EngResult;
-use crate::modelling::{CubicVertex, ExtendedVertex};
 use crate::modelling::cubic::material::Material;
+use crate::modelling::{CubicVertex, ExtendedVertex};
 
 #[derive(Debug, Clone)]
 pub struct Mesh<V: CubicVertex> {

@@ -6,11 +6,11 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
 
 use super::Camera;
-use super::geometry::CameraPose;
 use super::lighting::simple::ListLights;
 use super::model::Cubic;
 use crate::EngResult;
 use crate::modelling::SimpleVertex;
+use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 
 #[derive(Debug)]
@@ -26,7 +26,7 @@ pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth
         &'a Cubic,
         Pose,
         &'a SkeletalAnimation, // animation
-        f32,   // time
+        f32,                   // time
     )>,
 
     uniforms: Vec<(String, &'a dyn Uniform)>,
@@ -46,7 +46,7 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
             &'a Cubic,
             Pose,
             &'a SkeletalAnimation, // animation
-            f32,   // time
+            f32,                   // time
         )>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,

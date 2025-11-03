@@ -8,7 +8,8 @@ use graphics::{Draw, ShaderProgramContext};
 
 use crate::EngResult;
 use crate::modelling::cubic::Camera;
-use crate::modelling::cubic::geometry::{CameraPose, Pose, SkeletalAnimation};
+use crate::modelling::cubic::camera::CameraPose;
+use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::modelling::{CubicVertex, Skeleton, SkeletonBb, Volume};
 use crate::opengl_shaders::BoundingBoxShaderProgram;
 

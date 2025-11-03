@@ -6,9 +6,8 @@
 * Skeletal Animation / Skinning
 * Mouse use Rc and Clone rather than Box and pointers
 * ExtendedVertex no longer generic, instead has associated const DIMS
-* One bounding-box root per bone
-  * Use skeleton to look up pose when drawing
-  * Triangles contained within based on whether they have any tie to a given bone
+* BoneAnimation don't store poses, store ScLERPS
+* Camera ManualPose use Pose
 
 ## Skeletal Animation Notes
 

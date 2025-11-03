@@ -57,16 +57,12 @@ pub struct State {
     pub containers: Vec<Cubic>,
     pub testbool: bool,
     pub imported: SkeletonEntity<(bool, Vec<[SimpleVertex; 3]>)>,
-    // pub imported_other: Entity<(bool, Vec<[SimpleVertex; 3]>)>,
-    pub blank: Cubic,
 
     pub bounding_box_level: usize,
-    pub has_collided: bool,
     pub draw_models: bool,
 
     pub which_animation: SkeletalAnimation,
 
-    // pub player: Cubic,
     pub skybox: SkyBox,
     pub hdr_fb: Framebuffer<2, WithDepth>,
 

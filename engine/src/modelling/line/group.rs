@@ -6,7 +6,7 @@ use graphics::texture::FlatTexture;
 
 use crate::modelling::TestLineVertex;
 use crate::modelling::cubic::Camera;
-use crate::modelling::cubic::geometry::CameraPose;
+use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::line::Line;
 use crate::{EngResult, opengl_shaders};
 

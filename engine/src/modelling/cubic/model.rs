@@ -64,14 +64,6 @@ impl Cubic {
             .collect()
     }
 
-    // pub fn root(&self) -> Pose {
-    // self.skeleton.root
-    // }
-
-    // pub fn root_mut(&mut self) -> &mut Pose {
-    // &mut self.skeleton.root
-    // }
-
     pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, SimpleVertex, (Self, L), D::Tex, OUT>,
@@ -88,7 +80,7 @@ impl Cubic {
                 &self
                     .skeleton
                     .get_bone_pose(root, true, bone, animation, time)
-                    .map_or_else(Matrix::identity, Pose::as_matrix)
+                    .map_or_else(Matrix::identity, Pose::as_matrix),
             );
 
             mesh.draw(active_shader, active_framebuffer)?;

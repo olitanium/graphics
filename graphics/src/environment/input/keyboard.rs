@@ -1,8 +1,5 @@
 use std::cell::{RefCell, RefMut};
 use std::collections::HashSet;
-use std::marker::PhantomPinned;
-use std::ops::DerefMut;
-use std::pin::Pin;
 use std::rc::Rc;
 
 pub use glfw::{Action, Key};

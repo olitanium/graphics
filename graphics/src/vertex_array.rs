@@ -3,7 +3,6 @@ use std::sync::LazyLock;
 use std::{iter, ptr};
 
 use builder::Builder;
-use gl::VertexArrayElementBuffer;
 
 use super::framebuffer::ActiveFramebuffer;
 use crate::element_array_buffer::ElementArrayBuffer;

@@ -1,6 +1,6 @@
 use graphics::linear_algebra::{UnitVector, Vector};
 
-use crate::modelling::cubic::geometry::{CameraPose, Orientation, Pose};
+use crate::modelling::cubic::{camera::CameraPose, geometry::{Orientation, Pose}};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ManualPose {

@@ -47,10 +47,10 @@ impl Builder {
             self.inverse_bind_pose_relative_to_parent,
             skeleton.get(self.parent),
         ) {
-            (None, GetBone::Bone(parent)) => parent.inverse_bind_pose(),
+            (None, GetBone::Bone { bone: parent, .. }) => parent.inverse_bind_pose(),
             (None, GetBone::RootBone) => Pose::default(),
             (_, GetBone::NoBone) => return None,
-            (Some(self_inverse), GetBone::Bone(parent)) => {
+            (Some(self_inverse), GetBone::Bone { bone: parent, .. }) => {
                 parent.inverse_bind_pose().transform(&self_inverse)
             }
             (Some(self_inverse), GetBone::RootBone) => self_inverse,
@@ -59,7 +59,7 @@ impl Builder {
         Some(Bone {
             parent: self.parent,
             inverse_bind_pose,
-            //animations: self.animations.into(),
+            // animations: self.animations.into(),
             last_query: Cell::default(),
         })
     }
