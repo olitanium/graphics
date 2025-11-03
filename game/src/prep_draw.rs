@@ -24,7 +24,7 @@ impl State {
         let mut out = VecDraw::new();
 
         let all_models = vec![
-            (&self.imported.model, self.which_animation, time),
+            (&self.imported.model, self.imported.pose, &self.which_animation, time),
             //(&self.imported_other.model, self.which_animation, time),
         ];
 
@@ -43,7 +43,8 @@ impl State {
                     &self.hdr_fb,
                     bb,
                     &self.imported.model.skeleton,
-                    self.which_animation,
+                    self.imported.pose,
+                    &self.which_animation,
                     time,
                     &self.camera,
                     &(),

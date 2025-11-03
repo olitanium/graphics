@@ -1,13 +1,15 @@
 mod bone;
+use std::num::{NonZero, NonZeroUsize};
+
 pub use bone::Bone;
 use graphics::linear_algebra::Matrix;
 
 use super::geometry::Pose;
-use crate::transform::Transform;
+use crate::{modelling::cubic::geometry::SkeletalAnimation, transform::Transform};
 
 #[derive(Debug, Clone)]
 pub struct Skeleton {
-    pub root: Pose,
+    // pub root: Pose,
     // All accesses to `values` is offset by -1, where 0 means accessing the root node above,
     // 1 means accessing values[0], 2 => values[1] etc...
     values: Vec<Bone>,
@@ -24,7 +26,7 @@ impl Skeleton {
 
     pub fn new() -> Self {
         Self {
-            root: Pose::identity(),
+            // root: Pose::identity(),
             values: vec![],
         }
     }
@@ -46,16 +48,31 @@ impl Skeleton {
     // &mut self.root
     // }
 
-    pub fn get_all_bones(&self, animation: usize, time: f32) -> Vec<Matrix<4, 4>> {
-        let mut output = vec![self.root.as_matrix()];
+    pub fn get_all_bones_matrix(
+        &self,
+        root: Pose,
+        animation: &SkeletalAnimation,
+        time: f32,
+    ) -> Vec<Matrix<4, 4>> {
+        self.get_all_bones(root, animation, time)
+            .into_iter()
+            .map(|pose| pose.as_matrix())
+            .collect()
+    }
+
+    pub fn get_all_bones(&self, root: Pose, animation: &SkeletalAnimation, time: f32) -> Vec<Pose> {
+        /*let mut output = vec![root];
 
         let extend = self
             .values
             .iter()
-            .map(|bone| bone.get_pose(self, animation, time).as_matrix());
+            .enumerate()
+            .map(|(bone_index, bone)| bone.get_pose(NonZeroUsize::new(bone_index + 1).unwrap(), root, self, animation, time));
 
         output.extend(extend);
-        output
+        output*/
+
+        (0..).filter_map(|index| self.get_bone_pose(root, false, index, animation, time)).fuse().collect()
     }
 
     pub(crate) fn get(&self, index: usize) -> GetBone<'_> {
@@ -69,32 +86,27 @@ impl Skeleton {
         }
     }
 
-    pub fn get_bone_pose(&self, relative: bool, bone: usize, animation: usize, time: f32) -> Pose {
-        match self.get(bone) {
+    pub fn get_bone_pose(
+        &self,
+        root: Pose,
+        relative: bool,
+        bone_index: usize,
+        animation: &SkeletalAnimation,
+        time: f32,
+    ) -> Option<Pose> {
+        match self.get(bone_index) {
             GetBone::Bone(bone) => {
-                let pose = bone.get_pose(self, animation, time);
+                let pose = bone.get_pose(NonZeroUsize::new(bone_index).unwrap(), root, self, animation, time);
 
                 if relative {
-                    pose.transform(&bone.inverse_bind_pose)
+                    Some(pose.transform(&bone.inverse_bind_pose))
                 } else {
-                    pose
+                    Some(pose)
                 }
             }
-            GetBone::RootBone => self.root,
-            GetBone::NoBone => Pose::default(),
+            GetBone::RootBone => Some(root),
+            GetBone::NoBone => None,
         }
-
-        //         .map_or_default(|maybe_bone| {
-        // maybe_bone.map_or(self.root, |bone| {
-        // let pose = bone.get_pose(self, animation, time);
-        //
-        // if relative {
-        // pose.transform(&bone.inverse_bind_pose)
-        // } else {
-        // pose
-        // }
-        // })
-        // })
     }
 }
 

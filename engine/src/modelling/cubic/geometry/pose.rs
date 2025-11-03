@@ -1,4 +1,4 @@
-use dual_number::{DualQuaternion, UnitDualQuaternion};
+use dual_number::{DualNumber, DualQuaternion, UnitDualQuaternion};
 use graphics::linear_algebra::Matrix;
 use quaternion::Quaternion;
 
@@ -6,8 +6,6 @@ mod posesclerp;
 use graphics::linear_algebra::Vector;
 pub use posesclerp::PoseSclerp;
 
-mod apply_pose;
-pub use apply_pose::ApplyPose;
 
 use super::{CameraPose, Orientation};
 use crate::TransformBy;
@@ -20,11 +18,19 @@ pub struct Pose {
 
 impl Default for Pose {
     fn default() -> Self {
-        Self::identity()
+        Self::IDENTITY
     }
 }
 
 impl Pose {
+    pub const IDENTITY: Self = Self {
+        dual_quaternion: UnitDualQuaternion::new_normal_unchecked(DualNumber {
+            real: Quaternion::IDENTITY,
+            dual: Quaternion::ZERO,
+        }),
+    };
+
+    #[deprecated(note = "use Pose::IDENTITY")]
     pub fn identity() -> Self {
         Self::new_from_orientation_translation(Orientation::IDENTITY, Vector::ZERO)
     }

@@ -4,8 +4,9 @@ mod orientation;
 mod pose;
 mod yieldspose;
 
-pub use animation::Animation;
+pub use animation::BoneAnimation;
+pub use animation::SkeletalAnimation;
 pub use lerp::Lerp;
 pub use orientation::Orientation;
-pub use pose::{ApplyPose, Pose, PoseSclerp};
+pub use pose::{Pose, PoseSclerp};
 pub use yieldspose::{CameraPose, demo};

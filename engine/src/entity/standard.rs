@@ -7,6 +7,7 @@ use crate::modelling::{BoundingBox, Cubic, SimpleVertex, Volume};
 #[derive(Debug)]
 pub struct Entity<T> {
     pub model: Cubic,
+    pub pose: Pose,
     pub mass: f32,
     bounding_box: Option<BoundingBox<SimpleVertex, 3, T>>,
     pub velocity: Vector<3>,
@@ -16,6 +17,7 @@ impl<T: Default> Default for Entity<T> {
     fn default() -> Self {
         Self {
             mass: f32::INFINITY,
+            pose: Pose::IDENTITY,
             model: Default::default(),
             bounding_box: Default::default(),
             velocity: Default::default(),
@@ -58,10 +60,10 @@ impl<T> Entity<T> {
     ) -> Option<Vec<(Vec<[SimpleVertex; 3]>, Vec<[SimpleVertex; 3]>)>> {
         let vec = BoundingBox::detect_collision(
             self.bounding_box()?,
-            self.model.root(),
+            self.pose,
             self_alter_meta,
             other.bounding_box()?,
-            other.model.root(),
+            other.pose,
             other_alter_meta,
         );
 
@@ -81,16 +83,16 @@ impl<T> Entity<T> {
             let other_push = Pose::new_from_translation(-other.velocity.scale(SMALL_TIMESTEP));
             let self_push = Pose::new_from_translation(-self.velocity.scale(SMALL_TIMESTEP));
 
-            self.model.root_mut().push_change(self_push);
-            other.model.root_mut().push_change(other_push);
+            self.pose.push_change(self_push);
+            other.pose.push_change(other_push);
 
             while let Some(new_vec) =
                 self.detect_collision(&self_alter_meta, other, &other_alter_meta)
             {
                 vec = new_vec;
 
-                self.model.root_mut().push_change(self_push);
-                other.model.root_mut().push_change(other_push);
+                self.pose.push_change(self_push);
+                other.pose.push_change(other_push);
             }
 
             let (lhs_manyvec, rhs_manyvec): (Vec<Vec<_>>, Vec<Vec<_>>) = vec.into_iter().unzip();
@@ -124,7 +126,7 @@ impl<T> Entity<T> {
 
     pub fn update(&mut self, timestep: f32) {
         let delta_pose = Pose::new_from_translation(self.velocity.scale(timestep));
-        self.model.root_mut().push_change(delta_pose);
+        self.pose.push_change(delta_pose);
     }
 }
 

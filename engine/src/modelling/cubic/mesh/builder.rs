@@ -65,7 +65,7 @@ impl Builder {
         }));
     }
 
-    pub fn build<V: ExtendedVertex<3>>(mut self) -> Mesh<V>
+    pub fn build<V: CubicVertex>(mut self) -> Mesh<V>
     where
         [(); V::ELEMENT_COUNT]:,
     {

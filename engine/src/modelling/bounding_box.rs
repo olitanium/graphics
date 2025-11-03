@@ -20,7 +20,7 @@ pub use skeleton_bb::{SkeletonBb, SkeletonBbGroup};
 
 use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::cubic::geometry::Pose;
-use crate::modelling::{Cubic, CubicVertex, SimpleVertex, Skeleton, Volume};
+use crate::modelling::{Cubic, CubicVertex, SimpleVertex, Volume};
 use crate::{EngResult, TransformBy};
 
 #[derive(Debug)]

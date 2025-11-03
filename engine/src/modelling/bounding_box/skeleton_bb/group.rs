@@ -8,7 +8,7 @@ use graphics::{Draw, ShaderProgramContext};
 
 use crate::EngResult;
 use crate::modelling::cubic::Camera;
-use crate::modelling::cubic::geometry::CameraPose;
+use crate::modelling::cubic::geometry::{CameraPose, Pose, SkeletalAnimation};
 use crate::modelling::{CubicVertex, Skeleton, SkeletonBb, Volume};
 use crate::opengl_shaders::BoundingBoxShaderProgram;
 
@@ -26,11 +26,12 @@ pub struct Group<
 {
     framebuffer: &'a D,
     bounding_box: &'a SkeletonBb<V, T>,
+    pose: Pose,
     skeleton: &'a Skeleton,
     look_at: Matrix<4, 4>,
     level: usize,
     colour: F,
-    animation: usize,
+    animation: &'a SkeletalAnimation,
     time: f32,
 }
 
@@ -41,7 +42,8 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
         framebuffer: &'a D,
         bounding_box: &'a SkeletonBb<V, T>,
         skeleton: &'a Skeleton,
-        animation: usize,
+        pose: Pose,
+        animation: &'a SkeletalAnimation,
         time: f32,
         camera: &Camera<P>,
         hint: &P::Hint,
@@ -52,6 +54,7 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
         Box::new(Self {
             framebuffer,
             bounding_box,
+            pose,
             skeleton,
             look_at,
             level,
@@ -77,6 +80,7 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
                 self.skeleton,
                 &mut active_shader,
                 &mut active_framebuffer,
+                self.pose,
                 self.animation,
                 self.time,
                 self.colour,

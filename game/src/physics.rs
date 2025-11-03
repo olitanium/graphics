@@ -17,7 +17,7 @@ impl State {
 
         if let Some(light) = self.light_group.point.get_mut(0) {
             light.light.position = light_pos;
-            *self.light.root_mut() = Pose::new_from_translation(light_pos);
+            //*self.light = Pose::new_from_translation(light_pos);
         }
 
         // self.imported_other.update(frame_time);

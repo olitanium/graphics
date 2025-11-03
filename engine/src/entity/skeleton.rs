@@ -7,6 +7,7 @@ use crate::modelling::{Cubic, SimpleVertex, SkeletonBb, Volume};
 #[derive(Debug)]
 pub struct SkeletonEntity<T> {
     pub model: Cubic,
+    pub pose: Pose,
     pub mass: f32,
     bounding_box: Option<SkeletonBb<SimpleVertex, T>>,
     pub velocity: Vector<3>,
@@ -16,6 +17,7 @@ impl<T: Default> Default for SkeletonEntity<T> {
     fn default() -> Self {
         Self {
             mass: f32::INFINITY,
+            pose: Pose::IDENTITY,
             model: Default::default(),
             bounding_box: Default::default(),
             velocity: Default::default(),
@@ -128,7 +130,7 @@ impl<T> SkeletonEntity<T> {
 
     pub fn update(&mut self, timestep: f32) {
         let delta_pose = Pose::new_from_translation(self.velocity.scale(timestep));
-        self.model.root_mut().push_change(delta_pose);
+        self.pose.push_change(delta_pose);
     }
 }
 

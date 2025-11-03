@@ -8,7 +8,7 @@ use graphics::{Draw, ShaderProgramContext};
 
 use crate::EngResult;
 use crate::modelling::cubic::Camera;
-use crate::modelling::cubic::geometry::CameraPose;
+use crate::modelling::cubic::geometry::{CameraPose, Pose};
 use crate::modelling::{BoundingBox, ExtendedVertex, Skeleton, Volume};
 use crate::opengl_shaders::BoundingBoxShaderProgram;
 
@@ -27,6 +27,7 @@ pub struct Group<
     framebuffer: &'a D,
     bounding_box: &'a BoundingBox<V, DIMS, T>,
     skeleton: &'a Skeleton,
+    pose: Pose,
     look_at: Matrix<4, 4>,
     level: usize,
     colour: F,
@@ -44,6 +45,7 @@ impl<
         framebuffer: &'a D,
         bounding_box: &'a BoundingBox<V, 3, T>,
         skeleton: &'a Skeleton,
+        pose: Pose,
         camera: &Camera<P>,
         hint: &P::Hint,
         level: usize,
@@ -54,6 +56,7 @@ impl<
             framebuffer,
             bounding_box,
             skeleton,
+            pose,
             look_at,
             level,
             colour,
@@ -76,11 +79,11 @@ impl<
 
             active_shader.set_uniform("projtimesview", &self.look_at);
 
-            let pose = self.skeleton.root;
+            // let pose = self.skeleton.root;
 
             self.bounding_box.draw(
                 self.level,
-                pose,
+                self.pose,
                 &mut active_shader,
                 &mut active_framebuffer,
                 self.colour,

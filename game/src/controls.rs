@@ -57,9 +57,9 @@ impl State {
         if keyboard.contains(&Key::J) {
             self.camera.radius_out(0.5 * frame_time);
         }
-        if string.to_lowercase().contains('y') {
+        /*if string.to_lowercase().contains('y') {
             self.which_animation = (self.which_animation + 1) % 2
-        }
+        }*/
         if keyboard.contains(&Key::Comma) {
             self.camera.pose.roll_ccw(frame_time);
         }

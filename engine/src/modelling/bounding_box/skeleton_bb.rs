@@ -5,6 +5,7 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
 
 use crate::EngResult;
+use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::modelling::{BoundingBox, Cubic, CubicVertex, SimpleVertex, Skeleton};
 
 mod group;
@@ -38,13 +39,15 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
     pub fn overlap<F, O>(
         lhs: &Self,
         lhs_skeleton: &Skeleton,
-        lhs_animation: usize,
+        lhs_pose: Pose,
+        lhs_animation: &SkeletalAnimation,
         lhs_time: f32,
         lhs_alter_meta: F,
 
         rhs: &Self,
         rhs_skeleton: &Skeleton,
-        rhs_animation: usize,
+        rhs_pose: Pose,
+        rhs_animation: &SkeletalAnimation,
         rhs_time: f32,
         rhs_alter_meta: O,
     ) -> Vec<(Vec<[V; 3]>, Vec<[V; 3]>)>
@@ -59,13 +62,19 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
             .iter()
             .enumerate()
             .flat_map(|(lhs_bone, lhs_bb)| {
-                let lhs_pose = lhs_skeleton.get_bone_pose(true, lhs_bone, lhs_animation, lhs_time);
+                let lhs_pose =
+                    lhs_skeleton.get_bone_pose(lhs_pose, true, lhs_bone, lhs_animation, lhs_time).unwrap(/*TODO: Animation well formed */);
                 rhs.per_bone
                     .iter()
                     .enumerate()
                     .flat_map(move |(rhs_bone, rhs_bb)| {
-                        let rhs_pose =
-                            rhs_skeleton.get_bone_pose(true, rhs_bone, rhs_animation, rhs_time);
+                        let rhs_pose = rhs_skeleton.get_bone_pose(
+                            rhs_pose,
+                            true,
+                            rhs_bone,
+                            rhs_animation,
+                            rhs_time,
+                        ).unwrap(/*TODO: Animation well formed */);
 
                         BoundingBox::detect_collision(
                             lhs_bb,
@@ -86,12 +95,13 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
         skeleton: &Skeleton,
         active_shader: &mut ActiveShaderProgram<'_, '_, '_, Vector<3>, (), D::Tex, 1>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
-        animation: usize,
+        pose: Pose,
+        animation: &SkeletalAnimation,
         time: f32,
         colour: F,
     ) -> EngResult<(), !> {
         for (bone, bbox) in self.per_bone.iter().enumerate() {
-            let pose = skeleton.get_bone_pose(true, bone, animation, time);
+            let pose = skeleton.get_bone_pose(pose, true, bone, animation, time).unwrap(/* TODO: Well formed animation */);
             bbox.draw(level, pose, active_shader, active_framebuffer, &colour)?
         }
 

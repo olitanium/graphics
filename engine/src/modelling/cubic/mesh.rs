@@ -9,16 +9,16 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::vertex_array::VertexArray;
 
 use crate::EngResult;
-use crate::modelling::ExtendedVertex;
+use crate::modelling::{CubicVertex, ExtendedVertex};
 use crate::modelling::cubic::material::Material;
 
 #[derive(Debug, Clone)]
-pub struct Mesh<V: ExtendedVertex<3>> {
+pub struct Mesh<V: CubicVertex> {
     pub vertex_array: Rc<VertexArray<V>>,
     pub material: Rc<Material>,
 }
 
-impl<V: ExtendedVertex<3>> Mesh<V> {
+impl<V: CubicVertex> Mesh<V> {
     pub fn builder() -> MeshBuilder {
         MeshBuilder::new()
     }
@@ -31,7 +31,7 @@ impl<V: ExtendedVertex<3>> Mesh<V> {
     }
 }
 
-impl<V: ExtendedVertex<3>> Mesh<V>
+impl<V: CubicVertex> Mesh<V>
 where
     [(); V::ELEMENT_COUNT]:,
 {
@@ -50,11 +50,4 @@ where
     pub fn triangles(&self) -> Cow<'_, [[V; 3]]> {
         self.vertex_array.triangles()
     }
-
-    // pub fn triangles_from_vec(vec: &[Self]) -> Vec<[V; 3]> {
-    // vec.into_iter()
-    // .map(|mesh| mesh.triangles().into_owned())
-    // .flatten()
-    // .collect()
-    // }
 }

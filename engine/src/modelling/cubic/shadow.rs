@@ -11,6 +11,7 @@ use super::camera::Camera;
 use super::geometry::CameraPose;
 use super::lighting::shadow::ShadowListLights;
 use super::model::Cubic;
+use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::{EngResult, opengl_shaders};
 
 pub const SHADOW_SHADER_MAX_LIGHTS: usize = 2;
@@ -24,8 +25,18 @@ pub struct Group<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> {
 
     output_framebuffer: &'a X,
 
-    opaque: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
-    transparent: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
+    opaque: Vec<(
+        &'a Cubic,
+        Pose,
+        &'a SkeletalAnimation, // animation
+        f32,   // time
+    )>,
+    transparent: Vec<(
+        &'a Cubic,
+        Pose,
+        &'a SkeletalAnimation, // animation
+        f32,   // time
+    )>,
 
     uniforms: Vec<(String, &'a dyn Uniform)>,
 }
@@ -36,8 +47,18 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
         camera: &Camera<O>,
         hint: &O::Hint,
         list_light: &'a ShadowListLights<2>,
-        opaque: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
-        transparent: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
+        opaque: Vec<(
+            &'a Cubic,
+            Pose,
+            &'a SkeletalAnimation, // animation
+            f32,   // time
+        )>,
+        transparent: Vec<(
+            &'a Cubic,
+            Pose,
+            &'a SkeletalAnimation, // animation
+            f32,   // time
+        )>,
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Box<Self> {
         Box::new(Self {
@@ -84,10 +105,11 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw for Group<'a, X> {
             active_shadow_shader.set_uniform_dyn(self.uniforms);
 
             let mut active_output_framebuffer = self.output_framebuffer.bind(fb_context);
-            for (model, animation, time) in iter::chain(self.opaque, self.transparent) {
+            for (model, pose, animation, time) in iter::chain(self.opaque, self.transparent) {
                 model.draw(
                     &mut active_shadow_shader,
                     &mut active_output_framebuffer,
+                    pose,
                     animation,
                     time,
                 )?;

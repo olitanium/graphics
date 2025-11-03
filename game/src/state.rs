@@ -10,7 +10,7 @@ use engine::framebuffer::{DefaultFramebuffer, Framebuffer};
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::Camera;
 use engine::modelling::cubic::camera::{ManualPose, Projection};
-use engine::modelling::cubic::geometry::Pose;
+use engine::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::cubic::material::Material;
@@ -64,7 +64,7 @@ pub struct State {
     pub has_collided: bool,
     pub draw_models: bool,
 
-    pub which_animation: usize,
+    pub which_animation: SkeletalAnimation,
 
     // pub player: Cubic,
     pub skybox: SkyBox,

@@ -4,13 +4,15 @@ use std::rc::Rc;
 use graphics::ApiResult;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
+use graphics::linear_algebra::Matrix;
 use graphics::shader_program::{ActiveShaderProgram, CullFace};
 use russimp::scene::PostProcess;
 
 use super::material::Material;
 use super::{Builder, Mesh, Skeleton, import};
 use crate::error::EngResult;
-use crate::modelling::cubic::geometry::Pose;
+use crate::modelling::Bone;
+use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::modelling::simple_vertex::SimpleVertex;
 
 #[derive(Clone, Debug)]
@@ -39,7 +41,7 @@ impl Cubic {
 
     pub fn cube(side_length: f32, material: Rc<Material>) -> Builder {
         let mut out = Self::builder();
-        out.push_cube(Pose::identity(), material, side_length, 0);
+        out.push_cube(Pose::IDENTITY, material, side_length, 0);
         out
     }
 
@@ -62,19 +64,20 @@ impl Cubic {
             .collect()
     }
 
-    pub fn root(&self) -> Pose {
-        self.skeleton.root
-    }
+    // pub fn root(&self) -> Pose {
+    // self.skeleton.root
+    // }
 
-    pub fn root_mut(&mut self) -> &mut Pose {
-        &mut self.skeleton.root
-    }
+    // pub fn root_mut(&mut self) -> &mut Pose {
+    // &mut self.skeleton.root
+    // }
 
     pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, SimpleVertex, (Self, L), D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-        animation: usize,
+        root: Pose,
+        animation: &SkeletalAnimation,
         time: f32,
     ) -> EngResult<(), !> {
         // Ignore cull_face error
@@ -84,8 +87,8 @@ impl Cubic {
                 "model",
                 &self
                     .skeleton
-                    .get_bone_pose(true, bone, animation, time)
-                    .as_matrix(),
+                    .get_bone_pose(root, true, bone, animation, time)
+                    .map_or_else(Matrix::identity, Pose::as_matrix)
             );
 
             mesh.draw(active_shader, active_framebuffer)?;

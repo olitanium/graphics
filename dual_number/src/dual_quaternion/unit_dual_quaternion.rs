@@ -18,7 +18,7 @@ impl UnitDualQuaternion {
         Self(normalized)
     }
 
-    pub fn new_normal_unchecked(dual_quaternion: DualQuaternion) -> Self {
+    pub const fn new_normal_unchecked(dual_quaternion: DualQuaternion) -> Self {
         Self(dual_quaternion)
     }
 

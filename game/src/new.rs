@@ -8,7 +8,7 @@ use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::camera;
 use engine::modelling::cubic::camera::ManualPose;
-use engine::modelling::cubic::geometry::{Animation, Orientation, Pose};
+use engine::modelling::cubic::geometry::{BoneAnimation, Orientation, Pose, SkeletalAnimation};
 use engine::modelling::cubic::lighting::shadow::{
     ShadowListLights,
     ShadowPointLight,
@@ -75,9 +75,10 @@ impl State {
             })
             .collect();
 
-        let mut imported = SkeletonEntity::from_cubic(make_model("oliver")?, 20, 1.0).unwrap();
+        let (animation, model) = make_model("oliver")?;
+        let mut imported = SkeletonEntity::from_cubic(model, 20, 1.0).unwrap();
         imported.velocity = Vector::new([0.0, 0.0, 0.5]);
-        *imported.model.root_mut() = Pose::new_from_orientation_translation(
+        imported.pose = Pose::new_from_orientation_translation(
             Orientation::new_forward_up(UnitVector::Z, UnitVector::Y),
             Vector::new([0.0, 0.0, -1.1]),
         );
@@ -202,7 +203,7 @@ impl State {
             has_collided: false,
             draw_models: true,
 
-            which_animation: 0,
+            which_animation: animation,
 
             hdr_fb,
             do_bloom: false,
@@ -227,18 +228,18 @@ impl State {
     }
 }
 
-pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
+pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, Cubic), StateError> {
     use engine::PostProcess as P;
     let model = match which_model {
-        "morgan" => Cubic::import(
+        "morgan" => (SkeletalAnimation::new(), Cubic::import(
             "assets/Teddy Statue/Teddy Statue.obj",
             vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
             false,
         )?
         .cull_face(CullFace::BackFace)
         .scale(0.01)
-        .build(),
-        "backpack" => Cubic::import(
+        .build()),
+        "backpack" => (SkeletalAnimation::new(), Cubic::import(
             "assets/backpack/backpack.obj",
             vec![
                 P::Triangulate,
@@ -249,7 +250,7 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
             false,
         )?
         .material(Rc::new(Material::white()))
-        .build(),
+        .build()),
         "oliver" => {
             let material = Rc::new(
                 Material::builder()
@@ -262,7 +263,7 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
             const TAIL_GRADIENT: f32 = 0.9;
             const TAIL_EPSILON: f32 = 0.1;
             let animation1 = {
-                let mut animation = Animation::new();
+                let mut animation = BoneAnimation::new();
                 animation
                     .push(
                         Pose::new_from_orientation_translation(
@@ -290,8 +291,8 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
                 animation
             };
 
-            let animation2 = {
-                let mut animation = Animation::new();
+            /*let animation2 = {
+                let mut animation = BoneAnimation::new();
                 animation
                     .push(
                         Pose::new_from_orientation_translation(
@@ -317,29 +318,31 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
                     )
                     .unwrap();
                 animation
-            };
+            };*/
 
             let mut skeleton = Skeleton::default();
-            let animation_rc = vec![animation1, animation2];
+            let mut animation_1 = SkeletalAnimation::new();
+            
             let mut builder = Cubic::builder();
             let mut current_bone = Skeleton::ROOT_BONE;
+            //animation_1.push_animation(animation1.clone(), current_bone).unwrap();
 
             const LENGTH_TAIL: usize = 10;
             let cube_push = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.0]));
-            let mut cube_pose = Pose::identity();
+            let mut cube_pose = Pose::IDENTITY;
 
             builder.push_cube(cube_pose, material, 1.0, current_bone);
 
-            for (index, animation) in iter::repeat_n(animation_rc, LENGTH_TAIL - 1).enumerate() {
+            for index in 1..LENGTH_TAIL {
                 // TODO: remove unwrap
                 let bone = Bone::builder(current_bone)
-                    .animations(animation)
-                    .bind_pose_relative_to_parent(Pose::new_from_translation(Vector::new([
-                        0.0, 0.0, 1.0,
-                    ])))
+                    //.animations(animation)
+                    .bind_pose_relative_to_parent(cube_push)
                     .build(&skeleton)
                     .expect("parent bone always exists");
 
+                animation_1.push_animation(animation1.clone(), current_bone);
+                
                 cube_pose = cube_pose.transform_by(&cube_push);
                 current_bone = skeleton.push_bone(bone).unwrap();
                 let material = Rc::new(
@@ -354,12 +357,12 @@ pub fn make_model(which_model: &str) -> EngResult<Cubic, StateError> {
                 builder.push_cube(cube_pose, material, 1.0, current_bone);
             }
 
-            builder
+            (animation_1, builder
                 .cull_face(CullFace::BackFace)
                 .skeleton(skeleton)
-                .build()
+                .build())
         }
-        _ => Cubic::empty(),
+        _ => (SkeletalAnimation::new(), Cubic::empty()),
     };
     Ok(model)
 }

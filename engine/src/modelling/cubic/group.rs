@@ -11,6 +11,7 @@ use super::lighting::simple::ListLights;
 use super::model::Cubic;
 use crate::EngResult;
 use crate::modelling::SimpleVertex;
+use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
@@ -21,7 +22,12 @@ pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth
     camera_look_at: Matrix<4, 4>,
 
     lights: &'a ListLights<MAX>,
-    opaque: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
+    opaque: Vec<(
+        &'a Cubic,
+        Pose,
+        &'a SkeletalAnimation, // animation
+        f32,   // time
+    )>,
 
     uniforms: Vec<(String, &'a dyn Uniform)>,
 }
@@ -36,7 +42,12 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
         camera: &Camera<O>,
         hint: &O::Hint,
         lights: &'a ListLights<MAX>,
-        opaque: Vec<(&'a Cubic, usize /* animation */, f32 /* time */)>,
+        opaque: Vec<(
+            &'a Cubic,
+            Pose,
+            &'a SkeletalAnimation, // animation
+            f32,   // time
+        )>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Box<Self> {
@@ -71,8 +82,14 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
 
             active_shader.set_uniform_dyn(self.uniforms);
 
-            for (model, animation, time) in self.opaque {
-                model.draw(&mut active_shader, &mut active_framebuffer, animation, time)?;
+            for (model, pose, animation, time) in self.opaque {
+                model.draw(
+                    &mut active_shader,
+                    &mut active_framebuffer,
+                    pose,
+                    animation,
+                    time,
+                )?;
             }
         };
     }
