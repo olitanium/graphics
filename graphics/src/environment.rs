@@ -130,8 +130,7 @@ impl<G: ApiState> Environment<G> {
             .title(title.to_string())
             .raw_motion(true)
             .glfw(&mut glfw)
-            .build()
-            .map_err(ApiError::temp_convert_from_never)?;
+            .build()?;
 
         glfw.set_swap_interval(glfw::SwapInterval::None);
 
@@ -173,7 +172,7 @@ impl<G: ApiState> Environment<G> {
                     framebuffer_register.clear();
                     // Begin rendering code
                     for draw in to_draw {
-                        draw.draw(&mut framebuffer_register, &mut shader_program_marker);
+                        draw.draw(&mut framebuffer_register, &mut shader_program_marker)?;
                     }
                 }
                 Err(error) => return Err(error),
@@ -183,7 +182,7 @@ impl<G: ApiState> Environment<G> {
         Ok(())
     }
 
-    fn poll(&mut self) -> ApiResult<Vec<Box<dyn Draw + '_>>, G::Error> {
+    fn poll(&mut self) -> ApiResult<Vec<Box<dyn Draw<G::Error> + '_>>, G::Error> {
         let curr_time = self.glfw.get_time();
         let frametime = curr_time - *self.old_frame.get_or_insert(curr_time);
         self.old_frame = Some(curr_time);
@@ -214,7 +213,7 @@ impl<'env, G: ApiState> FrameIter<'env, G> {
 }
 
 impl<G: ApiState> FrameIter<'_, G> {
-    pub fn next(&mut self) -> Option<ApiResult<Vec<Box<dyn Draw + '_>>, G::Error>> {
+    pub fn next(&mut self) -> Option<ApiResult<Vec<Box<dyn Draw<G::Error> + '_>>, G::Error>> {
         if !self.env.window.should_close() {
             // Poll for and process events
             self.env.glfw.poll_events();

@@ -1,11 +1,13 @@
+use std::ffi::CString;
 use std::fmt::Debug;
 
 use colour::{ColourRGB, ColourRGBA};
 use linear_algebra::{Matrix, UnitVector, Vector};
 
-use crate::gl_call;
 use crate::shader_program::program::active_shader::IsActiveShaderProgram;
+use crate::shader_program::{self, Error, shader};
 use crate::types::UniformLocation;
+use crate::{ApiResult, gl_call};
 
 pub struct NameNotFoundError;
 
@@ -14,7 +16,7 @@ pub trait Uniform: Debug {
         &self,
         name: String,
         shader_program: &dyn IsActiveShaderProgram,
-    ) -> Result<(), NameNotFoundError>;
+    ) -> ApiResult<(), !>;
 }
 
 macro_rules! define_uniform {
@@ -24,18 +26,14 @@ macro_rules! define_uniform {
                 &self,
                 name: String,
                 shader_program: &dyn IsActiveShaderProgram,
-            ) -> Result<(), NameNotFoundError> {
-                if let Some(location) = shader_program.get_uniform_location(name) {
+            ) -> ApiResult<(), !> {
+                shader_program.get_uniform_location(name).map(|location| {
                     (|$self: &Self, $loc: UniformLocation, $shader| $out)(
                         self,
                         location,
                         shader_program,
                     );
-
-                    Ok(())
-                } else {
-                    Err(NameNotFoundError)
-                }
+                })
             }
         }
     };
@@ -48,7 +46,7 @@ macro_rules! named_define_uniform {
                 &self,
                 name: String,
                 shader_program: &dyn IsActiveShaderProgram,
-            ) -> Result<(), NameNotFoundError> {
+            ) -> $crate::ApiResult<(), !> {
                 (|$self: &Self, $name: String, $shader| $out)(self, name, shader_program)
             }
         }
@@ -101,22 +99,30 @@ impl<U: Uniform> Uniform for [U] {
         &self,
         name: String,
         shader_program: &dyn IsActiveShaderProgram,
-    ) -> Result<(), NameNotFoundError> {
-        let outputs: Vec<_> = self
-            .into_iter()
-            .enumerate()
-            .map_while(|(index, value)| {
-                value
-                    .set_uniform(format!("{name}[{index}]"), shader_program)
-                    .ok()
-            })
-            .collect();
-
-        if outputs.len() > 0 {
-            Ok(())
-        } else {
-            Err(NameNotFoundError)
+    ) -> ApiResult<(), !> {
+        // let outputs: Vec<_> = self
+        // .into_iter()
+        // .enumerate()
+        // .map_while(|(index, value)| {
+        // value
+        // .set_uniform(format!("{name}[{index}]"), shader_program)
+        // .ok()
+        // })
+        // .collect();
+        //
+        // if outputs.len() > 0 {
+        // Ok(())
+        // } else {
+        // match CString::new(name) {
+        // Ok(c_name) => Err(shader_program::Error::UniformNotFound { name: c_name }),
+        // Err(err) => Err(shader_program::Error::NulInUnformName { name:
+        // err.to_string() }) }?
+        // }
+        for (index, value) in self.into_iter().enumerate() {
+            value.set_uniform(format!("{name}[{index}]"), shader_program)?;
         }
+
+        Ok(())
     }
 }
 
@@ -125,7 +131,7 @@ impl<U: Uniform> Uniform for Vec<U> {
         &self,
         name: String,
         shader_program: &dyn IsActiveShaderProgram,
-    ) -> Result<(), NameNotFoundError> {
+    ) -> ApiResult<(), !> {
         self.as_slice().set_uniform(name, shader_program)
     }
 }
@@ -135,7 +141,7 @@ impl<U: Uniform> Uniform for &U {
         &self,
         name: String,
         shader_program: &dyn IsActiveShaderProgram,
-    ) -> Result<(), NameNotFoundError> {
+    ) -> ApiResult<(), !> {
         (*self).set_uniform(name, shader_program)
     }
 }

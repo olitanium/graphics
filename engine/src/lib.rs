@@ -9,6 +9,8 @@
 #![feature(associated_const_equality)]
 #![feature(result_option_map_or_default)]
 #![feature(iter_map_windows)]
+#![feature(associated_type_defaults)]
+#![deny(unused_must_use)]
 
 pub mod eng_state;
 pub mod entity;
@@ -18,7 +20,7 @@ pub mod modelling;
 pub mod opengl_shaders;
 pub use array_vec;
 pub use entity::Entity;
-pub use error::{EngApiResult, EngError, EngResult};
+pub use error::{EngError, EngResult};
 pub use graphics::colour::{ColourRGB, ColourRGBA};
 pub use graphics::framebuffer::Builder as FrameBufferBuilder;
 pub use graphics::{types, *};
@@ -26,4 +28,4 @@ pub use russimp::scene::PostProcess;
 mod transform;
 pub use transform::TransformBy;
 
-pub type VecDraw<'a> = Vec<Box<dyn Draw + 'a>>;
+pub type VecDraw<'a, E> = Vec<Box<dyn Draw<EngError<E>> + 'a>>;

@@ -12,7 +12,7 @@ pub struct IncompleteVertex<const N: usize> {
     pub texture: Option<Vector<2>>,
     pub normal: Option<UnitVector<3>>,
     pub tangent: Option<UnitVector<3>>,
-    pub weights: Option<ArrayVec<(usize, f32), 4>>
+    pub weights: Option<ArrayVec<(usize, f32), 4>>,
 }
 
 impl TransformBy<Pose> for IncompleteVertex<3> {

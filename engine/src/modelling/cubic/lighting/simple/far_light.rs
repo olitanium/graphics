@@ -4,7 +4,8 @@ use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::Texture;
 
 use super::super::traits::ListLightCompatible;
-use crate::modelling::{SimpleCubic, CubicVertex};
+use crate::EngResult;
+use crate::modelling::{CubicVertex, SimpleCubic};
 
 #[derive(Clone, Debug)]
 pub struct FarLight {
@@ -17,6 +18,7 @@ pub struct FarLight {
 
 impl FarLight {
     pub(crate) fn bind_to<
+        NEVER,
         const N: usize,
         const MAX: usize,
         L: ListLightCompatible<MAX>,
@@ -28,10 +30,12 @@ impl FarLight {
         shader: &mut ActiveShaderProgram<'_, '_, '_, V, (M, L), T, N>,
         name: &str,
         index: usize,
-    ) {
-        shader.set_uniform(format!("{name}_vary[{index}].direction"), &self.direction);
-        shader.set_uniform(format!("{name}[{index}].ambient"), &self.ambient);
-        shader.set_uniform(format!("{name}[{index}].diffuse"), &self.diffuse);
-        shader.set_uniform(format!("{name}[{index}].specular"), &self.specular);
+    ) -> EngResult<(), NEVER> {
+        shader.set_uniform(format!("{name}_vary[{index}].direction"), &self.direction)?;
+        shader.set_uniform(format!("{name}[{index}].ambient"), &self.ambient)?;
+        shader.set_uniform(format!("{name}[{index}].diffuse"), &self.diffuse)?;
+        shader.set_uniform(format!("{name}[{index}].specular"), &self.specular)?;
+
+        Ok(())
     }
 }

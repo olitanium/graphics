@@ -1,11 +1,11 @@
-use graphics::Draw;
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
+use graphics::{ApiResult, Draw};
 
 use super::Quad;
-use crate::EngResult;
 use crate::modelling::quad::QuadVertex;
+use crate::{EngError, EngResult};
 
 #[derive(Debug)]
 pub struct Group<'a, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> {
@@ -33,22 +33,21 @@ impl<'a, const N: usize, const OUT: usize, X: FramebufferWithoutExtra<OUT>> Grou
     }
 }
 
-impl<'a, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> Draw
-    for Group<'a, N, OUT, D>
+impl<'a, NEVER, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>>
+    Draw<EngError<NEVER>> for Group<'a, N, OUT, D>
 {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) {
-        let _: EngResult<(), !> = try {
-            let mut active_framebuffer = self.framebuffer.bind(fb_context);
-            let mut shader = self.shader.use_program(sp_context);
-            shader.set_uniform_dyn(self.uniforms);
+    ) -> ApiResult<(), EngError<NEVER>> {
+        let mut active_framebuffer = self.framebuffer.bind(fb_context);
+        let mut shader = self.shader.use_program(sp_context);
+        shader.set_uniform_dyn(self.uniforms)?;
 
-            for quad in self.quads {
-                quad.draw(&mut shader, &mut active_framebuffer)?;
-            }
-        };
+        for quad in self.quads {
+            quad.draw(&mut shader, &mut active_framebuffer)?;
+        }
+        Ok(())
     }
 }

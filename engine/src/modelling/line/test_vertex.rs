@@ -1,3 +1,4 @@
+use graphics::ApiResult;
 use graphics::colour::ColourRGB;
 use graphics::linear_algebra::Vector;
 use graphics::shader_program::{IsActiveShaderProgram, NameNotFoundError, Uniform};
@@ -13,7 +14,7 @@ impl Uniform for TestLineVertex {
         &self,
         name: String,
         shader_program: &dyn IsActiveShaderProgram,
-    ) -> Result<(), NameNotFoundError> {
+    ) -> ApiResult<(), !> {
         self.position
             .set_uniform(format!("{name}.position"), shader_program)?;
         self.colour

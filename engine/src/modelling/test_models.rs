@@ -126,7 +126,8 @@ pub fn quad_triangles(
         IncompleteVertex::new(Vector::new(position)).texture(Vector::new(texture))
     });
 
-    let triangles = [[0, 1, 2], [0, 2, 3]].map(|arr_index| arr_index.map(|index| vertices[index].clone()));
+    let triangles =
+        [[0, 1, 2], [0, 2, 3]].map(|arr_index| arr_index.map(|index| vertices[index].clone()));
 
     triangles.into_iter()
 }

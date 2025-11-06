@@ -2,12 +2,10 @@ use graphics::ApiError;
 
 pub type EngResult<T, U> = core::result::Result<T, EngError<U>>;
 
-pub type EngApiResult<T, U> = graphics::ApiResult<T, EngError<U>>;
-
 #[derive(Debug, Clone)]
 pub enum EngError<U> {
     User(U),
-    Api(Box<graphics::error::ApiError<Self>>),
+    Api(graphics::error::ApiError<Self>),
     Import(crate::modelling::ImportError),
 }
 
@@ -29,15 +27,15 @@ impl<U> From<!> for EngError<U> {
 
 impl<U> From<ApiError<Self>> for EngError<U> {
     fn from(value: ApiError<EngError<U>>) -> Self {
-        Self::Api(Box::new(value))
+        Self::Api(value)
     }
 }
 
 impl<U> From<EngError<U>> for ApiError<EngError<U>> {
     fn from(value: EngError<U>) -> Self {
         match value {
-            EngError::Api(x) => *x,
-            other => Self::Engine(other),
+            EngError::Api(x) => x,
+            other => Self::Engine(Box::new(other)),
         }
     }
 }

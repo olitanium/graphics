@@ -53,11 +53,11 @@ impl<const N: usize> Quad<N> {
         }
     }
 
-    pub(crate) fn draw<'a, const OUT: usize, I: FramebufferWithoutExtra<OUT>>(
+    pub(crate) fn draw<'a, NEVER, const OUT: usize, I: FramebufferWithoutExtra<OUT>>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, QuadVertex, Self, I::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, I>,
-    ) -> EngResult<(), !> {
+    ) -> EngResult<(), NEVER> {
         let _: ApiResult<_, !> = active_shader.cull_face(CullFace::BackFace);
 
         let input = self.texture

@@ -8,10 +8,10 @@ use graphics::vertex::NoVertex;
 use crate::modelling::cubic::lighting::shadow::ShadowListLights;
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::{
-    SimpleCubic,
     Line,
     Quad,
     QuadVertex,
+    SimpleCubic,
     SimpleVertex,
     SkyBox,
     SkyBoxVertex,

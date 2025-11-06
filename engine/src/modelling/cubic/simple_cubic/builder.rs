@@ -66,7 +66,10 @@ impl Builder {
         let meshes = self
             .mesh_builders
             .into_iter()
-            .map(|(bone, builder)| BoneAndMesh {bone, mesh: builder.scale(self.scale).build()})
+            .map(|(bone, builder)| BoneAndMesh {
+                bone,
+                mesh: builder.scale(self.scale).build(),
+            })
             .collect::<Vec<_>>();
 
         SimpleCubic {

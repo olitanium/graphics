@@ -18,7 +18,12 @@ pub mod lighting;
 pub mod material;
 
 mod simple_cubic;
-pub use simple_cubic::Group as SimpleCubicGroup;
-pub use simple_cubic::SimpleCubic;
-pub use simple_cubic::BoneAndMesh;
-pub use simple_cubic::Builder as SimpleCubicBuilder;
+pub use simple_cubic::{
+    BoneAndMesh,
+    Builder as SimpleCubicBuilder,
+    Group as SimpleCubicGroup,
+    SimpleCubic,
+};
+
+mod skeleton_cubic;
+pub use skeleton_cubic::SkeletonCubic;

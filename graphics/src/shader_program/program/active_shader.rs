@@ -7,18 +7,18 @@ use std::{iter, ptr};
 use super::uniform::Uniform;
 use super::{CullFace, Error, ShaderProgram, ShaderProgramContext};
 use crate::error::ApiResult;
-use crate::gl_call;
 use crate::texture::{self, Texture};
 use crate::types::{self, UniformLocation};
 use crate::vertex::Vertex;
+use crate::{ApiError, gl_call};
 
-pub struct ActiveShaderProgram<'a, 'b, 'c, V: Vertex, M, T: Texture, const OUT: usize> {
+pub struct ActiveShaderProgram<'a, 'b, 'c, V: Vertex, M: ?Sized, T: Texture, const OUT: usize> {
     shader_program: &'a ShaderProgram<V, M, OUT, T>,
-    texture_list: HashMap<String, &'c dyn Texture>,
     context: &'b mut ShaderProgramContext,
+    texture_list: HashMap<String, &'c dyn Texture>,
 }
 
-impl<M: Debug, V: Vertex + Debug, T: Texture + Debug, const OUT: usize> Debug
+impl<M: Debug + ?Sized, V: Vertex + Debug, T: Texture + Debug, const OUT: usize> Debug
     for ActiveShaderProgram<'_, '_, '_, V, M, T, OUT>
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -37,7 +37,7 @@ impl<M: Debug, V: Vertex + Debug, T: Texture + Debug, const OUT: usize> Debug
     }
 }
 
-impl<'a, 'b, V: Vertex, M, T: Texture, const OUT: usize>
+impl<'a, 'b, V: Vertex, M: ?Sized, T: Texture, const OUT: usize>
     ActiveShaderProgram<'a, 'b, '_, V, M, T, OUT>
 {
     pub fn new(
@@ -52,7 +52,9 @@ impl<'a, 'b, V: Vertex, M, T: Texture, const OUT: usize>
     }
 }
 
-impl<'c, V: Vertex, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, V, M, T, OUT> {
+impl<'c, V: Vertex, M: ?Sized, T: Texture, const OUT: usize>
+    ActiveShaderProgram<'_, '_, 'c, V, M, T, OUT>
+{
     pub fn context(&self) -> &ShaderProgramContext {
         self.context
     }
@@ -102,7 +104,8 @@ impl<'c, V: Vertex, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_,
         if self.texture_list.len() <= *MAX_TEX_UNITS {
             for (index, (name, tex)) in self.texture_list.clone().into_iter().enumerate() {
                 tex.bind_to(index as u32);
-                self.set_uniform(name, &(index as i32));
+                self.set_uniform(name, &(index as i32))
+                    .map_err(ApiError::to_any)?;
             }
             Ok(())
         } else {
@@ -114,18 +117,30 @@ impl<'c, V: Vertex, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_,
         }
     }
 
-    pub fn set_uniform<U: Uniform + ?Sized, S: Into<String>>(&mut self, name: S, value: &U) {
-        let _ = value.set_uniform(name.into(), self);
+    pub fn set_uniform<NEVER, U: Uniform + ?Sized, S: Into<String>>(
+        &mut self,
+        name: S,
+        value: &U,
+    ) -> ApiResult<(), NEVER> {
+        value
+            .set_uniform(name.into(), self)
+            .map_err(ApiError::to_any)
     }
 
-    pub fn set_uniform_dyn(&mut self, values: Vec<(String, &dyn Uniform)>) {
+    pub fn set_uniform_dyn<NEVER>(
+        &mut self,
+        values: Vec<(String, &dyn Uniform)>,
+    ) -> ApiResult<(), NEVER> {
         for (name, value) in values {
-            let _ = value.set_uniform(name, self);
+            value.set_uniform(name, self).map_err(ApiError::to_any)?;
         }
+        Ok(())
     }
 
-    pub fn get_uniform_location(&self, name: String) -> Option<UniformLocation> {
-        self.shader_program.get_uniform_location(name)
+    pub fn get_uniform_location<NEVER>(&self, name: String) -> ApiResult<UniformLocation, NEVER> {
+        self.shader_program
+            .get_uniform_location(name)
+            .map_err(ApiError::to_any)
     }
 
     pub fn cull_face<NEVER>(&mut self, cull_face: CullFace) -> ApiResult<(), NEVER> {
@@ -139,13 +154,13 @@ impl<'c, V: Vertex, M, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_,
 }
 
 pub trait IsActiveShaderProgram {
-    fn get_uniform_location(&self, name: String) -> Option<UniformLocation>;
+    fn get_uniform_location(&self, name: String) -> ApiResult<UniformLocation, !>;
 }
 
-impl<'a, 'b, 'c, V: Vertex, M, T: Texture, const OUT: usize> IsActiveShaderProgram
+impl<'a, 'b, 'c, V: Vertex, M: ?Sized, T: Texture, const OUT: usize> IsActiveShaderProgram
     for ActiveShaderProgram<'a, 'b, 'c, V, M, T, OUT>
 {
-    fn get_uniform_location(&self, name: String) -> Option<UniformLocation> {
+    fn get_uniform_location(&self, name: String) -> ApiResult<UniformLocation, !> {
         self.shader_program.get_uniform_location(name)
     }
 }

@@ -1,7 +1,6 @@
 use builder::MissingPose;
 use graphics::linear_algebra::{Matrix, UnitVector, Vector};
 
-
 mod builder;
 mod projection;
 pub use projection::Projection;

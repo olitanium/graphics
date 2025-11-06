@@ -6,6 +6,7 @@ use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{FlatTexture, Magnification, Texture, WrapType};
 use graphics::types::TexDim;
 
+use crate::EngResult;
 use crate::modelling::VertexHasTangent;
 use crate::modelling::cubic::camera::{self, Camera};
 use crate::modelling::cubic::geometry::{Orientation, Pose};
@@ -48,6 +49,7 @@ impl ShadowSpotLight {
 
     pub(crate) unsafe fn bind_to<
         'c,
+        NEVER,
         const N: usize,
         const MAX: usize,
         L: ShadowLightCompatible<MAX>,
@@ -59,13 +61,15 @@ impl ShadowSpotLight {
         shader: &mut ActiveShaderProgram<'_, '_, 'c, V, (M, L), T, N>,
         name: &str,
         index: usize,
-    ) {
-        self.light.bind_to(shader, name, index);
-        shader.set_uniform(format!("{name}[{index}].matrix"), &self.projtimesview());
+    ) -> EngResult<(), NEVER> {
+        self.light.bind_to(shader, name, index)?;
+        shader.set_uniform(format!("{name}[{index}].matrix"), &self.projtimesview())?;
         // SAFETY: Reference must not live to a point where the
         shader.register_texture(Some((format!("{name}[{index}].depth"), unsafe {
             self.framebuffer.get_attachment_ref()
         })));
+
+        Ok(())
     }
 
     pub(crate) fn bind_to_ghost<

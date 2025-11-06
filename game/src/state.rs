@@ -18,12 +18,12 @@ use engine::modelling::{
     Bloom,
     BloomGroup,
     BoundingBoxGroup,
-    SimpleCubic,
     Line,
     Quad,
     QuadGroup,
     SHADOW_SHADER_MAX_LIGHTS,
     ShadowGroup,
+    SimpleCubic,
     SimpleVertex,
     SkyBox,
     SkyBoxGroup,
@@ -82,7 +82,7 @@ impl EngState for State {
         &'a mut self,
         events: Vec<Event<'a>>,
         // default_framebuffer: &'a DefaultFramebuffer,
-    ) -> EngResult<VecDraw<'a>, StateError> {
+    ) -> EngResult<VecDraw<'a, StateError>, StateError> {
         let mut frame_time = 0.0;
         let mut keyboard = HashSet::new();
         let mut mouse_delta = (0.0, 0.0);

@@ -4,7 +4,8 @@ use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::Texture;
 
 use super::super::traits::ListLightCompatible;
-use crate::modelling::{SimpleCubic, CubicVertex};
+use crate::EngResult;
+use crate::modelling::{CubicVertex, SimpleCubic};
 
 #[derive(Clone, Debug)]
 pub struct SpotLight {
@@ -22,6 +23,7 @@ pub struct SpotLight {
 
 impl SpotLight {
     pub(crate) fn bind_to<
+        NEVER,
         const N: usize,
         const MAX: usize,
         L: ListLightCompatible<MAX>,
@@ -34,25 +36,27 @@ impl SpotLight {
         shader: &mut ActiveShaderProgram<'_, '_, '_, V, (M, L), T, N>,
         name: &str,
         index: usize,
-    ) {
+    ) -> EngResult<(), NEVER> {
         shader.set_uniform(
             format!("{name}_vary[{index}].position"),
             &self.position.homogeneous(),
-        );
-        shader.set_uniform(format!("{name}_vary[{index}].direction"), &self.direction);
+        )?;
+        shader.set_uniform(format!("{name}_vary[{index}].direction"), &self.direction)?;
 
-        shader.set_uniform(format!("{name}[{index}].attenuation"), &self.attenuation);
-        shader.set_uniform(format!("{name}[{index}].ambient"), &self.ambient);
-        shader.set_uniform(format!("{name}[{index}].diffuse"), &self.diffuse);
+        shader.set_uniform(format!("{name}[{index}].attenuation"), &self.attenuation)?;
+        shader.set_uniform(format!("{name}[{index}].ambient"), &self.ambient)?;
+        shader.set_uniform(format!("{name}[{index}].diffuse"), &self.diffuse)?;
         shader.set_uniform(
             format!("{name}[{index}].specular"),
             &self.specular.as_array(),
-        );
-        shader.set_uniform(format!("{name}[{index}].cos_cut_off"), &self.cos_cut_off);
+        )?;
+        shader.set_uniform(format!("{name}[{index}].cos_cut_off"), &self.cos_cut_off)?;
 
         shader.set_uniform(
             format!("{name}[{index}].cos_outer_cut_off"),
             &self.cos_outer_cut_off,
-        );
+        )?;
+
+        Ok(())
     }
 }

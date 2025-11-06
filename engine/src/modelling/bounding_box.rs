@@ -20,7 +20,7 @@ pub use skeleton_bb::{SkeletonBb, SkeletonBbGroup};
 
 use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::cubic::geometry::Pose;
-use crate::modelling::{SimpleCubic, CubicVertex, SimpleVertex, Volume};
+use crate::modelling::{CubicVertex, SimpleCubic, SimpleVertex, Volume};
 use crate::{EngResult, TransformBy};
 
 #[derive(Debug)]
@@ -87,15 +87,15 @@ where
         self.get(0).encloses_point_and_children(self, point)
     }
 
-    pub(crate) fn draw<D: FramebufferWithDepth<1>, F: Fn(&T) -> ColourRGBA>(
+    pub(crate) fn draw<NEVER, D: FramebufferWithDepth<1>, F: Fn(&T) -> ColourRGBA>(
         &self,
         level: usize,
         pose: Pose,
         active_shader: &mut ActiveShaderProgram<'_, '_, '_, Vector<DIMS>, (), D::Tex, 1>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
         colour: F,
-    ) -> EngResult<(), !> {
-        active_shader.set_uniform("model", &pose.as_matrix());
+    ) -> EngResult<(), NEVER> {
+        active_shader.set_uniform("model", &pose.as_matrix())?;
         self.get(0)
             .draw_recursive(self, level, active_shader, active_framebuffer, &colour)
     }

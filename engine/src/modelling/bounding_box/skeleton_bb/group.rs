@@ -4,14 +4,14 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::texture::FlatTexture;
 use graphics::vertex::Vertex;
-use graphics::{Draw, ShaderProgramContext};
+use graphics::{ApiResult, Draw, ShaderProgramContext};
 
-use crate::EngResult;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::modelling::{CubicVertex, Skeleton, SkeletonBb, Volume};
 use crate::opengl_shaders::BoundingBoxShaderProgram;
+use crate::{EngError, EngResult};
 
 pub struct Group<
     'a,
@@ -66,26 +66,36 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
     }
 }
 
-impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn(&T) -> ColourRGBA>
-    Draw for Group<'a, 1, 3, D, V, T, F>
+impl<
+    'a,
+    NEVER,
+    D: FramebufferWithDepth<1, Tex = FlatTexture>,
+    V: CubicVertex,
+    T,
+    F: Fn(&T) -> ColourRGBA,
+> Draw<EngError<NEVER>> for Group<'a, 1, 3, D, V, T, F>
 {
-    fn draw(self: Box<Self>, register: &mut FramebufferContext, marker: &mut ShaderProgramContext) {
-        let _: EngResult<(), !> = try {
-            let mut active_framebuffer = self.framebuffer.bind(register);
-            let mut active_shader = Vector::shader_program().use_program(marker);
+    fn draw(
+        self: Box<Self>,
+        register: &mut FramebufferContext,
+        marker: &mut ShaderProgramContext,
+    ) -> ApiResult<(), EngError<NEVER>> {
+        let mut active_framebuffer = self.framebuffer.bind(register);
+        let mut active_shader = Vector::shader_program().use_program(marker);
 
-            active_shader.set_uniform("projtimesview", &self.look_at);
+        active_shader.set_uniform("projtimesview", &self.look_at)?;
 
-            self.bounding_box.draw(
-                self.level,
-                self.skeleton,
-                &mut active_shader,
-                &mut active_framebuffer,
-                self.pose,
-                self.animation,
-                self.time,
-                self.colour,
-            )?
-        };
+        self.bounding_box.draw(
+            self.level,
+            self.skeleton,
+            &mut active_shader,
+            &mut active_framebuffer,
+            self.pose,
+            self.animation,
+            self.time,
+            self.colour,
+        )?;
+
+        Ok(())
     }
 }

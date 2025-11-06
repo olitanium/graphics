@@ -6,7 +6,7 @@ use graphics::linear_algebra::Vector;
 
 use crate::EngResult;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
-use crate::modelling::{BoundingBox, SimpleCubic, CubicVertex, SimpleVertex, Skeleton};
+use crate::modelling::{BoundingBox, CubicVertex, SimpleCubic, SimpleVertex, Skeleton};
 
 mod group;
 pub use group::Group as SkeletonBbGroup;
@@ -89,7 +89,7 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
             .collect()
     }
 
-    pub(crate) fn draw<D: FramebufferWithDepth<1>, F: Fn(&T) -> ColourRGBA>(
+    pub(crate) fn draw<NEVER, D: FramebufferWithDepth<1>, F: Fn(&T) -> ColourRGBA>(
         &self,
         level: usize,
         skeleton: &Skeleton,
@@ -99,7 +99,7 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
         animation: &SkeletalAnimation,
         time: f32,
         colour: F,
-    ) -> EngResult<(), !> {
+    ) -> EngResult<(), NEVER> {
         for (bone, bbox) in self.per_bone.iter().enumerate() {
             let pose = skeleton.get_bone_pose(pose, true, bone, animation, time).unwrap(/* TODO: Well formed animation */);
             bbox.draw(level, pose, active_shader, active_framebuffer, &colour)?

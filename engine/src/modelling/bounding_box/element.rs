@@ -172,6 +172,7 @@ where
 
     pub fn draw_recursive<
         'a,
+        NEVER,
         D: FramebufferWithDepth<OUT>,
         const OUT: usize,
         F: Fn(&T) -> ColourRGBA,
@@ -182,7 +183,7 @@ where
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Vector<DIMS>, (), D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         colour: &F,
-    ) -> EngResult<(), !> {
+    ) -> EngResult<(), NEVER> {
         if let Some([lhs, rhs]) = self.get_children(bounding_box)
             && level != 0
         {
@@ -204,7 +205,7 @@ where
         } else {
             let chosen_colour = colour(&*self.meta.borrow());
 
-            active_shader.set_uniform("colour", &chosen_colour);
+            active_shader.set_uniform("colour", &chosen_colour)?;
 
             self.vertex_array.draw(active_shader, active_framebuffer)?;
 

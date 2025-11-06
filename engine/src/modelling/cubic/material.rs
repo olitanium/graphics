@@ -4,6 +4,7 @@ use graphics::texture::{FlatTexture, Texture};
 use utils::{builder, new};
 
 use crate::modelling::ExtendedVertex;
+use crate::{EngError, EngResult};
 
 #[derive(Debug)]
 pub struct Material {
@@ -50,12 +51,12 @@ impl Material {
         Self::from_colour(ColourRGBA::WHITE)
     }
 
-    pub fn register_to<'c, const N: usize, T: Texture, V: ExtendedVertex<3>, M>(
+    pub fn register_to<'c, NEVER, const N: usize, T: Texture, V: ExtendedVertex<3>, M>(
         &'c self,
         shader: &mut ActiveShaderProgram<'_, '_, 'c, V, M, T, N>,
         name: &str,
-    ) {
-        shader.set_uniform(format!("{name}.shininess"), &self.shininess);
+    ) -> EngResult<(), NEVER> {
+        shader.set_uniform(format!("{name}.shininess"), &self.shininess)?;
         shader.register_texture(
             vec![
                 (format!("{name}.diffuse"), &self.diffuse),
@@ -66,7 +67,9 @@ impl Material {
             ]
             .into_iter()
             .map(|(string, tex)| (string, tex as &dyn Texture)),
-        )
+        );
+
+        Ok(())
     }
 }
 

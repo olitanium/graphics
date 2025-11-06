@@ -1,3 +1,4 @@
+use std::ffi::CString;
 use std::marker::PhantomData;
 use std::mem;
 use std::path::Path;
@@ -24,7 +25,7 @@ pub struct FragmentShader(Shader);
 pub struct MissingFragmentShader;
 
 #[derive(Debug)]
-pub struct Builder<Vx: Vertex, M, T: Texture, const OUT: usize, V, F> {
+pub struct Builder<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize, V, F> {
     vertex_shader: V,
     fragment_shader: F,
     geometry_shader: Option<Shader>,
@@ -32,7 +33,7 @@ pub struct Builder<Vx: Vertex, M, T: Texture, const OUT: usize, V, F> {
     _phantom_model: PhantomData<fn(M, Vx, T)>,
 }
 
-impl<Vx: Vertex, M, T: Texture, const OUT: usize> Default
+impl<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize> Default
     for Builder<Vx, M, T, OUT, MissingVertexShader, MissingFragmentShader>
 {
     fn default() -> Self {
@@ -46,13 +47,13 @@ impl<Vx: Vertex, M, T: Texture, const OUT: usize> Default
     }
 }
 
-impl<Vx: Vertex, M, T: Texture, const OUT: usize>
+impl<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize>
     Builder<Vx, M, T, OUT, MissingVertexShader, MissingFragmentShader>
 {
     new!();
 }
 
-impl<Vx: Vertex, M, T: Texture, const OUT: usize, V, F> Builder<Vx, M, T, OUT, V, F> {
+impl<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize, V, F> Builder<Vx, M, T, OUT, V, F> {
     builder!(force_cull_face: Option<CullFace>);
 
     pub fn vertex_shader<NEVER, P: AsRef<Path>>(
@@ -109,22 +110,25 @@ impl<Vx: Vertex, M, T: Texture, const OUT: usize, V, F> Builder<Vx, M, T, OUT, V
         })
     }
 }
-impl<Vx: Vertex, M, T: Texture, const OUT: usize>
+impl<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize>
     Builder<Vx, M, T, OUT, VertexShader, FragmentShader>
 {
     pub fn build<NEVER>(mut self) -> ApiResult<ShaderProgram<Vx, M, OUT, T>, NEVER> {
         let program_id = gl_call! { ShaderProgramId::new(gl::CreateProgram()) };
-
+        let mut total_string = String::default();
         gl_call! {
             gl::AttachShader(program_id.to_primitive(), self.vertex_shader.0.id().to_primitive());
         }
+        total_string.push_str(&self.vertex_shader.0.source);
         gl_call! {
             gl::AttachShader(program_id.to_primitive(), self.fragment_shader.0.id().to_primitive());
         }
+        total_string.push_str(&self.fragment_shader.0.source);
         if let Some(geometry) = &self.geometry_shader {
             gl_call! {
                 gl::AttachShader(program_id.to_primitive(), geometry.id().to_primitive());
             }
+            total_string.push_str(&geometry.source);
         }
         gl_call! {
             gl::LinkProgram(program_id.to_primitive());
@@ -157,6 +161,7 @@ impl<Vx: Vertex, M, T: Texture, const OUT: usize>
         } else {
             Ok(ShaderProgram {
                 id: program_id,
+                concat_all_text: total_string,
                 uniform_locations: Default::default(),
                 force_cull_face: self.force_cull_face,
                 _phantom_model: PhantomData,

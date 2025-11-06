@@ -12,9 +12,10 @@ use russimp::scene::{PostProcess, Scene};
 use super::SimpleCubic;
 use super::material::Material;
 use crate::error::EngResult;
+use crate::modelling::CubicVertex;
 use crate::modelling::advanced_vertex::IncompleteVertex;
-use crate::modelling::cubic::SimpleCubicBuilder;
 use crate::modelling::cubic::mesh::MeshBuilder;
+use crate::modelling::cubic::{Mesh, SimpleCubicBuilder};
 
 mod error {
     use std::path::PathBuf;
@@ -63,12 +64,15 @@ mod error {
 
 pub use error::Error;
 
+pub(crate) struct ImportOutput {
+    pub meshes: Vec<MeshBuilder>,
+}
 
 pub(super) fn import<NEVER: Clone, P: AsRef<Path>>(
     path: P,
     post_process: Vec<PostProcess>,
     load_tangent_space: bool,
-) -> EngResult<SimpleCubicBuilder, NEVER> {
+) -> EngResult<ImportOutput, NEVER> {
     let path = path.as_ref();
 
     let dir = path
@@ -85,7 +89,7 @@ pub(super) fn import<NEVER: Clone, P: AsRef<Path>>(
             as_text: error.to_string(),
         })?;
 
-    let out = process_node(
+    let meshes = process_node(
         &scene,
         scene
             .root
@@ -95,9 +99,10 @@ pub(super) fn import<NEVER: Clone, P: AsRef<Path>>(
         &mut HashMap::new(),
         load_tangent_space,
     )?;
-    let mut builder = SimpleCubic::builder();
-    builder.extend_meshes(out);
-    Ok(builder)
+    // let mut builder = SimpleCubic::builder();
+    // builder.extend_meshes(out);
+    // Ok(builder)
+    Ok(ImportOutput { meshes })
 }
 
 fn process_node<NEVER: Clone>(
@@ -106,7 +111,7 @@ fn process_node<NEVER: Clone>(
     dir: &Path,
     current_mat: &mut HashMap<u32, EngResult<Rc<Material>, NEVER>>,
     load_tangent_space: bool,
-) -> EngResult<Vec<(usize, MeshBuilder)>, NEVER> {
+) -> EngResult<Vec<MeshBuilder>, NEVER> {
     // process current node and recursively process each in node.children.
     let mut curr_meshes = node
         .meshes
@@ -212,7 +217,7 @@ fn process_node<NEVER: Clone>(
             let mut builder = MeshBuilder::new().material(mat);
             builder.extend_triangle(mesh_buffer);
 
-            Ok((0, builder))
+            Ok(builder)
         })
         .collect::<EngResult<Vec<_>, NEVER>>()?;
 

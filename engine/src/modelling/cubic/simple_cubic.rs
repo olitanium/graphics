@@ -11,6 +11,7 @@ use russimp::scene::PostProcess;
 use super::material::Material;
 use super::{Mesh, Skeleton, import};
 use crate::error::EngResult;
+use crate::modelling::CubicVertex;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::modelling::simple_vertex::SimpleVertex;
 
@@ -20,7 +21,7 @@ pub use group::Group;
 mod builder;
 pub use builder::Builder;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct SimpleCubic {
     pub(crate) meshes: Vec<BoneAndMesh>,
     pub cull_face: CullFace,
@@ -33,15 +34,9 @@ pub struct BoneAndMesh {
     pub(crate) mesh: Mesh<SimpleVertex>,
 }
 
-impl Default for SimpleCubic {
-    fn default() -> Self {
-        Self::empty()
-    }
-}
-
 impl SimpleCubic {
     pub fn empty() -> Self {
-        Self::builder().build()
+        Self::default()
     }
 
     pub fn builder() -> Builder {
@@ -73,14 +68,27 @@ impl SimpleCubic {
             .collect()
     }
 
-    pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
+    pub fn import<NEVER: Clone, PA: AsRef<Path>>(
+        path: PA,
+        post_process: Vec<PostProcess>,
+        load_tangent_space: bool,
+    ) -> EngResult<Builder, NEVER> {
+        let import_output = import::import(path, post_process, load_tangent_space)?;
+
+        let mut out = Self::builder();
+        out.extend_meshes(import_output.meshes.into_iter().map(|builder| (0, builder)));
+
+        Ok(out)
+    }
+
+    pub(crate) fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, SimpleVertex, (Self, L), D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         root: Pose,
         animation: &SkeletalAnimation,
         time: f32,
-    ) -> EngResult<(), !> {
+    ) -> EngResult<(), NEVER> {
         // Ignore cull_face error
         let _: ApiResult<_, !> = active_shader.cull_face(self.cull_face);
         for BoneAndMesh { bone, mesh } in self.meshes.iter() {
@@ -90,19 +98,11 @@ impl SimpleCubic {
                     .skeleton
                     .get_bone_pose(root, true, *bone, animation, time)
                     .map_or_else(Matrix::identity, Pose::as_matrix),
-            );
+            )?;
 
             mesh.draw(active_shader, active_framebuffer)?;
         }
 
         Ok(())
-    }
-
-    pub fn import<NEVER: Clone, PA: AsRef<Path>>(
-        path: PA,
-        post_process: Vec<PostProcess>,
-        load_tangent_space: bool,
-    ) -> EngResult<Builder, NEVER> {
-        import::import(path, post_process, load_tangent_space)
     }
 }

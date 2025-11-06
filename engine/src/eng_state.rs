@@ -1,5 +1,5 @@
-use graphics::Event;
 use graphics::types::TexDim;
+use graphics::{Draw, Event};
 
 use crate::{EngResult, VecDraw};
 
@@ -8,7 +8,10 @@ pub trait EngState: Sized {
 
     fn new(initial_size: (TexDim, TexDim)) -> EngResult<Self, Self::Error>;
 
-    fn poll<'a>(&'a mut self, events: Vec<Event<'a>>) -> EngResult<VecDraw<'a>, Self::Error>;
+    fn poll<'a>(
+        &'a mut self,
+        events: Vec<Event<'a>>,
+    ) -> EngResult<VecDraw<'a, Self::Error>, Self::Error>;
 }
 
 #[macro_export]
@@ -25,7 +28,7 @@ macro_rules! derive_api_state {
             fn poll<'a>(
                 &'a mut self,
                 events: Vec<Event<'a>>,
-            ) -> $crate::ApiResult<Vec<Box<dyn $crate::Draw + 'a>>, Self::Error> {
+            ) -> $crate::ApiResult<Vec<Box<dyn $crate::Draw<Self::Error> + 'a>>, Self::Error> {
                 let out = <$slf as EngState>::poll(self, events)?;
                 Ok(out)
             }

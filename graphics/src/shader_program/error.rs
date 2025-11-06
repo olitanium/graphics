@@ -21,9 +21,6 @@ pub enum Error {
     CompileError {
         source: String,
     },
-    NulInUnformName {
-        name: String,
-    },
     TooLongVecErrorInt {
         length_given: usize,
         vector: Vec<i32>,
@@ -44,6 +41,13 @@ pub enum Error {
         vertex_shader: String,
         fragment_shader: String,
         geometry_shader: Option<String>,
+    },
+    UniformNotFound {
+        shader_source: String,
+        name: CString,
+    },
+    UniformNameNulError {
+        name: String,
     },
 }
 

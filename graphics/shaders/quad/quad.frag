@@ -3,27 +3,27 @@
 in vec2 texture_coord;
 out vec4 frag_colour;
 
-uniform sampler2D in_texture;
+uniform sampler2D in_texture0;
 
 void main() {  
     // Regular
-    frag_colour = texture(in_texture, texture_coord);
+    frag_colour = texture(in_texture0, texture_coord);
 
     // Linear depth
     /*float far = 20.0;
     float near = 0.1;
-    float ndc = texture(in_texture, texture_coord).r;
+    float ndc = texture(in_texture0, texture_coord).r;
     float linear_depth = (2.0 * near * far) / (far + near - ndc * (far - near));	
     frag_colour = vec4(vec3(linear_depth/far), 1.0);*/
 
     // gray-scale
-    /*frag_colour = texture(in_texture, texture_coord);
+    /*frag_colour = texture(in_texture0, texture_coord);
     float average = 0.2126 * frag_colour.r + 0.7152 * frag_colour.g + 0.0722 * frag_colour.b;
     frag_colour = vec4(average, average, average, 1.0);*/
     
 
     // Inverted
-    // frag_colour = vec4( vec3(1.0 - texture(material.diffuse, texture_coord).rgb), 1.0);
+    // frag_colour = vec4( vec3(1.0 - texture(in_texture0, texture_coord).rgb), 1.0);
 
     // Kernel 
     /*float offset_x = 1.0/500.0;
@@ -58,7 +58,7 @@ void main() {
     vec3 sampleTex[9];
     for(int i = 0; i < 9; i++)
     {
-        sampleTex[i] = vec3(texture(material.diffuse, texture_coord.st + offsets[i]));
+        sampleTex[i] = vec3(texture(in_texture0, texture_coord.st + offsets[i]));
     }
     vec3 col = vec3(0.0);
     for(int i = 0; i < 9; i++)

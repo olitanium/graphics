@@ -15,7 +15,7 @@ use engine::modelling::cubic::lighting::shadow::{
 };
 use engine::modelling::cubic::lighting::simple::{ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
-use engine::modelling::{Bloom, Bone, SimpleCubic, Line, Quad, Skeleton, SkyBox};
+use engine::modelling::{Bloom, Bone, Line, Quad, SimpleCubic, Skeleton, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
@@ -340,7 +340,9 @@ pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, SimpleCubi
                     .build(&skeleton)
                     .expect("parent bone always exists");
 
-                animation_1.push_animation(animation1.clone(), current_bone).unwrap();
+                animation_1
+                    .push_animation(animation1.clone(), current_bone)
+                    .unwrap();
 
                 cube_pose = cube_pose.transform_by(&cube_push);
                 current_bone = skeleton.push_bone(bone).unwrap();

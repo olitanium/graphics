@@ -35,12 +35,12 @@ impl<V: CubicVertex> Mesh<V>
 where
     [(); V::ELEMENT_COUNT]:,
 {
-    pub(crate) fn draw<'a, const OUT: usize, D: FramebufferWithDepth<OUT>, M>(
+    pub(crate) fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>, M>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, V, M, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-    ) -> EngResult<(), !> {
-        self.material.register_to(active_shader, "material");
+    ) -> EngResult<(), NEVER> {
+        let _: EngResult<_, !> = self.material.register_to(active_shader, "material");
 
         self.vertex_array.draw(active_shader, active_framebuffer)?;
 

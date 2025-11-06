@@ -6,6 +6,7 @@ use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{FlatTexture, Magnification, Texture, WrapType};
 use graphics::types::TexDim;
 
+use crate::EngResult;
 use crate::modelling::VertexHasTangent;
 use crate::modelling::cubic::camera;
 use crate::modelling::cubic::camera::Camera;
@@ -59,7 +60,8 @@ impl ShadowFarLight {
     }
 
     pub(crate) unsafe fn bind_to<
-        'c,
+        'a,
+        NEVER,
         const N: usize,
         const MAX: usize,
         L: ShadowLightCompatible<MAX>,
@@ -67,22 +69,24 @@ impl ShadowFarLight {
         M,
         V: VertexHasTangent,
     >(
-        &'c self,
-        shader: &mut ActiveShaderProgram<'_, '_, 'c, V, (M, L), T, N>,
+        &'a self,
+        shader: &mut ActiveShaderProgram<'_, '_, 'a, V, (M, L), T, N>,
         name: &str,
         index: usize,
         target: Vector<3>,
-    ) {
-        self.light.bind_to(shader, name, index);
+    ) -> EngResult<(), NEVER> {
+        self.light.bind_to(shader, name, index)?;
         shader.set_uniform(
             format!("{name}[{index}].matrix"),
             &self.projtimesview(target),
-        );
+        )?;
         // SAFETY: Reference, therefore the ActiveShaderProgram, must not live to a
         // point where the inner framebuffer is resized.
         shader.register_texture(Some((format!("{name}[{index}].depth"), unsafe {
             self.framebuffer.get_attachment_ref()
         })));
+
+        Ok(())
     }
 
     pub(crate) fn bind_to_ghost<

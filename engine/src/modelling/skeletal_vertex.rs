@@ -1,8 +1,14 @@
-use std::{array, mem::offset_of};
+use std::array;
+use std::mem::offset_of;
 
-use graphics::{linear_algebra::Vector, types::VertexAttrType, vertex::Vertex};
+use graphics::linear_algebra::Vector;
+use graphics::types::VertexAttrType;
+use graphics::vertex::Vertex;
 
-use crate::{TransformBy, modelling::{CubicVertex, ExtendedVertex, SimpleVertex, advanced_vertex::IncompleteVertex, cubic::geometry::Pose}};
+use crate::TransformBy;
+use crate::modelling::advanced_vertex::IncompleteVertex;
+use crate::modelling::cubic::geometry::Pose;
+use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex};
 
 #[derive(Debug, Clone, Copy)]
 pub struct SkeletalVertex {
@@ -51,26 +57,24 @@ impl ExtendedVertex<3> for SkeletalVertex {
     }
 
     fn from_incomplete_triangle(mut triangle: [IncompleteVertex<3>; 3]) -> Option<[Self; 3]> {
-        
         let weights = triangle.each_mut().map(|vert| {
             let weight = vert.weights.take();
-            
-            weight.map_or(
-                [(0, 1.0), (0, 0.0), (0, 0.0), (0, 0.0)],
-                |mut vec| {
-                    while let Ok(_) = vec.push_within_capacity((0, 0.0)) {}
-                    vec.try_into_array().expect("filled above")
-                }
-            )
+
+            weight.map_or([(0, 1.0), (0, 0.0), (0, 0.0), (0, 0.0)], |mut vec| {
+                while let Ok(_) = vec.push_within_capacity((0, 0.0)) {}
+                vec.try_into_array().expect("filled above")
+            })
         });
-        
+
         let simple_vertex = SimpleVertex::from_incomplete_triangle(triangle)?;
 
         Some(array::from_fn(move |index| {
             Self {
                 simplevertex: simple_vertex[index],
                 bone_weights: weights[index].map(|(_, weight)| weight),
-                bone_indices: weights[index].map(|(index, _)| index as f32 /*TODO: make ints work here*/),
+                bone_indices: weights[index].map(
+                    |(index, _)| index as f32, // TODO: make ints work here
+                ),
             }
         }))
     }

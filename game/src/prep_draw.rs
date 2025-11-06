@@ -1,11 +1,5 @@
 use engine::framebuffer::DefaultFramebuffer;
-use engine::modelling::{
-    BloomGroup,
-    QuadGroup,
-    ShadowGroup,
-    SkeletonBbGroup,
-    SkyBoxGroup,
-};
+use engine::modelling::{BloomGroup, QuadGroup, ShadowGroup, SkeletonBbGroup, SkyBoxGroup};
 use engine::{ColourRGBA, EngResult, VecDraw};
 
 use crate::state::{State, StateError};
@@ -14,7 +8,7 @@ impl State {
     pub fn prep_draw<'a>(
         &'a mut self,
         default_framebuffer: &'a DefaultFramebuffer,
-    ) -> EngResult<VecDraw<'a>, StateError> {
+    ) -> EngResult<VecDraw<'a, StateError>, StateError> {
         let time = self.time;
 
         let mut out = VecDraw::new();

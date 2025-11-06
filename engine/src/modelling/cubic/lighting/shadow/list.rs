@@ -19,7 +19,7 @@ pub struct ShadowListLights<const MAX: usize> {
 }
 
 impl<const MAX: usize> ShadowListLights<MAX> {
-    pub(crate) fn gen_depth(
+    pub(crate) fn gen_depth<NEVER>(
         &self,
         sp_context: &mut ShaderProgramContext,
         fb_context: &mut FramebufferContext,
@@ -31,10 +31,10 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         )],
         target_position: Vector<3>,
         uniforms: Vec<(String, &dyn Uniform)>,
-    ) -> EngResult<(), !> {
+    ) -> EngResult<(), NEVER> {
         let mut active_depth_only_shader =
             opengl_shaders::far_light_depth().use_program(sp_context);
-        active_depth_only_shader.set_uniform_dyn(uniforms.clone());
+        active_depth_only_shader.set_uniform_dyn(uniforms.clone())?;
 
         for light in &self.far {
             // Draw the scene from the lights perspective, saving to the light's internal
@@ -42,7 +42,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
             active_depth_only_shader.set_uniform(
                 "projtimesview".to_string(),
                 &light.projtimesview(target_position),
-            );
+            )?;
 
             let mut active_light_framebuffer = light.framebuffer.bind(fb_context);
 
@@ -60,13 +60,13 @@ impl<const MAX: usize> ShadowListLights<MAX> {
 
         let mut active_depth_only_shader =
             opengl_shaders::far_light_depth().use_program(sp_context);
-        active_depth_only_shader.set_uniform_dyn(uniforms.clone());
+        active_depth_only_shader.set_uniform_dyn(uniforms.clone())?;
 
         for light in &self.spot {
             // Draw the scene from the lights perspective, saving to the light's internal
             // framebuffer
             active_depth_only_shader
-                .set_uniform("projtimesview".to_string(), &light.projtimesview());
+                .set_uniform("projtimesview".to_string(), &light.projtimesview())?;
 
             let mut active_light_framebuffer = light.framebuffer.bind(fb_context);
 
@@ -84,14 +84,14 @@ impl<const MAX: usize> ShadowListLights<MAX> {
 
         let mut active_depth_only_shader_point =
             opengl_shaders::point_depth().use_program(sp_context);
-        active_depth_only_shader_point.set_uniform_dyn(uniforms.clone());
+        active_depth_only_shader_point.set_uniform_dyn(uniforms.clone())?;
 
         for light in &self.point {
             for (index, matrix) in light.get_look_at_matrices().into_iter().enumerate() {
-                active_depth_only_shader_point.set_uniform(format!("matrix[{index}]"), &matrix);
+                active_depth_only_shader_point.set_uniform(format!("matrix[{index}]"), &matrix)?;
             }
-            active_depth_only_shader_point.set_uniform("light_position", &light.light.position);
-            active_depth_only_shader_point.set_uniform("far_plane", &light.far_plane());
+            active_depth_only_shader_point.set_uniform("light_position", &light.light.position)?;
+            active_depth_only_shader_point.set_uniform("far_plane", &light.far_plane())?;
 
             let mut active_light_framebuffer = light.framebuffer.bind(fb_context);
 
@@ -117,6 +117,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
     /// internal framebuffers is applied
     pub(crate) unsafe fn bind<
         'a,
+        NEVER,
         const N: usize,
         L: ShadowLightCompatible<MAX>,
         T: Texture,
@@ -126,12 +127,12 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, V, (M, L), T, N>,
         target: Vector<3>,
-    ) {
+    ) -> EngResult<(), NEVER> {
         const FAR_LIGHT_NAME: &str = "far";
-        active_shader.set_uniform(format!("num_{FAR_LIGHT_NAME}"), &(self.far.len() as i32));
+        active_shader.set_uniform(format!("num_{FAR_LIGHT_NAME}"), &(self.far.len() as i32))?;
         for (index, light) in self.far.iter().enumerate() {
             unsafe {
-                light.bind_to(active_shader, FAR_LIGHT_NAME, index, target);
+                light.bind_to(active_shader, FAR_LIGHT_NAME, index, target)?;
             }
         }
         for index in self.far.len()..MAX {
@@ -139,12 +140,13 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         }
 
         const SPOT_LIGHT_NAME: &str = "spot";
-        active_shader.set_uniform(format!("num_{SPOT_LIGHT_NAME}"), &(self.spot.len() as i32));
+        active_shader.set_uniform(format!("num_{SPOT_LIGHT_NAME}"), &(self.spot.len() as i32))?;
         for (index, light) in self.spot.iter().enumerate() {
             unsafe {
-                light.bind_to(active_shader, SPOT_LIGHT_NAME, index);
+                light.bind_to(active_shader, SPOT_LIGHT_NAME, index)?;
             }
         }
+
         for index in self.spot.len()..MAX {
             ShadowSpotLight::bind_to_ghost(active_shader, SPOT_LIGHT_NAME, index);
         }
@@ -153,14 +155,16 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         active_shader.set_uniform(
             format!("num_{POINT_LIGHT_NAME}"),
             &(self.point.len() as i32),
-        );
+        )?;
         for (index, light) in self.point.iter().enumerate() {
             unsafe {
-                light.bind_to(active_shader, POINT_LIGHT_NAME, index);
+                light.bind_to(active_shader, POINT_LIGHT_NAME, index)?;
             }
         }
         for index in self.point.len()..MAX {
             ShadowPointLight::bind_to_ghost(active_shader, POINT_LIGHT_NAME, index);
         }
+
+        Ok(())
     }
 }

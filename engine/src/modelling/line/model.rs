@@ -32,7 +32,7 @@ impl<U: Uniform> Line<U> {
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, NoVertex, Self, F::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, F>,
     ) -> EngResult<(), !> {
-        active_shader.set_uniform("vertex".to_string(), &self.vertices);
+        active_shader.set_uniform("vertex".to_string(), &self.vertices)?;
 
         vertex_array::dummy_vertex_array().draw_len(
             active_shader,
