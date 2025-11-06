@@ -1,11 +1,9 @@
-use std::ffi::CString;
 use std::fmt::Debug;
 
 use colour::{ColourRGB, ColourRGBA};
 use linear_algebra::{Matrix, UnitVector, Vector};
 
 use crate::shader_program::program::active_shader::IsActiveShaderProgram;
-use crate::shader_program::{self, Error, shader};
 use crate::types::UniformLocation;
 use crate::{ApiResult, gl_call};
 

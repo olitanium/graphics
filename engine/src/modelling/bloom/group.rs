@@ -6,7 +6,7 @@ use graphics::{ApiResult, Draw};
 
 use super::Bloom;
 use crate::modelling::Quad;
-use crate::{EngError, EngResult, opengl_shaders};
+use crate::{EngError, opengl_shaders};
 
 #[derive(Debug)]
 pub struct Group<'a, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> {

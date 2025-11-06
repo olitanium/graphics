@@ -1,5 +1,5 @@
+use graphics::Event;
 use graphics::types::TexDim;
-use graphics::{Draw, Event};
 
 use crate::{EngResult, VecDraw};
 

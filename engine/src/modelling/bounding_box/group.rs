@@ -4,15 +4,14 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::texture::FlatTexture;
 use graphics::vertex::Vertex;
-use graphics::{ApiError, ApiResult, Draw, ShaderProgramContext};
+use graphics::{ApiResult, Draw, ShaderProgramContext};
 
+use crate::EngError;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
 use crate::opengl_shaders::BoundingBoxShaderProgram;
-use crate::{EngError, EngResult};
-
 pub struct Group<
     'a,
     const OUT: usize,

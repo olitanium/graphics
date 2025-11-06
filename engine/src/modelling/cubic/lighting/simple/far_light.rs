@@ -5,7 +5,7 @@ use graphics::texture::Texture;
 
 use super::super::traits::ListLightCompatible;
 use crate::EngResult;
-use crate::modelling::{CubicVertex, SimpleCubic};
+use crate::modelling::CubicVertex;
 
 #[derive(Clone, Debug)]
 pub struct FarLight {

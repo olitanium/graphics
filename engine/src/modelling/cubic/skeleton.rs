@@ -1,5 +1,5 @@
 mod bone;
-use std::num::{NonZero, NonZeroUsize};
+use std::num::NonZeroUsize;
 
 pub use bone::Bone;
 use graphics::linear_algebra::Matrix;

@@ -25,9 +25,6 @@ pub use uniform::{NameNotFoundError, Uniform};
 mod cull_face;
 pub use cull_face::CullFace;
 
-mod draw_state;
-pub use draw_state::DrawState;
-
 #[derive(Debug)]
 pub struct ShaderProgram<V: Vertex, M: ?Sized, const OUT: usize, T: Texture> {
     pub(crate) id: ShaderProgramId,

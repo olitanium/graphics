@@ -16,9 +16,9 @@ pub use window::Window;
 
 use crate::error::ApiResult;
 use crate::framebuffer::{DefaultFramebuffer, FramebufferContext};
+use crate::gl_call;
 use crate::shader_program::ShaderProgramContext;
 use crate::types::TexDim;
-use crate::{ApiError, gl_call};
 
 #[derive(Debug, Clone)]
 pub enum Error {

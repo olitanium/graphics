@@ -11,7 +11,6 @@ use russimp::scene::PostProcess;
 use super::material::Material;
 use super::{Mesh, Skeleton, import};
 use crate::error::EngResult;
-use crate::modelling::CubicVertex;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::modelling::simple_vertex::SimpleVertex;
 

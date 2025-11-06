@@ -5,10 +5,10 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::{ApiResult, Draw};
 
 use super::SkyBox;
+use crate::EngError;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::skybox::SkyBoxVertex;
-use crate::{EngError, EngResult};
 
 #[derive(Debug)]
 pub struct Group<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> {

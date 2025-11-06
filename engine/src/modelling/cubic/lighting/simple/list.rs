@@ -6,7 +6,7 @@ use super::super::shadow::ShadowListLights;
 use super::super::traits::ListLightCompatible;
 use super::{FarLight, PointLight, SpotLight};
 use crate::EngResult;
-use crate::modelling::{CubicVertex, SimpleCubic};
+use crate::modelling::CubicVertex;
 
 #[derive(Clone, Debug, Default)]
 pub struct ListLights<const MAX: usize> {

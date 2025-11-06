@@ -1,5 +1,3 @@
-use std::error::Error;
-
 use crate::ApiResult;
 use crate::framebuffer::FramebufferContext;
 use crate::shader_program::ShaderProgramContext;

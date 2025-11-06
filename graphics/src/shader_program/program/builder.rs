@@ -1,4 +1,3 @@
-use std::ffi::CString;
 use std::marker::PhantomData;
 use std::mem;
 use std::path::Path;

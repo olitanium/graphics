@@ -6,7 +6,7 @@ use graphics::vertex_array::VertexArray;
 
 use crate::EngResult;
 use crate::modelling::skybox::SkyBoxVertex;
-use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex, test_models};
+use crate::modelling::{ExtendedVertex, test_models};
 
 #[derive(Debug)]
 pub struct SkyBox {

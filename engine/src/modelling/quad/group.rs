@@ -4,8 +4,8 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::{ApiResult, Draw};
 
 use super::Quad;
+use crate::EngError;
 use crate::modelling::quad::QuadVertex;
-use crate::{EngError, EngResult};
 
 #[derive(Debug)]
 pub struct Group<'a, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> {

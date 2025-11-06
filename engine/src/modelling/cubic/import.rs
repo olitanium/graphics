@@ -9,13 +9,10 @@ use russimp::material::{PropertyTypeInfo, TextureType};
 use russimp::node::Node;
 use russimp::scene::{PostProcess, Scene};
 
-use super::SimpleCubic;
 use super::material::Material;
 use crate::error::EngResult;
-use crate::modelling::CubicVertex;
 use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::cubic::mesh::MeshBuilder;
-use crate::modelling::cubic::{Mesh, SimpleCubicBuilder};
 
 mod error {
     use std::path::PathBuf;

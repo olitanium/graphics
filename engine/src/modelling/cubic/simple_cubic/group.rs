@@ -5,12 +5,12 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
 use graphics::{ApiResult, Draw};
 
+use crate::EngError;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::{SimpleCubic, SimpleVertex};
-use crate::{EngError, EngResult};
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {

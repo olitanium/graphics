@@ -3,8 +3,8 @@ use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{FlatTexture, Texture};
 use utils::{builder, new};
 
+use crate::EngResult;
 use crate::modelling::ExtendedVertex;
-use crate::{EngError, EngResult};
 
 #[derive(Debug)]
 pub struct Material {

@@ -2,7 +2,7 @@ use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::linear_algebra::Matrix;
 use graphics::shader_program::Uniform;
 use graphics::texture::FlatTexture;
-use graphics::{ApiError, ApiResult, Draw};
+use graphics::{ApiResult, Draw};
 
 use crate::modelling::TestLineVertex;
 use crate::modelling::cubic::Camera;

@@ -1,7 +1,7 @@
 use graphics::ApiResult;
 use graphics::colour::ColourRGB;
 use graphics::linear_algebra::Vector;
-use graphics::shader_program::{IsActiveShaderProgram, NameNotFoundError, Uniform};
+use graphics::shader_program::{IsActiveShaderProgram, Uniform};
 
 #[derive(Debug)]
 pub struct TestLineVertex {
