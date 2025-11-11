@@ -45,10 +45,6 @@ impl Skeleton {
         Some(self.values.len())
     }
 
-    // pub fn get_root_mut(&mut self) -> &mut Pose {
-    // &mut self.root
-    // }
-
     pub fn get_all_bones_matrix(
         &self,
         root: Pose,
@@ -62,21 +58,8 @@ impl Skeleton {
     }
 
     pub fn get_all_bones(&self, root: Pose, animation: &SkeletalAnimation, time: f32) -> Vec<Pose> {
-        // let mut output = vec![root];
-        //
-        // let extend = self
-        // .values
-        // .iter()
-        // .enumerate()
-        // .map(|(bone_index, bone)| bone.get_pose(NonZeroUsize::new(bone_index +
-        // 1).unwrap(), root, self, animation, time));
-        //
-        // output.extend(extend);
-        // output
-
         (0..)
-            .filter_map(|index| self.get_bone_pose(root, false, index, animation, time))
-            .fuse()
+            .map_while(|index| self.get_bone_pose(root, true, index, animation, time))
             .collect()
     }
 

@@ -1,6 +1,7 @@
 #![feature(maybe_uninit_slice)]
 #![feature(maybe_uninit_array_assume_init)]
 
+use std::fmt::Debug;
 use std::mem::{self, ManuallyDrop, MaybeUninit};
 use std::ops::{Deref, DerefMut};
 mod iterators;
@@ -9,7 +10,6 @@ mod test;
 pub use ArrayVec as StackVec;
 pub use iterators::{IntoIter, Iter, IterMut};
 
-#[derive(Debug)]
 pub struct ArrayVec<T, const N: usize> {
     len: usize,
     array: ManuallyDrop<[MaybeUninit<T>; N]>,
@@ -155,5 +155,15 @@ impl<T, const N: usize> Drop for ArrayVec<T, N> {
 impl<T: Clone, const N: usize> Clone for ArrayVec<T, N> {
     fn clone(&self) -> Self {
         self.iter().cloned().collect()
+    }
+}
+
+impl<T: Debug, const N: usize> Debug for ArrayVec<T, N> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ArrayVec")
+            .field("max_len", &N)
+            .field("len", &self.len())
+            .field("values", &self.as_slice())
+            .finish()
     }
 }

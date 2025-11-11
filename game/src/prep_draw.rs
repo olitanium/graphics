@@ -1,6 +1,8 @@
 use engine::framebuffer::DefaultFramebuffer;
-use engine::modelling::{BloomGroup, QuadGroup, ShadowGroup, SkeletonBbGroup, SkyBoxGroup};
-use engine::{ColourRGBA, EngResult, VecDraw};
+use engine::modelling::cubic::SkeletonCubicGroup;
+use engine::modelling::cubic::geometry::Pose;
+use engine::modelling::{BloomGroup, QuadGroup, ShadowGroup, SimpleCubicGroup, SkeletonBbGroup, SkyBoxGroup};
+use engine::{ColourRGBA, EngResult, ShaderProgram, ShaderProgramContext, VecDraw, opengl_shaders, shader_program};
 
 use crate::state::{State, StateError};
 
@@ -31,7 +33,7 @@ impl State {
             &(),
             vec![],
         ));
-
+        /*
         if self.show_bbs {
             if let Some(bb) = self.imported.bounding_box() {
                 out.push(SkeletonBbGroup::new(
@@ -94,16 +96,26 @@ impl State {
                     },
                 ));
             }*/
-        }
+        } */
 
         if self.draw_models {
-            out.push(ShadowGroup::new(
+            /*out.push(ShadowGroup::new(
                 &self.hdr_fb,
                 &self.camera,
                 &(),
                 &self.light_group,
                 all_models,
                 vec![],
+                vec![],
+            ));*/
+            
+            out.push(SkeletonCubicGroup::new(
+                opengl_shaders::skeletal(),
+                &self.hdr_fb,
+                &self.camera,
+                &(),
+                &self.ns_light_group,
+                vec![(&self.simpletail, Pose::IDENTITY, &self.skeletal_animation, time)],
                 vec![],
             ));
         }

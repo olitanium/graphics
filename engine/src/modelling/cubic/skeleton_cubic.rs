@@ -6,7 +6,7 @@ use graphics::{ActiveShaderProgram, ApiResult};
 use crate::EngResult;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::modelling::cubic::{Mesh, skeleton};
-use crate::modelling::{SkeletalVertex, Skeleton};
+use crate::modelling::{SkeletalVertex, Skeleton, test_models};
 
 mod group;
 pub use group::Group as SkeletonCubicGroup;
@@ -25,6 +25,10 @@ impl SkeletonCubic {
             skeleton,
             cull_face: CullFace::DoNotCull,
         }
+    }
+
+    pub fn debug_tail() -> (Self, SkeletalAnimation) {
+        test_models::tail_skeleton_cubic(10)
     }
 
     pub(crate) fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(

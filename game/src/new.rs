@@ -5,7 +5,7 @@ use engine::entity::SkeletonEntity;
 use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
-use engine::modelling::cubic::camera;
+use engine::modelling::cubic::{SkeletonCubic, camera};
 use engine::modelling::cubic::camera::ManualPose;
 use engine::modelling::cubic::geometry::{BoneAnimation, Orientation, Pose, SkeletalAnimation};
 use engine::modelling::cubic::lighting::shadow::{
@@ -15,7 +15,7 @@ use engine::modelling::cubic::lighting::shadow::{
 };
 use engine::modelling::cubic::lighting::simple::{ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
-use engine::modelling::{Bloom, Bone, Line, Quad, SimpleCubic, Skeleton, SkyBox};
+use engine::modelling::{Bloom, Bone, Line, Quad, SimpleCubic, Skeleton, SkyBox, test_models};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
@@ -176,6 +176,10 @@ impl State {
 
         let line = Line::new(vec![]);
 
+        let (simpletail, skeletal_animation) = SkeletonCubic::debug_tail();
+
+
+
         Ok(Self {
             show_bbs: true,
             time: 0.0,
@@ -196,6 +200,8 @@ impl State {
             bounding_box_level,
             draw_models: true,
 
+            simpletail,
+            skeletal_animation,
             which_animation: animation,
 
             hdr_fb,
@@ -259,7 +265,7 @@ pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, SimpleCubi
                     .build(),
             );
 
-            const TAIL_GRADIENT: f32 = 0.9;
+            /*const TAIL_GRADIENT: f32 = 0.9;
             const TAIL_EPSILON: f32 = 0.1;
             let animation1 = {
                 let mut animation = BoneAnimation::new();
@@ -288,7 +294,7 @@ pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, SimpleCubi
                     )
                     .unwrap();
                 animation
-            };
+            };*/
 
             // let animation2 = {
             // let mut animation = BoneAnimation::new();
@@ -319,37 +325,25 @@ pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, SimpleCubi
             // animation
             // };
 
-            let mut skeleton = Skeleton::default();
+            /*let mut skeleton = Skeleton::default();
             let mut animation_1 = SkeletalAnimation::new();
 
-            let mut builder = SimpleCubic::builder();
-            let mut current_bone = Skeleton::ROOT_BONE;
             // animation_1.push_animation(animation1.clone(), current_bone).unwrap();
-
+            */
+            let mut builder = SimpleCubic::builder();
             const LENGTH_TAIL: usize = 10;
             let cube_push = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.0]));
             let mut cube_pose = Pose::IDENTITY;
 
-            builder.push_cube(cube_pose, material, 1.0, current_bone);
+            builder.push_cube(cube_pose, material, 1.0, Skeleton::ROOT_BONE);
 
-            for index in 1..LENGTH_TAIL {
-                // TODO: remove unwrap
-                let bone = Bone::builder(current_bone)
-                    //.animations(animation)
-                    .bind_pose_relative_to_parent(cube_push)
-                    .build(&skeleton)
-                    .expect("parent bone always exists");
-
-                animation_1
-                    .push_animation(animation1.clone(), current_bone)
-                    .unwrap();
-
+            for current_bone in 1..LENGTH_TAIL {
                 cube_pose = cube_pose.transform_by(&cube_push);
-                current_bone = skeleton.push_bone(bone).unwrap();
+
                 let material = Rc::new(
                     Material::builder()
                         .diffuse(FlatTexture::grayscale(
-                            index as f32 / LENGTH_TAIL as f32,
+                            current_bone as f32 / LENGTH_TAIL as f32,
                             1.0,
                         ))
                         .build(),
@@ -357,7 +351,7 @@ pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, SimpleCubi
 
                 builder.push_cube(cube_pose, material, 1.0, current_bone);
             }
-
+            let (skeleton, animation_1) = test_models::tail_animation(LENGTH_TAIL);
             (
                 animation_1,
                 builder

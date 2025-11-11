@@ -1,4 +1,5 @@
 use graphics::linear_algebra::{UnitVector, Vector};
+use russimp::camera::Camera;
 
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::geometry::{Orientation, Pose};

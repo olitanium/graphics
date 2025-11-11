@@ -122,9 +122,12 @@ impl<'c, V: Vertex, M: ?Sized, T: Texture, const OUT: usize>
         name: S,
         value: &U,
     ) -> ApiResult<(), NEVER> {
-        value
-            .set_uniform(name.into(), self)
-            .map_err(ApiError::to_any)
+        //FIXME: allow uniforms to error when appropriate
+        let _ = value
+            .set_uniform(name.into(), self);
+        //    .map_err(ApiError::to_any);
+
+        Ok(())
     }
 
     pub fn set_uniform_dyn<NEVER>(

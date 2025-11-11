@@ -1,12 +1,22 @@
+use core::num;
 use std::iter;
+use std::rc::Rc;
 use std::sync::LazyLock;
 
-use graphics::linear_algebra::Vector;
+use array_vec::ArrayVec;
+use graphics::linear_algebra::{UnitVector, Vector};
+use graphics::shader_program::CullFace;
+use graphics::texture::FlatTexture;
 use graphics::vertex_array::VertexArray;
+use russimp::animation;
 
-use crate::modelling::ExtendedVertex;
+use crate::TransformBy;
 use crate::modelling::advanced_vertex::IncompleteVertex;
+use crate::modelling::cubic::geometry::{BoneAnimation, Orientation, Pose, SkeletalAnimation};
+use crate::modelling::cubic::material::Material;
+use crate::modelling::cubic::{Mesh, MeshBuilder, SkeletonCubic};
 use crate::modelling::quad::QuadVertex;
+use crate::modelling::{Bone, CubicVertex, ExtendedVertex, SimpleCubic, Skeleton};
 
 pub fn cube_triangles(
     lower_bound: Vector<3>,
@@ -137,4 +147,159 @@ pub fn screen_quad() -> &'static VertexArray<QuadVertex> {
         LazyLock::new(|| vertex_array_quad(Vector::from([-1.0, -1.0]), Vector::new([1.0, 1.0])));
 
     &SCREEN_QUAD
+}
+
+/// You need max_len number of bones. One of which is the
+pub fn tail_with_bone(max_len: usize) -> impl Iterator<Item = [IncompleteVertex<3>; 3]> {
+    const fn make_long_slice(z: f32) -> [Vector<3>; 4] {
+        [
+            Vector::new([-0.5, -0.5, z]),
+            Vector::new([0.5, -0.5, z]),
+            Vector::new([0.5, 0.5, z]),
+            Vector::new([-0.5, 0.5, z]),
+        ]
+    }
+
+    (0..=max_len)
+        .map(|z| (z, make_long_slice(z as f32)))
+        .map_windows(move |&[(bone1, slice1), (bone2, slice2)]| {
+            struct BoneVertexTexture {
+                bone: usize,
+                position: Vector<3>,
+                texture: Vector<2>,
+            }
+
+            let vertices_in_order = [
+                BoneVertexTexture{bone: bone1, position: slice1[0], texture: Vector::new([bone1 as f32 / max_len as f32, 0.0])},
+                BoneVertexTexture{bone: bone1, position: slice1[1], texture: Vector::new([bone1 as f32 / max_len as f32, 1.0])},
+                BoneVertexTexture{bone: bone1, position: slice1[2], texture: Vector::new([bone1 as f32 / max_len as f32, 0.0])},
+                BoneVertexTexture{bone: bone1, position: slice1[3], texture: Vector::new([bone1 as f32 / max_len as f32, 1.0])},
+                BoneVertexTexture{bone: bone2, position: slice2[0], texture: Vector::new([bone2 as f32 / max_len as f32, 0.0])},
+                BoneVertexTexture{bone: bone2, position: slice2[1], texture: Vector::new([bone2 as f32 / max_len as f32, 1.0])},
+                BoneVertexTexture{bone: bone2, position: slice2[2], texture: Vector::new([bone2 as f32 / max_len as f32, 0.0])},
+                BoneVertexTexture{bone: bone2, position: slice2[3], texture: Vector::new([bone2 as f32 / max_len as f32, 1.0])},
+            ];
+            #[rustfmt::skip]
+            let triangles = [
+                [5, 1, 4], [4, 1, 0],
+                [1, 5, 2], [2, 5, 6],
+                [6, 7, 2], [2, 7, 3],
+                [0, 3, 4], [4, 3, 7],
+            ]
+            .map(|triangle| {
+                triangle.map(|index| {
+                    let BoneVertexTexture{ bone, position, texture} = vertices_in_order[index];
+                    let mut weights = ArrayVec::new();
+                    weights.push((bone, 1.0));
+                    let out = IncompleteVertex::new(position).weights(weights).texture(texture);
+                    //eprintln!("out: {out:?}");
+                    out
+                })
+            });
+
+            triangles
+        })
+        .flatten()
+}
+
+// num_bones does not include the root bone.
+pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletalAnimation) {
+    let animation1 = {
+        let mut animation = BoneAnimation::new();
+        animation
+            .push(
+                Pose::new_from_orientation_translation(
+                    Orientation::new_forward_up(
+                        Vector::new([0.25, 0.0, 1.0]).normalize(),
+                        UnitVector::Y,
+                    ),
+                    Vector::new([0.0, 0.0, 1.0]),
+                ),
+                1.0,
+            )
+            .unwrap();
+        animation
+            .push(
+                Pose::new_from_orientation_translation(
+                    Orientation::new_forward_up(
+                        Vector::new([-0.25, 0.0, 1.0]).normalize(),
+                        UnitVector::Y,
+                    ),
+                    Vector::new([0.0, 0.0, 1.0]),
+                ),
+                1.0,
+            )
+            .unwrap();
+        animation
+    };
+
+    let mut skeleton = Skeleton::default();
+    let mut animation_1 = SkeletalAnimation::new();
+
+    let mut current_bone = Skeleton::ROOT_BONE;
+
+    let cube_push = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.0]));
+    let mut cube_pose = Pose::IDENTITY;
+
+
+    for _ in 0..num_bones {
+        // TODO: remove unwrap
+        let bone = Bone::builder(current_bone)
+            //.animations(animation)
+            .bind_pose_relative_to_parent(cube_push)
+            .build(&skeleton)
+            .expect("parent bone always exists");
+
+        animation_1
+            .push_animation(animation1.clone(), current_bone)
+            .expect("parent bone always exists");
+
+        cube_pose = cube_pose.transform_by(&cube_push);
+        current_bone = skeleton.push_bone(bone).unwrap();
+        
+    }
+
+    (
+        skeleton,
+        animation_1,
+    )
+}
+
+pub fn tail_skeleton_cubic(max_len: usize) -> (SkeletonCubic, SkeletalAnimation) {
+    // MESHES
+    let triangles = tail_with_bone(max_len);
+
+    // make meshes.
+    let mut mesh_builder = MeshBuilder::new().material(Rc::new(Material::white()));
+    mesh_builder.extend_triangle(triangles);
+    let mesh = mesh_builder.build();
+    let vec_mesh = vec![mesh];
+    
+    // SKELETON
+    let (skeleton, animation) = tail_animation(max_len);
+
+    (
+        SkeletonCubic::debug_new(vec_mesh, skeleton),
+        animation,
+    )
+}
+
+pub fn tail_simplecubic(max_len: usize) -> (SimpleCubic, SkeletalAnimation) {
+    let triangles = tail_with_bone(max_len);
+
+    let mut mesh_builder = MeshBuilder::new().material(Rc::new(Material::white()));
+    mesh_builder.extend_triangle(triangles);
+    
+    let mut builder = SimpleCubic::builder();
+    builder.push_mesh(0, mesh_builder);
+    // SKELETON
+    let (skeleton, animation) = tail_animation(max_len);
+    //let animation = SkeletalAnimation::new();
+    builder = builder.skeleton(skeleton);
+
+    let cubic = builder.build();
+    (
+        cubic,
+        animation,
+    )
 }

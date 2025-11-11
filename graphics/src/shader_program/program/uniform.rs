@@ -98,25 +98,8 @@ impl<U: Uniform> Uniform for [U] {
         name: String,
         shader_program: &dyn IsActiveShaderProgram,
     ) -> ApiResult<(), !> {
-        // let outputs: Vec<_> = self
-        // .into_iter()
-        // .enumerate()
-        // .map_while(|(index, value)| {
-        // value
-        // .set_uniform(format!("{name}[{index}]"), shader_program)
-        // .ok()
-        // })
-        // .collect();
-        //
-        // if outputs.len() > 0 {
-        // Ok(())
-        // } else {
-        // match CString::new(name) {
-        // Ok(c_name) => Err(shader_program::Error::UniformNotFound { name: c_name }),
-        // Err(err) => Err(shader_program::Error::NulInUnformName { name:
-        // err.to_string() }) }?
-        // }
         for (index, value) in self.into_iter().enumerate() {
+            eprintln!("setting uniform: {name}[{index}] to \n{value:#?}");
             value.set_uniform(format!("{name}[{index}]"), shader_program)?;
         }
 

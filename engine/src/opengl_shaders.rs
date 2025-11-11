@@ -5,18 +5,11 @@ use graphics::shader_program::{CullFace, ShaderProgram};
 use graphics::texture::{CubeMap, FlatTexture};
 use graphics::vertex::NoVertex;
 
+use crate::modelling::cubic::SkeletonCubic;
 use crate::modelling::cubic::lighting::shadow::ShadowListLights;
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::{
-    Line,
-    Quad,
-    QuadVertex,
-    SimpleCubic,
-    SimpleVertex,
-    SkyBox,
-    SkyBoxVertex,
-    TestLineVertex,
-    Volume,
+    Line, Quad, QuadVertex, SimpleCubic, SimpleVertex, SkeletalVertex, SkyBox, SkyBoxVertex, TestLineVertex, Volume
 };
 
 static ERROR_MESSAGE: &str = "Engine defined shader should exist and not have errors";
@@ -130,6 +123,15 @@ make_included! {
 }
 
 pub const LINE_SHADER_MAX_VERTICES: usize = 100;
+
+make_included! {
+    ShaderProgram<SkeletalVertex, (SkeletonCubic, ListLights<2>), 2, FlatTexture>,
+    skeletal,
+    //"shaders/hdr_tangent/hdr_tangent.vert",
+    //"shaders/hdr_tangent/hdr_tangent.frag",
+    "shaders/simple_skeleton_blending/simple_skeleton_blending.vert",
+    "shaders/simple_skeleton_blending/simple_skeleton_blending.frag",
+}
 
 pub trait BoundingBoxShaderProgram<const DIMS: usize>: Volume<DIMS> {
     fn shader_program() -> &'static ShaderProgram<Self, (), 1, FlatTexture>;

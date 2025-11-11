@@ -24,15 +24,14 @@ uniform mat4 model;
 uniform mat4 projtimesview;
 uniform vec4 camera_position;
 
-
 uniform PointLightVarying point_vary[MAX_LIGHTS];
-uniform int num_point = 1;
+uniform int num_point = 0;
 
 uniform FarLightVarying far_vary[MAX_LIGHTS];
-uniform int num_far = 1;
+uniform int num_far = 0;
 
 uniform SpotLightVarying spot_vary[MAX_LIGHTS];
-uniform int num_spot = 1;
+uniform int num_spot = 0;
 
 out PointLightVarying out_point_vary[MAX_LIGHTS];
 out FarLightVarying out_far_vary[MAX_LIGHTS];

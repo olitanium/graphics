@@ -8,7 +8,7 @@ use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::framebuffer::{DefaultFramebuffer, Framebuffer};
 use engine::linear_algebra::Vector;
-use engine::modelling::cubic::Camera;
+use engine::modelling::cubic::{Camera, SkeletonCubic};
 use engine::modelling::cubic::camera::{ManualPose, Projection};
 use engine::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
@@ -57,6 +57,8 @@ pub struct State {
     pub containers: Vec<SimpleCubic>,
     pub testbool: bool,
     pub imported: SkeletonEntity<(bool, Vec<[SimpleVertex; 3]>)>,
+    pub simpletail: SkeletonCubic,
+    pub skeletal_animation: SkeletalAnimation,
 
     pub bounding_box_level: usize,
     pub draw_models: bool,

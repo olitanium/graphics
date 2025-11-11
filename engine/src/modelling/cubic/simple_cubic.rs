@@ -13,6 +13,7 @@ use super::{Mesh, Skeleton, import};
 use crate::error::EngResult;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::modelling::simple_vertex::SimpleVertex;
+use crate::modelling::test_models;
 
 mod group;
 pub use group::Group;
@@ -46,6 +47,10 @@ impl SimpleCubic {
         let mut out = Self::builder();
         out.push_cube(Pose::IDENTITY, material, side_length, 0);
         out
+    }
+
+    pub fn tail(max_len: usize) -> (Self, SkeletalAnimation) {
+        test_models::tail_simplecubic(max_len)
     }
 
     pub fn temp_set_all_material(&mut self, mat: Rc<Material>) {
