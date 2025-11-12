@@ -101,7 +101,7 @@ impl SimpleCubic {
                 &self
                     .skeleton
                     .get_bone_pose(root, true, *bone, animation, time)
-                    .map_or_else(Matrix::identity, Pose::as_matrix),
+                    .map_or_else(Matrix::identity, Pose::as_transformation_matrix),
             )?;
 
             mesh.draw(active_shader, active_framebuffer)?;

@@ -95,7 +95,7 @@ where
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
         colour: F,
     ) -> EngResult<(), NEVER> {
-        active_shader.set_uniform("model", &pose.as_matrix())?;
+        active_shader.set_uniform("model", &pose.as_transformation_matrix())?;
         self.get(0)
             .draw_recursive(self, level, active_shader, active_framebuffer, &colour)
     }

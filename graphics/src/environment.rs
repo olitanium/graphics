@@ -171,9 +171,7 @@ impl<G: ApiState> Environment<G> {
                 Ok(to_draw) => {
                     framebuffer_register.clear();
                     // Begin rendering code
-                    for draw in to_draw {
-                        draw.draw(&mut framebuffer_register, &mut shader_program_marker)?;
-                    }
+                    Box::new(to_draw).draw(&mut framebuffer_register, &mut shader_program_marker)?;
                 }
                 Err(error) => return Err(error),
             }

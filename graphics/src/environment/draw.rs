@@ -10,14 +10,28 @@ pub trait Draw<E> {
     ) -> ApiResult<(), E>;
 }
 
-impl<T: Draw<E>, E> Draw<E> for Vec<T> {
+impl<T: Draw<E> + ?Sized, E> Draw<E> for Vec<Box<T>> {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         shader_marker: &mut ShaderProgramContext,
     ) -> ApiResult<(), E> {
         for group in *self {
-            Box::new(group).draw(fb_context, shader_marker)?;
+            group.draw(fb_context, shader_marker)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl<T: Draw<E> + ?Sized, E> Draw<E> for [Box<T>] {
+    fn draw(
+            self: Box<Self>,
+            fb_context: &mut FramebufferContext,
+            shader_marker: &mut ShaderProgramContext,
+        ) -> ApiResult<(), E> {
+        for group in self {
+            group.draw(fb_context, shader_marker)?;
         }
 
         Ok(())

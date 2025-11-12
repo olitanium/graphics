@@ -85,15 +85,15 @@ uniform float time;
 
 in PointLightVarying out_point_vary[MAX_LIGHTS];
 uniform PointLight point[MAX_LIGHTS];
-uniform int num_point;
+uniform int num_point = 0;
 
 in FarLightVarying out_far_vary[MAX_LIGHTS];
 uniform FarLight far[MAX_LIGHTS];
-uniform int num_far;
+uniform int num_far = 0;
 
 in SpotLightVarying out_spot_vary[MAX_LIGHTS];
 uniform SpotLight spot[MAX_LIGHTS];
-uniform int num_spot;
+uniform int num_spot = 0;
 
 in vec3 tangent_view_direction;
 in vec3 frag_pos_world_space;

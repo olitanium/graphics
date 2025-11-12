@@ -81,7 +81,10 @@ impl<'a, NEVER, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>
         self.lights.bind(&mut active_shader)?;
 
         active_shader.set_uniform("projtimesview".to_string(), &self.camera_look_at)?;
-        active_shader.set_uniform("camera_position".to_string(), &self.camera_pos.homogeneous())?;
+        active_shader.set_uniform(
+            "camera_position".to_string(),
+            &self.camera_pos.homogeneous(),
+        )?;
 
         active_shader.set_uniform_dyn(self.uniforms)?;
 

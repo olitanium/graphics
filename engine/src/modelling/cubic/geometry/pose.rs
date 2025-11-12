@@ -30,11 +30,6 @@ impl Pose {
         }),
     };
 
-    #[deprecated(note = "use Pose::IDENTITY")]
-    pub fn identity() -> Self {
-        Self::new_from_orientation_translation(Orientation::IDENTITY, Vector::ZERO)
-    }
-
     pub fn new_from_dual(dual_quaternion: UnitDualQuaternion) -> Self {
         Self { dual_quaternion }
     }
@@ -85,12 +80,29 @@ impl Pose {
         Orientation::from_quaternion(new)
     }
 
-    pub fn as_matrix(self) -> Matrix<4, 4> {
+    pub fn as_transformation_matrix(self) -> Matrix<4, 4> {
         Matrix::transform_translate(self.translation()) * self.orientation().as_matrix()
     }
 
+    pub fn as_matrix_for_shader(self) -> Matrix<4, 2> {
+        let DualNumber { real, dual } = self.into_inner().u();
+        Matrix::from_col_major([
+            [
+                real.vector()[0],
+                real.vector()[1],
+                real.vector()[2],
+                real.scalar(),
+            ],
+            [
+                dual.vector()[0],
+                dual.vector()[1],
+                dual.vector()[2],
+                dual.scalar(),
+            ],
+        ])
+    }
+
     pub fn push_change(&mut self, pose: Self) {
-        //*self = pose.apply_to(*self);
         *self = pose.transform(self);
     }
 
@@ -136,8 +148,9 @@ mod test {
 
         let new_pose = second_pose.transform(&first_pose);
 
-        let composite_matrix = first_pose.as_matrix() * second_pose.as_matrix();
-        let other_matrix = new_pose.as_matrix();
+        let composite_matrix =
+            first_pose.as_transformation_matrix() * second_pose.as_transformation_matrix();
+        let other_matrix = new_pose.as_transformation_matrix();
 
         assert_eq!(composite_matrix, other_matrix);
     }

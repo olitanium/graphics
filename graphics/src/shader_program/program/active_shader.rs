@@ -122,9 +122,8 @@ impl<'c, V: Vertex, M: ?Sized, T: Texture, const OUT: usize>
         name: S,
         value: &U,
     ) -> ApiResult<(), NEVER> {
-        //FIXME: allow uniforms to error when appropriate
-        let _ = value
-            .set_uniform(name.into(), self);
+        // FIXME: allow uniforms to error when appropriate
+        let _ = value.set_uniform(name.into(), self);
         //    .map_err(ApiError::to_any);
 
         Ok(())

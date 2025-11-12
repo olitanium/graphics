@@ -30,13 +30,13 @@ uniform vec4 camera_position;
 
 
 uniform PointLightVarying point_vary[MAX_LIGHTS];
-uniform int num_point = 1;
+uniform int num_point = 0;
 
 uniform FarLightVarying far_vary[MAX_LIGHTS];
-uniform int num_far = 1;
+uniform int num_far = 0;
 
 uniform SpotLightVarying spot_vary[MAX_LIGHTS];
-uniform int num_spot = 1;
+uniform int num_spot = 0;
 
 out PointLightVarying out_point_vary[MAX_LIGHTS];
 out FarLightVarying out_far_vary[MAX_LIGHTS];
@@ -49,7 +49,7 @@ out vec2 texture_coord;
 void main() {
     texture_coord = in_texture_coord;
     
-    mat4 model = mat4(1.0);
+    mat4 model = mat4(0.0);
     for(int i = 0; i < 4; ++i) {
         int bone_index = int(in_boneindex[i]);
         model += bones[bone_index] * in_boneweights[i];

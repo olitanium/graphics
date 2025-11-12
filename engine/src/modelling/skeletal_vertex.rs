@@ -13,14 +13,11 @@ use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex};
 #[derive(Debug, Clone, Copy)]
 pub struct SkeletalVertex {
     pub position: Vector<3>,
-    // 1
     pub texture: Vector<2>,
-    // 2
     pub normal: UnitVector<3>,
-    // 3
     pub tangent: UnitVector<3>,
-    bone_indices: [f32; 4],
-    bone_weights: [f32; 4],
+    pub bone_indices: [f32; 4],
+    pub bone_weights: [f32; 4],
 }
 
 impl Vertex for SkeletalVertex {

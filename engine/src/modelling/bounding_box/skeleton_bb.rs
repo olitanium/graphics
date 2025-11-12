@@ -1,3 +1,5 @@
+use std::convert;
+
 use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
@@ -5,8 +7,16 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
 
 use crate::EngResult;
+use crate::modelling::cubic::SkeletonCubic;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
-use crate::modelling::{BoundingBox, CubicVertex, SimpleCubic, SimpleVertex, Skeleton};
+use crate::modelling::{
+    BoundingBox,
+    CubicVertex,
+    SimpleCubic,
+    SimpleVertex,
+    SkeletalVertex,
+    Skeleton,
+};
 
 mod group;
 pub use group::Group as SkeletonBbGroup;
@@ -16,14 +26,44 @@ pub struct SkeletonBb<V: CubicVertex, T> {
     per_bone: Vec<BoundingBox<V, 3, T>>,
 }
 
+impl<T> SkeletonBb<SkeletalVertex, T> {
+    pub fn from_skeletoncubic<F: FnMut(&[(Vector<3>, [SkeletalVertex; 3])]) -> T>(
+        cubic: &SkeletonCubic,
+        depth: usize,
+        init: F,
+    ) -> Option<Self> {
+        let per_mesh = partition(
+            cubic.triangles(),
+            |tri| {
+                tri.into_iter()
+                    .flat_map(|vertex| vertex.bone_indices.map(|x| x as usize))
+                    .collect()
+            },
+            convert::identity,
+        );
+
+        Self::from_vec_triangle(per_mesh, depth, init)
+    }
+}
+
 impl<T> SkeletonBb<SimpleVertex, T> {
     pub fn from_cubic_simplevertex<F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
         cubic: &SimpleCubic,
         depth: usize,
-        mut init: F,
+        init: F,
     ) -> Option<Self> {
         let per_mesh = partition(cubic.triangles(), |(bone, _)| vec![*bone], |(_, tri)| tri);
 
+        Self::from_vec_triangle(per_mesh, depth, init)
+    }
+}
+
+impl<V: CubicVertex, T> SkeletonBb<V, T> {
+    fn from_vec_triangle<F: FnMut(&[(Vector<3>, [V; 3])]) -> T>(
+        per_mesh: Vec<Vec<[V; 3]>>,
+        depth: usize,
+        mut init: F,
+    ) -> Option<Self> {
         let opt_per_mesh: Option<Vec<_>> = per_mesh
             .into_iter()
             .map(|mesh| BoundingBox::new_from_triangles(mesh, depth, &mut init))

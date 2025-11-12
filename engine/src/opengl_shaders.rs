@@ -9,7 +9,16 @@ use crate::modelling::cubic::SkeletonCubic;
 use crate::modelling::cubic::lighting::shadow::ShadowListLights;
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::{
-    Line, Quad, QuadVertex, SimpleCubic, SimpleVertex, SkeletalVertex, SkyBox, SkyBoxVertex, TestLineVertex, Volume
+    Line,
+    Quad,
+    QuadVertex,
+    SimpleCubic,
+    SimpleVertex,
+    SkeletalVertex,
+    SkyBox,
+    SkyBoxVertex,
+    TestLineVertex,
+    Volume,
 };
 
 static ERROR_MESSAGE: &str = "Engine defined shader should exist and not have errors";
@@ -66,8 +75,8 @@ make_included! {
 make_included! {
     ShaderProgram<QuadVertex, Quad<1>, 1, FlatTexture>,
     exposure,
-    "shaders/exposure/exposure.vert",
-    "shaders/exposure/exposure.frag",
+    "shaders/quad/quad.vert",
+    "shaders/quad/exposure.frag",
 }
 
 make_included! {
@@ -127,10 +136,15 @@ pub const LINE_SHADER_MAX_VERTICES: usize = 100;
 make_included! {
     ShaderProgram<SkeletalVertex, (SkeletonCubic, ListLights<2>), 2, FlatTexture>,
     skeletal,
-    //"shaders/hdr_tangent/hdr_tangent.vert",
-    //"shaders/hdr_tangent/hdr_tangent.frag",
     "shaders/simple_skeleton_blending/simple_skeleton_blending.vert",
-    "shaders/simple_skeleton_blending/simple_skeleton_blending.frag",
+    "shaders/hdr_tangent/hdr_tangent.frag",
+}
+
+make_included! {
+    ShaderProgram<SkeletalVertex, (SkeletonCubic, ListLights<2>), 2, FlatTexture>,
+    skeletal_quat,
+    "shaders/simple_skeleton_blending_quat/simple_skeleton_blending_quat.vert",
+    "shaders/hdr_tangent/hdr_tangent.frag",
 }
 
 pub trait BoundingBoxShaderProgram<const DIMS: usize>: Volume<DIMS> {

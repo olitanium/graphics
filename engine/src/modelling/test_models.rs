@@ -170,14 +170,46 @@ pub fn tail_with_bone(max_len: usize) -> impl Iterator<Item = [IncompleteVertex<
             }
 
             let vertices_in_order = [
-                BoneVertexTexture{bone: bone1, position: slice1[0], texture: Vector::new([bone1 as f32 / max_len as f32, 0.0])},
-                BoneVertexTexture{bone: bone1, position: slice1[1], texture: Vector::new([bone1 as f32 / max_len as f32, 1.0])},
-                BoneVertexTexture{bone: bone1, position: slice1[2], texture: Vector::new([bone1 as f32 / max_len as f32, 0.0])},
-                BoneVertexTexture{bone: bone1, position: slice1[3], texture: Vector::new([bone1 as f32 / max_len as f32, 1.0])},
-                BoneVertexTexture{bone: bone2, position: slice2[0], texture: Vector::new([bone2 as f32 / max_len as f32, 0.0])},
-                BoneVertexTexture{bone: bone2, position: slice2[1], texture: Vector::new([bone2 as f32 / max_len as f32, 1.0])},
-                BoneVertexTexture{bone: bone2, position: slice2[2], texture: Vector::new([bone2 as f32 / max_len as f32, 0.0])},
-                BoneVertexTexture{bone: bone2, position: slice2[3], texture: Vector::new([bone2 as f32 / max_len as f32, 1.0])},
+                BoneVertexTexture {
+                    bone: bone1,
+                    position: slice1[0],
+                    texture: Vector::new([bone1 as f32 / max_len as f32, 0.0]),
+                },
+                BoneVertexTexture {
+                    bone: bone1,
+                    position: slice1[1],
+                    texture: Vector::new([bone1 as f32 / max_len as f32, 1.0]),
+                },
+                BoneVertexTexture {
+                    bone: bone1,
+                    position: slice1[2],
+                    texture: Vector::new([bone1 as f32 / max_len as f32, 0.0]),
+                },
+                BoneVertexTexture {
+                    bone: bone1,
+                    position: slice1[3],
+                    texture: Vector::new([bone1 as f32 / max_len as f32, 1.0]),
+                },
+                BoneVertexTexture {
+                    bone: bone2,
+                    position: slice2[0],
+                    texture: Vector::new([bone2 as f32 / max_len as f32, 0.0]),
+                },
+                BoneVertexTexture {
+                    bone: bone2,
+                    position: slice2[1],
+                    texture: Vector::new([bone2 as f32 / max_len as f32, 1.0]),
+                },
+                BoneVertexTexture {
+                    bone: bone2,
+                    position: slice2[2],
+                    texture: Vector::new([bone2 as f32 / max_len as f32, 0.0]),
+                },
+                BoneVertexTexture {
+                    bone: bone2,
+                    position: slice2[3],
+                    texture: Vector::new([bone2 as f32 / max_len as f32, 1.0]),
+                },
             ];
             #[rustfmt::skip]
             let triangles = [
@@ -241,7 +273,6 @@ pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletalAnimation) {
     let cube_push = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.0]));
     let mut cube_pose = Pose::IDENTITY;
 
-
     for _ in 0..num_bones {
         // TODO: remove unwrap
         let bone = Bone::builder(current_bone)
@@ -256,13 +287,9 @@ pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletalAnimation) {
 
         cube_pose = cube_pose.transform_by(&cube_push);
         current_bone = skeleton.push_bone(bone).unwrap();
-        
     }
 
-    (
-        skeleton,
-        animation_1,
-    )
+    (skeleton, animation_1)
 }
 
 pub fn tail_skeleton_cubic(max_len: usize) -> (SkeletonCubic, SkeletalAnimation) {
@@ -274,14 +301,11 @@ pub fn tail_skeleton_cubic(max_len: usize) -> (SkeletonCubic, SkeletalAnimation)
     mesh_builder.extend_triangle(triangles);
     let mesh = mesh_builder.build();
     let vec_mesh = vec![mesh];
-    
+
     // SKELETON
     let (skeleton, animation) = tail_animation(max_len);
 
-    (
-        SkeletonCubic::debug_new(vec_mesh, skeleton),
-        animation,
-    )
+    (SkeletonCubic::debug_new(vec_mesh, skeleton), animation)
 }
 
 pub fn tail_simplecubic(max_len: usize) -> (SimpleCubic, SkeletalAnimation) {
@@ -289,17 +313,14 @@ pub fn tail_simplecubic(max_len: usize) -> (SimpleCubic, SkeletalAnimation) {
 
     let mut mesh_builder = MeshBuilder::new().material(Rc::new(Material::white()));
     mesh_builder.extend_triangle(triangles);
-    
+
     let mut builder = SimpleCubic::builder();
     builder.push_mesh(0, mesh_builder);
     // SKELETON
     let (skeleton, animation) = tail_animation(max_len);
-    //let animation = SkeletalAnimation::new();
+    // let animation = SkeletalAnimation::new();
     builder = builder.skeleton(skeleton);
 
     let cubic = builder.build();
-    (
-        cubic,
-        animation,
-    )
+    (cubic, animation)
 }

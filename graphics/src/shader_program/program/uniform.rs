@@ -99,7 +99,6 @@ impl<U: Uniform> Uniform for [U] {
         shader_program: &dyn IsActiveShaderProgram,
     ) -> ApiResult<(), !> {
         for (index, value) in self.into_iter().enumerate() {
-            eprintln!("setting uniform: {name}[{index}] to \n{value:#?}");
             value.set_uniform(format!("{name}[{index}]"), shader_program)?;
         }
 

@@ -1,11 +1,10 @@
 use std::rc::Rc;
 
 use engine::array_vec::ArrayVec;
-use engine::entity::SkeletonEntity;
+use engine::entity::{SkeletonEntity, SkinningEntity};
 use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
-use engine::modelling::cubic::{SkeletonCubic, camera};
 use engine::modelling::cubic::camera::ManualPose;
 use engine::modelling::cubic::geometry::{BoneAnimation, Orientation, Pose, SkeletalAnimation};
 use engine::modelling::cubic::lighting::shadow::{
@@ -15,6 +14,7 @@ use engine::modelling::cubic::lighting::shadow::{
 };
 use engine::modelling::cubic::lighting::simple::{ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
+use engine::modelling::cubic::{SkeletonCubic, camera};
 use engine::modelling::{Bloom, Bone, Line, Quad, SimpleCubic, Skeleton, SkyBox, test_models};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
@@ -178,7 +178,7 @@ impl State {
 
         let (simpletail, skeletal_animation) = SkeletonCubic::debug_tail();
 
-
+        let simpletail = SkinningEntity::from_skeletoncubic(simpletail, 2, 1.0).unwrap();
 
         Ok(Self {
             show_bbs: true,
@@ -265,71 +265,6 @@ pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, SimpleCubi
                     .build(),
             );
 
-            /*const TAIL_GRADIENT: f32 = 0.9;
-            const TAIL_EPSILON: f32 = 0.1;
-            let animation1 = {
-                let mut animation = BoneAnimation::new();
-                animation
-                    .push(
-                        Pose::new_from_orientation_translation(
-                            Orientation::new_forward_up(
-                                Vector::new([0.25, 0.0, 1.0]).normalize(),
-                                UnitVector::Y,
-                            ),
-                            Vector::new([0.0, 0.0, 0.5 + TAIL_GRADIENT / 2.0 - TAIL_EPSILON]),
-                        ),
-                        1.0,
-                    )
-                    .unwrap();
-                animation
-                    .push(
-                        Pose::new_from_orientation_translation(
-                            Orientation::new_forward_up(
-                                Vector::new([-0.25, 0.0, 1.0]).normalize(),
-                                UnitVector::Y,
-                            ),
-                            Vector::new([0.0, 0.0, 0.5 + TAIL_GRADIENT / 2.0 - TAIL_EPSILON]),
-                        ),
-                        1.0,
-                    )
-                    .unwrap();
-                animation
-            };*/
-
-            // let animation2 = {
-            // let mut animation = BoneAnimation::new();
-            // animation
-            // .push(
-            // Pose::new_from_orientation_translation(
-            // Orientation::new_forward_up(
-            // Vector::new([0.0, 0.25, 1.0]).normalize(),
-            // Vector::new([0.0, 1.0, 0.0]).normalize(),
-            // ),
-            // Vector::new([0.0, 0.0, 0.5 + TAIL_GRADIENT / 2.0 - TAIL_EPSILON]),
-            // ),
-            // 1.0,
-            // )
-            // .unwrap();
-            // animation
-            // .push(
-            // Pose::new_from_orientation_translation(
-            // Orientation::new_forward_up(
-            // Vector::new([0.0, -0.25, 1.0]).normalize(),
-            // Vector::new([0.0, 1.0, 0.0]).normalize(),
-            // ),
-            // Vector::new([0.0, 0.0, 0.5 + TAIL_GRADIENT / 2.0 - TAIL_EPSILON]),
-            // ),
-            // 1.0,
-            // )
-            // .unwrap();
-            // animation
-            // };
-
-            /*let mut skeleton = Skeleton::default();
-            let mut animation_1 = SkeletalAnimation::new();
-
-            // animation_1.push_animation(animation1.clone(), current_bone).unwrap();
-            */
             let mut builder = SimpleCubic::builder();
             const LENGTH_TAIL: usize = 10;
             let cube_push = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.0]));

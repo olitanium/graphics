@@ -45,7 +45,7 @@ impl Skeleton {
         Some(self.values.len())
     }
 
-    pub fn get_all_bones_matrix(
+    pub fn get_all_bones_transformation_matrix(
         &self,
         root: Pose,
         animation: &SkeletalAnimation,
@@ -53,7 +53,19 @@ impl Skeleton {
     ) -> Vec<Matrix<4, 4>> {
         self.get_all_bones(root, animation, time)
             .into_iter()
-            .map(|pose| pose.as_matrix())
+            .map(|pose| pose.as_transformation_matrix())
+            .collect()
+    }
+
+    pub fn get_all_bones_for_shader(
+        &self,
+        root: Pose,
+        animation: &SkeletalAnimation,
+        time: f32,
+    ) -> Vec<Matrix<4, 2>> {
+        self.get_all_bones(root, animation, time)
+            .into_iter()
+            .map(|pose| pose.as_matrix_for_shader())
             .collect()
     }
 

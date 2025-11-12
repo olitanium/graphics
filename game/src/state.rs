@@ -3,17 +3,17 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use engine::eng_state::EngState;
-use engine::entity::SkeletonEntity;
+use engine::entity::{SkeletonEntity, SkinningEntity};
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::framebuffer::{DefaultFramebuffer, Framebuffer};
 use engine::linear_algebra::Vector;
-use engine::modelling::cubic::{Camera, SkeletonCubic};
 use engine::modelling::cubic::camera::{ManualPose, Projection};
 use engine::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::cubic::material::Material;
+use engine::modelling::cubic::{Camera, SkeletonCubic};
 use engine::modelling::{
     Bloom,
     BloomGroup,
@@ -57,7 +57,7 @@ pub struct State {
     pub containers: Vec<SimpleCubic>,
     pub testbool: bool,
     pub imported: SkeletonEntity<(bool, Vec<[SimpleVertex; 3]>)>,
-    pub simpletail: SkeletonCubic,
+    pub simpletail: SkinningEntity<()>,
     pub skeletal_animation: SkeletalAnimation,
 
     pub bounding_box_level: usize,

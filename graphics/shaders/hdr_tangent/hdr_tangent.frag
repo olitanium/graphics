@@ -71,7 +71,7 @@ struct SpotLight {
     float cos_outer_cut_off;
 };
 
-uniform float time;
+uniform float time = 0.0;
 
 in PointLightVarying out_point_vary[MAX_LIGHTS];
 uniform PointLight point[MAX_LIGHTS];

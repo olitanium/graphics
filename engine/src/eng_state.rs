@@ -36,7 +36,7 @@ macro_rules! derive_api_state {
     };
 }
 
-// use graphics::ApiState;
+use graphics::ApiState;
 // impl<T: EngState> ApiState for T {
 // type Error = EngError<<Self as EngState>::Error>;
 //
