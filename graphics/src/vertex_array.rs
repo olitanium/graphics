@@ -181,8 +181,7 @@ where
 }
 
 pub fn dummy_vertex_array() -> &'static VertexArray<NoVertex> {
-    static DUMMY_VERTEX_ARRAY: LazyLock<VertexArray<NoVertex>> =
-        LazyLock::new(VertexArray::empty);
+    static DUMMY_VERTEX_ARRAY: LazyLock<VertexArray<NoVertex>> = LazyLock::new(VertexArray::empty);
     &DUMMY_VERTEX_ARRAY
 }
 

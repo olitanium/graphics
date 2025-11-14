@@ -78,10 +78,14 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
 
         // for security, replaces with zeroes to obscure previous values
-        let output = mem::replace(&mut self.array[self.len - 1], const { MaybeUninit::zeroed() });
+        let output = mem::replace(
+            &mut self.array[self.len - 1],
+            const { MaybeUninit::zeroed() },
+        );
         self.len -= 1;
 
-        // SAFETY: self.array[self.len - 1] is within the initialized, it is swapped for uninit, and the len is decremented
+        // SAFETY: self.array[self.len - 1] is within the initialized, it is swapped for
+        // uninit, and the len is decremented
         Some(unsafe { output.assume_init() })
     }
 

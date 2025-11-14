@@ -222,9 +222,13 @@ fn process_node<NEVER: Clone>(
                                 actual_len: textures.len(),
                             })?;
                         let triangle_normal =
-                            is_no_vec_or_element_exists("normal", &opt_normal, index)?.copied().flatten();
+                            is_no_vec_or_element_exists("normal", &opt_normal, index)?
+                                .copied()
+                                .flatten();
                         let triangle_tangent =
-                            is_no_vec_or_element_exists("tangent", &opt_tangent, index)?.copied().flatten();
+                            is_no_vec_or_element_exists("tangent", &opt_tangent, index)?
+                                .copied()
+                                .flatten();
 
                         Ok(IncompleteVertex::new(triangle_position)
                             .texture(triangle_texture)

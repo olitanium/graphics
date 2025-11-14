@@ -1,7 +1,7 @@
+use std::array;
 use std::cell::RefCell;
 use std::num::NonZeroUsize;
 use std::rc::Rc;
-use std::array;
 
 use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;
@@ -84,10 +84,7 @@ where
         depth: usize,
         init: &mut F,
     ) -> Option<usize> {
-        let vectors: Vec<_> = triangles
-            .iter_mut()
-            .flat_map(|&mut (_, arr)| arr)
-            .collect();
+        let vectors: Vec<_> = triangles.iter_mut().flat_map(|&mut (_, arr)| arr).collect();
 
         let vec_triangles = triangles.iter_mut().map(|&mut (_, arr)| arr).collect();
 

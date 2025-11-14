@@ -58,15 +58,14 @@ fn size() {
 
 #[test]
 fn init_macro() {
-    use crate::ArrayVec;
-    use crate::arrvec;
+    use crate::{ArrayVec, arrvec};
 
     let array: ArrayVec<u32, 4> = arrvec![1, 2];
     assert_eq!(array.as_slice(), &[1, 2]);
 
-    //compile fail
-    //const ARRAY: ArrayVec<u32, 1> = arrvec![1, 2];
-    
+    // compile fail
+    // const ARRAY: ArrayVec<u32, 1> = arrvec![1, 2];
+
     let array: ArrayVec<u32, _> = arrvec![5; 1,2,3,];
     assert_eq!(array.capacity(), 5);
 }

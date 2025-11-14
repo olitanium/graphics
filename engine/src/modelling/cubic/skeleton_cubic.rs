@@ -4,8 +4,8 @@ use graphics::shader_program::CullFace;
 use graphics::{ActiveShaderProgram, ApiResult};
 
 use crate::EngResult;
-use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::modelling::cubic::Mesh;
+use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::modelling::{SkeletalVertex, Skeleton, test_models};
 
 mod group;

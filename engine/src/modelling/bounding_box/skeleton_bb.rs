@@ -1,4 +1,3 @@
-
 use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
@@ -7,11 +6,7 @@ use graphics::linear_algebra::Vector;
 
 use crate::EngResult;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
-use crate::modelling::{
-    BoundingBox,
-    CubicVertex,
-    Skeleton,
-};
+use crate::modelling::{BoundingBox, CubicVertex, Skeleton};
 
 mod group;
 pub use group::Group as SkeletonBbGroup;

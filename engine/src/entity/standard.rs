@@ -29,10 +29,7 @@ impl<T: Default> Default for Entity<T> {
 impl Entity<(bool, Vec<[SimpleVertex; 3]>)> {
     pub fn from_cubic(model: SimpleCubic, depth: usize, mass: Mass) -> Option<Self> {
         let bounding_box = BoundingBox::from_cubic(&model, depth, |input| {
-            (
-                false,
-                input.iter().map(|(_, triangle)| *triangle).collect(),
-            )
+            (false, input.iter().map(|(_, triangle)| *triangle).collect())
         });
 
         Some(Self {

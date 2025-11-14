@@ -183,9 +183,8 @@ fn make_window<T>(
     let window_resized = Rc::new(Cell::new(false));
 
     let resized_ptr = window_resized.clone();
-    glfw_window.set_framebuffer_size_callback(move |_window, _width, _height| 
-        resized_ptr.set(true)
-    );
+    glfw_window
+        .set_framebuffer_size_callback(move |_window, _width, _height| resized_ptr.set(true));
 
     if glfw_window.glfw.supports_raw_motion() && builder.raw_motion {
         glfw_window.set_raw_mouse_motion(true);
