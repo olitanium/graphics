@@ -6,7 +6,7 @@ use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::camera::ManualPose;
-use engine::modelling::cubic::geometry::{BoneAnimation, Orientation, Pose, SkeletalAnimation};
+use engine::modelling::cubic::geometry::{Orientation, Pose, SkeletalAnimation};
 use engine::modelling::cubic::lighting::shadow::{
     ShadowListLights,
     ShadowPointLight,
@@ -15,7 +15,7 @@ use engine::modelling::cubic::lighting::shadow::{
 use engine::modelling::cubic::lighting::simple::{ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
 use engine::modelling::cubic::{SkeletonCubic, camera};
-use engine::modelling::{Bloom, Bone, Line, Quad, SimpleCubic, Skeleton, SkyBox, test_models};
+use engine::modelling::{Bloom, Line, Quad, SimpleCubic, Skeleton, SkyBox, test_models};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;

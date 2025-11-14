@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::num::NonZeroUsize;
 use std::rc::Rc;
-use std::{array, default};
+use std::array;
 
 use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;

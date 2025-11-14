@@ -1,13 +1,12 @@
 use std::{convert, iter};
 
 use graphics::linear_algebra::Vector;
-use graphics::vertex::Vertex;
 use utils::partition;
 
 use crate::entity::Mass;
 use crate::modelling::cubic::SkeletonCubic;
 use crate::modelling::cubic::geometry::Pose;
-use crate::modelling::{SimpleCubic, SimpleVertex, SkeletalVertex, SkeletonBb, Volume};
+use crate::modelling::{SkeletalVertex, SkeletonBb};
 
 #[derive(Debug, Clone)]
 pub struct SkinningEntity<T> {

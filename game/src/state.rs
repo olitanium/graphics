@@ -1,37 +1,26 @@
-use std::cell::RefMut;
 use std::collections::HashSet;
-use std::rc::Rc;
 
 use engine::eng_state::EngState;
 use engine::entity::{SkeletonEntity, SkinningEntity};
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
-use engine::framebuffer::{DefaultFramebuffer, Framebuffer};
-use engine::linear_algebra::Vector;
-use engine::modelling::cubic::camera::{ManualPose, Projection};
-use engine::modelling::cubic::geometry::{Pose, SkeletalAnimation};
+use engine::framebuffer::Framebuffer;
+use engine::modelling::cubic::camera::Projection;
+use engine::modelling::cubic::geometry::SkeletalAnimation;
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
 use engine::modelling::cubic::lighting::simple::ListLights;
-use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{Camera, SkeletonCubic};
+use engine::modelling::cubic::Camera;
 use engine::modelling::{
     Bloom,
-    BloomGroup,
-    BoundingBoxGroup,
     Line,
     Quad,
-    QuadGroup,
     SHADOW_SHADER_MAX_LIGHTS,
-    ShadowGroup,
     SimpleCubic,
-    SimpleVertex,
     SkyBox,
-    SkyBoxGroup,
     TestLineVertex,
 };
-use engine::texture::FlatTexture;
 use engine::types::TexDim;
-use engine::{ApiState, ColourRGB, ColourRGBA, EngError, EngResult, Entity, Event, VecDraw};
+use engine::{ApiState, EngError, EngResult, Event, VecDraw};
 
 pub struct State {
     pub time: f32,
@@ -106,7 +95,7 @@ impl EngState for State {
                     };
                 }
                 Event::Keyboard(kb) => keyboard = kb,
-                Event::TextBuffer(mut string) => local_string = Some(string),
+                Event::TextBuffer(string) => local_string = Some(string),
                 Event::Mouse {
                     buttons: _,
                     position: _,

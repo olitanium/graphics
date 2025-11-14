@@ -1,21 +1,15 @@
-use std::{convert, iter};
 
 use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
-use utils::partition;
 
 use crate::EngResult;
-use crate::modelling::cubic::SkeletonCubic;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::modelling::{
     BoundingBox,
     CubicVertex,
-    SimpleCubic,
-    SimpleVertex,
-    SkeletalVertex,
     Skeleton,
 };
 

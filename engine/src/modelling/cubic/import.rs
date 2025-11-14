@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-use dual_number::DualQuaternion;
 use graphics::linear_algebra::{Matrix, UnitVector, Vector};
 use graphics::texture::{FlatTexture, Image, TextureHasBuilder};
 use graphics::types::ElementArrayElem;
@@ -16,7 +15,7 @@ use crate::TransformBy;
 use crate::error::EngResult;
 use crate::modelling::Bone;
 use crate::modelling::advanced_vertex::IncompleteVertex;
-use crate::modelling::cubic::geometry::{Orientation, Pose};
+use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::cubic::mesh::MeshBuilder;
 use crate::transform::Transform;
 

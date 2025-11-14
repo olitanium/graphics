@@ -90,7 +90,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
     }
 
     pub fn as_mut_slice(&mut self) -> &mut [T] {
-        unsafe { (&mut self.array[..self.len]).assume_init_mut() }
+        unsafe { self.array[..self.len].assume_init_mut() }
     }
 
     fn to_raw_parts(mut self) -> (usize, [MaybeUninit<T>; N]) {

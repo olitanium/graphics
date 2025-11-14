@@ -22,7 +22,7 @@ impl<'a, T, const N: usize> Iterator for InfiniteWindowIter<'a, T, N> {
     type Item = [&'a T; N];
 
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
-        let len = if self.backing.len() == 0 {
+        let len = if self.backing.is_empty() {
             return None;
         } else {
             self.backing.len()

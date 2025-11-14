@@ -1,22 +1,18 @@
-use core::num;
 use std::iter;
 use std::rc::Rc;
 use std::sync::LazyLock;
 
 use array_vec::ArrayVec;
 use graphics::linear_algebra::{UnitVector, Vector};
-use graphics::shader_program::CullFace;
-use graphics::texture::FlatTexture;
 use graphics::vertex_array::VertexArray;
-use russimp::animation;
 
 use crate::TransformBy;
 use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::cubic::geometry::{BoneAnimation, Orientation, Pose, SkeletalAnimation};
 use crate::modelling::cubic::material::Material;
-use crate::modelling::cubic::{Mesh, MeshBuilder, SkeletonCubic};
+use crate::modelling::cubic::{MeshBuilder, SkeletonCubic};
 use crate::modelling::quad::QuadVertex;
-use crate::modelling::{Bone, CubicVertex, ExtendedVertex, SimpleCubic, Skeleton};
+use crate::modelling::{Bone, ExtendedVertex, SimpleCubic, Skeleton};
 
 pub fn cube_triangles(
     lower_bound: Vector<3>,

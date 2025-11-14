@@ -5,7 +5,7 @@ use graphics::{ActiveShaderProgram, ApiResult};
 
 use crate::EngResult;
 use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
-use crate::modelling::cubic::{Mesh, skeleton};
+use crate::modelling::cubic::Mesh;
 use crate::modelling::{SkeletalVertex, Skeleton, test_models};
 
 mod group;

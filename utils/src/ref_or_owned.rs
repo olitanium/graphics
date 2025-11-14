@@ -12,7 +12,7 @@ impl<'a, T> Deref for RefOwned<'a, T> {
     fn deref(&self) -> &Self::Target {
         match self {
             Self::Owned(x) => x,
-            Self::Ref(x) => *x,
+            Self::Ref(x) => x,
         }
     }
 }
