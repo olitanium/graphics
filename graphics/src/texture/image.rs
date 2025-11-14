@@ -26,7 +26,7 @@ fn new_from_file<NEVER, P: AsRef<Path>>(
     fn new_from_file_path<NEVER>(
         path: &Path,
     ) -> ApiResult<((TexDim, TexDim), Vec<ColourRGBA>), NEVER> {
-        let image = image::ImageReader::open(&path)
+        let image = image::ImageReader::open(path)
             .map_err(|_| Error::OpeningTexture { path: path.into() })?
             .with_guessed_format()
             .map_err(|_| Error::ParsingTextureImage { path: path.into() })?

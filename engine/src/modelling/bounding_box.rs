@@ -48,7 +48,7 @@ where
         init: F,
     ) -> Option<Self> {
         let new_triangles: Option<Vec<_>> = triangles
-            .into_iter()
+            .iter()
             .map(|arr| arr.map(|index| vectors.get(index).copied()).transpose())
             .collect();
         let new_triangles = new_triangles?;
@@ -118,18 +118,17 @@ impl<V: CubicVertex, T> BoundingBox<V, 3, T> {
             rhs.get(0),
             rhs,
             &rhs_pose,
-            0,
             &rhs_alter_meta,
         )
         .map(|(lhs, rhs)| {
             (
                 lhs.get_triangles()
-                    .into_iter()
+                    .iter()
                     .map(|triangle| triangle.transform_by(&lhs_pose))
                     //.copied()
                     .collect(),
                 rhs.get_triangles()
-                    .into_iter()
+                    .iter()
                     .map(|triangle| triangle.transform_by(&rhs_pose))
                     //.copied()
                     .collect(),

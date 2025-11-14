@@ -40,7 +40,7 @@ pub fn cube_triangles(
     let tex_coords =
         iter::repeat([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]].map(Vector::new));
 
-    let triangles = [
+    [
         [5, 4, 6, 7],
         [0, 1, 3, 2],
         [2, 3, 7, 6],
@@ -62,9 +62,7 @@ pub fn cube_triangles(
         ];
 
         [[va.clone(), vb, vc.clone()], [va, vc, vd]]
-    });
-
-    triangles
+    })
 }
 
 pub fn origin_unit_cube() -> impl Iterator<Item = [IncompleteVertex<3>; 3]> {
@@ -223,9 +221,7 @@ pub fn tail_with_bone(max_len: usize) -> impl Iterator<Item = [IncompleteVertex<
                     let BoneVertexTexture{ bone, position, texture} = vertices_in_order[index];
                     let mut weights = ArrayVec::new();
                     weights.push((bone, 1.0));
-                    let out = IncompleteVertex::new(position).weights(weights).texture(texture);
-                    //eprintln!("out: {out:?}");
-                    out
+                    IncompleteVertex::new(position).weights(weights).texture(texture)
                 })
             });
 

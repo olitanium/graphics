@@ -21,7 +21,7 @@ impl<V: Vertex> VertexBuffer<V> {
         };
 
         gl_call! {
-            gl::BindBuffer(gl::ARRAY_BUFFER, id.to_primitive());
+            gl::BindBuffer(gl::ARRAY_BUFFER, id.as_primitive());
         }
 
         gl_call! { gl::BufferData(
@@ -40,7 +40,7 @@ impl<V: Vertex> VertexBuffer<V> {
 
     pub(crate) fn bind(&self) {
         gl_call! {
-            gl::BindBuffer(gl::ARRAY_BUFFER, self.id.to_primitive());
+            gl::BindBuffer(gl::ARRAY_BUFFER, self.id.as_primitive());
         }
     }
 
@@ -57,7 +57,7 @@ impl<V: Vertex> VertexBuffer<V> {
 
 impl<V: Vertex> Drop for VertexBuffer<V> {
     fn drop(&mut self) {
-        let primitive = self.id.to_primitive();
+        let primitive = self.id.as_primitive();
         gl_call! {
             gl::DeleteBuffers(1, &raw const primitive);
         }

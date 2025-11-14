@@ -100,7 +100,7 @@ pub struct Framebuffer<const OUT: usize, X: Attachment> {
 
 impl<const OUT: usize, X: Attachment> Drop for Framebuffer<OUT, X> {
     fn drop(&mut self) {
-        let id = self.id().to_primitive();
+        let id = self.id().as_primitive();
         gl_call! {
             gl::DeleteFramebuffers(1, &raw const id);
         }

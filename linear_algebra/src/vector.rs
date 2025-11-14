@@ -62,6 +62,7 @@ impl<const N: usize> Vector<N> {
         &self.0
     }
 
+    #[allow(clippy::len_without_is_empty)]
     pub const fn len(&self) -> usize {
         N
     }

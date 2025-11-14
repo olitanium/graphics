@@ -69,7 +69,7 @@ impl Texture for CubeMap {
             gl::BindTexture(gl::TEXTURE_2D, 0);
         }
         gl_call! {
-            gl::BindTexture(gl::TEXTURE_CUBE_MAP, self.id.to_primitive());
+            gl::BindTexture(gl::TEXTURE_CUBE_MAP, self.id.as_primitive());
         }
     }
 
@@ -80,7 +80,7 @@ impl Texture for CubeMap {
 
 impl Drop for CubeMap {
     fn drop(&mut self) {
-        let primitive = self.id.to_primitive();
+        let primitive = self.id.as_primitive();
         gl_call! {
             gl::DeleteTextures(1, &raw const primitive);
         }

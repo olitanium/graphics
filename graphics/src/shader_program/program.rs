@@ -53,7 +53,7 @@ impl<V: Vertex, M: ?Sized, const OUT: usize, T: Texture> ShaderProgram<V, M, OUT
         marker: &'b mut ShaderProgramContext,
     ) -> ActiveShaderProgram<'a, 'b, 'c, V, M, T, OUT> {
         gl_call! {
-            gl::UseProgram(self.id.to_primitive());
+            gl::UseProgram(self.id.as_primitive());
         }
 
         marker.force_cull_face(self.force_cull_face);
@@ -74,7 +74,7 @@ impl<V: Vertex, M: ?Sized, const OUT: usize, T: Texture> ShaderProgram<V, M, OUT
             .borrow_mut()
             .entry(c_name.clone())
             .or_insert_with_key(|c_name| {
-                gl_call! { gl::GetUniformLocation(self.id.to_primitive(), c_name.as_ptr()) }
+                gl_call! { gl::GetUniformLocation(self.id.as_primitive(), c_name.as_ptr()) }
             });
 
         if out != -1 {
@@ -92,7 +92,7 @@ impl<V: Vertex, M: ?Sized, const OUT: usize, T: Texture> ShaderProgram<V, M, OUT
 impl<V: Vertex, M: ?Sized, T: Texture, const OUT: usize> Drop for ShaderProgram<V, M, OUT, T> {
     fn drop(&mut self) {
         gl_call! {
-            gl::DeleteProgram(self.id.to_primitive());
+            gl::DeleteProgram(self.id.as_primitive());
         }
     }
 }

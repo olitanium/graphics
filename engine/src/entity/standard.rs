@@ -31,7 +31,7 @@ impl Entity<(bool, Vec<[SimpleVertex; 3]>)> {
         let bounding_box = BoundingBox::from_cubic(&model, depth, |input| {
             (
                 false,
-                input.into_iter().map(|(_, triangle)| *triangle).collect(),
+                input.iter().map(|(_, triangle)| *triangle).collect(),
             )
         });
 
@@ -118,8 +118,8 @@ impl<T> Entity<T> {
             let other_change = 2.0 * self.mass.0 / (other.mass.0 + self.mass.0)
                 * average.v().dot(self.velocity - other.velocity);
 
-            self.velocity = self.velocity + average.v() * self_change;
-            other.velocity = other.velocity + average.v() * other_change;
+            self.velocity += average.v() * self_change;
+            other.velocity += average.v() * other_change;
 
             true
         } else {

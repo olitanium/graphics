@@ -67,8 +67,8 @@ impl State {
             self.camera.pose.roll_ccw(-frame_time);
         }
 
-        match string.pop() {
-            Some(ch) => match ch {
+        if let Some(ch) = string.pop() {
+            match ch {
                 'Q' => string.clear(),
                 'l' => {
                     self.line.as_mut().push(TestLineVertex {
@@ -96,8 +96,7 @@ impl State {
                     // }
                 }
                 other => string.push(other),
-            },
-            None => {}
+            }
         }
 
         self.camera

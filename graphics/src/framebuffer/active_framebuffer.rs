@@ -47,7 +47,7 @@ impl FramebufferContext {
         &'b mut self,
         framebuffer: &'a D,
     ) -> ActiveFramebuffer<'a, 'b, OUT, D> {
-        if self.cleared.insert(framebuffer.id().to_primitive()) {
+        if self.cleared.insert(framebuffer.id().as_primitive()) {
             let mut active = ActiveFramebuffer::new(framebuffer, self);
             active.clear();
             active
@@ -79,10 +79,10 @@ impl<'a, 'b, const OUT: usize, D: FramebufferWithoutExtra<OUT>> ActiveFramebuffe
         let (width, height) = framebuffer.size();
 
         gl_call! {
-            gl::BindFramebuffer(gl::FRAMEBUFFER, framebuffer.id().to_primitive());
+            gl::BindFramebuffer(gl::FRAMEBUFFER, framebuffer.id().as_primitive());
         }
         gl_call! {
-            gl::Viewport(0, 0, width.to_primitive(), height.to_primitive());
+            gl::Viewport(0, 0, width.as_primitive(), height.as_primitive());
         }
 
         framebuffer.enables(context);

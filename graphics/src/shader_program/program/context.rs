@@ -35,7 +35,7 @@ impl ShaderProgramContext {
         program: &ShaderProgram<V, M, OUT, T>,
     ) {
         gl_call! {
-            gl::UseProgram(program.id().to_primitive());
+            gl::UseProgram(program.id().as_primitive());
         }
     }
 

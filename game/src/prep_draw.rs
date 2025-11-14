@@ -63,7 +63,7 @@ impl State {
         if self.show_bbs {
             out.push(SkeletonBbGroup::new(
                 &self.hdr_fb,
-                &self.simpletail.bounding_box().unwrap(),
+                self.simpletail.bounding_box().unwrap(),
                 &self.simpletail.model.skeleton,
                 Pose::IDENTITY,
                 &self.skeletal_animation,

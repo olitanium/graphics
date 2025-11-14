@@ -116,26 +116,26 @@ impl<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize>
         let program_id = gl_call! { ShaderProgramId::new(gl::CreateProgram()) };
         let mut total_string = String::default();
         gl_call! {
-            gl::AttachShader(program_id.to_primitive(), self.vertex_shader.0.id().to_primitive());
+            gl::AttachShader(program_id.as_primitive(), self.vertex_shader.0.id().as_primitive());
         }
         total_string.push_str(&self.vertex_shader.0.source);
         gl_call! {
-            gl::AttachShader(program_id.to_primitive(), self.fragment_shader.0.id().to_primitive());
+            gl::AttachShader(program_id.as_primitive(), self.fragment_shader.0.id().as_primitive());
         }
         total_string.push_str(&self.fragment_shader.0.source);
         if let Some(geometry) = &self.geometry_shader {
             gl_call! {
-                gl::AttachShader(program_id.to_primitive(), geometry.id().to_primitive());
+                gl::AttachShader(program_id.as_primitive(), geometry.id().as_primitive());
             }
             total_string.push_str(&geometry.source);
         }
         gl_call! {
-            gl::LinkProgram(program_id.to_primitive());
+            gl::LinkProgram(program_id.as_primitive());
         }
 
         let mut number = 0;
         gl_call! {
-            gl::GetProgramiv(program_id.to_primitive(), gl::LINK_STATUS, &raw mut number);
+            gl::GetProgramiv(program_id.as_primitive(), gl::LINK_STATUS, &raw mut number);
         }
 
         if number != gl::TRUE as i32 {
@@ -143,7 +143,7 @@ impl<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize>
             let mut v = vec![0; BUFF_SIZE as usize + 1];
             let ptr = v.as_mut_ptr().cast();
             let mut len = 0;
-            gl_call! { gl::GetProgramInfoLog(program_id.to_primitive(), BUFF_SIZE, &raw mut len, ptr); }
+            gl_call! { gl::GetProgramInfoLog(program_id.as_primitive(), BUFF_SIZE, &raw mut len, ptr); }
 
             v.truncate(len as usize);
             let info_log = String::from_utf8(v).expect("ascii is a subset of UTF-8");

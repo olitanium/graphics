@@ -51,16 +51,16 @@ macro_rules! named_define_uniform {
     };
 }
 
-define_uniform!(i32 => |value, location, _s| { gl_call!{ gl::Uniform1i(location.to_primitive(), *value); } } );
-define_uniform!(f32 => |value, location, _s| { gl_call!{ gl::Uniform1f(location.to_primitive(), *value); } } );
+define_uniform!(i32 => |value, location, _s| { gl_call!{ gl::Uniform1i(location.as_primitive(), *value); } } );
+define_uniform!(f32 => |value, location, _s| { gl_call!{ gl::Uniform1f(location.as_primitive(), *value); } } );
 named_define_uniform!([i32; 1] => |value, name, s| value[0].set_uniform(name, s));
 named_define_uniform!([f32; 1] => |value, name, s| value[0].set_uniform(name, s));
-define_uniform!([i32; 2] => |value, location, _s| gl_call! { gl::Uniform2i(location.to_primitive(), value[0], value[1]); });
-define_uniform!([f32; 2] => |value, location, _s| gl_call! { gl::Uniform2f(location.to_primitive(), value[0], value[1]); });
-define_uniform!([i32; 3] => |value, location, _s| gl_call! { gl::Uniform3i(location.to_primitive(), value[0], value[1], value[2]); });
-define_uniform!([f32; 3] => |value, location, _s| gl_call! { gl::Uniform3f(location.to_primitive(), value[0], value[1], value[2]); });
-define_uniform!([i32; 4] => |value, location, _s| gl_call! { gl::Uniform4i(location.to_primitive(), value[0], value[1], value[2], value[3]); });
-define_uniform!([f32; 4] => |value, location, _s| gl_call! { gl::Uniform4f(location.to_primitive(), value[0], value[1], value[2], value[3]); });
+define_uniform!([i32; 2] => |value, location, _s| gl_call! { gl::Uniform2i(location.as_primitive(), value[0], value[1]); });
+define_uniform!([f32; 2] => |value, location, _s| gl_call! { gl::Uniform2f(location.as_primitive(), value[0], value[1]); });
+define_uniform!([i32; 3] => |value, location, _s| gl_call! { gl::Uniform3i(location.as_primitive(), value[0], value[1], value[2]); });
+define_uniform!([f32; 3] => |value, location, _s| gl_call! { gl::Uniform3f(location.as_primitive(), value[0], value[1], value[2]); });
+define_uniform!([i32; 4] => |value, location, _s| gl_call! { gl::Uniform4i(location.as_primitive(), value[0], value[1], value[2], value[3]); });
+define_uniform!([f32; 4] => |value, location, _s| gl_call! { gl::Uniform4f(location.as_primitive(), value[0], value[1], value[2], value[3]); });
 
 macro_rules! vectors {
     ($($num:literal),*) => {
@@ -75,7 +75,7 @@ vectors!(2, 3, 4);
 
 macro_rules! matrix {
     ($row:literal, $col:literal => $func:ident) => {
-define_uniform!(Matrix<$row,$col> => |value, location, _s| gl_call! { gl::$func(location.to_primitive(), 1, gl::FALSE, value.col_major().as_ptr()); });
+define_uniform!(Matrix<$row,$col> => |value, location, _s| gl_call! { gl::$func(location.as_primitive(), 1, gl::FALSE, value.col_major().as_ptr()); });
     };
 }
 
@@ -98,7 +98,7 @@ impl<U: Uniform> Uniform for [U] {
         name: String,
         shader_program: &dyn IsActiveShaderProgram,
     ) -> ApiResult<(), !> {
-        for (index, value) in self.into_iter().enumerate() {
+        for (index, value) in self.iter().enumerate() {
             value.set_uniform(format!("{name}[{index}]"), shader_program)?;
         }
 

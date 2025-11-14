@@ -25,7 +25,7 @@ pub struct VertexArray<V: Vertex> {
 
 impl<V: Vertex> Drop for VertexArray<V> {
     fn drop(&mut self) {
-        let primitive = self.id.to_primitive();
+        let primitive = self.id.as_primitive();
         gl_call! {
             gl::DeleteVertexArrays(1, &raw const primitive);
         }
@@ -62,7 +62,7 @@ where
         };
 
         gl_call! {
-            gl::BindVertexArray(id.to_primitive());
+            gl::BindVertexArray(id.as_primitive());
         }
 
         vertex_buffer.bind();
@@ -103,7 +103,7 @@ where
 
     pub(crate) fn bind(&self) {
         gl_call! {
-            gl::BindVertexArray(self.id.to_primitive());
+            gl::BindVertexArray(self.id.as_primitive());
         }
     }
 
@@ -123,7 +123,7 @@ where
                 let vertices = vertex.vertices();
 
                 let option_vec_triangles: Option<Vec<_>> = triangles
-                    .into_iter()
+                    .iter()
                     .map(|index| index.map(|value| vertices.get(value).copied()).transpose())
                     .collect();
 
@@ -149,14 +149,14 @@ where
             gl_call! {
                 gl::DrawElements(
                     gl::TRIANGLES,
-                    element_buffer.len().to_primitive(),
+                    element_buffer.len().as_primitive(),
                     gl::UNSIGNED_INT,
                     ptr::null(),
                 );
             }
         } else if let Some(vbo) = self.vertex_buffer.as_ref() {
             gl_call! {
-                gl::DrawArrays(gl::TRIANGLES, 0, vbo.len().to_primitive());
+                gl::DrawArrays(gl::TRIANGLES, 0, vbo.len().as_primitive());
             }
         }
 
@@ -182,7 +182,7 @@ where
 
 pub fn dummy_vertex_array() -> &'static VertexArray<NoVertex> {
     static DUMMY_VERTEX_ARRAY: LazyLock<VertexArray<NoVertex>> =
-        LazyLock::new(|| VertexArray::empty());
+        LazyLock::new(VertexArray::empty);
     &DUMMY_VERTEX_ARRAY
 }
 
@@ -198,7 +198,7 @@ impl VertexArray<NoVertex> {
         active_shader_program.validate()?;
 
         gl_call! {
-            gl::DrawArrays(gl::LINE_STRIP, 0, len.to_primitive());
+            gl::DrawArrays(gl::LINE_STRIP, 0, len.as_primitive());
         }
 
         Ok(())

@@ -36,16 +36,16 @@ impl Shader {
         let arr_cstr = [cstr.as_ptr().cast()];
 
         gl_call! {
-            gl::ShaderSource(shader_id.to_primitive(), 1, arr_cstr.as_ptr(), len.as_ptr());
+            gl::ShaderSource(shader_id.as_primitive(), 1, arr_cstr.as_ptr(), len.as_ptr());
         }
         gl_call! {
-            gl::CompileShader(shader_id.to_primitive());
+            gl::CompileShader(shader_id.as_primitive());
         }
 
         let mut is_success = 0;
         gl_call! {
             gl::GetShaderiv(
-                shader_id.to_primitive(),
+                shader_id.as_primitive(),
                 gl::COMPILE_STATUS,
                 &raw mut is_success,
             );
@@ -71,6 +71,6 @@ impl Shader {
 
 impl Drop for Shader {
     fn drop(&mut self) {
-        gl_call! { gl::DeleteShader(self.id.to_primitive()) }
+        gl_call! { gl::DeleteShader(self.id.as_primitive()) }
     }
 }

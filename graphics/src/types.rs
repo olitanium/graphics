@@ -22,7 +22,7 @@ macro_rules! opaque {
             pub type Primitive = gl::types::$type;
 
             #[allow(dead_code)]
-            pub(crate) fn to_primitive(&self) -> Self::Primitive {
+            pub(crate) fn as_primitive(&self) -> Self::Primitive {
                 self.0
             }
         }
@@ -61,7 +61,7 @@ macro_rules! nz_opaque {
         impl $name {
             pub type Primitive = gl::types::$type;
 
-            pub(crate) fn to_primitive(&self) -> Self::Primitive {
+            pub(crate) fn as_primitive(&self) -> Self::Primitive {
                 self.0.get()
             }
         }

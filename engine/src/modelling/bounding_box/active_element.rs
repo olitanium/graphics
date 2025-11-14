@@ -44,10 +44,8 @@ where
         let offset_from_minimum = point - self.lower_bound; // if in, all positive
         let offset_from_maximum = self.upper_bound - point; // if in, all positive
 
-        let is_in = offset_from_maximum.into_iter().all(|x| x >= 0.0)
-            && offset_from_minimum.into_iter().all(|x| x >= 0.0);
-
-        is_in
+        offset_from_maximum.into_iter().all(|x| x >= 0.0)
+            && offset_from_minimum.into_iter().all(|x| x >= 0.0)
     }
 
     pub fn encloses_point_and_children(
@@ -84,7 +82,6 @@ where
         other: &'b Self,
         other_boundingbox: &'b BoundingBox<V, DIMS, T>,
         other_transform: &P,
-        depth: usize,
         other_alter_meta: &O,
     ) -> impl Iterator<
         Item = (
@@ -119,7 +116,6 @@ where
                         new_other,
                         other_boundingbox,
                         other_transform,
-                        depth + 1,
                         other_alter_meta,
                     )
                 })
@@ -136,7 +132,6 @@ where
                             new_other,
                             other_boundingbox,
                             other_transform,
-                            depth + 1,
                             other_alter_meta,
                         )
                     })
@@ -153,7 +148,6 @@ where
                             new_other,
                             other_boundingbox,
                             other_transform,
-                            depth + 1,
                             other_alter_meta,
                         )
                     })

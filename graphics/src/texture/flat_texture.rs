@@ -37,7 +37,7 @@ impl FlatTexture {
 
 impl Drop for FlatTexture {
     fn drop(&mut self) {
-        let primitive = self.id.to_primitive();
+        let primitive = self.id.as_primitive();
         gl_call! { gl::DeleteTextures(1, &raw const primitive); }
     }
 }
@@ -75,7 +75,7 @@ impl Texture for FlatTexture {
             gl::BindTexture(gl::TEXTURE_CUBE_MAP, 0);
         }
         gl_call! {
-            gl::BindTexture(gl::TEXTURE_2D, self.id.to_primitive());
+            gl::BindTexture(gl::TEXTURE_2D, self.id.as_primitive());
         }
     }
 

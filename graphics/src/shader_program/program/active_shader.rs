@@ -29,7 +29,7 @@ impl<M: Debug + ?Sized, V: Vertex + Debug, T: Texture + Debug, const OUT: usize>
                     .entries(
                         self.texture_list
                             .iter()
-                            .map(|(string, tex)| (string, tex.id().to_primitive())),
+                            .map(|(string, tex)| (string, tex.id().as_primitive())),
                     )
                     .finish()
             })
@@ -69,20 +69,20 @@ impl<'c, V: Vertex, M: ?Sized, T: Texture, const OUT: usize>
     }
 
     pub fn validate<NEVER>(&self) -> ApiResult<(), NEVER> {
-        gl_call! { gl::ValidateProgram(self.shader_program.id.to_primitive()); }
+        gl_call! { gl::ValidateProgram(self.shader_program.id.as_primitive()); }
 
         let mut error = 0;
-        gl_call! { gl::GetProgramiv(self.shader_program.id.to_primitive(), gl::VALIDATE_STATUS, &raw mut error); }
+        gl_call! { gl::GetProgramiv(self.shader_program.id.as_primitive(), gl::VALIDATE_STATUS, &raw mut error); }
 
         if error == gl::TRUE as types::GLint {
             Ok(())
         } else {
             let mut error_length = 0;
-            gl_call! { gl::GetProgramiv(self.shader_program.id.to_primitive(), gl::INFO_LOG_LENGTH, &raw mut error_length); }
+            gl_call! { gl::GetProgramiv(self.shader_program.id.as_primitive(), gl::INFO_LOG_LENGTH, &raw mut error_length); }
 
             let mut error_message: Vec<i8> = iter::repeat_n(0, error_length as usize).collect(); // Vec::with_capacity(error_length as usize);
 
-            gl_call! { gl::GetProgramInfoLog(self.shader_program.id.to_primitive(), error_length, ptr::null_mut(), error_message.as_mut_ptr()); }
+            gl_call! { gl::GetProgramInfoLog(self.shader_program.id.as_primitive(), error_length, ptr::null_mut(), error_message.as_mut_ptr()); }
 
             let message =
                 CString::from_vec_with_nul(error_message.into_iter().map(|x| x as u8).collect())

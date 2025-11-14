@@ -56,7 +56,7 @@ impl ExtendedVertex<3> for SkeletalVertex {
             let weight = vert.weights.take();
 
             weight.map_or([(0, 1.0), (0, 0.0), (0, 0.0), (0, 0.0)], |mut vec| {
-                while let Ok(_) = vec.push_within_capacity((0, 0.0)) {}
+                while vec.push_within_capacity((0, 0.0)).is_ok() {}
                 vec.try_into_array().expect("filled above")
             })
         });

@@ -62,13 +62,12 @@ impl SimpleCubic {
     pub fn triangles(&self) -> Vec<(usize, [SimpleVertex; 3])> {
         self.meshes
             .iter()
-            .map(|BoneAndMesh { bone, mesh }| {
+            .flat_map(|BoneAndMesh { bone, mesh }| {
                 mesh.triangles()
                     .into_owned()
                     .into_iter()
                     .map(move |triangles| (*bone, triangles))
             })
-            .flatten()
             .collect()
     }
 

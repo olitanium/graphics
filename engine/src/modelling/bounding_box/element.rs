@@ -53,7 +53,7 @@ fn make_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
 ) -> Option<Vector<DIMS>> {
     array::from_fn(|index| {
         vectors
-            .into_iter()
+            .iter()
             .map(|vec| vec.position().get(index).copied().unwrap_or_default())
             .reduce(func)
     })
@@ -85,11 +85,11 @@ where
         init: &mut F,
     ) -> Option<usize> {
         let vectors: Vec<_> = triangles
-            .into_iter()
+            .iter_mut()
             .flat_map(|&mut (_, arr)| arr)
             .collect();
 
-        let vec_triangles = triangles.into_iter().map(|&mut (_, arr)| arr).collect();
+        let vec_triangles = triangles.iter_mut().map(|&mut (_, arr)| arr).collect();
 
         let upper_bounds = make_upper_bound(&vectors)?;
         let lower_bounds = make_lower_bound(&vectors)?;
@@ -151,14 +151,12 @@ where
 
                 node_not_leaf
                     .then(|| {
-                        let children = partitions.try_map(|(lower_bound_partition, partition)| {
+                        partitions.try_map(|(lower_bound_partition, partition)| {
                             let bb_triangle = &mut triangles[lower_bound_partition..partition];
                             let out =
                                 Self::new_from_many_inner(so_far, bb_triangle, depth - 1, init);
                             out.and_then(NonZeroUsize::new)
-                        });
-
-                        children
+                        })
                     })
                     .flatten()
             }

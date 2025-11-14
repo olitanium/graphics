@@ -81,8 +81,7 @@ impl Builder {
         vertex_array_builder.extend_triangles(
             self.triangles
                 .into_iter()
-                .map(ExtendedVertex::from_incomplete_triangle)
-                .flatten(),
+                .filter_map(ExtendedVertex::from_incomplete_triangle)
         );
 
         let vertex_array = vertex_array_builder.build();

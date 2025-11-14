@@ -127,7 +127,7 @@ fn process_node<NEVER: Clone>(
     node: &Node,
     dir: &Path,
     current_mat: &mut HashMap<u32, EngResult<Rc<Material>, NEVER>>,
-    current_bones: &mut HashMap<String, Bone>,
+    _current_bones: &mut HashMap<String, Bone>,
     accum_transform: Pose,
     load_tangent_space: bool,
 ) -> EngResult<Vec<MeshBuilder>, NEVER> {
@@ -150,7 +150,7 @@ fn process_node<NEVER: Clone>(
             let textures: Vec<Vector<2>> = mesh
                 .texture_coords
                 .first()
-                .ok_or_else(|| Error::ShouldNotOccur)?
+                .ok_or(Error::ShouldNotOccur)?
                 .as_ref()
                 .ok_or_else(|| Error::NoTexCoords { dir: dir.into() })?
                 .iter()
@@ -206,7 +206,7 @@ fn process_node<NEVER: Clone>(
             let mesh_buffer = element_buffer
                 .as_chunks()
                 .0
-                .into_iter()
+                .iter()
                 .map(|triangle| {
                     triangle.try_map(|index| {
                         let index = index.as_usize();
@@ -259,7 +259,7 @@ fn process_node<NEVER: Clone>(
                 node,
                 dir,
                 current_mat,
-                current_bones,
+                _current_bones,
                 accum_transform,
                 load_tangent_space,
             )

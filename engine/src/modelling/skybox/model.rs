@@ -19,8 +19,7 @@ impl SkyBox {
         let mut model_builder = VertexArray::builder();
         model_builder.extend_triangles(
             test_models::origin_unit_cube()
-                .map(ExtendedVertex::from_incomplete_triangle)
-                .flatten(),
+                .filter_map(ExtendedVertex::from_incomplete_triangle)
         );
         let model = model_builder.build();
         Self { model, texture }

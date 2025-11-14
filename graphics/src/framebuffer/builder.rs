@@ -130,7 +130,7 @@ impl<const N: usize, B: Attachment> Builder<N, HasSize, B> {
         };
 
         gl_call! {
-            gl::BindFramebuffer(gl::FRAMEBUFFER, id.to_primitive());
+            gl::BindFramebuffer(gl::FRAMEBUFFER, id.as_primitive());
         }
 
         let colour: [Rc<RefCell<B::Tex>>; N] = array::from_fn(|_| {
@@ -149,7 +149,7 @@ impl<const N: usize, B: Attachment> Builder<N, HasSize, B> {
                     gl::FRAMEBUFFER,
                     gl::COLOR_ATTACHMENT0 + index as types::GLenum,
                     gl::TEXTURE_2D,
-                    texture.borrow().id().to_primitive(),
+                    texture.borrow().id().as_primitive(),
                     0,
                 );
             }

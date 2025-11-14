@@ -12,7 +12,7 @@ impl<T, const N: usize> IntoIterator for ArrayVec<T, N> {
 }
 
 fn get_iter<T, const N: usize>(vec: ArrayVec<T, N>) -> IntoIter<T, N> {
-    let (len, array) = vec.as_raw_parts();
+    let (len, array) = vec.to_raw_parts();
     // SAFETY: taking `len` ensures that only init values are assumed init
     array.into_iter().take(len).map(|init| unsafe { init.assume_init() })
 }

@@ -1,5 +1,6 @@
 use std::cell::Cell;
 use std::ptr;
+use std::rc::Rc;
 
 use glfw::{Context, Glfw, GlfwReceiver, PWindow, WindowEvent};
 use utils::{builder, new};
@@ -18,7 +19,7 @@ pub struct Window {
     glfw_window: PWindow, // DefaultFramebuffer,
     default_framebuffer: DefaultFramebuffer,
     events: GlfwReceiver<(f64, WindowEvent)>,
-    pub(crate) window_resized: Box<Cell<bool>>,
+    pub(crate) window_resized: Rc<Cell<bool>>,
     pub(crate) keyboard: Keyboard,
     pub(crate) mouse: Mouse,
 }
@@ -179,12 +180,12 @@ fn make_window<T>(
     glfw_window.make_current();
     glfw_window.set_key_polling(true);
 
-    let mut window_resized = Box::new(Cell::new(false));
+    let window_resized = Rc::new(Cell::new(false));
 
-    let resized_ptr = Box::as_ptr(&mut window_resized);
-    glfw_window.set_framebuffer_size_callback(move |_window, _width, _height| unsafe {
-        resized_ptr.as_ref().expect("FROM BOX").set(true);
-    });
+    let resized_ptr = window_resized.clone();
+    glfw_window.set_framebuffer_size_callback(move |_window, _width, _height| 
+        resized_ptr.set(true)
+    );
 
     if glfw_window.glfw.supports_raw_motion() && builder.raw_motion {
         glfw_window.set_raw_mouse_motion(true);

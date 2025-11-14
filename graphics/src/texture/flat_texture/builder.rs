@@ -122,7 +122,7 @@ fn gen_tex_set_parameters<T>(builder: &Builder<T>) -> TexId {
         TexId::new(id)
     };
 
-    gl_call! { gl::BindTexture(gl::TEXTURE_2D, id.to_primitive()); }
+    gl_call! { gl::BindTexture(gl::TEXTURE_2D, id.as_primitive()); }
 
     let wrap_s_t = builder.wrap_s_t.get_enum();
 
@@ -196,8 +196,8 @@ impl Builder<Image> {
                 gl::TEXTURE_2D,
                 0,
                 internal_format,
-                width.to_primitive(),
-                height.to_primitive(),
+                width.as_primitive(),
+                height.as_primitive(),
                 0,
                 gl::RGBA,
                 type_,
@@ -229,8 +229,8 @@ impl TexBuilderCanBuild for Builder<Dimensions> {
                 gl::TEXTURE_2D,
                 0,
                 gl::RGBA16F as GLint,
-                self.image.0.0.to_primitive(),
-                self.image.0.1.to_primitive(),
+                self.image.0.0.as_primitive(),
+                self.image.0.1.as_primitive(),
                 0,
                 gl::RGBA,
                 gl::FLOAT,
@@ -255,8 +255,8 @@ impl<X: Attachment> Builder<FramebufferAttachment<X>> {
                 gl::TEXTURE_2D,
                 0,
                 tex_info.internal_format as types::GLint,
-                self.image.size.0.to_primitive(),
-                self.image.size.1.to_primitive(),
+                self.image.size.0.as_primitive(),
+                self.image.size.1.as_primitive(),
                 0,
                 tex_info.format,
                 tex_info.data_type,
@@ -268,7 +268,7 @@ impl<X: Attachment> Builder<FramebufferAttachment<X>> {
                     gl::FRAMEBUFFER,
                     tex_info.attachment,
                     gl::TEXTURE_2D,
-                    id.to_primitive(),
+                    id.as_primitive(),
                     0,
                 );
             }

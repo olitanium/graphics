@@ -45,7 +45,7 @@ impl<const N: usize> Quad<N> {
     }
 
     pub fn downcast<const M: usize>(mut self) -> Quad<M> {
-        let mut iter = self.texture.iter_mut().map(|x| mem::take(x));
+        let mut iter = self.texture.iter_mut().map(mem::take);
         let texture = array::from_fn(|_| iter.next().unwrap_or_default());
         Quad {
             vertex_array: mem::take(&mut self.vertex_array),

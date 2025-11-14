@@ -16,7 +16,7 @@ pub struct ElementArrayBuffer {
 
 impl Drop for ElementArrayBuffer {
     fn drop(&mut self) {
-        let primitive = self.id.to_primitive();
+        let primitive = self.id.as_primitive();
         gl_call! {
             gl::DeleteBuffers(1, &raw const primitive);
         }
@@ -38,7 +38,7 @@ impl ElementArrayBuffer {
         };
 
         gl_call! {
-            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, id.to_primitive());
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, id.as_primitive());
         }
 
         gl_call! {
@@ -72,7 +72,7 @@ impl ElementArrayBuffer {
     /// Bind ElementArrayBuffer
     pub(crate) fn bind(&self) {
         gl_call! {
-            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id.to_primitive());
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id.as_primitive());
         }
     }
 

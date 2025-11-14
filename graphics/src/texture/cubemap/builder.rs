@@ -201,8 +201,8 @@ impl TexBuilderCanBuild for Builder<Dimensions> {
                     target,
                     0,
                     gl::RGBA16F as types::GLint,
-                    size.to_primitive(),
-                    size.to_primitive(),
+                    size.as_primitive(),
+                    size.as_primitive(),
                     0,
                     gl::RGBA,
                     gl::FLOAT,
@@ -267,8 +267,8 @@ impl<T: Attachment> Builder<FramebufferAttachment<T>> {
                         target,
                         0,
                         tex_info.internal_format as types::GLint,
-                        self.data.size.to_primitive(),
-                        self.data.size.to_primitive(),
+                        self.data.size.as_primitive(),
+                        self.data.size.as_primitive(),
                         0,
                         tex_info.format,
                         tex_info.data_type,
@@ -281,7 +281,7 @@ impl<T: Attachment> Builder<FramebufferAttachment<T>> {
                 gl::FramebufferTexture(
                     gl::FRAMEBUFFER,
                     tex_info.attachment,
-                    id.to_primitive(),
+                    id.as_primitive(),
                     0,
                 );
             }

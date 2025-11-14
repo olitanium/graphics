@@ -70,7 +70,7 @@ pub trait FramebufferInternals: Sized {
     fn size(&self) -> (TexDim, TexDim);
     fn aspect_ratio(&self) -> f32 {
         let (x, y) = self.size();
-        x.to_primitive() as f32 / y.to_primitive() as f32
+        x.as_primitive() as f32 / y.as_primitive() as f32
     }
     fn id(&self) -> &FrameBufferId;
 

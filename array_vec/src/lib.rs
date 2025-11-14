@@ -86,14 +86,14 @@ impl<T, const N: usize> ArrayVec<T, N> {
     }
 
     pub fn as_slice(&self) -> &[T] {
-        unsafe { (&self.array[..self.len]).assume_init_ref() }
+        unsafe { self.array[..self.len].assume_init_ref() }
     }
 
     pub fn as_mut_slice(&mut self) -> &mut [T] {
         unsafe { (&mut self.array[..self.len]).assume_init_mut() }
     }
 
-    fn as_raw_parts(mut self) -> (usize, [MaybeUninit<T>; N]) {
+    fn to_raw_parts(mut self) -> (usize, [MaybeUninit<T>; N]) {
         let len = mem::replace(&mut self.len, 0);
         let uninit_array = ManuallyDrop::new([const { MaybeUninit::uninit() }; N]);
         let md_array = mem::replace(&mut self.array, uninit_array);
@@ -102,7 +102,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
     }
 
     pub fn try_into_array(self) -> Result<[T; N], TryFromErr> {
-        let (len, array) = self.as_raw_parts();
+        let (len, array) = self.to_raw_parts();
 
         if len != N {
             Err(TryFromErr {
@@ -177,7 +177,7 @@ impl<T, const N: usize, const M: usize> TryFrom<[T; M]> for ArrayVec<T, N> {
 
 impl<T, const N: usize> Drop for ArrayVec<T, N> {
     fn drop(&mut self) {
-        while let Some(_) = self.pop() {}
+        while self.pop().is_some() {}
     }
 }
 

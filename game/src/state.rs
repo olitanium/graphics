@@ -122,7 +122,7 @@ impl EngState for State {
 
         // eprintln!("fps: {}", 1.0 / frame_time);
 
-        self.controls(mouse_delta, keyboard, &mut *string, frame_time)?;
+        self.controls(mouse_delta, keyboard, &mut string, frame_time)?;
 
         self.physics(frame_time);
 

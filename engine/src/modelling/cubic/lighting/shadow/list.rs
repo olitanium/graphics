@@ -51,7 +51,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
                     &mut active_depth_only_shader,
                     &mut active_light_framebuffer,
                     *pose,
-                    *animation,
+                    animation,
                     *time,
                 )?;
             }
@@ -75,7 +75,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
                     &mut active_depth_only_shader,
                     &mut active_light_framebuffer,
                     *pose,
-                    *animation,
+                    animation,
                     *time,
                 )?;
             }
@@ -100,7 +100,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
                     &mut active_depth_only_shader_point,
                     &mut active_light_framebuffer,
                     *pose,
-                    *animation,
+                    animation,
                     *time,
                 )?;
             }

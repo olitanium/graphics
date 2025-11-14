@@ -26,7 +26,7 @@ impl<const N: usize> Builder<N> {
         Quad {
             vertex_array: self.vertex_array.map_or_else(
                 || RefOwned::Ref(test_models::screen_quad()),
-                |arr| RefOwned::Owned(arr),
+                RefOwned::Owned,
             ),
             texture: self.texture.unwrap_or(array::from_fn(|_| {
                 Rc::new(RefCell::new(FlatTexture::default()))
