@@ -1,3 +1,5 @@
+use crate::{ArrayVec, arrvec};
+
 #[test]
 fn pop_push() {
     use crate::ArrayVec;
@@ -54,4 +56,16 @@ fn size() {
     iter.next();
 
     assert_eq!(iter.size_hint(), (2, Some(2)));
+}
+
+#[test]
+fn init_macro() {
+    let array: ArrayVec<u32, 4> = arrvec![1, 2];
+    assert_eq!(array.as_slice(), &[1, 2]);
+
+    //compile fail
+    //const ARRAY: ArrayVec<u32, 1> = arrvec![1, 2];
+    
+    let array: ArrayVec<u32, _> = arrvec![5; 1,2,3,];
+    assert_eq!(array.capacity(), 5);
 }

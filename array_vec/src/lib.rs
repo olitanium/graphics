@@ -1,5 +1,8 @@
 #![feature(maybe_uninit_slice)]
 #![feature(maybe_uninit_array_assume_init)]
+#![feature(const_convert)]
+#![feature(const_trait_impl)]
+#![feature(maybe_uninit_uninit_array_transpose)]
 
 use std::fmt::Debug;
 use std::mem::{self, ManuallyDrop, MaybeUninit};
@@ -10,6 +13,8 @@ mod test;
 pub use ArrayVec as StackVec;
 pub use iterators::{IntoIter, Iter, IterMut};
 
+mod initmacro;
+
 pub struct ArrayVec<T, const N: usize> {
     len: usize,
     array: ManuallyDrop<[MaybeUninit<T>; N]>,
@@ -19,22 +24,46 @@ pub struct ArrayVec<T, const N: usize> {
 struct LengthError<const N: usize>;
 
 impl<T, const N: usize> ArrayVec<T, N> {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             len: 0,
-            array: ManuallyDrop::new([const { MaybeUninit::uninit() }; N]),
+            array: ManuallyDrop::new([const { MaybeUninit::zeroed() }; N]),
         }
     }
 
-    pub fn push_within_capacity(&mut self, elem: T) -> Result<(), T> {
+    pub fn capacity(&self) -> usize {
+        N
+    }
+
+    pub const fn push_within_capacity(&mut self, elem: T) -> Result<(), T> {
         if self.len >= N {
             return Err(elem);
         }
 
-        self.array[self.len] = MaybeUninit::new(elem);
-        self.len += 1;
+        self.push_lossy(elem);
 
         Ok(())
+    }
+
+    pub const fn push_lossy(&mut self, elem: T) {
+        self.array[self.len] = MaybeUninit::new(elem);
+        self.len += 1;
+    }
+
+    pub const fn const_collect<const M: usize>(array: [T; M]) -> Self {
+        assert!(M <= N);
+        let mut this = Self::new();
+        let mut array = MaybeUninit::transpose(MaybeUninit::new(array));
+        let mut index = 0;
+        loop {
+            if index == M {
+                break;
+            }
+            let value = mem::replace(&mut array[index], MaybeUninit::uninit());
+            this.push_lossy(unsafe { value.assume_init() });
+            index += 1;
+        }
+        this
     }
 
     pub fn push(&mut self, elem: T) {
@@ -43,16 +72,16 @@ impl<T, const N: usize> ArrayVec<T, N> {
             .unwrap();
     }
 
-    pub fn pop(&mut self) -> Option<T> {
+    pub const fn pop(&mut self) -> Option<T> {
         if self.len == 0 {
             return None;
         }
 
-        // security replaces with zeroes to obscure previous values
-        let mut output = MaybeUninit::zeroed();
-        mem::swap(&mut output, &mut self.array[self.len - 1]);
+        // for security, replaces with zeroes to obscure previous values
+        let output = mem::replace(&mut self.array[self.len - 1], const { MaybeUninit::zeroed() });
         self.len -= 1;
 
+        // SAFETY: self.array[self.len - 1] is within the initialized, it is swapped for uninit, and the len is decremented
         Some(unsafe { output.assume_init() })
     }
 
