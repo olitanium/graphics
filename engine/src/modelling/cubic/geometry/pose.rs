@@ -54,6 +54,13 @@ impl Pose {
         Self::new_from_orientation_translation(Orientation::IDENTITY, translation)
     }
 
+    pub fn new_from_matrix(matrix: Matrix<4, 4>) -> Self {
+        let translation = matrix.col(3).truncate();
+        let orientation = matrix.truncate();
+
+        Self::new_from_orientation_translation(Orientation::from_matrix(orientation), translation)
+    }
+
     pub fn into_inner(self) -> UnitDualQuaternion {
         self.dual_quaternion
     }

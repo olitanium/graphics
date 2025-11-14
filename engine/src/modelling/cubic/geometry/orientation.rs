@@ -44,6 +44,10 @@ impl Orientation {
             forward.v(), // forward = z
         ]);
 
+        Self::from_matrix(matrix)
+    }
+
+    pub fn from_matrix(matrix: Matrix<3, 3>) -> Self {
         let quaternion = UnitQuaternion::from_matrix(matrix);
         Self { quaternion }
     }

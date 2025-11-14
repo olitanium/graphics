@@ -9,10 +9,10 @@ use std::slice::SliceIndex;
 use super::matrix::Matrix;
 
 #[repr(transparent)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Vector<const N: usize>([f32; N]);
 
-impl<const N: usize> Default for Vector<N> {
+impl<const N: usize> const Default for Vector<N> {
     fn default() -> Self {
         Self::ZERO
     }

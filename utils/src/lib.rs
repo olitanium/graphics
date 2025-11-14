@@ -50,3 +50,36 @@ macro_rules! new {
         }
     };
 }
+
+pub fn partition<
+    U,
+    T: Clone,
+    I: IntoIterator<Item = T>,
+    F: FnMut(&T) -> Vec<usize>,
+    O: FnMut(T) -> U,
+>(
+    iter: I,
+    mut part_fn: F,
+    mut manipulate_elem: O,
+) -> Vec<Vec<U>> {
+    let mut out = vec![];
+
+    for item in iter {
+        let indices = part_fn(&item);
+        if let Some(&max) = indices.iter().max() {
+            conditionally_resize_vector(&mut out, max + 1, Vec::new);
+
+            for value in indices {
+                out[value].push(manipulate_elem(item.clone()))
+            }
+        }
+    }
+
+    out
+}
+
+fn conditionally_resize_vector<T, F: FnMut() -> T>(vec: &mut Vec<T>, len: usize, new: F) {
+    if vec.len() < len {
+        vec.resize_with(len, new);
+    }
+}

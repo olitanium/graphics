@@ -19,7 +19,7 @@ impl State {
         }
 
         // self.imported_other.update(frame_time);
-        self.imported.update(frame_time);
+        //self.imported.update(frame_time);
 
         // let self_pose = self.imported.model.root();
         // let other_pose = self.imported_other.model.root();

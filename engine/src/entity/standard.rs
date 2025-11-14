@@ -1,6 +1,7 @@
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::vertex::Vertex;
 
+use crate::entity::Mass;
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{BoundingBox, SimpleCubic, SimpleVertex, Volume};
 
@@ -8,7 +9,7 @@ use crate::modelling::{BoundingBox, SimpleCubic, SimpleVertex, Volume};
 pub struct Entity<T> {
     pub model: SimpleCubic,
     pub pose: Pose,
-    pub mass: f32,
+    pub mass: Mass,
     bounding_box: Option<BoundingBox<SimpleVertex, 3, T>>,
     pub velocity: Vector<3>,
 }
@@ -16,8 +17,8 @@ pub struct Entity<T> {
 impl<T: Default> Default for Entity<T> {
     fn default() -> Self {
         Self {
-            mass: f32::INFINITY,
-            pose: Pose::IDENTITY,
+            mass: Default::default(),
+            pose: Default::default(),
             model: Default::default(),
             bounding_box: Default::default(),
             velocity: Default::default(),
@@ -26,7 +27,7 @@ impl<T: Default> Default for Entity<T> {
 }
 
 impl Entity<(bool, Vec<[SimpleVertex; 3]>)> {
-    pub fn from_cubic(model: SimpleCubic, depth: usize, mass: f32) -> Option<Self> {
+    pub fn from_cubic(model: SimpleCubic, depth: usize, mass: Mass) -> Option<Self> {
         let bounding_box = BoundingBox::from_cubic(&model, depth, |input| {
             (
                 false,
@@ -108,11 +109,13 @@ impl<T> Entity<T> {
                 return false;
             };
 
+            // `average` = direction of force (in which direction?)
+
             // elastic collision
-            let self_change = 2.0 * other.mass / (other.mass + self.mass)
+            let self_change = 2.0 * other.mass.0 / (other.mass.0 + self.mass.0)
                 * average.v().dot(other.velocity - self.velocity);
 
-            let other_change = 2.0 * self.mass / (other.mass + self.mass)
+            let other_change = 2.0 * self.mass.0 / (other.mass.0 + self.mass.0)
                 * average.v().dot(self.velocity - other.velocity);
 
             self.velocity = self.velocity + average.v() * self_change;

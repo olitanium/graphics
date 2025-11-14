@@ -1,6 +1,7 @@
-use std::array;
 use std::cell::RefCell;
 use std::num::NonZeroUsize;
+use std::rc::Rc;
+use std::{array, default};
 
 use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;
@@ -13,12 +14,12 @@ use graphics::vertex_array::VertexArray;
 use crate::EngResult;
 use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BoundingBoxElement<V: Vertex, const DIMS: usize, T>
 where
     Vector<DIMS>: Vertex,
 {
-    pub(crate) vertex_array: VertexArray<Vector<DIMS>>,
+    pub(crate) vertex_array: Rc<VertexArray<Vector<DIMS>>>,
     pub(crate) meta: RefCell<T>,
 
     pub(crate) lower_bound: Vector<DIMS>,
@@ -36,12 +37,12 @@ where
 {
     fn default() -> Self {
         Self {
-            vertex_array: VertexArray::default(),
+            vertex_array: Default::default(),
             lower_bound: -Vector::X,
             upper_bound: Vector::X,
             meta: Default::default(),
             triangles: Default::default(),
-            children: None,
+            children: Default::default(),
         }
     }
 }
@@ -102,7 +103,7 @@ where
         let vertex_array = vertex_array_builder.build();
 
         so_far.push(Self {
-            vertex_array,
+            vertex_array: Rc::new(vertex_array),
             meta: RefCell::new(init(triangles)),
             triangles: vec_triangles,
             lower_bound: lower_bounds,

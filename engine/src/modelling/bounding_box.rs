@@ -15,7 +15,7 @@ mod active_element;
 mod group;
 pub use group::Group as BoundingBoxGroup;
 
-mod skeleton_bb;
+pub mod skeleton_bb;
 pub use skeleton_bb::{SkeletonBb, SkeletonBbGroup};
 
 use crate::modelling::advanced_vertex::ExtendedVertex;
@@ -23,7 +23,7 @@ use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{CubicVertex, SimpleCubic, SimpleVertex, Volume};
 use crate::{EngResult, TransformBy};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct BoundingBox<V: ExtendedVertex<DIMS>, const DIMS: usize, T>
 where
     Vector<DIMS>: Volume<DIMS>,

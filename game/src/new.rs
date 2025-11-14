@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
-use engine::array_vec::ArrayVec;
-use engine::entity::{SkeletonEntity, SkinningEntity};
+use engine::array_vec::{ArrayVec, arrvec};
+use engine::entity::{Mass, SkeletonEntity, SkinningEntity};
 use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
@@ -74,8 +74,8 @@ impl State {
             })
             .collect();
 
-        let (animation, model) = make_model("oliver")?;
-        let mut imported = SkeletonEntity::from_cubic(model, 20, 1.0).unwrap();
+        let (animation, model) = make_model("bigguy")?;
+        let mut imported = SkeletonEntity::from_cubic(model, 20, Mass(1.0), |_| ()).unwrap();
         imported.velocity = Vector::new([0.0, 0.0, 0.5]);
         imported.pose = Pose::new_from_orientation_translation(
             Orientation::new_forward_up(UnitVector::Z, UnitVector::Y),
@@ -178,7 +178,8 @@ impl State {
 
         let (simpletail, skeletal_animation) = SkeletonCubic::debug_tail();
 
-        let simpletail = SkinningEntity::from_skeletoncubic(simpletail, 2, 1.0).unwrap();
+        let simpletail =
+            SkinningEntity::from_skeletoncubic(simpletail, 2, Mass(1.0), |_| ()).unwrap();
 
         Ok(Self {
             show_bbs: true,
@@ -209,16 +210,14 @@ impl State {
             bloom,
 
             light_group: ShadowListLights {
-                point: ArrayVec::try_from([point_light])
-                    .expect("size leq SHADOW_SHADER_MAX_LIGHTS"),
+                point: arrvec![point_light],
                 // spot: ArrayVec::try_from([spotlight])
                 //    .expect("size leq MAX"),
                 ..ShadowListLights::default()
             },
 
             ns_light_group: ListLights {
-                point: ArrayVec::try_from([ns_point_light])
-                    .expect("size leq SHADOW_SHADER_MAX_LIGHTS"),
+                point: arrvec![ns_point_light],
                 ..ListLights::default()
             },
 
@@ -235,7 +234,7 @@ pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, SimpleCubi
             SimpleCubic::import(
                 "assets/Teddy Statue/Teddy Statue.obj",
                 vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
-                false,
+                true,
             )?
             .cull_face(CullFace::BackFace)
             .scale(0.01)
@@ -254,6 +253,21 @@ pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, SimpleCubi
                 false,
             )?
             .material(Rc::new(Material::white()))
+            .build(),
+        ),
+        "bigguy" => (
+            SkeletalAnimation::new(),
+            SimpleCubic::import(
+                "assets/vamp.fbx",
+                vec![
+                    P::Triangulate,
+                    P::FlipUVs,
+                    P::OptimizeGraph,
+                    P::OptimizeMeshes,
+                ],
+                true,
+            )?
+            .scale(0.01)
             .build(),
         ),
         "oliver" => {

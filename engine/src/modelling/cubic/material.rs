@@ -19,7 +19,7 @@ pub struct Material {
 
 impl Default for Material {
     fn default() -> Self {
-        Self::black()
+        Self::white()
     }
 }
 

@@ -1,10 +1,11 @@
-use std::convert;
+use std::{convert, iter};
 
 use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
+use utils::partition;
 
 use crate::EngResult;
 use crate::modelling::cubic::SkeletonCubic;
@@ -21,47 +22,17 @@ use crate::modelling::{
 mod group;
 pub use group::Group as SkeletonBbGroup;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SkeletonBb<V: CubicVertex, T> {
     per_bone: Vec<BoundingBox<V, 3, T>>,
-}
-
-impl<T> SkeletonBb<SkeletalVertex, T> {
-    pub fn from_skeletoncubic<F: FnMut(&[(Vector<3>, [SkeletalVertex; 3])]) -> T>(
-        cubic: &SkeletonCubic,
-        depth: usize,
-        init: F,
-    ) -> Option<Self> {
-        let per_mesh = partition(
-            cubic.triangles(),
-            |tri| {
-                tri.into_iter()
-                    .flat_map(|vertex| vertex.bone_indices.map(|x| x as usize))
-                    .collect()
-            },
-            convert::identity,
-        );
-
-        Self::from_vec_triangle(per_mesh, depth, init)
-    }
-}
-
-impl<T> SkeletonBb<SimpleVertex, T> {
-    pub fn from_cubic_simplevertex<F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
-        cubic: &SimpleCubic,
-        depth: usize,
-        init: F,
-    ) -> Option<Self> {
-        let per_mesh = partition(cubic.triangles(), |(bone, _)| vec![*bone], |(_, tri)| tri);
-
-        Self::from_vec_triangle(per_mesh, depth, init)
-    }
+    skeleton: Skeleton,
 }
 
 impl<V: CubicVertex, T> SkeletonBb<V, T> {
-    fn from_vec_triangle<F: FnMut(&[(Vector<3>, [V; 3])]) -> T>(
+    pub fn from_vec_triangle<F: FnMut(&[(Vector<3>, [V; 3])]) -> T>(
         per_mesh: Vec<Vec<[V; 3]>>,
         depth: usize,
+        skeleton: Skeleton,
         mut init: F,
     ) -> Option<Self> {
         let opt_per_mesh: Option<Vec<_>> = per_mesh
@@ -71,6 +42,7 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
 
         Some(Self {
             per_bone: opt_per_mesh?,
+            skeleton,
         })
     }
 }
@@ -78,14 +50,12 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
 impl<V: CubicVertex, T> SkeletonBb<V, T> {
     pub fn overlap<F, O>(
         lhs: &Self,
-        lhs_skeleton: &Skeleton,
         lhs_pose: Pose,
         lhs_animation: &SkeletalAnimation,
         lhs_time: f32,
         lhs_alter_meta: F,
 
         rhs: &Self,
-        rhs_skeleton: &Skeleton,
         rhs_pose: Pose,
         rhs_animation: &SkeletalAnimation,
         rhs_time: f32,
@@ -103,12 +73,12 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
             .enumerate()
             .flat_map(|(lhs_bone, lhs_bb)| {
                 let lhs_pose =
-                    lhs_skeleton.get_bone_pose(lhs_pose, true, lhs_bone, lhs_animation, lhs_time).unwrap(/*TODO: Animation well formed */);
+                    lhs.skeleton.get_bone_pose(lhs_pose, true, lhs_bone, lhs_animation, lhs_time).unwrap(/*TODO: Animation well formed */);
                 rhs.per_bone
                     .iter()
                     .enumerate()
                     .flat_map(move |(rhs_bone, rhs_bb)| {
-                        let rhs_pose = rhs_skeleton.get_bone_pose(
+                        let rhs_pose = rhs.skeleton.get_bone_pose(
                             rhs_pose,
                             true,
                             rhs_bone,
@@ -146,38 +116,5 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
         }
 
         Ok(())
-    }
-}
-
-fn partition<
-    U,
-    T: Clone,
-    I: IntoIterator<Item = T>,
-    F: FnMut(&T) -> Vec<usize>,
-    O: FnMut(T) -> U,
->(
-    iter: I,
-    mut part_fn: F,
-    mut manipulate_elem: O,
-) -> Vec<Vec<U>> {
-    let mut out = vec![];
-
-    for item in iter {
-        let indices = part_fn(&item);
-        if let Some(&max) = indices.iter().max() {
-            conditionally_resize_vector(&mut out, max + 1, Vec::new);
-
-            for value in indices {
-                out[value].push(manipulate_elem(item.clone()))
-            }
-        }
-    }
-
-    out
-}
-
-fn conditionally_resize_vector<T, F: FnMut() -> T>(vec: &mut Vec<T>, len: usize, new: F) {
-    if vec.len() < len {
-        vec.resize_with(len, new);
     }
 }

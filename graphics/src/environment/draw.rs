@@ -26,10 +26,10 @@ impl<T: Draw<E> + ?Sized, E> Draw<E> for Vec<Box<T>> {
 
 impl<T: Draw<E> + ?Sized, E> Draw<E> for [Box<T>] {
     fn draw(
-            self: Box<Self>,
-            fb_context: &mut FramebufferContext,
-            shader_marker: &mut ShaderProgramContext,
-        ) -> ApiResult<(), E> {
+        self: Box<Self>,
+        fb_context: &mut FramebufferContext,
+        shader_marker: &mut ShaderProgramContext,
+    ) -> ApiResult<(), E> {
         for group in self {
             group.draw(fb_context, shader_marker)?;
         }

@@ -2,17 +2,23 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-use graphics::linear_algebra::{UnitVector, Vector};
+use dual_number::DualQuaternion;
+use graphics::linear_algebra::{Matrix, UnitVector, Vector};
 use graphics::texture::{FlatTexture, Image, TextureHasBuilder};
 use graphics::types::ElementArrayElem;
+use russimp::Matrix4x4;
 use russimp::material::{PropertyTypeInfo, TextureType};
 use russimp::node::Node;
 use russimp::scene::{PostProcess, Scene};
 
 use super::material::Material;
+use crate::TransformBy;
 use crate::error::EngResult;
+use crate::modelling::Bone;
 use crate::modelling::advanced_vertex::IncompleteVertex;
+use crate::modelling::cubic::geometry::{Orientation, Pose};
 use crate::modelling::cubic::mesh::MeshBuilder;
+use crate::transform::Transform;
 
 mod error {
     use std::path::PathBuf;
@@ -86,6 +92,7 @@ pub(super) fn import<NEVER: Clone, P: AsRef<Path>>(
             as_text: error.to_string(),
         })?;
 
+    let mut bones = HashMap::new();
     let meshes = process_node(
         &scene,
         scene
@@ -94,6 +101,8 @@ pub(super) fn import<NEVER: Clone, P: AsRef<Path>>(
             .ok_or_else(|| Error::NoRootNode { path: path.into() })?,
         dir,
         &mut HashMap::new(),
+        &mut bones,
+        Pose::IDENTITY,
         load_tangent_space,
     )?;
     // let mut builder = SimpleCubic::builder();
@@ -102,14 +111,30 @@ pub(super) fn import<NEVER: Clone, P: AsRef<Path>>(
     Ok(ImportOutput { meshes })
 }
 
+fn assimp_matrix_to_pose(matrix: Matrix4x4) -> Pose {
+    let matrix = Matrix::from_col_major([
+        [matrix.a1, matrix.a2, matrix.a3, matrix.a4],
+        [matrix.b1, matrix.b2, matrix.b3, matrix.b4],
+        [matrix.c1, matrix.c2, matrix.c3, matrix.c4],
+        [matrix.d1, matrix.d2, matrix.d3, matrix.d4],
+    ]);
+
+    Pose::new_from_matrix(matrix)
+}
+
 fn process_node<NEVER: Clone>(
     scene: &Scene,
     node: &Node,
     dir: &Path,
     current_mat: &mut HashMap<u32, EngResult<Rc<Material>, NEVER>>,
+    current_bones: &mut HashMap<String, Bone>,
+    accum_transform: Pose,
     load_tangent_space: bool,
 ) -> EngResult<Vec<MeshBuilder>, NEVER> {
     // process current node and recursively process each in node.children.
+    let node_transform = assimp_matrix_to_pose(node.transformation);
+    let accum_transform = node_transform.transform(&accum_transform);
+
     let mut curr_meshes = node
         .meshes
         .iter()
@@ -132,22 +157,27 @@ fn process_node<NEVER: Clone>(
                 .map(|vec3d| Vector::new([vec3d.x, vec3d.y]))
                 .collect();
 
-            let normals: Vec<UnitVector<3>> = mesh
-                .normals
-                .iter()
-                .map(|vec3d| Vector::new([vec3d.x, vec3d.y, vec3d.z]).normalize())
-                .collect();
+            let (opt_normal, opt_tangent) = if load_tangent_space {
+                let normals: Vec<Option<UnitVector<3>>> = mesh
+                    .normals
+                    .iter()
+                    .map(|vec3d| Vector::new([vec3d.x, vec3d.y, vec3d.z]).try_normalize())
+                    .collect();
 
-            let opt_normal = (!normals.is_empty() && load_tangent_space).then_some(normals);
+                let opt_normal = (!normals.is_empty()).then_some(normals);
 
-            let tangent: Vec<UnitVector<3>> = mesh
-                .tangents
-                .iter()
-                .map(|vec3d| Vector::new([vec3d.x, vec3d.y, vec3d.z]).normalize())
-                .collect();
+                let tangent: Vec<Option<UnitVector<3>>> = mesh
+                    .tangents
+                    .iter()
+                    .map(|vec3d| Vector::new([vec3d.x, vec3d.y, vec3d.z]).try_normalize())
+                    .collect();
 
-            let opt_tangent = (!tangent.is_empty() && load_tangent_space).then_some(tangent);
+                let opt_tangent = (!tangent.is_empty()).then_some(tangent);
 
+                (opt_normal, opt_tangent)
+            } else {
+                (None, None)
+            };
             let element_buffer: Vec<ElementArrayElem> = mesh
                 .faces
                 .iter()
@@ -193,14 +223,15 @@ fn process_node<NEVER: Clone>(
                                 actual_len: textures.len(),
                             })?;
                         let triangle_normal =
-                            is_no_vec_or_element_exists("normal", &opt_normal, index)?.copied();
+                            is_no_vec_or_element_exists("normal", &opt_normal, index)?.copied().flatten();
                         let triangle_tangent =
-                            is_no_vec_or_element_exists("tangent", &opt_tangent, index)?.copied();
+                            is_no_vec_or_element_exists("tangent", &opt_tangent, index)?.copied().flatten();
 
                         Ok(IncompleteVertex::new(triangle_position)
                             .texture(triangle_texture)
                             .opt_normal(triangle_normal)
-                            .opt_tangent(triangle_tangent))
+                            .opt_tangent(triangle_tangent)
+                            .transform_by(&accum_transform))
                     }) //;
                 })
                 .collect::<EngResult<Vec<_>, _>>();
@@ -209,7 +240,8 @@ fn process_node<NEVER: Clone>(
             let mat = current_mat
                 .entry(mesh.material_index)
                 .or_insert_with_key(|key| parse_material(&scene.materials[*key as usize], dir))
-                .clone()?;
+                .clone()
+                .unwrap_or_default();
 
             let mut builder = MeshBuilder::new().material(mat);
             builder.extend_triangle(mesh_buffer);
@@ -221,7 +253,17 @@ fn process_node<NEVER: Clone>(
     let children = node.children.borrow();
     let child_meshes = children
         .iter()
-        .map(|node| process_node(scene, node, dir, current_mat, load_tangent_space))
+        .map(|node| {
+            process_node(
+                scene,
+                node,
+                dir,
+                current_mat,
+                current_bones,
+                accum_transform,
+                load_tangent_space,
+            )
+        })
         .collect::<EngResult<Vec<_>, NEVER>>()?
         .into_iter()
         .flatten();

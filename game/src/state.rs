@@ -36,7 +36,7 @@ use engine::{ApiState, ColourRGB, ColourRGBA, EngError, EngResult, Entity, Event
 pub struct State {
     pub time: f32,
     pub game_start: Option<f32>,
-    pub camera: Camera<ManualPose>,
+    pub camera: Camera,
 
     pub exposure: f32,
     pub sensitivity: f32,
@@ -56,7 +56,7 @@ pub struct State {
     pub light: SimpleCubic,
     pub containers: Vec<SimpleCubic>,
     pub testbool: bool,
-    pub imported: SkeletonEntity<(bool, Vec<[SimpleVertex; 3]>)>,
+    pub imported: SkeletonEntity<()>,
     pub simpletail: SkinningEntity<()>,
     pub skeletal_animation: SkeletalAnimation,
 

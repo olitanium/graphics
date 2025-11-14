@@ -15,7 +15,7 @@ pub use camerapose::CameraPose;
 use crate::modelling::cubic::geometry::Orientation;
 
 #[derive(Clone, Debug)]
-pub struct Camera<P: CameraPose> {
+pub struct Camera<P: CameraPose = ManualPose> {
     pub pose: P,
     pub radius: f32, // first or third-person
     pub projection: Projection,

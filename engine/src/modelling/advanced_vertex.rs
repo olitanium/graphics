@@ -14,7 +14,7 @@ pub trait ExtendedVertex<const N: usize>: Vertex {
     fn from_incomplete_triangle(triangle: [IncompleteVertex<N>; 3]) -> Option<[Self; 3]>;
 }
 
-pub trait CubicVertex: ExtendedVertex<3> + TransformBy<Pose> { }
+pub trait CubicVertex: ExtendedVertex<3> + TransformBy<Pose> {}
 
 pub trait VertexHasTangent: CubicVertex {
     fn normal(self) -> UnitVector<3>;

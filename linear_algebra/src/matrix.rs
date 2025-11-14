@@ -89,6 +89,10 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
             .expect("Number of entries is permitted by compile time constants")
     }
 
+    pub fn col(&self, index: usize) -> Vector<R> {
+        self.0[index]
+    }
+
     #[expect(clippy::missing_panics_doc)]
     #[inline]
     pub fn row_iter(&self) -> impl Iterator<Item = Vector<C>> {
@@ -243,8 +247,8 @@ impl Matrix<4, 4> {
 
     pub fn transform_perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Self {
         let mut matrix = Self::zeros();
-        let fovbytwo = fov / 2.0;
-        matrix[(0, 0)] = 1.0 / fovbytwo.tan() / aspect;
+        let fovbytwo = fov * 0.5;
+        matrix[(0, 0)] = 1.0 / (fovbytwo.tan() * aspect);
         matrix[(1, 1)] = 1.0 / fovbytwo.tan();
         matrix[(2, 2)] = -(far + near) / (far - near);
         matrix[(3, 2)] = -1.0;

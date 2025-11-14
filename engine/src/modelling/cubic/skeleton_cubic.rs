@@ -14,8 +14,8 @@ pub use group::Group as SkeletonCubicGroup;
 #[derive(Debug, Clone, Default)]
 pub struct SkeletonCubic {
     meshes: Vec<Mesh<SkeletalVertex>>,
-    skeleton: Skeleton,
-    cull_face: CullFace,
+    pub skeleton: Skeleton,
+    pub cull_face: CullFace,
 }
 
 impl SkeletonCubic {

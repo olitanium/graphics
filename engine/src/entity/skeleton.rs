@@ -1,6 +1,8 @@
 use graphics::linear_algebra::Vector;
 use graphics::vertex::Vertex;
+use utils::partition;
 
+use crate::entity::Mass;
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{SimpleCubic, SimpleVertex, SkeletonBb, Volume};
 
@@ -8,16 +10,16 @@ use crate::modelling::{SimpleCubic, SimpleVertex, SkeletonBb, Volume};
 pub struct SkeletonEntity<T> {
     pub model: SimpleCubic,
     pub pose: Pose,
-    pub mass: f32,
+    pub mass: Mass,
     bounding_box: Option<SkeletonBb<SimpleVertex, T>>,
     pub velocity: Vector<3>,
 }
 
-impl<T: Default> Default for SkeletonEntity<T> {
+impl<T> Default for SkeletonEntity<T> {
     fn default() -> Self {
         Self {
-            mass: f32::INFINITY,
-            pose: Pose::IDENTITY,
+            mass: Default::default(),
+            pose: Default::default(),
             model: Default::default(),
             bounding_box: Default::default(),
             velocity: Default::default(),
@@ -25,15 +27,14 @@ impl<T: Default> Default for SkeletonEntity<T> {
     }
 }
 
-// TODO: more generic, let the user give init
-impl SkeletonEntity<(bool, Vec<[SimpleVertex; 3]>)> {
-    pub fn from_cubic(model: SimpleCubic, depth: usize, mass: f32) -> Option<Self> {
-        let bounding_box = SkeletonBb::from_cubic_simplevertex(&model, depth, |input| {
-            (
-                false,
-                input.into_iter().map(|(_, triangle)| *triangle).collect(),
-            )
-        });
+impl<T> SkeletonEntity<T> {
+    pub fn from_cubic<F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
+        model: SimpleCubic,
+        depth: usize,
+        mass: Mass,
+        init: F,
+    ) -> Option<Self> {
+        let bounding_box = make_bounding_box(&model, depth, init);
 
         Some(Self {
             model,
@@ -42,6 +43,16 @@ impl SkeletonEntity<(bool, Vec<[SimpleVertex; 3]>)> {
             ..Self::default()
         })
     }
+}
+
+pub fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
+    cubic: &SimpleCubic,
+    depth: usize,
+    init: F,
+) -> Option<SkeletonBb<SimpleVertex, T>> {
+    let per_mesh = partition(cubic.triangles(), |(bone, _)| vec![*bone], |(_, tri)| tri);
+
+    SkeletonBb::from_vec_triangle(per_mesh, depth, cubic.skeleton.clone(), init)
 }
 
 impl<T> SkeletonEntity<T> {
