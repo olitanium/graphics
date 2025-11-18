@@ -63,17 +63,13 @@ impl ExtendedVertex<3> for SkeletalVertex {
 
         let simple_vertex = SimpleVertex::from_incomplete_triangle(triangle)?;
 
-        Some(array::from_fn(move |index| {
-            Self {
-                position: simple_vertex[index].position,
-                texture: simple_vertex[index].texture,
-                normal: simple_vertex[index].normal,
-                tangent: simple_vertex[index].tangent,
-                bone_weights: weights[index].map(|(_, weight)| weight),
-                bone_indices: weights[index].map(
-                    |(index, _)| index as f32, // TODO: make ints work here
-                ),
-            }
+        Some(array::from_fn(move |index| Self {
+            position: simple_vertex[index].position,
+            texture: simple_vertex[index].texture,
+            normal: simple_vertex[index].normal,
+            tangent: simple_vertex[index].tangent,
+            bone_weights: weights[index].map(|(_, weight)| weight),
+            bone_indices: weights[index].map(|(index, _)| index as f32),
         }))
     }
 }

@@ -14,7 +14,7 @@ pub struct Entity<T> {
     pub velocity: Vector<3>,
 }
 
-impl<T: Default> Default for Entity<T> {
+impl<T> Default for Entity<T> {
     fn default() -> Self {
         Self {
             mass: Default::default(),
@@ -26,11 +26,14 @@ impl<T: Default> Default for Entity<T> {
     }
 }
 
-impl Entity<(bool, Vec<[SimpleVertex; 3]>)> {
-    pub fn from_cubic(model: SimpleCubic, depth: usize, mass: Mass) -> Option<Self> {
-        let bounding_box = BoundingBox::from_cubic(&model, depth, |input| {
-            (false, input.iter().map(|(_, triangle)| *triangle).collect())
-        });
+impl<T> Entity<T> {
+    pub fn from_cubic<F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
+        model: SimpleCubic,
+        depth: usize,
+        mass: Mass,
+        init: F,
+    ) -> Option<Self> {
+        let bounding_box = BoundingBox::from_cubic(&model, depth, init);
 
         Some(Self {
             model,

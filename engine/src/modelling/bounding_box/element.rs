@@ -7,12 +7,14 @@ use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
-use graphics::linear_algebra::Vector;
+use graphics::linear_algebra::{Matrix, Vector};
 use graphics::vertex::Vertex;
 use graphics::vertex_array::VertexArray;
 
 use crate::EngResult;
+use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
+use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
 pub struct BoundingBoxElement<V: Vertex, const DIMS: usize, T>
@@ -51,14 +53,9 @@ fn make_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
     vectors: &[V],
     func: fn(f32, f32) -> f32,
 ) -> Option<Vector<DIMS>> {
-    array::from_fn(|index| {
-        vectors
-            .iter()
-            .map(|vec| vec.position().get(index).copied().unwrap_or_default())
-            .reduce(func)
-    })
-    .transpose()
-    .map(Vector::new)
+    array::from_fn(|index| vectors.iter().map(|vec| vec.position()[index]).reduce(func))
+        .transpose()
+        .map(Vector::new)
 }
 
 fn make_upper_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
@@ -130,6 +127,7 @@ where
 
                 const CHILDREN: usize = 2;
                 const CHILDRENPLUS1: usize = CHILDREN + 1;
+
                 let number_of_partitions: [_; CHILDRENPLUS1] =
                     array::from_fn(|index| (index) as f32 / CHILDREN as f32);
                 let points = number_of_partitions.map(|mult| {
@@ -167,16 +165,17 @@ where
     }
 
     pub fn draw_recursive<
-        'a,
         NEVER,
         D: FramebufferWithDepth<OUT>,
+        P: Transform<Vector<DIMS>>,
         const OUT: usize,
         F: Fn(&T) -> ColourRGBA,
     >(
         &self,
         bounding_box: &BoundingBox<V, DIMS, T>,
+        pose: &P,
         level: usize,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Vector<DIMS>, (), D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, '_, Vector<DIMS>, (), D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         colour: &F,
     ) -> EngResult<(), NEVER> {
@@ -185,6 +184,7 @@ where
         {
             lhs.draw_recursive(
                 bounding_box,
+                pose,
                 level - 1,
                 active_shader,
                 active_framebuffer,
@@ -192,6 +192,7 @@ where
             )?;
             rhs.draw_recursive(
                 bounding_box,
+                pose,
                 level - 1,
                 active_shader,
                 active_framebuffer,
@@ -201,9 +202,17 @@ where
         } else {
             let chosen_colour = colour(&*self.meta.borrow());
 
-            active_shader.set_uniform("colour", &chosen_colour)?;
+            let (lower_bounds, upper_bounds) = self.transform_by(pose);
+            let positions_triangles = Volume::volume(lower_bounds, upper_bounds)
+                .map(|triangle| Vector::<DIMS>::from_incomplete_triangle(triangle).unwrap());
+            let mut vertex_array_builder = VertexArray::builder();
+            vertex_array_builder.extend_triangles(positions_triangles);
+            let vertex_array = vertex_array_builder.build();
 
-            self.vertex_array.draw(active_shader, active_framebuffer)?;
+            active_shader.set_uniform("colour", &chosen_colour)?;
+            active_shader.set_uniform("model", &Matrix::<4,4>::identity())?;
+            vertex_array.draw(active_shader, active_framebuffer)?;
+            // self.vertex_array.draw(active_shader, active_framebuffer)?;
 
             Ok(())
         }

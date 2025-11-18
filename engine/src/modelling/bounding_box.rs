@@ -60,16 +60,17 @@ where
         depth: usize,
         mut init: F,
     ) -> Option<Self> {
-        let mut triangles_with_mid: Vec<_> = triangles.iter().map(
-            |&triangle| {
-                let vertices = triangle.map(|vertex| vertex.position().truncate(/* currently required to force the vectors to the correct length */));
+        let mut triangles_with_mid: Vec<_> = triangles
+            .iter()
+            .map(|&triangle| {
+                let vertices = triangle.map(|vertex| vertex.position());
                 let mut mid: Vector<_> = vertices.into_iter().sum();
-                const ONE_THIRD: f32 = 1.0/3.0;
+                const ONE_THIRD: f32 = 1.0 / 3.0;
                 mid = mid.scale(ONE_THIRD);
 
                 (mid, triangle)
-            }
-        ).collect();
+            })
+            .collect();
 
         let mut accumulator = Vec::new();
 
@@ -86,22 +87,27 @@ where
     pub fn encloses_point(&self, point: Vector<DIMS>) -> bool {
         self.get(0).encloses_point_and_children(self, point)
     }
-
+}
+impl<V: CubicVertex, T> BoundingBox<V, 3, T> {
     pub(crate) fn draw<NEVER, D: FramebufferWithDepth<1>, F: Fn(&T) -> ColourRGBA>(
         &self,
         level: usize,
         pose: Pose,
-        active_shader: &mut ActiveShaderProgram<'_, '_, '_, Vector<DIMS>, (), D::Tex, 1>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, '_, Vector<3>, (), D::Tex, 1>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
         colour: F,
     ) -> EngResult<(), NEVER> {
-        active_shader.set_uniform("model", &pose.as_transformation_matrix())?;
-        self.get(0)
-            .draw_recursive(self, level, active_shader, active_framebuffer, &colour)
+        // active_shader.set_uniform("model", &pose.as_transformation_matrix())?;
+        self.get(0).draw_recursive(
+            self,
+            &pose,
+            level,
+            active_shader,
+            active_framebuffer,
+            &colour,
+        )
     }
-}
 
-impl<V: CubicVertex, T> BoundingBox<V, 3, T> {
     pub fn detect_collision<F: Fn(&mut T), O: Fn(&mut T)>(
         lhs: &Self,
         lhs_pose: Pose,

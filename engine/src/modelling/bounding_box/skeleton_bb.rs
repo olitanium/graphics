@@ -40,13 +40,13 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
     pub fn overlap<F, O>(
         lhs: &Self,
         lhs_pose: Pose,
-        lhs_animation: &SkeletalAnimation,
+        lhs_animation: Option<&SkeletalAnimation>,
         lhs_time: f32,
         lhs_alter_meta: F,
 
         rhs: &Self,
         rhs_pose: Pose,
-        rhs_animation: &SkeletalAnimation,
+        rhs_animation: Option<&SkeletalAnimation>,
         rhs_time: f32,
         rhs_alter_meta: O,
     ) -> Vec<(Vec<[V; 3]>, Vec<[V; 3]>)>
@@ -95,7 +95,7 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
         active_shader: &mut ActiveShaderProgram<'_, '_, '_, Vector<3>, (), D::Tex, 1>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
         pose: Pose,
-        animation: &SkeletalAnimation,
+        animation: Option<&SkeletalAnimation>,
         time: f32,
         colour: F,
     ) -> EngResult<(), NEVER> {

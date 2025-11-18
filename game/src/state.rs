@@ -20,7 +20,7 @@ use engine::modelling::{
     TestLineVertex,
 };
 use engine::types::TexDim;
-use engine::{ApiState, EngError, EngResult, Event, VecDraw};
+use engine::{ApiState, EngError, EngResult, Entity, Event, VecDraw};
 
 pub struct State {
     pub time: f32,
@@ -45,7 +45,8 @@ pub struct State {
     pub light: SimpleCubic,
     pub containers: Vec<SimpleCubic>,
     pub testbool: bool,
-    pub imported: SkeletonEntity<()>,
+    pub imported: Entity<()>,
+    pub imported_other: Entity<()>,
     pub simpletail: SkinningEntity<()>,
     pub skeletal_animation: SkeletalAnimation,
 

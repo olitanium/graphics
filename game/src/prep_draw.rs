@@ -1,7 +1,14 @@
 use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::SkeletonCubicGroup;
 use engine::modelling::cubic::geometry::Pose;
-use engine::modelling::{BloomGroup, QuadGroup, SimpleCubicGroup, SkeletonBbGroup, SkyBoxGroup};
+use engine::modelling::{
+    BloomGroup,
+    BoundingBoxGroup,
+    QuadGroup,
+    SimpleCubicGroup,
+    SkeletonBbGroup,
+    SkyBoxGroup,
+};
 use engine::{ColourRGBA, EngResult, VecDraw, opengl_shaders};
 
 use crate::state::{State, StateError};
@@ -19,10 +26,15 @@ impl State {
             (
                 &self.imported.model,
                 self.imported.pose,
-                &self.which_animation,
+                None,
                 time,
             ),
-            //(&self.imported_other.model, self.which_animation, time),
+            /*(
+                &self.imported_other.model,
+                self.imported_other.pose,
+                None,
+                time,
+            ),*/
         ];
 
         out.push(SkyBoxGroup::new(
@@ -34,7 +46,7 @@ impl State {
             vec![],
         ));
 
-        if self.draw_models {
+        if !self.draw_models {
             out.push(SkeletonCubicGroup::new(
                 opengl_shaders::skeletal_quat(),
                 &self.hdr_fb,
@@ -44,7 +56,7 @@ impl State {
                 vec![(
                     &self.simpletail.model,
                     Pose::IDENTITY,
-                    &self.skeletal_animation,
+                    Some(&self.skeletal_animation),
                     time,
                 )],
                 vec![],
@@ -61,17 +73,35 @@ impl State {
             ))
         }
         if self.show_bbs {
-            out.push(SkeletonBbGroup::new(
+            // out.push(SkeletonBbGroup::new(
+            // &self.hdr_fb,
+            // self.simpletail.bounding_box().unwrap(),
+            // &self.simpletail.model.skeleton,
+            // Pose::IDENTITY,
+            // Some(&self.skeletal_animation),
+            // time,
+            // &self.camera,
+            // &(),
+            // 3,
+            // |_| ColourRGBA::RED,
+            // ));
+            /*out.push(BoundingBoxGroup::new(
                 &self.hdr_fb,
-                self.simpletail.bounding_box().unwrap(),
-                &self.simpletail.model.skeleton,
-                Pose::IDENTITY,
-                &self.skeletal_animation,
-                time,
+                self.imported_other.bounding_box().unwrap(),
+                self.imported_other.pose,
                 &self.camera,
                 &(),
-                3,
+                self.bounding_box_level,
                 |_| ColourRGBA::RED,
+            ));*/
+            out.push(BoundingBoxGroup::new(
+                &self.hdr_fb,
+                self.imported.bounding_box().unwrap(),
+                self.imported.pose,
+                &self.camera,
+                &(),
+                self.bounding_box_level,
+                |_| ColourRGBA::BLUE,
             ));
         }
 

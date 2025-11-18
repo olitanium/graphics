@@ -19,7 +19,7 @@ use engine::modelling::{Bloom, Line, Quad, SimpleCubic, Skeleton, SkyBox, test_m
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
-use engine::{ColourRGB, ColourRGBA, EngResult, TransformBy};
+use engine::{ColourRGB, ColourRGBA, EngResult, Entity, TransformBy};
 
 use crate::state::{State, StateError};
 
@@ -74,18 +74,18 @@ impl State {
             })
             .collect();
 
-        let (animation, model) = make_model("bigguy")?;
-        let mut imported = SkeletonEntity::from_cubic(model, 20, Mass(1.0), |_| ()).unwrap();
-        imported.velocity = Vector::new([0.0, 0.0, 0.5]);
+        let (animation, model) = make_model("morgan")?;
+        let mut imported = Entity::from_cubic(model, 20, Mass(1.0), |_| ()).unwrap();
+        imported.velocity = Vector::new([0.0, 0.0, 0.05]);
         imported.pose = Pose::new_from_orientation_translation(
-            Orientation::new_forward_up(UnitVector::Z, UnitVector::Y),
-            Vector::new([0.0, 0.0, -1.1]),
+            Orientation::new_forward_up(UnitVector::X, UnitVector::Y),
+            Vector::new([0.0, 0.0, -1.5]),
         );
 
-        // let mut imported_other = Entity::from_cubic(make_model("")?, 20,
-        // 3.0).unwrap(); imported_other.velocity = Vector::new([0.0, 0.0,
-        // -0.05]); imported_other.model.root_mut() =
-        // Pose::new_from_translation(Vector::new([0.0, 0.0, 1.1]));
+        let mut imported_other =
+            Entity::from_cubic(make_model("morgan")?.1, 20, Mass(3.0), |_| ()).unwrap();
+        imported_other.velocity = Vector::new([0.0, 0.0, -0.05]);
+        imported_other.pose = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.1]));
 
         let bounding_box_level = 0;
 
@@ -198,6 +198,7 @@ impl State {
 
             testbool: false,
             imported,
+            imported_other,
             bounding_box_level,
             draw_models: true,
 
@@ -212,7 +213,6 @@ impl State {
             light_group: ShadowListLights {
                 point: arrvec![point_light],
                 // spot: ArrayVec::try_from([spotlight])
-                //    .expect("size leq MAX"),
                 ..ShadowListLights::default()
             },
 

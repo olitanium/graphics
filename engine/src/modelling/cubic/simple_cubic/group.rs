@@ -24,8 +24,8 @@ pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth
     opaque: Vec<(
         &'a SimpleCubic,
         Pose,
-        &'a SkeletalAnimation, // animation
-        f32,                   // time
+        Option<&'a SkeletalAnimation>, // animation
+        f32,                           // time
     )>,
 
     uniforms: Vec<(String, &'a dyn Uniform)>,
@@ -44,8 +44,8 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
         opaque: Vec<(
             &'a SimpleCubic,
             Pose,
-            &'a SkeletalAnimation, // animation
-            f32,                   // time
+            Option<&'a SkeletalAnimation>, // animation
+            f32,                           // time
         )>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,

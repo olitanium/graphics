@@ -17,11 +17,11 @@ impl<U: Uniform> Line<U> {
         Self { vertices }
     }
 
-    pub fn as_mut(&mut self) -> &mut Vec<U> {
+    pub fn get_mut(&mut self) -> &mut Vec<U> {
         &mut self.vertices
     }
 
-    pub fn as_ref(&self) -> &Vec<U> {
+    pub fn get(&self) -> &Vec<U> {
         &self.vertices
     }
 }

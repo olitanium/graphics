@@ -152,9 +152,10 @@ impl<T, const N: usize> Default for ArrayVec<T, N> {
 }
 
 #[derive(Debug, Clone, Copy)]
-#[expect(dead_code)]
 pub struct TryFromErr {
+    #[expect(dead_code)]
     array_size: usize,
+    #[expect(dead_code)]
     stack_vec_size: usize,
 }
 

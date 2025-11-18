@@ -63,7 +63,8 @@ impl Bone {
 
         // Fails is Parent is not a valid bone or if the parent bone could not get a
         // pose. Fatal.
-        let parent_pose = skeleton.get_bone_pose(root, false, self.parent, animation, time)?;
+        let parent_pose =
+            skeleton.get_bone_pose(root, false, self.parent, Some(animation), time)?;
 
         // Fails if this bone does not exist in the animation. Fatal.
         let own_pose = animation.get_pose(bone_index, time)?;

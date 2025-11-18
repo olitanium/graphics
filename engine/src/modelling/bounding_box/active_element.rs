@@ -12,22 +12,60 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
 where
     Vector<DIMS>: Volume<DIMS>,
 {
+    pub fn transform_by<P: Transform<Vector<DIMS>>>(
+        &self,
+        pose: &P,
+    ) -> (Vector<DIMS>, Vector<DIMS>) {
+        let all_vertices: Vec<_> =
+            permutations(self.lower_bound.into_inner(), self.upper_bound.into_inner())
+                .into_iter()
+                .map(|arr| {
+                    let vec = Vector::new(arr);
+                    pose.transform(&vec)
+                })
+                .collect();
+
+        const EXPECT_MESSAGE: &str = "all_vertices.len() != 0  due to permutations returning many \
+                                      results as DIMS != 0. Vector<DIMS>: Volume<DIMS>";
+
+        let upper_bounds =
+            array::from_fn(|index| all_vertices.iter().map(|vec| vec[index]).reduce(f32::max))
+                .transpose()
+                .expect(EXPECT_MESSAGE);
+        let lower_bounds =
+            array::from_fn(|index| all_vertices.iter().map(|vec| vec[index]).reduce(f32::min))
+                .transpose()
+                .expect(EXPECT_MESSAGE);
+
+
+        
+        (Vector::new(lower_bounds), Vector::new(upper_bounds))
+    }
+
     pub fn overlaps_bounding_box_single<P: Transform<Vector<DIMS>>>(
         &self,
         self_transform: &P,
         other: &Self,
         other_transform: &P,
     ) -> bool {
-        let self_lower_bound = self_transform.transform(&self.lower_bound);
-        let self_upper_bound = self_transform.transform(&self.upper_bound);
-        let other_lower_bound = other_transform.transform(&other.lower_bound);
-        let other_upper_bound = other_transform.transform(&other.upper_bound);
+        // let self_lower_bound = self_transform.transform(&self.lower_bound);
+        // let self_upper_bound = self_transform.transform(&self.upper_bound);
+        // let other_lower_bound = other_transform.transform(&other.lower_bound);
+        // let other_upper_bound = other_transform.transform(&other.upper_bound);
+
+        let (self_lower_bound, self_upper_bound) = self.transform_by(self_transform);
+        let (other_lower_bound, other_upper_bound) = other.transform_by(other_transform);
 
         let lines: [_; DIMS] = array::from_fn(|index| {
-            let one_lb = f32::min(self_lower_bound[index], self_upper_bound[index]);
-            let one_ub = f32::max(self_lower_bound[index], self_upper_bound[index]);
-            let two_lb = f32::min(other_lower_bound[index], other_upper_bound[index]);
-            let two_ub = f32::max(other_lower_bound[index], other_upper_bound[index]);
+            // let one_lb = f32::min(self_lower_bound[index], self_upper_bound[index]);
+            // let one_ub = f32::max(self_lower_bound[index], self_upper_bound[index]);
+            // let two_lb = f32::min(other_lower_bound[index], other_upper_bound[index]);
+            // let two_ub = f32::max(other_lower_bound[index], other_upper_bound[index]);
+
+            let one_lb = self_lower_bound[index];
+            let one_ub = self_upper_bound[index];
+            let two_lb = other_lower_bound[index];
+            let two_ub = other_upper_bound[index];
 
             TestBoxVertex {
                 one_lb,
@@ -199,7 +237,28 @@ fn line_overlap(
     !fail
 }
 
+pub fn permutations<T: Clone, const DIMS: usize>(
+    input_vec_1: [T; DIMS],
+    input_vec_2: [T; DIMS],
+) -> Vec<[T; DIMS]> {
+    (0..(1_usize << DIMS))
+        .map(|bin| {
+            array::from_fn(|index| {
+                let mask = 1 << index;
+                let first = (bin & mask) != 0;
+                if first {
+                    input_vec_1[index].clone()
+                } else {
+                    input_vec_2[index].clone()
+                }
+            })
+        })
+        .collect()
+}
 mod test {
+    use graphics::linear_algebra::Vector;
+
+    use crate::modelling::bounding_box::active_element::permutations;
 
     #[test]
     fn test_line_overlap() {
@@ -213,5 +272,25 @@ mod test {
         };
 
         assert!(line_overlap(input))
+    }
+
+    #[test]
+    fn test_permuations() {
+        let vec1 = [1, 1, 1];
+        let vec2 = [0, 0, 0];
+
+        assert_eq!(
+            permutations(vec1, vec2),
+            vec![
+                [0, 0, 0],
+                [1, 0, 0],
+                [0, 1, 0],
+                [1, 1, 0],
+                [0, 0, 1],
+                [1, 0, 1],
+                [0, 1, 1],
+                [1, 1, 1],
+            ]
+        )
     }
 }

@@ -32,7 +32,7 @@ pub struct Group<
     look_at: Matrix<4, 4>,
     level: usize,
     colour: F,
-    animation: &'a SkeletalAnimation,
+    animation: Option<&'a SkeletalAnimation>,
     time: f32,
 }
 
@@ -44,7 +44,7 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
         bounding_box: &'a SkeletonBb<V, T>,
         skeleton: &'a Skeleton,
         pose: Pose,
-        animation: &'a SkeletalAnimation,
+        animation: Option<&'a SkeletalAnimation>,
         time: f32,
         camera: &Camera<P>,
         hint: &P::Hint,

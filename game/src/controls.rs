@@ -71,7 +71,7 @@ impl State {
             match ch {
                 'Q' => string.clear(),
                 'l' => {
-                    self.line.as_mut().push(TestLineVertex {
+                    self.line.get_mut().push(TestLineVertex {
                         position: Vector::new([self.angle.cos(), 0.0, self.angle.sin()]),
                         colour: ColourRGB::new([self.angle.cos(), 0.0, self.angle.sin()]),
                     });
@@ -81,19 +81,9 @@ impl State {
                 'm' | 'M' => self.draw_models = !self.draw_models,
                 'o' => {
                     self.bounding_box_level = self.bounding_box_level.wrapping_add(1);
-                    // if let Some(bbox) = self.imported.bounding_box() {
-                    // self.imported_bounding_box_model = bbox
-                    // .make_model(self.bounding_box_level,
-                    // Rc::new(Material::white())) .build();
-                    // }
                 }
                 'i' => {
                     self.bounding_box_level = self.bounding_box_level.wrapping_sub(1);
-                    // if let Some(bbox) = self.imported.bounding_box() {
-                    // self.imported_bounding_box_model = bbox
-                    // .make_model(self.bounding_box_level,
-                    // Rc::new(Material::white())) .build();
-                    // }
                 }
                 other => string.push(other),
             }

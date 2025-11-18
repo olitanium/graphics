@@ -26,8 +26,8 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         complete_models: &[(
             &SimpleCubic,
             Pose,
-            &SkeletalAnimation, // animation
-            f32,                // time
+            Option<&SkeletalAnimation>, // animation
+            f32,                        // time
         )],
         target_position: Vector<3>,
         uniforms: Vec<(String, &dyn Uniform)>,
@@ -51,7 +51,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
                     &mut active_depth_only_shader,
                     &mut active_light_framebuffer,
                     *pose,
-                    animation,
+                    *animation,
                     *time,
                 )?;
             }
@@ -75,7 +75,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
                     &mut active_depth_only_shader,
                     &mut active_light_framebuffer,
                     *pose,
-                    animation,
+                    *animation,
                     *time,
                 )?;
             }
@@ -100,7 +100,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
                     &mut active_depth_only_shader_point,
                     &mut active_light_framebuffer,
                     *pose,
-                    animation,
+                    *animation,
                     *time,
                 )?;
             }

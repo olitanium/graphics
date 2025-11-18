@@ -1,5 +1,6 @@
 use std::cell::{Cell, RefCell};
 use std::collections::HashSet;
+use std::rc::Rc;
 
 use glfw::PWindow;
 pub use glfw::{CursorMode, MouseButton as Button};
@@ -35,21 +36,17 @@ struct Inner {
 }
 
 #[derive(Debug)]
-pub struct Mouse(Box<Inner>);
+pub struct Mouse(Rc<Inner>);
 
 impl Mouse {
     pub(crate) fn new(window: &mut PWindow, fix_to_centre: bool) -> Self {
-        let out = Mouse(Box::default());
-        const ERROR_MESSAGE: &str =
-            "Pointer was created based on box, and so is valid for reads and writes";
-        let state_ptr = &raw const out.0.state;
+        let out = Mouse(Rc::default());
+        let state_ptr = out.0.clone();
 
         window.set_cursor_pos_callback(move |_, x, y| {
             let y = -y;
-            // SAFETY: unsure
-            let data = unsafe { state_ptr.as_ref() }.expect(ERROR_MESSAGE);
 
-            let new = match data.get() {
+            let new = match state_ptr.state.get() {
                 MouseState::FirstMouse => MouseState::Stationary {
                     current_location: (x, y),
                 },
@@ -67,25 +64,20 @@ impl Mouse {
                         y - current_location.1 + delta.1,
                     ),
                 },
+                // TODO: MOVED => STATIONARY
             };
 
-            data.set(new);
+            state_ptr.state.set(new);
         });
 
-        let buttons_ptr = &raw const out.0.buttons;
+        let buttons_ptr = out.0.clone();
 
         window.set_mouse_button_callback(move |_, mouse_button, action, _| match action {
             Action::Press => {
-                unsafe { buttons_ptr.as_ref() }
-                    .expect(ERROR_MESSAGE)
-                    .borrow_mut()
-                    .insert(mouse_button);
+                buttons_ptr.buttons.borrow_mut().insert(mouse_button);
             }
             Action::Release => {
-                unsafe { buttons_ptr.as_ref() }
-                    .expect(ERROR_MESSAGE)
-                    .borrow_mut()
-                    .remove(&mouse_button);
+                buttons_ptr.buttons.borrow_mut().remove(&mouse_button);
             }
             Action::Repeat => {}
         });

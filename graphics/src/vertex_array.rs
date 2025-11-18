@@ -142,6 +142,7 @@ where
         self.bind();
         active_shader_program.bind_textures()?;
 
+        #[cfg(debug_assertions)]
         active_shader_program.validate()?;
 
         if let Some(element_buffer) = &self.element_array_buffer {

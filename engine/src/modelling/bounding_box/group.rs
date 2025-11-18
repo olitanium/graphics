@@ -10,7 +10,7 @@ use crate::EngError;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::geometry::Pose;
-use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
+use crate::modelling::{BoundingBox, CubicVertex, ExtendedVertex, Volume};
 use crate::opengl_shaders::BoundingBoxShaderProgram;
 pub struct Group<
     'a,
@@ -65,7 +65,7 @@ impl<
     'a,
     NEVER,
     D: FramebufferWithDepth<1, Tex = FlatTexture>,
-    V: ExtendedVertex<3>,
+    V: CubicVertex,
     T,
     F: Fn(&T) -> ColourRGBA,
 > Draw<EngError<NEVER>> for Group<'a, 1, 3, D, V, T, F>
@@ -79,8 +79,6 @@ impl<
         let mut active_shader = Vector::shader_program().use_program(marker);
 
         active_shader.set_uniform("projtimesview", &self.look_at)?;
-
-        // let pose = self.skeleton.root;
 
         self.bounding_box.draw(
             self.level,

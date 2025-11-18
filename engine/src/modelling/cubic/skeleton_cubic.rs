@@ -43,7 +43,7 @@ impl SkeletonCubic {
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, SkeletalVertex, (Self, L), D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         root: Pose,
-        animation: &SkeletalAnimation,
+        animation: Option<&SkeletalAnimation>,
         time: f32,
     ) -> EngResult<(), NEVER> {
         // Ignore cull_face error

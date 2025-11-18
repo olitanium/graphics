@@ -28,14 +28,14 @@ pub struct Group<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> {
     opaque: Vec<(
         &'a SimpleCubic,
         Pose,
-        &'a SkeletalAnimation, // animation
-        f32,                   // time
+        Option<&'a SkeletalAnimation>, // animation
+        f32,                           // time
     )>,
     transparent: Vec<(
         &'a SimpleCubic,
         Pose,
-        &'a SkeletalAnimation, // animation
-        f32,                   // time
+        Option<&'a SkeletalAnimation>, // animation
+        f32,                           // time
     )>,
 
     uniforms: Vec<(String, &'a dyn Uniform)>,
@@ -50,14 +50,14 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
         opaque: Vec<(
             &'a SimpleCubic,
             Pose,
-            &'a SkeletalAnimation, // animation
-            f32,                   // time
+            Option<&'a SkeletalAnimation>, // animation
+            f32,                           // time
         )>,
         transparent: Vec<(
             &'a SimpleCubic,
             Pose,
-            &'a SkeletalAnimation, // animation
-            f32,                   // time
+            Option<&'a SkeletalAnimation>, // animation
+            f32,                           // time
         )>,
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Box<Self> {

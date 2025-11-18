@@ -20,7 +20,7 @@ pub trait TransformBy<By> {
 impl TransformBy<Pose> for Vector<3> {
     fn transform_by(&self, pose: &Pose) -> Self {
         let translation_as_pose = Pose::new_from_translation(*self);
-        let current_pos = pose.transform_by(&translation_as_pose);
+        let current_pos = translation_as_pose.transform_by(pose);
         current_pos.translation()
     }
 }

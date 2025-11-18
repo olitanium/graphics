@@ -48,7 +48,7 @@ impl Skeleton {
     pub fn get_all_bones_transformation_matrix(
         &self,
         root: Pose,
-        animation: &SkeletalAnimation,
+        animation: Option<&SkeletalAnimation>,
         time: f32,
     ) -> Vec<Matrix<4, 4>> {
         self.get_all_bones(root, animation, time)
@@ -60,7 +60,7 @@ impl Skeleton {
     pub fn get_all_bones_for_shader(
         &self,
         root: Pose,
-        animation: &SkeletalAnimation,
+        animation: Option<&SkeletalAnimation>,
         time: f32,
     ) -> Vec<Matrix<4, 2>> {
         self.get_all_bones(root, animation, time)
@@ -69,7 +69,12 @@ impl Skeleton {
             .collect()
     }
 
-    pub fn get_all_bones(&self, root: Pose, animation: &SkeletalAnimation, time: f32) -> Vec<Pose> {
+    pub fn get_all_bones(
+        &self,
+        root: Pose,
+        animation: Option<&SkeletalAnimation>,
+        time: f32,
+    ) -> Vec<Pose> {
         (0..)
             .map_while(|index| self.get_bone_pose(root, true, index, animation, time))
             .collect()
@@ -95,17 +100,21 @@ impl Skeleton {
         root: Pose,
         relative: bool,
         bone_index: usize,
-        animation: &SkeletalAnimation,
+        animation: Option<&SkeletalAnimation>,
         time: f32,
     ) -> Option<Pose> {
         match self.get(bone_index) {
             GetBone::Bone { bone_index, bone } => {
-                let pose = bone.get_pose(bone_index, root, self, animation, time)?;
+                if let Some(animation) = animation {
+                    let pose = bone.get_pose(bone_index, root, self, animation, time)?;
 
-                if relative {
-                    Some(pose.transform(&bone.inverse_bind_pose))
+                    if relative {
+                        Some(pose.transform(&bone.inverse_bind_pose))
+                    } else {
+                        Some(pose)
+                    }
                 } else {
-                    Some(pose)
+                    Some(root)
                 }
             }
             GetBone::RootBone => Some(root),
