@@ -1,4 +1,5 @@
-use engine::{linear_algebra::{UnitVector, Vector}, modelling::cubic::geometry::{Orientation, Pose}};
+use engine::linear_algebra::{UnitVector, Vector};
+use engine::modelling::cubic::geometry::{Orientation, Pose};
 
 use crate::state::State;
 
@@ -17,10 +18,13 @@ impl State {
             light.light.position = light_pos;
         }
 
-        //self.imported_other.update(frame_time);
-        //self.imported.update(frame_time);
+        // self.imported_other.update(frame_time);
+        // self.imported.update(frame_time);
 
-        self.imported.pose = Pose::new_from_orientation_translation(Orientation::new_from_to(Vector::ZERO, light_pos, UnitVector::Y), Vector::ZERO);
+        self.imported.pose = Pose::new_from_orientation_translation(
+            Orientation::new_from_to(Vector::ZERO, light_pos, UnitVector::Y),
+            Vector::ZERO,
+        );
 
         if let Some(light) = self.light_group.spot.get_mut(0) {
             light.light.direction = self.camera.direction(&());

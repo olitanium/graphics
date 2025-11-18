@@ -37,8 +37,6 @@ where
                 .transpose()
                 .expect(EXPECT_MESSAGE);
 
-
-        
         (Vector::new(lower_bounds), Vector::new(upper_bounds))
     }
 

@@ -23,18 +23,13 @@ impl State {
         let mut out = VecDraw::new();
 
         let all_models = vec![
-            (
-                &self.imported.model,
-                self.imported.pose,
-                None,
-                time,
-            ),
-            /*(
-                &self.imported_other.model,
-                self.imported_other.pose,
-                None,
-                time,
-            ),*/
+            (&self.imported.model, self.imported.pose, None, time),
+            // (
+            // &self.imported_other.model,
+            // self.imported_other.pose,
+            // None,
+            // time,
+            // ),
         ];
 
         out.push(SkyBoxGroup::new(
@@ -85,15 +80,15 @@ impl State {
             // 3,
             // |_| ColourRGBA::RED,
             // ));
-            /*out.push(BoundingBoxGroup::new(
-                &self.hdr_fb,
-                self.imported_other.bounding_box().unwrap(),
-                self.imported_other.pose,
-                &self.camera,
-                &(),
-                self.bounding_box_level,
-                |_| ColourRGBA::RED,
-            ));*/
+            // out.push(BoundingBoxGroup::new(
+            // &self.hdr_fb,
+            // self.imported_other.bounding_box().unwrap(),
+            // self.imported_other.pose,
+            // &self.camera,
+            // &(),
+            // self.bounding_box_level,
+            // |_| ColourRGBA::RED,
+            // ));
             out.push(BoundingBoxGroup::new(
                 &self.hdr_fb,
                 self.imported.bounding_box().unwrap(),

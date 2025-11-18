@@ -210,7 +210,7 @@ where
             let vertex_array = vertex_array_builder.build();
 
             active_shader.set_uniform("colour", &chosen_colour)?;
-            active_shader.set_uniform("model", &Matrix::<4,4>::identity())?;
+            active_shader.set_uniform("model", &Matrix::<4, 4>::identity())?;
             vertex_array.draw(active_shader, active_framebuffer)?;
             // self.vertex_array.draw(active_shader, active_framebuffer)?;
 
