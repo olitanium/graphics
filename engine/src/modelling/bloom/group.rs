@@ -2,7 +2,7 @@ use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::shader_program::ShaderProgramContext;
 use graphics::texture::FlatTexture;
-use graphics::{ApiResult, Draw};
+use graphics::{ApiResult, Draw, DrawOut};
 
 use super::Bloom;
 use crate::modelling::Quad;
@@ -27,7 +27,7 @@ impl<'a, NEVER, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> Draw<EngError<
         self: Box<Self>,
         register: &mut FramebufferContext,
         marker: &mut ShaderProgramContext,
-    ) -> ApiResult<(), EngError<NEVER>> {
+    ) -> ApiResult<DrawOut, EngError<NEVER>> {
         let Group { bloom, output_fb } = *self;
 
         let mut active_framebuffer_x = bloom.framebuffer_x.bind(register);
@@ -41,6 +41,6 @@ impl<'a, NEVER, X: FramebufferWithoutExtra<1, Tex = FlatTexture>> Draw<EngError<
 
         Quad::screen(bloom.framebuffer_x.get_all_colour())
             .draw(&mut active_blur_y, &mut active_output_fb)?;
-        Ok(())
+        DrawOut::OK
     }
 }

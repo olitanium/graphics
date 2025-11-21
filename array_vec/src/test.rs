@@ -1,3 +1,8 @@
+use std::ops::AddAssign;
+use std::sync::Mutex;
+
+use crate::{ArrayVec, arrvec};
+
 #[test]
 fn pop_push() {
     use crate::ArrayVec;
@@ -37,8 +42,25 @@ fn rev() {
     let vec: ArrayVec<_, 10> = (0..10_usize).collect();
 
     for (index, item) in vec.into_iter().rev().enumerate() {
-        assert_eq!(9 - item, index);
+        assert_eq!(9, index + item);
     }
+}
+
+#[test]
+fn test_drop() {
+    struct DropStruct(usize);
+
+    static DROPCOUNT: Mutex<usize> = Mutex::new(0);
+    impl Drop for DropStruct {
+        fn drop(&mut self) {
+            DROPCOUNT.lock().unwrap().add_assign(self.0);
+        }
+    }
+    let vec: ArrayVec<_, 5> = arrvec![DropStruct(1), DropStruct(2), DropStruct(3)];
+
+    drop(vec);
+
+    assert_eq!(*DROPCOUNT.lock().unwrap(), 6)
 }
 
 #[test]

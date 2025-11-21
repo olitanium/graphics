@@ -254,9 +254,6 @@ pub fn permutations<T: Clone, const DIMS: usize>(
         .collect()
 }
 mod test {
-    use graphics::linear_algebra::Vector;
-
-    use crate::modelling::bounding_box::active_element::permutations;
 
     #[test]
     fn test_line_overlap() {
@@ -274,6 +271,8 @@ mod test {
 
     #[test]
     fn test_permuations() {
+        use crate::modelling::bounding_box::active_element::permutations;
+
         let vec1 = [1, 1, 1];
         let vec2 = [0, 0, 0];
 

@@ -6,7 +6,8 @@ mod global_state;
 mod input;
 mod window;
 
-pub use draw::Draw;
+pub(crate) use draw::PrivateToken;
+pub use draw::{Draw, DrawNothing, DrawOut};
 use glfw::fail_on_errors;
 pub use global_state::ApiState;
 pub use input::keyboard::Key;
@@ -18,7 +19,7 @@ use crate::error::ApiResult;
 use crate::framebuffer::{DefaultFramebuffer, FramebufferContext};
 use crate::gl_call;
 use crate::shader_program::ShaderProgramContext;
-use crate::types::TexDim;
+use crate::types::{Query, TexDim};
 
 #[derive(Debug, Clone)]
 pub enum Error {
@@ -95,11 +96,13 @@ pub enum Event<'a> {
         position: (f64, f64),
         delta: (f64, f64),
     },
+    Query(Vec<(usize, Query)>),
 }
 
 #[derive(Debug)]
 pub struct Environment<G: ApiState> {
     global_state: G,
+    queries: Option<Vec<(usize, bool)>>,
     window: Window,
     old_frame: Option<f64>,
     glfw: glfw::Glfw,
@@ -151,12 +154,12 @@ impl<G: ApiState> Environment<G> {
             window,
             // window2,
             global_state,
-
+            queries: None,
             old_frame: None,
         })
     }
 
-    pub fn run(&mut self) -> ApiResult<(), G::Error> {
+    pub fn run(mut self) -> ApiResult<(), G::Error> {
         // Substitute for `for to_draw in env.iter() {`
         // self.window.make_current();
 
@@ -166,13 +169,23 @@ impl<G: ApiState> Environment<G> {
             FramebufferContext::new().expect("First invocation means only one register");
 
         let mut frame_iter = self.iter();
-        while let Some(result) = frame_iter.next() {
+
+        let mut query_outputs = None;
+        while let Some(result) = frame_iter.next(query_outputs.take()) {
             match result {
                 Ok(to_draw) => {
                     framebuffer_register.clear();
                     // Begin rendering code
-                    Box::new(to_draw)
-                        .draw(&mut framebuffer_register, &mut shader_program_marker)?;
+                    match to_draw
+                        .into_boxed_slice()
+                        .draw(&mut framebuffer_register, &mut shader_program_marker)?
+                    {
+                        DrawOut::Draw => query_outputs = None,
+                        DrawOut::QueryOutput {
+                            name, query_object, ..
+                        } => query_outputs = Some(vec![(name, query_object)]),
+                        DrawOut::MultiQueryOutput { values, .. } => query_outputs = Some(values),
+                    }
                 }
                 Err(error) => return Err(error),
             }
@@ -181,7 +194,10 @@ impl<G: ApiState> Environment<G> {
         Ok(())
     }
 
-    fn poll(&mut self) -> ApiResult<Vec<Box<dyn Draw<G::Error> + '_>>, G::Error> {
+    fn poll(
+        &mut self,
+        queries: Option<Vec<(usize, Query)>>,
+    ) -> ApiResult<Vec<Box<dyn Draw<G::Error> + '_>>, G::Error> {
         let curr_time = self.glfw.get_time();
         let frametime = curr_time - *self.old_frame.get_or_insert(curr_time);
         self.old_frame = Some(curr_time);
@@ -191,6 +207,9 @@ impl<G: ApiState> Environment<G> {
 
         events.push(Event::ActualTime(curr_time));
         events.push(Event::FrameTime(frametime));
+        if let Some(queries) = queries {
+            events.push(Event::Query(queries));
+        }
 
         self.global_state.poll(events)
     }
@@ -212,14 +231,17 @@ impl<'env, G: ApiState> FrameIter<'env, G> {
 }
 
 impl<G: ApiState> FrameIter<'_, G> {
-    pub fn next(&mut self) -> Option<ApiResult<Vec<Box<dyn Draw<G::Error> + '_>>, G::Error>> {
+    pub fn next(
+        &mut self,
+        queries: Option<Vec<(usize, Query)>>,
+    ) -> Option<ApiResult<Vec<Box<dyn Draw<G::Error> + '_>>, G::Error>> {
         if !self.env.window.should_close() {
             // Poll for and process events
             self.env.glfw.poll_events();
             // Swap front and back buffers
             self.env.window.swap_buffers();
 
-            match self.env.poll() {
+            match self.env.poll(queries) {
                 Err(crate::error::ApiError::Close) => None,
                 x => Some(x),
             }

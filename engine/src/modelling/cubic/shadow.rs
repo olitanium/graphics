@@ -5,7 +5,7 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::shader_program::Uniform;
 use graphics::texture::FlatTexture;
-use graphics::{ApiResult, Draw, ShaderProgramContext};
+use graphics::{ApiResult, Draw, DrawOut, ShaderProgramContext};
 
 use super::camera::Camera;
 use super::lighting::shadow::ShadowListLights;
@@ -81,7 +81,7 @@ impl<'a, NEVER, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw<EngError<NEV
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> ApiResult<(), EngError<NEVER>> {
+    ) -> ApiResult<DrawOut, EngError<NEVER>> {
         self.list_light.gen_depth(
             sp_context,
             fb_context,
@@ -117,6 +117,6 @@ impl<'a, NEVER, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw<EngError<NEV
         }
 
         drop(active_shadow_shader);
-        Ok(())
+        DrawOut::OK
     }
 }

@@ -7,6 +7,7 @@
 use std::fmt::Debug;
 use std::mem::{self, ManuallyDrop, MaybeUninit};
 use std::ops::{Deref, DerefMut};
+use std::ptr;
 mod iterators;
 mod test;
 
@@ -182,7 +183,10 @@ impl<T, const N: usize, const M: usize> TryFrom<[T; M]> for ArrayVec<T, N> {
 
 impl<T, const N: usize> Drop for ArrayVec<T, N> {
     fn drop(&mut self) {
-        while self.pop().is_some() {}
+        unsafe {
+            ptr::drop_in_place(self.as_mut_slice());
+        }
+        // safe alternative: while self.pop().is_some() {}
     }
 }
 

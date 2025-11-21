@@ -9,6 +9,7 @@
 #![feature(inherent_associated_types)]
 #![feature(never_type)]
 #![feature(option_array_transpose)]
+#![feature(generic_const_items)]
 
 mod environment;
 pub mod error;
@@ -22,10 +23,13 @@ pub mod vertex;
 pub mod vertex_array;
 pub mod vertex_buffer;
 
-pub use environment::{ApiState, Draw, Environment, Event, Key};
+pub(crate) use environment::PrivateToken;
+pub use environment::{ApiState, Draw, DrawNothing, DrawOut, Environment, Event, Key};
 pub use error::{ApiError, ApiResult};
 pub use shader_program::{ActiveShaderProgram, ShaderProgram, ShaderProgramContext};
 pub use {colour, linear_algebra};
+
+pub mod query;
 
 #[macro_export]
 macro_rules! gl_call_inner {

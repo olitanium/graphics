@@ -1,7 +1,6 @@
 use std::array;
 use std::cell::RefCell;
 use std::num::NonZeroUsize;
-use std::rc::Rc;
 
 use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;
@@ -12,16 +11,14 @@ use graphics::vertex::Vertex;
 use graphics::vertex_array::VertexArray;
 
 use crate::EngResult;
-use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
 use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
-pub struct BoundingBoxElement<V: Vertex, const DIMS: usize, T>
+pub struct BoundingBoxElement<V: ExtendedVertex<DIMS>, const DIMS: usize, T>
 where
     Vector<DIMS>: Vertex,
 {
-    pub(crate) vertex_array: Rc<VertexArray<Vector<DIMS>>>,
     pub(crate) meta: RefCell<T>,
 
     pub(crate) lower_bound: Vector<DIMS>,
@@ -32,14 +29,14 @@ where
     pub(crate) children: Option<[NonZeroUsize; 2]>,
 }
 
-impl<V: Vertex, const DIMS: usize, T: Default> Default for BoundingBoxElement<V, DIMS, T>
+impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T: Default> Default
+    for BoundingBoxElement<V, DIMS, T>
 where
     [(); Vector::<DIMS>::ELEMENT_COUNT]:,
     Vector<DIMS>: Vertex,
 {
     fn default() -> Self {
         Self {
-            vertex_array: Default::default(),
             lower_bound: -Vector::X,
             upper_bound: Vector::X,
             meta: Default::default(),
@@ -90,14 +87,13 @@ where
 
         let destination_index = so_far.len();
 
-        let positions_triangles = Volume::volume(lower_bounds, upper_bounds)
-            .map(|triangle| Vector::<DIMS>::from_incomplete_triangle(triangle).unwrap());
-        let mut vertex_array_builder = VertexArray::builder();
-        vertex_array_builder.extend_triangles(positions_triangles);
-        let vertex_array = vertex_array_builder.build();
+        // let positions_triangles = Volume::volume(lower_bounds, upper_bounds)
+        // .map(|triangle| Vector::<DIMS>::from_incomplete_triangle(triangle).unwrap());
+        // let mut vertex_array_builder = VertexArray::builder();
+        // vertex_array_builder.extend_triangles(positions_triangles);
+        // let vertex_array = vertex_array_builder.build();
 
         so_far.push(Self {
-            vertex_array: Rc::new(vertex_array),
             meta: RefCell::new(init(triangles)),
             triangles: vec_triangles,
             lower_bound: lower_bounds,

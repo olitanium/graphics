@@ -1,7 +1,7 @@
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
-use graphics::{ApiResult, Draw};
+use graphics::{ApiResult, Draw, DrawOut};
 
 use super::Quad;
 use crate::EngError;
@@ -40,7 +40,7 @@ impl<'a, NEVER, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> ApiResult<(), EngError<NEVER>> {
+    ) -> ApiResult<DrawOut, EngError<NEVER>> {
         let mut active_framebuffer = self.framebuffer.bind(fb_context);
         let mut shader = self.shader.use_program(sp_context);
         shader.set_uniform_dyn(self.uniforms)?;
@@ -48,6 +48,7 @@ impl<'a, NEVER, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT
         for quad in self.quads {
             quad.draw(&mut shader, &mut active_framebuffer)?;
         }
-        Ok(())
+
+        DrawOut::OK
     }
 }

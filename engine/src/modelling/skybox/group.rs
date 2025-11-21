@@ -2,7 +2,7 @@ use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Matrix;
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
-use graphics::{ApiResult, Draw};
+use graphics::{ApiResult, Draw, DrawOut};
 
 use super::SkyBox;
 use crate::EngError;
@@ -56,7 +56,7 @@ impl<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw<EngError<NE
         self: Box<Self>,
         register: &mut FramebufferContext,
         marker: &mut ShaderProgramContext,
-    ) -> ApiResult<(), EngError<NEVER>> {
+    ) -> ApiResult<DrawOut, EngError<NEVER>> {
         let mut active_framebuffer = self.framebuffer.bind(register);
         let mut active_shader = self.shader.use_program(marker);
 
@@ -69,6 +69,7 @@ impl<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw<EngError<NE
             .draw(&mut active_shader, &mut active_framebuffer)?;
 
         active_shader.drawing_skybox(false);
-        Ok(())
+
+        DrawOut::OK
     }
 }

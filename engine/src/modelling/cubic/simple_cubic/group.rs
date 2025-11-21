@@ -3,7 +3,7 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
-use graphics::{ApiResult, Draw};
+use graphics::{ApiResult, Draw, DrawOut};
 
 use crate::EngError;
 use crate::modelling::cubic::Camera;
@@ -69,7 +69,7 @@ impl<'a, NEVER, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> ApiResult<(), EngError<NEVER>> {
+    ) -> ApiResult<DrawOut, EngError<NEVER>> {
         let mut active_shader = self.shader.use_program(sp_context);
         let mut active_framebuffer = self.framebuffer.bind(fb_context);
 
@@ -92,6 +92,6 @@ impl<'a, NEVER, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>
                 time,
             )?;
         }
-        Ok(())
+        DrawOut::OK
     }
 }

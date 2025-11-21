@@ -4,7 +4,7 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::texture::FlatTexture;
 use graphics::vertex::Vertex;
-use graphics::{ApiResult, Draw, ShaderProgramContext};
+use graphics::{ApiResult, Draw, DrawOut, ShaderProgramContext};
 
 use crate::EngError;
 use crate::modelling::cubic::Camera;
@@ -79,7 +79,7 @@ impl<
         self: Box<Self>,
         register: &mut FramebufferContext,
         marker: &mut ShaderProgramContext,
-    ) -> ApiResult<(), EngError<NEVER>> {
+    ) -> ApiResult<DrawOut, EngError<NEVER>> {
         let mut active_framebuffer = self.framebuffer.bind(register);
         let mut active_shader = Vector::shader_program().use_program(marker);
 
@@ -96,6 +96,6 @@ impl<
             self.colour,
         )?;
 
-        Ok(())
+        DrawOut::OK
     }
 }

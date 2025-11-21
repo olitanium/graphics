@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::rc::Rc;
 
 use engine::eng_state::EngState;
 use engine::entity::{SkeletonEntity, SkinningEntity};
@@ -10,6 +11,7 @@ use engine::modelling::cubic::camera::Projection;
 use engine::modelling::cubic::geometry::SkeletalAnimation;
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
 use engine::modelling::cubic::lighting::simple::ListLights;
+use engine::modelling::cubic::material::Material;
 use engine::modelling::{
     Bloom,
     Line,
@@ -20,7 +22,7 @@ use engine::modelling::{
     TestLineVertex,
 };
 use engine::types::TexDim;
-use engine::{ApiState, EngError, EngResult, Entity, Event, VecDraw};
+use engine::{ApiState, ColourRGBA, EngError, EngResult, Entity, Event, VecDraw};
 
 pub struct State {
     pub time: f32,
@@ -104,6 +106,19 @@ impl EngState for State {
                 } => {
                     mouse_delta = (delta.0 as f32, delta.1 as f32);
                 }
+                Event::Query(queries) => match queries.as_slice() {
+                    [(0, query)] if query.get_answer() => {
+                        self.imported_other
+                            .model
+                            .temp_set_all_material(Rc::new(Material::from_colour(ColourRGBA::RED)));
+                    }
+                    [(0, query)] if !query.get_answer() => {
+                        self.imported_other.model.temp_set_all_material(Rc::new(
+                            Material::from_colour(ColourRGBA::BLUE),
+                        ));
+                    }
+                    _ => {}
+                },
                 _ => {}
             }
         }

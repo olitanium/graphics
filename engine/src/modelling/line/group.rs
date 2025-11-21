@@ -2,7 +2,7 @@ use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::linear_algebra::Matrix;
 use graphics::shader_program::Uniform;
 use graphics::texture::FlatTexture;
-use graphics::{ApiResult, Draw};
+use graphics::{ApiResult, Draw, DrawOut};
 
 use crate::modelling::TestLineVertex;
 use crate::modelling::cubic::Camera;
@@ -38,7 +38,7 @@ impl<'a, NEVER, F: FramebufferWithoutExtra<1, Tex = FlatTexture>> Draw<EngError<
         self: Box<Self>,
         fb_context: &mut graphics::framebuffer::FramebufferContext,
         shader_context: &mut graphics::ShaderProgramContext,
-    ) -> ApiResult<(), EngError<NEVER>> {
+    ) -> ApiResult<DrawOut, EngError<NEVER>> {
         let mut active_framebuffer = self.destination.bind(fb_context);
         let mut active_shader = opengl_shaders::line_test().use_program(shader_context);
 
@@ -46,6 +46,6 @@ impl<'a, NEVER, F: FramebufferWithoutExtra<1, Tex = FlatTexture>> Draw<EngError<
 
         let _: EngResult<(), !> = self.line.draw(&mut active_shader, &mut active_framebuffer);
 
-        Ok(())
+        DrawOut::OK
     }
 }

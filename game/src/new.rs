@@ -75,17 +75,17 @@ impl State {
             .collect();
 
         let (animation, model) = make_model("morgan")?;
-        let mut imported = Entity::from_cubic(model, 20, Mass(1.0), |_| ()).unwrap();
-        imported.velocity = Vector::new([0.0, 0.0, 0.05]);
-        imported.pose = Pose::new_from_orientation_translation(
-            Orientation::new_forward_up(UnitVector::X, UnitVector::Y),
-            Vector::new([0.0, 0.0, -1.5]),
-        );
+        let imported = Entity::from_cubic(model, 20, Mass(1.0), |_| ()).unwrap();
 
-        let mut imported_other =
-            Entity::from_cubic(make_model("morgan")?.1, 20, Mass(3.0), |_| ()).unwrap();
+        let mut imported_other = Entity::from_cubic(
+            SimpleCubic::cube(1.0, Rc::new(Material::black())).build(),
+            20,
+            Mass(3.0),
+            |_| (),
+        )
+        .unwrap();
         imported_other.velocity = Vector::new([0.0, 0.0, -0.05]);
-        imported_other.pose = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.1]));
+        imported_other.pose = Pose::new_from_translation(Vector::new([0.0, 0.0, 2.1]));
 
         let bounding_box_level = 0;
 
@@ -212,7 +212,7 @@ impl State {
 
             light_group: ShadowListLights {
                 point: arrvec![point_light],
-                // spot: ArrayVec::try_from([spotlight])
+                spot: arrvec![spotlight],
                 ..ShadowListLights::default()
             },
 

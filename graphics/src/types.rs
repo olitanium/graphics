@@ -86,6 +86,7 @@ nz_opaque!(VertexBufferId: GLuint);
 opaque!(UniformLocation: GLint);
 nz_opaque!(ShaderId: GLuint);
 nz_opaque!(ShaderProgramId: GLuint);
+nz_opaque!(Query: GLuint);
 
 #[derive(Clone, Copy)]
 pub struct GLError(pub(crate) gl::types::GLenum);
