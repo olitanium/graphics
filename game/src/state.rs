@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use engine::eng_state::EngState;
-use engine::entity::{SkeletonEntity, SkinningEntity};
+use engine::entity::SkinningEntity;
 use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;

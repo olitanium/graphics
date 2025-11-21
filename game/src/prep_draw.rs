@@ -1,14 +1,7 @@
 use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::SkeletonCubicGroup;
 use engine::modelling::cubic::geometry::Pose;
-use engine::modelling::{
-    BloomGroup,
-    BoundingBoxGroup,
-    QuadGroup,
-    SimpleCubicGroup,
-    SkeletonBbGroup,
-    SkyBoxGroup,
-};
+use engine::modelling::{BloomGroup, BoundingBoxGroup, QuadGroup, SimpleCubicGroup, SkyBoxGroup};
 use engine::query::HasDrawnQuery;
 use engine::{ColourRGBA, EngResult, VecDraw, opengl_shaders};
 

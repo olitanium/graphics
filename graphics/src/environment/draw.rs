@@ -1,6 +1,5 @@
 use crate::ApiResult;
 use crate::framebuffer::FramebufferContext;
-use crate::query::HasDrawnQuery;
 use crate::shader_program::ShaderProgramContext;
 use crate::types::Query;
 

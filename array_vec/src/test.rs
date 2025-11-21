@@ -1,8 +1,3 @@
-use std::ops::AddAssign;
-use std::sync::Mutex;
-
-use crate::{ArrayVec, arrvec};
-
 #[test]
 fn pop_push() {
     use crate::ArrayVec;
@@ -48,6 +43,11 @@ fn rev() {
 
 #[test]
 fn test_drop() {
+    use std::ops::AddAssign;
+    use std::sync::Mutex;
+
+    use crate::{ArrayVec, arrvec};
+
     struct DropStruct(usize);
 
     static DROPCOUNT: Mutex<usize> = Mutex::new(0);

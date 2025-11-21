@@ -1,8 +1,6 @@
-use std::error::Error;
 use std::marker::PhantomData;
 
-use crate::framebuffer::attachments::WithDepth;
-use crate::framebuffer::{Framebuffer, FramebufferContext};
+use crate::framebuffer::FramebufferContext;
 use crate::types::Query;
 use crate::{ApiResult, Draw, DrawOut, ShaderProgramContext, gl_call};
 

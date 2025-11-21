@@ -1,12 +1,12 @@
 use std::rc::Rc;
 
 use engine::array_vec::{ArrayVec, arrvec};
-use engine::entity::{Mass, SkeletonEntity, SkinningEntity};
+use engine::entity::{Mass, SkinningEntity};
 use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::camera::ManualPose;
-use engine::modelling::cubic::geometry::{Orientation, Pose, SkeletalAnimation};
+use engine::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use engine::modelling::cubic::lighting::shadow::{
     ShadowListLights,
     ShadowPointLight,

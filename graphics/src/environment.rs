@@ -102,7 +102,6 @@ pub enum Event<'a> {
 #[derive(Debug)]
 pub struct Environment<G: ApiState> {
     global_state: G,
-    queries: Option<Vec<(usize, bool)>>,
     window: Window,
     old_frame: Option<f64>,
     glfw: glfw::Glfw,
@@ -154,7 +153,6 @@ impl<G: ApiState> Environment<G> {
             window,
             // window2,
             global_state,
-            queries: None,
             old_frame: None,
         })
     }

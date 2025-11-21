@@ -1,4 +1,4 @@
-use engine::linear_algebra::{UnitVector, Vector};
+use engine::linear_algebra::Vector;
 
 use crate::state::State;
 
