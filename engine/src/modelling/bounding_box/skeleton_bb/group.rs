@@ -6,12 +6,12 @@ use graphics::texture::FlatTexture;
 use graphics::vertex::Vertex;
 use graphics::{ApiResult, Draw, DrawOut, ShaderProgramContext};
 
-use crate::EngError;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
+use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
 use crate::modelling::{CubicVertex, Skeleton, SkeletonBb, Volume};
 use crate::opengl_shaders::BoundingBoxShaderProgram;
+use crate::{EngError, EngResult};
 
 pub struct Group<
     'a,
@@ -27,19 +27,16 @@ pub struct Group<
 {
     framebuffer: &'a D,
     bounding_box: &'a SkeletonBb<V, T>,
-    pose: Pose,
-    skeleton: &'a Skeleton,
+    calculated_animation: CalculatedAnimation,
     look_at: Matrix<4, 4>,
     level: usize,
     colour: F,
-    animation: Option<&'a SkeletalAnimation>,
-    time: f32,
 }
 
 impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn(&T) -> ColourRGBA>
     Group<'a, 1, 3, D, V, T, F>
 {
-    pub fn new<P: CameraPose>(
+    pub fn new<P: CameraPose, NEVER>(
         framebuffer: &'a D,
         bounding_box: &'a SkeletonBb<V, T>,
         skeleton: &'a Skeleton,
@@ -50,19 +47,18 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
         hint: &P::Hint,
         level: usize,
         colour: F,
-    ) -> Box<Self> {
+    ) -> EngResult<Box<Self>, NEVER> {
         let look_at = camera.look_at(hint);
-        Box::new(Self {
+        let calculated_animation =
+            CalculatedAnimation::builder(pose, skeleton, animation)?.build(time);
+        Ok(Box::new(Self {
             framebuffer,
             bounding_box,
-            pose,
-            skeleton,
+            calculated_animation,
             look_at,
             level,
             colour,
-            animation,
-            time,
-        })
+        }))
     }
 }
 
@@ -87,12 +83,9 @@ impl<
 
         self.bounding_box.draw(
             self.level,
-            self.skeleton,
             &mut active_shader,
             &mut active_framebuffer,
-            self.pose,
-            self.animation,
-            self.time,
+            self.calculated_animation,
             self.colour,
         )?;
 

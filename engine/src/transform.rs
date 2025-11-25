@@ -1,3 +1,5 @@
+use std::clone;
+
 use graphics::linear_algebra::{UnitVector, Vector};
 
 use crate::modelling::cubic::geometry::Pose;
@@ -38,6 +40,16 @@ impl TransformBy<Pose> for Pose {
         let dual_quaternion = (pose.dual_quaternion.u() * self.dual_quaternion.u()).normalize();
 
         Self { dual_quaternion }
+    }
+}
+
+impl<T: TransformBy<U> + Clone, U> TransformBy<Option<U>> for T {
+    fn transform_by(&self, opt_operator: &Option<U>) -> Self {
+        if let Some(operator) = opt_operator {
+            self.transform_by(operator)
+        } else {
+            self.clone()
+        }
     }
 }
 

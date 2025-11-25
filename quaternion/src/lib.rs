@@ -1,3 +1,4 @@
+#![feature(const_mul_add)]
 use std::ops;
 
 use linear_algebra::{UnitVector, Vector};
@@ -31,7 +32,7 @@ impl Quaternion {
         }
     }
 
-    pub fn is_zero(self) -> bool {
+    pub const fn is_zero(self) -> bool {
         const EPSILON: f32 = 0.001;
 
         let real_same = self.real.abs() <= EPSILON;
@@ -40,7 +41,7 @@ impl Quaternion {
         real_same && vec_same
     }
 
-    pub fn dot(self, other: Self) -> f32 {
+    pub const fn dot(self, other: Self) -> f32 {
         self.real.mul_add(other.real, self.vector.dot(other.vector))
     }
 
@@ -60,8 +61,8 @@ impl Quaternion {
         non_normal.normalize()
     }
 
-    pub fn conjugate(mut self) -> Self {
-        self.vector = -self.vector;
+    pub const fn conjugate(mut self) -> Self {
+        self.vector = self.vector.flip();
         self
     }
 
@@ -69,17 +70,10 @@ impl Quaternion {
         Self { real: 0.0, vector }
     }
 
-    // pub const fn identity() -> Self {
-    // Self {
-    // real: 1.0,
-    // vector: Vector::new_zero(),
-    // }
-    // }
-
-    pub fn scale(self, scalar: f32) -> Self {
+    pub const fn scale(self, scalar: f32) -> Self {
         Self {
             real: self.real * scalar,
-            vector: self.vector * scalar,
+            vector: self.vector.scale(scalar),
         }
     }
 
@@ -87,7 +81,7 @@ impl Quaternion {
         self.conjugate().scale(1.0 / self.magnitude_sq())
     }
 
-    pub fn magnitude_sq(self) -> f32 {
+    pub const fn magnitude_sq(self) -> f32 {
         self.real * self.real + self.vector.magnitude_sq()
     }
 

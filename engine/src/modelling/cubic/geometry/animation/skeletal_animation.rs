@@ -1,6 +1,6 @@
 use std::num::NonZeroUsize;
 
-use crate::modelling::cubic::geometry::{BoneAnimation, Pose};
+use crate::modelling::cubic::geometry::{BoneAnimation, CalculatedAnimationBuilder, Pose};
 
 #[derive(Debug, Default)]
 pub struct SkeletalAnimation {
@@ -39,7 +39,7 @@ impl SkeletalAnimation {
         self.bones.get(bone.get() - 1)
     }
 
-    pub fn get_pose(&self, bone: NonZeroUsize, time: f32) -> Option<Pose> {
-        Some(self.get_animation(bone)?.get_pose(time))
+    pub fn signature(&self) -> &[usize] {
+        &self.signature
     }
 }

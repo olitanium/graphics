@@ -3,7 +3,14 @@ mod lerp;
 mod orientation;
 mod pose;
 
-pub use animation::{BoneAnimation, SkeletalAnimation};
+pub(crate) use animation::process_vec;
+pub use animation::{
+    AnimationError,
+    BoneAnimation,
+    CalculatedAnimation,
+    CalculatedAnimationBuilder,
+    SkeletalAnimation,
+};
 pub use lerp::Lerp;
 pub use orientation::Orientation;
 pub use pose::{Pose, PoseSclerp};

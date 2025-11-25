@@ -5,12 +5,17 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
 use graphics::{ApiResult, Draw, DrawOut};
 
-use crate::EngError;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
+use crate::modelling::cubic::geometry::{
+    CalculatedAnimation,
+    Pose,
+    SkeletalAnimation,
+    process_vec,
+};
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::{SimpleCubic, SimpleVertex};
+use crate::{EngError, EngResult};
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
@@ -21,12 +26,7 @@ pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth
     camera_look_at: Matrix<4, 4>,
 
     lights: &'a ListLights<MAX>,
-    opaque: Vec<(
-        &'a SimpleCubic,
-        Pose,
-        Option<&'a SkeletalAnimation>, // animation
-        f32,                           // time
-    )>,
+    opaque: Vec<(&'a SimpleCubic, CalculatedAnimation)>,
 
     uniforms: Vec<(String, &'a dyn Uniform)>,
 }
@@ -34,7 +34,7 @@ pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth
 impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = FlatTexture>>
     Group<'a, MAX, OUT, D>
 {
-    pub fn new<O: CameraPose>(
+    pub fn new<O: CameraPose, NEVER>(
         shader: &'a ShaderProgram<SimpleVertex, (SimpleCubic, ListLights<MAX>), OUT, FlatTexture>,
         framebuffer: &'a D,
 
@@ -49,8 +49,9 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
         )>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,
-    ) -> Box<Self> {
-        Box::new(Self {
+    ) -> EngResult<Box<Self>, NEVER> {
+        let opaque = process_vec(opaque)?;
+        Ok(Box::new(Self {
             shader,
             framebuffer,
             camera_pos: camera.position(hint),
@@ -58,7 +59,7 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
             lights,
             opaque,
             uniforms,
-        })
+        }))
     }
 }
 
@@ -83,13 +84,11 @@ impl<'a, NEVER, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>
 
         active_shader.set_uniform_dyn(self.uniforms)?;
 
-        for (model, pose, animation, time) in self.opaque {
+        for (model, calculated_animation) in self.opaque {
             model.draw(
                 &mut active_shader,
                 &mut active_framebuffer,
-                pose,
-                animation,
-                time,
+                &calculated_animation,
             )?;
         }
         DrawOut::OK

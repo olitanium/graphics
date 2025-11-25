@@ -64,7 +64,6 @@ impl Mouse {
                         y - current_location.1 + delta.1,
                     ),
                 },
-                // TODO: MOVED => STATIONARY
             };
 
             state_ptr.state.set(new);

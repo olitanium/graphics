@@ -63,7 +63,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     #[inline]
-    pub fn inner_mut(&mut self) -> &mut [Vector<R>; C] {
+    pub const fn inner_mut(&mut self) -> &mut [Vector<R>; C] {
         &mut self.0
     }
 

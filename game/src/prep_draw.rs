@@ -1,7 +1,14 @@
 use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::SkeletonCubicGroup;
 use engine::modelling::cubic::geometry::Pose;
-use engine::modelling::{BloomGroup, BoundingBoxGroup, QuadGroup, SimpleCubicGroup, SkyBoxGroup};
+use engine::modelling::{
+    BloomGroup,
+    BoundingBoxGroup,
+    QuadGroup,
+    SimpleCubicGroup,
+    SkeletonBbGroup,
+    SkyBoxGroup,
+};
 use engine::query::HasDrawnQuery;
 use engine::{ColourRGBA, EngResult, VecDraw, opengl_shaders};
 
@@ -73,6 +80,18 @@ impl State {
                 self.bounding_box_level,
                 |_| ColourRGBA::BLUE,
             ));
+            out.push(SkeletonBbGroup::new(
+                &self.hdr_fb,
+                self.simpletail.bounding_box().unwrap(),
+                &self.simpletail.model.skeleton,
+                self.simpletail.pose,
+                Some(&self.skeletal_animation),
+                time,
+                &self.camera,
+                &(),
+                self.bounding_box_level,
+                |_| ColourRGBA::GREEN,
+            )?)
         }
 
         if !self.draw_models {
@@ -85,11 +104,11 @@ impl State {
                 vec![(
                     &self.simpletail.model,
                     Pose::IDENTITY,
-                    Some(&self.skeletal_animation),
+                    None, // Some(&self.skeletal_animation),
                     time,
                 )],
                 vec![],
-            ));
+            )?);
         } else {
             out.push(SimpleCubicGroup::new(
                 opengl_shaders::hdr(),
@@ -99,7 +118,7 @@ impl State {
                 &self.ns_light_group,
                 cube,
                 vec![],
-            ));
+            )?);
             let cubgroup = SimpleCubicGroup::new(
                 opengl_shaders::hdr(),
                 &self.hdr_fb,
@@ -108,7 +127,7 @@ impl State {
                 &self.ns_light_group,
                 all_models,
                 vec![],
-            );
+            )?;
             out.push(HasDrawnQuery::new(0, cubgroup))
         }
 

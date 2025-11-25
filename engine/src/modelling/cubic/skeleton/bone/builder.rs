@@ -1,5 +1,3 @@
-use std::cell::Cell;
-
 use utils::builder;
 
 use super::Bone;
@@ -59,8 +57,6 @@ impl Builder {
         Some(Bone {
             parent: self.parent,
             inverse_bind_pose,
-            // animations: self.animations.into(),
-            last_query: Cell::default(),
         })
     }
 }

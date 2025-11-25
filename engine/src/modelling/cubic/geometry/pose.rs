@@ -61,7 +61,7 @@ impl Pose {
         Self::new_from_orientation_translation(Orientation::from_matrix(orientation), translation)
     }
 
-    pub fn into_inner(self) -> UnitDualQuaternion {
+    pub const fn into_inner(self) -> UnitDualQuaternion {
         self.dual_quaternion
     }
 

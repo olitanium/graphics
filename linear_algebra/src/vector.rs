@@ -28,7 +28,7 @@ impl<const N: usize> Vector<N> {
     pub const X: Self = Self::x();
     pub const ZERO: Self = Self::new([0.0; N]);
 
-    pub const fn x() -> Self {
+    const fn x() -> Self {
         let mut vec = Self::ZERO;
         vec.inner_mut()[0] = 1.0;
         vec
@@ -78,7 +78,7 @@ impl<const N: usize> Vector<N> {
     }
 
     #[inline]
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut f32> {
+    pub const fn iter_mut(&mut self) -> impl Iterator<Item = &mut f32> {
         self.inner_mut().iter_mut()
     }
 
@@ -89,7 +89,7 @@ impl<const N: usize> Vector<N> {
         Self::new(array)
     }
 
-    pub fn magnitude_sq(self) -> f32 {
+    pub const fn magnitude_sq(self) -> f32 {
         self.dot(self)
     }
 
@@ -116,70 +116,94 @@ impl<const N: usize> Vector<N> {
 
     #[inline]
     #[must_use]
-    pub fn is_zero(self) -> bool {
+    pub const fn is_zero(self) -> bool {
         array_maths::is_zero(self.into_inner())
     }
 
     #[inline]
     #[must_use]
-    pub fn dot(self, rhs: Self) -> f32 {
+    pub const fn dot(self, rhs: Self) -> f32 {
         array_maths::dot(self.into_inner(), rhs.into_inner())
     }
 
     #[inline]
     #[must_use]
-    pub fn from_to(from: Self, to: Self) -> Self {
-        to - from
+    pub const fn from_to(from: Self, to: Self) -> Self {
+        to.sub(from)
     }
 
     #[must_use]
     #[inline]
-    pub fn distance_squared(self, to: Self) -> f32 {
+    pub const fn distance_squared(self, to: Self) -> f32 {
         let direction = Self::from_to(self, to);
         direction.dot(direction)
     }
 
     #[inline]
     #[must_use]
-    pub fn scale(self, scalar: f32) -> Self {
-        self.map(|elem| scalar * elem)
-    }
+    pub const fn scale(mut self, scalar: f32) -> Self {
+        // CONST-HACK
+        // self.map(|elem| scalar * elem)
 
-    #[inline]
-    #[must_use]
-    pub fn flip(mut self) -> Self {
-        for x in self.inner_mut() {
-            *x = -*x;
+        let mut index = 0;
+        while index < N {
+            self.0[index] *= scalar;
+            index += 1;
         }
+
         self
     }
 
-    pub fn truncate<const M: usize>(self) -> Vector<M> {
-        let array = array::from_fn(|index| self.0.get(index).copied().unwrap_or(0.0));
+    pub const fn flip(self) -> Self {
+        // CONST-HACK
+        // for x in self.inner_mut() {
+        // x = -*x;
+        // }
+        //
+        // self
+
+        Vector::new([0.0; N]).sub(self)
+    }
+
+    pub const fn truncate<const M: usize>(self) -> Vector<M> {
+        // CONST-HACK
+        // let array = array::from_fn(|index|
+        // self.0.get(index).copied().unwrap_or(0.0)); Vector::new(array)
+
+        let mut array = [0.0; M];
+        let mut index = 0;
+        while let (Some(value), Some(dest)) = (self.0.get(index).copied(), array.get_mut(index)) {
+            *dest = value;
+            index += 1;
+        }
+
         Vector::new(array)
     }
 
-    pub fn reflect(self, normal: UnitVector<N>) -> Self {
+    pub const fn reflect(self, normal: UnitVector<N>) -> Self {
         let normal = normal.v();
         let projection = normal.dot(self);
-        self - (2.0 * projection * normal)
+        self.sub(normal.scale(2.0 * projection))
     }
 }
 
 impl Vector<3> {
     #[inline]
     #[must_use]
-    pub fn cross(self, rhs: Self) -> Self {
+    pub const fn cross(self, rhs: Self) -> Self {
+        let lhs = self.into_inner();
+        let rhs = rhs.into_inner();
         let out = [
-            self[1].mul_add(rhs[2], -(self[2] * rhs[1])), // self[1] * rhs[2] - self[2] * rhs[1],
-            self[2].mul_add(rhs[0], -(self[0] * rhs[2])), // self[2] * rhs[0] - self[0] * rhs[2],
-            self[0].mul_add(rhs[1], -(self[1] * rhs[0])), // self[0] * rhs[1] - self[1] * rhs[0],
+            lhs[1].mul_add(rhs[2], -(lhs[2] * rhs[1])), // lhs[1] * rhs[2] - lhs[2] * rhs[1],
+            lhs[2].mul_add(rhs[0], -(lhs[0] * rhs[2])), // lhs[2] * rhs[0] - lhs[0] * rhs[2],
+            lhs[0].mul_add(rhs[1], -(lhs[1] * rhs[0])), // lhs[0] * rhs[1] - lhs[1] * rhs[0],
         ];
         Self::new(out)
     }
 
-    pub fn homogeneous(self) -> Vector<4> {
-        Vector::new([self[0], self[1], self[2], 1.0])
+    pub const fn homogeneous(self) -> Vector<4> {
+        let this = self.into_inner();
+        Vector::new([this[0], this[1], this[2], 1.0])
     }
 }
 
@@ -192,6 +216,15 @@ macro_rules! impl_ops {
             #[inline]
             fn $fn(self, rhs: Self) -> Self::Output {
                 Self::new($fn(self.into_inner(), rhs.into_inner()))
+            }
+        }
+
+        impl<const N: usize> Vector<N> {
+            pub const fn $fn(self, rhs: Self) -> Self {
+                Self::new($crate::vector::array_maths::$fn(
+                    self.into_inner(),
+                    rhs.into_inner(),
+                ))
             }
         }
 
@@ -396,7 +429,7 @@ impl UnitVector<3> {
 
 impl<const N: usize> UnitVector<N> {
     #[inline(always)]
-    pub fn v(self) -> Vector<N> {
+    pub const fn v(self) -> Vector<N> {
         self.0
     }
 

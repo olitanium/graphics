@@ -5,7 +5,12 @@ use graphics::{ActiveShaderProgram, ApiResult};
 
 use crate::EngResult;
 use crate::modelling::cubic::Mesh;
-use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
+use crate::modelling::cubic::geometry::{
+    CalculatedAnimation,
+    CalculatedAnimationBuilder,
+    Pose,
+    SkeletalAnimation,
+};
 use crate::modelling::{SkeletalVertex, Skeleton, test_models};
 
 mod group;
@@ -19,7 +24,7 @@ pub struct SkeletonCubic {
 }
 
 impl SkeletonCubic {
-    pub fn debug_new(meshes: Vec<Mesh<SkeletalVertex>>, skeleton: Skeleton) -> Self {
+    pub const fn debug_new(meshes: Vec<Mesh<SkeletalVertex>>, skeleton: Skeleton) -> Self {
         Self {
             meshes,
             skeleton,
@@ -42,20 +47,23 @@ impl SkeletonCubic {
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, SkeletalVertex, (Self, L), D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-        root: Pose,
-        animation: Option<&SkeletalAnimation>,
-        time: f32,
+        calculated_animation: CalculatedAnimation,
     ) -> EngResult<(), NEVER> {
         // Ignore cull_face error
         let _: ApiResult<_, !> = active_shader.cull_face(self.cull_face);
 
-        let matrices = self
-            .skeleton
-            .get_all_bones_transformation_matrix(root, animation, time);
+        let poses = calculated_animation.poses();
+
+        let matrices: Vec<_> = poses
+            .iter()
+            .map(|pose| pose.as_transformation_matrix())
+            .collect();
         let _: ApiResult<_, !> = active_shader.set_uniform("bones", &matrices);
-        let matrices_quat = self
-            .skeleton
-            .get_all_bones_for_shader(root, animation, time);
+
+        let matrices_quat: Vec<_> = poses
+            .iter()
+            .map(|pose| pose.as_matrix_for_shader())
+            .collect();
         let _: ApiResult<_, !> = active_shader.set_uniform("bones_quat", &matrices_quat);
 
         for mesh in &self.meshes {
@@ -63,5 +71,11 @@ impl SkeletonCubic {
         }
 
         Ok(())
+    }
+}
+
+impl AsRef<Skeleton> for SkeletonCubic {
+    fn as_ref(&self) -> &Skeleton {
+        &self.skeleton
     }
 }

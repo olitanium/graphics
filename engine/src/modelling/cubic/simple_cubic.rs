@@ -11,7 +11,7 @@ use russimp::scene::PostProcess;
 use super::material::Material;
 use super::{Mesh, Skeleton, import};
 use crate::error::EngResult;
-use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
+use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
 use crate::modelling::simple_vertex::SimpleVertex;
 use crate::modelling::test_models;
 
@@ -88,24 +88,27 @@ impl SimpleCubic {
         &'a self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'a, SimpleVertex, (Self, L), D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-        root: Pose,
-        animation: Option<&SkeletalAnimation>,
-        time: f32,
+        calculated_animation: &CalculatedAnimation,
     ) -> EngResult<(), NEVER> {
         // Ignore cull_face error
         let _: ApiResult<_, !> = active_shader.cull_face(self.cull_face);
         for BoneAndMesh { bone, mesh } in self.meshes.iter() {
             active_shader.set_uniform(
                 "model",
-                &self
-                    .skeleton
-                    .get_bone_pose(root, true, *bone, animation, time)
-                    .map_or_else(Matrix::identity, Pose::as_transformation_matrix),
+                &calculated_animation
+                    .get(*bone)
+                    .map_or_else(|_| Matrix::identity(), Pose::as_transformation_matrix),
             )?;
 
             mesh.draw(active_shader, active_framebuffer)?;
         }
 
         Ok(())
+    }
+}
+
+impl AsRef<Skeleton> for SimpleCubic {
+    fn as_ref(&self) -> &Skeleton {
+        &self.skeleton
     }
 }

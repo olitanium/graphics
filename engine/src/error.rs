@@ -1,5 +1,8 @@
 use graphics::ApiError;
 
+use crate::modelling::BoundingBoxError;
+use crate::modelling::cubic::geometry::AnimationError;
+
 pub type EngResult<T, U> = core::result::Result<T, EngError<U>>;
 
 #[derive(Debug, Clone)]
@@ -7,6 +10,8 @@ pub enum EngError<U> {
     User(U),
     Api(graphics::error::ApiError<Self>),
     Import(crate::modelling::ImportError),
+    Animation(AnimationError),
+    BoundingBox(BoundingBoxError),
 }
 
 // Display IS debug

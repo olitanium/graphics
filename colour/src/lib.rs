@@ -43,7 +43,7 @@ impl ColourRGBA {
         self.0
     }
 
-    pub fn as_ref(&self) -> &[f32; 4] {
+    pub const fn as_ref(&self) -> &[f32; 4] {
         &self.0
     }
 }
@@ -53,7 +53,7 @@ pub struct ColourRGB([f32; 3]);
 
 macro_rules! get_colour {
     ($letter:ident, $index:literal) => {
-        pub fn $letter(self) -> f32 {
+        pub const fn $letter(self) -> f32 {
             self.0[$index]
         }
     };
@@ -80,7 +80,7 @@ impl ColourRGB {
         self.0
     }
 
-    pub fn as_ref(&self) -> &[f32; 3] {
+    pub const fn as_ref(&self) -> &[f32; 3] {
         &self.0
     }
 

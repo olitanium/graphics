@@ -5,7 +5,7 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
 
 use crate::EngResult;
-use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
+use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
 use crate::modelling::{BoundingBox, CubicVertex, Skeleton};
 
 mod group;
@@ -39,15 +39,11 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
 impl<V: CubicVertex, T> SkeletonBb<V, T> {
     pub fn overlap<F, O>(
         lhs: &Self,
-        lhs_pose: Pose,
-        lhs_animation: Option<&SkeletalAnimation>,
-        lhs_time: f32,
+        lhs_calculated_animation: &CalculatedAnimation,
         lhs_alter_meta: F,
 
         rhs: &Self,
-        rhs_pose: Pose,
-        rhs_animation: Option<&SkeletalAnimation>,
-        rhs_time: f32,
+        rhs_calculated_animation: &CalculatedAnimation,
         rhs_alter_meta: O,
     ) -> Vec<(Vec<[V; 3]>, Vec<[V; 3]>)>
     where
@@ -62,18 +58,13 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
             .enumerate()
             .flat_map(|(lhs_bone, lhs_bb)| {
                 let lhs_pose =
-                    lhs.skeleton.get_bone_pose(lhs_pose, true, lhs_bone, lhs_animation, lhs_time).unwrap(/*TODO: Animation well formed */);
+                    // TODO: well formed
+                    lhs_calculated_animation.get(lhs_bone).unwrap();
                 rhs.per_bone
                     .iter()
                     .enumerate()
                     .flat_map(move |(rhs_bone, rhs_bb)| {
-                        let rhs_pose = rhs.skeleton.get_bone_pose(
-                            rhs_pose,
-                            true,
-                            rhs_bone,
-                            rhs_animation,
-                            rhs_time,
-                        ).unwrap(/*TODO: Animation well formed */);
+                        let rhs_pose = rhs_calculated_animation.get(rhs_bone).unwrap();
 
                         BoundingBox::detect_collision(
                             lhs_bb,
@@ -91,16 +82,13 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
     pub(crate) fn draw<NEVER, D: FramebufferWithDepth<1>, F: Fn(&T) -> ColourRGBA>(
         &self,
         level: usize,
-        skeleton: &Skeleton,
         active_shader: &mut ActiveShaderProgram<'_, '_, '_, Vector<3>, (), D::Tex, 1>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
-        pose: Pose,
-        animation: Option<&SkeletalAnimation>,
-        time: f32,
+        calculated_animation: CalculatedAnimation,
         colour: F,
     ) -> EngResult<(), NEVER> {
         for (bone, bbox) in self.per_bone.iter().enumerate() {
-            let pose = skeleton.get_bone_pose(pose, true, bone, animation, time).unwrap(/* TODO: Well formed animation */);
+            let pose = calculated_animation.get(bone)?;
             bbox.draw(level, pose, active_shader, active_framebuffer, &colour)?
         }
 

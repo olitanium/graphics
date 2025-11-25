@@ -6,7 +6,7 @@ use graphics::shader_program::{ActiveShaderProgram, ShaderProgramContext, Unifor
 use graphics::texture::Texture;
 
 use super::{ShadowFarLight, ShadowPointLight, ShadowSpotLight};
-use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
+use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
 use crate::modelling::{SimpleCubic, VertexHasTangent};
 use crate::{EngResult, opengl_shaders};
@@ -23,12 +23,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         &self,
         sp_context: &mut ShaderProgramContext,
         fb_context: &mut FramebufferContext,
-        complete_models: &[(
-            &SimpleCubic,
-            Pose,
-            Option<&SkeletalAnimation>, // animation
-            f32,                        // time
-        )],
+        complete_models: &[(&SimpleCubic, CalculatedAnimation)],
         target_position: Vector<3>,
         uniforms: Vec<(String, &dyn Uniform)>,
     ) -> EngResult<(), NEVER> {
@@ -46,13 +41,11 @@ impl<const MAX: usize> ShadowListLights<MAX> {
 
             let mut active_light_framebuffer = light.framebuffer.bind(fb_context);
 
-            for (model, pose, animation, time) in complete_models {
+            for (model, calculated_animation) in complete_models {
                 model.draw(
                     &mut active_depth_only_shader,
                     &mut active_light_framebuffer,
-                    *pose,
-                    *animation,
-                    *time,
+                    calculated_animation,
                 )?;
             }
         }
@@ -70,13 +63,11 @@ impl<const MAX: usize> ShadowListLights<MAX> {
 
             let mut active_light_framebuffer = light.framebuffer.bind(fb_context);
 
-            for (model, pose, animation, time) in complete_models {
+            for (model, calculated_animation) in complete_models {
                 model.draw(
                     &mut active_depth_only_shader,
                     &mut active_light_framebuffer,
-                    *pose,
-                    *animation,
-                    *time,
+                    calculated_animation,
                 )?;
             }
         }
@@ -95,13 +86,11 @@ impl<const MAX: usize> ShadowListLights<MAX> {
 
             let mut active_light_framebuffer = light.framebuffer.bind(fb_context);
 
-            for (model, pose, animation, time) in complete_models {
+            for (model, calculated_animation) in complete_models {
                 model.draw(
                     &mut active_depth_only_shader_point,
                     &mut active_light_framebuffer,
-                    *pose,
-                    *animation,
-                    *time,
+                    calculated_animation,
                 )?;
             }
         }

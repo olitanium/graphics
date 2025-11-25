@@ -11,16 +11,16 @@ pub struct BoneAnimation {
 
 impl Default for BoneAnimation {
     fn default() -> Self {
-        Self {
-            keyframes: Vec::default(),
-            duration: Some(0.0),
-        }
+        Self::new()
     }
 }
 
 impl BoneAnimation {
-    pub fn new() -> Self {
-        Self::default()
+    pub const fn new() -> Self {
+        Self {
+            keyframes: Vec::new(),
+            duration: Some(0.0),
+        }
     }
 
     pub fn push(&mut self, pose: Pose, duration: f32) -> Result<(), Pose> {

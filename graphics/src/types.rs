@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 use std::io::Write;
-use std::num::NonZero;
+use std::num::{NonZero, NonZeroUsize};
 
 pub(crate) use gl::types::*;
 
@@ -40,11 +40,11 @@ macro_rules! nz_opaque {
         #[derive(Debug, Hash, PartialEq, Eq $(, $derives)*)]
         pub struct $name(NonZero<gl::types::$type>);
 
-        impl From<gl::types::$type> for $name {
+        /*impl From<gl::types::$type> for $name {
             fn from(value: Self::Primitive) -> Self {
                 Self::new(value)
             }
-        }
+        }*/
 
         impl $name {
             pub(crate) fn new(value: Self::Primitive) -> Self {
@@ -52,14 +52,15 @@ macro_rules! nz_opaque {
             }
         }
 
-        impl $name {
-            pub fn try_new(value: Self::Primitive) -> Option<Self> {
+        /*impl $name {
+            pub(crate) fn try_new(value: Self::Primitive) -> Option<Self> {
                 NonZero::new(value).map($name)
             }
-        }
+        }*/
 
         impl $name {
-            pub type Primitive = gl::types::$type;
+            #[expect(dead_code)]
+            pub(crate) type Primitive = gl::types::$type;
 
             pub(crate) fn as_primitive(&self) -> Self::Primitive {
                 self.0.get()
@@ -69,6 +70,12 @@ macro_rules! nz_opaque {
 }
 
 nz_opaque!(TexDim: GLsizei, Clone, Copy);
+
+impl TexDim {
+    pub const fn from(value: NonZeroUsize) -> Self {
+        Self(NonZero::new(value.get() as _).unwrap())
+    }
+}
 nz_opaque!(TexId: GLuint);
 opaque!(FrameBufferId: GLuint);
 nz_opaque!(VertexArrayId: GLuint);

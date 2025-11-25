@@ -11,8 +11,8 @@ use super::camera::Camera;
 use super::lighting::shadow::ShadowListLights;
 use crate::modelling::SimpleCubic;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
-use crate::{EngError, opengl_shaders};
+use crate::modelling::cubic::geometry::{self, CalculatedAnimation, Pose, SkeletalAnimation};
+use crate::{EngError, EngResult, opengl_shaders};
 
 pub const SHADOW_SHADER_MAX_LIGHTS: usize = 2;
 
@@ -27,22 +27,24 @@ pub struct Group<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> {
 
     opaque: Vec<(
         &'a SimpleCubic,
-        Pose,
-        Option<&'a SkeletalAnimation>, // animation
-        f32,                           // time
+        // Pose,
+        // Option<&'a SkeletalAnimation>, // animation
+        // f32,                           // time
+        CalculatedAnimation,
     )>,
     transparent: Vec<(
         &'a SimpleCubic,
-        Pose,
-        Option<&'a SkeletalAnimation>, // animation
-        f32,                           // time
+        // Pose,
+        // Option<&'a SkeletalAnimation>, // animation
+        // f32,                           // time
+        CalculatedAnimation,
     )>,
 
     uniforms: Vec<(String, &'a dyn Uniform)>,
 }
 
 impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
-    pub fn new<O: CameraPose>(
+    pub fn new<NEVER, O: CameraPose>(
         output_framebuffer: &'a X,
         camera: &Camera<O>,
         hint: &O::Hint,
@@ -60,17 +62,17 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
             f32,                           // time
         )>,
         uniforms: Vec<(String, &'a dyn Uniform)>,
-    ) -> Box<Self> {
-        Box::new(Self {
+    ) -> EngResult<Box<Self>, NEVER> {
+        Ok(Box::new(Self {
             look_at: camera.look_at(hint),
             position: camera.position(hint),
 
             list_light,
             output_framebuffer,
-            opaque,
-            transparent,
+            opaque: geometry::process_vec(opaque)?,
+            transparent: geometry::process_vec(transparent)?,
             uniforms,
-        })
+        }))
     }
 }
 
@@ -106,13 +108,13 @@ impl<'a, NEVER, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw<EngError<NEV
         active_shadow_shader.set_uniform_dyn(self.uniforms)?;
 
         let mut active_output_framebuffer = self.output_framebuffer.bind(fb_context);
-        for (model, pose, animation, time) in iter::chain(self.opaque, self.transparent) {
+        for (model, calculated_animation) in iter::chain(self.opaque, self.transparent) {
             model.draw(
                 &mut active_shadow_shader,
                 &mut active_output_framebuffer,
-                pose,
-                animation,
-                time,
+                &calculated_animation, /* pose,
+                                        * animation,
+                                        * time, */
             )?;
         }
 

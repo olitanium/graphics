@@ -1,3 +1,4 @@
+use std::num::NonZero;
 use std::rc::Rc;
 
 use engine::array_vec::{ArrayVec, arrvec};
@@ -110,7 +111,7 @@ impl State {
                 diffuse: light_colour.map(|x| x * 0.5),
                 specular: light_colour,
             },
-            1000.into(),
+            TexDim::from(NonZero::new(1000).unwrap()),
         );
 
         let ns_point_light = PointLight {
@@ -155,7 +156,7 @@ impl State {
                 cos_cut_off: 20f32.to_radians().cos(),
                 cos_outer_cut_off: 25f32.to_radians().cos(),
             },
-            1000.into(),
+            const { TexDim::from(NonZero::new(1000).unwrap()) },
         );
 
         let [dark_tex, light_tex] = hdr_fb.get_all_colour();

@@ -28,3 +28,33 @@ fn reflect() {
 
     assert_eq!(reflected, Vector::new([1.0, 1.0, 0.5]));
 }
+
+#[test]
+fn flip() {
+    use crate::Vector;
+    assert_eq!(
+        Vector::new([1.0, 1.0, 1.0]),
+        Vector::new([-1.0, -1.0, -1.0]).flip()
+    )
+}
+
+#[test]
+fn eq() {
+    use crate::Vector;
+    assert_eq!(Vector::new([1.0]), Vector::new([1.0]));
+
+    assert_ne!(Vector::new([1.0]), Vector::new([0.0]));
+}
+
+#[test]
+fn truncate() {
+    use crate::Vector;
+
+    let vec1 = Vector::new([1.0, 2.0, 3.0]);
+
+    let vec2: Vector<4> = vec1.truncate();
+    let vec3: Vector<2> = vec1.truncate();
+
+    assert_eq!(vec2, Vector::new([1.0, 2.0, 3.0, 0.0]));
+    assert_eq!(vec3, Vector::new([1.0, 2.0]));
+}

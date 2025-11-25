@@ -11,6 +11,7 @@
 #![feature(iter_map_windows)]
 #![feature(associated_type_defaults)]
 #![deny(unused_must_use)]
+#![deny(clippy::missing_const_for_fn)]
 
 pub mod eng_state;
 pub mod entity;

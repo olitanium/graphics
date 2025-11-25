@@ -4,6 +4,9 @@
 #![feature(const_clone)]
 #![feature(const_default)]
 #![feature(const_trait_impl)]
+#![feature(const_index)]
+#![feature(const_mul_add)]
+#![feature(const_slice_make_iter)]
 
 mod matrix;
 mod vector;

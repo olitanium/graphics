@@ -13,15 +13,15 @@ pub struct Line<U> {
 }
 
 impl<U: Uniform> Line<U> {
-    pub fn new(vertices: Vec<U>) -> Self {
+    pub const fn new(vertices: Vec<U>) -> Self {
         Self { vertices }
     }
 
-    pub fn get_mut(&mut self) -> &mut Vec<U> {
+    pub const fn get_mut(&mut self) -> &mut Vec<U> {
         &mut self.vertices
     }
 
-    pub fn get(&self) -> &Vec<U> {
+    pub const fn get(&self) -> &Vec<U> {
         &self.vertices
     }
 }

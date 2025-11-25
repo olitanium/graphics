@@ -27,7 +27,7 @@ impl ShadowPointLight {
         Self { light, framebuffer }
     }
 
-    pub fn set_position(&mut self, position: Vector<3>) {
+    pub const fn set_position(&mut self, position: Vector<3>) {
         self.light.position = position;
     }
 

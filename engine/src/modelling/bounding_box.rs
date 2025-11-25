@@ -18,6 +18,9 @@ pub use group::Group as BoundingBoxGroup;
 pub mod skeleton_bb;
 pub use skeleton_bb::{SkeletonBb, SkeletonBbGroup};
 
+mod error;
+pub use error::Error as BoundingBoxError;
+
 use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{CubicVertex, SimpleCubic, SimpleVertex, Volume};
