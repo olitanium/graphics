@@ -6,12 +6,12 @@ use engine::entity::SkinningEntity;
 use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
-use engine::modelling::cubic::Camera;
 use engine::modelling::cubic::camera::Projection;
 use engine::modelling::cubic::geometry::SkeletalAnimation;
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::cubic::material::Material;
+use engine::modelling::cubic::{AggregateCubic, Camera, SkeletonCubic};
 use engine::modelling::{
     Bloom,
     Line,
@@ -49,7 +49,8 @@ pub struct State {
     pub testbool: bool,
     pub imported: Entity<()>,
     pub imported_other: Entity<()>,
-    pub simpletail: SkinningEntity<()>,
+    pub simpletail: SkeletonCubic,
+    pub aggregate_tail: AggregateCubic,
     pub skeletal_animation: SkeletalAnimation,
 
     pub bounding_box_level: usize,

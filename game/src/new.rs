@@ -7,7 +7,7 @@ use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::camera::ManualPose;
-use engine::modelling::cubic::geometry::{Pose, SkeletalAnimation};
+use engine::modelling::cubic::geometry::{Orientation, Pose, SkeletalAnimation};
 use engine::modelling::cubic::lighting::shadow::{
     ShadowListLights,
     ShadowPointLight,
@@ -15,7 +15,7 @@ use engine::modelling::cubic::lighting::shadow::{
 };
 use engine::modelling::cubic::lighting::simple::{ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{SkeletonCubic, camera};
+use engine::modelling::cubic::{AggregateCubic, SkeletonCubic, camera};
 use engine::modelling::{Bloom, Line, Quad, SimpleCubic, Skeleton, SkyBox, test_models};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
@@ -179,8 +179,16 @@ impl State {
 
         let (simpletail, skeletal_animation) = SkeletonCubic::debug_tail();
 
-        let simpletail =
-            SkinningEntity::from_skeletoncubic(simpletail, 2, Mass(1.0), |_| ()).unwrap();
+        // let simpletail =
+        // SkinningEntity::from_skeletoncubic(simpletail, 2, Mass(1.0), |_|
+        // ()).unwrap();
+
+        let mut aggregate_tail = AggregateCubic::new(simpletail.clone());
+        let offset = Pose::new_from_orientation_translation(
+            Orientation::new_forward_up(UnitVector::Y, -UnitVector::Z),
+            Vector::new([0.0, 0.5, 0.5]),
+        );
+        aggregate_tail.push(simpletail.clone(), offset, 9);
 
         Ok(Self {
             show_bbs: true,
@@ -203,6 +211,7 @@ impl State {
             bounding_box_level,
             draw_models: true,
 
+            aggregate_tail,
             simpletail,
             skeletal_animation,
             which_animation: animation,

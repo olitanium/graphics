@@ -5,7 +5,12 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
 
 use crate::EngResult;
-use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
+use crate::modelling::cubic::geometry::{
+    AnimationError,
+    CalculatedAnimation,
+    Pose,
+    SkeletalAnimation,
+};
 use crate::modelling::{BoundingBox, CubicVertex, Skeleton};
 
 mod group;
@@ -53,18 +58,20 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
         let lhs_alter_meta = &lhs_alter_meta;
         let rhs_alter_meta = &rhs_alter_meta;
 
+        let lhs_calculated_animation = lhs_calculated_animation.poses();
+        let rhs_calculated_animation = rhs_calculated_animation.poses();
         lhs.per_bone
             .iter()
             .enumerate()
             .flat_map(|(lhs_bone, lhs_bb)| {
                 let lhs_pose =
                     // TODO: well formed
-                    lhs_calculated_animation.get(lhs_bone).unwrap();
+                    *lhs_calculated_animation.get(lhs_bone).unwrap();
                 rhs.per_bone
                     .iter()
                     .enumerate()
                     .flat_map(move |(rhs_bone, rhs_bb)| {
-                        let rhs_pose = rhs_calculated_animation.get(rhs_bone).unwrap();
+                        let rhs_pose = *rhs_calculated_animation.get(rhs_bone).unwrap();
 
                         BoundingBox::detect_collision(
                             lhs_bb,

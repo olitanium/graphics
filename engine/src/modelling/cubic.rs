@@ -27,3 +27,6 @@ pub use simple_cubic::{
 
 mod skeleton_cubic;
 pub use skeleton_cubic::{SkeletonCubic, SkeletonCubicGroup};
+
+mod aggregate_model;
+pub use aggregate_model::{AggregateCubic, AggregateGroup};

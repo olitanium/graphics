@@ -51,9 +51,9 @@ impl Material {
         Self::from_colour(ColourRGBA::WHITE)
     }
 
-    pub fn register_to<'c, NEVER, const N: usize, T: Texture, V: ExtendedVertex<3>, M>(
-        &'c self,
-        shader: &mut ActiveShaderProgram<'_, '_, 'c, V, M, T, N>,
+    pub fn register_to<'a, NEVER, const N: usize, T: Texture, V: ExtendedVertex<3>, M>(
+        &'a self,
+        shader: &mut ActiveShaderProgram<'_, '_, 'a, V, M, T, N>,
         name: &str,
     ) -> EngResult<(), NEVER> {
         shader.set_uniform(format!("{name}.shininess"), &self.shininess)?;

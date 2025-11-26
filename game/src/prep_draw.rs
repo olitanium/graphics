@@ -1,6 +1,7 @@
 use engine::framebuffer::DefaultFramebuffer;
-use engine::modelling::cubic::SkeletonCubicGroup;
+use engine::linear_algebra::Vector;
 use engine::modelling::cubic::geometry::Pose;
+use engine::modelling::cubic::{AggregateGroup, SkeletonCubicGroup};
 use engine::modelling::{
     BloomGroup,
     BoundingBoxGroup,
@@ -23,22 +24,22 @@ impl State {
 
         let mut out = VecDraw::new();
 
-        let all_models = vec![
-            (&self.imported.model, self.imported.pose, None, time),
-            // (
-            // &self.imported_other.model,
-            // self.imported_other.pose,
-            // None,
-            // time,
-            // ),
-        ];
+        // let all_models = vec![
+        // (&self.imported.model, self.imported.pose, None, time),
+        // (
+        // &self.imported_other.model,
+        // self.imported_other.pose,
+        // None,
+        // time,
+        // ),
+        // ];
 
-        let cube = vec![(
-            &self.imported_other.model,
-            self.imported_other.pose,
-            None,
-            time,
-        )];
+        // let cube = vec![(
+        // &self.imported_other.model,
+        // self.imported_other.pose,
+        // None,
+        // time,
+        // )];
 
         out.push(SkyBoxGroup::new(
             engine::opengl_shaders::skybox_hdr(),
@@ -49,87 +50,107 @@ impl State {
             vec![],
         ));
 
-        if self.show_bbs {
-            // out.push(SkeletonBbGroup::new(
-            // &self.hdr_fb,
-            // self.simpletail.bounding_box().unwrap(),
-            // &self.simpletail.model.skeleton,
-            // Pose::IDENTITY,
-            // Some(&self.skeletal_animation),
-            // time,
-            // &self.camera,
-            // &(),
-            // 3,
-            // |_| ColourRGBA::RED,
-            // ));
-            // out.push(BoundingBoxGroup::new(
-            // &self.hdr_fb,
-            // self.imported_other.bounding_box().unwrap(),
-            // self.imported_other.pose,
-            // &self.camera,
-            // &(),
-            // self.bounding_box_level,
-            // |_| ColourRGBA::RED,
-            // ));
-            out.push(BoundingBoxGroup::new(
-                &self.hdr_fb,
-                self.imported.bounding_box().unwrap(),
-                self.imported.pose,
-                &self.camera,
-                &(),
-                self.bounding_box_level,
-                |_| ColourRGBA::BLUE,
-            ));
-            out.push(SkeletonBbGroup::new(
-                &self.hdr_fb,
-                self.simpletail.bounding_box().unwrap(),
-                &self.simpletail.model.skeleton,
-                self.simpletail.pose,
-                Some(&self.skeletal_animation),
-                time,
-                &self.camera,
-                &(),
-                self.bounding_box_level,
-                |_| ColourRGBA::GREEN,
-            )?)
-        }
+        // if self.show_bbs {
+        // out.push(SkeletonBbGroup::new(
+        // &self.hdr_fb,
+        // self.simpletail.bounding_box().unwrap(),
+        // &self.simpletail.model.skeleton,
+        // Pose::IDENTITY,
+        // Some(&self.skeletal_animation),
+        // time,
+        // &self.camera,
+        // &(),
+        // 3,
+        // |_| ColourRGBA::RED,
+        // ));
+        // out.push(BoundingBoxGroup::new(
+        // &self.hdr_fb,
+        // self.imported_other.bounding_box().unwrap(),
+        // self.imported_other.pose,
+        // &self.camera,
+        // &(),
+        // self.bounding_box_level,
+        // |_| ColourRGBA::RED,
+        // ));
+        // out.push(BoundingBoxGroup::new(
+        // &self.hdr_fb,
+        // self.imported.bounding_box().unwrap(),
+        // self.imported.pose,
+        // &self.camera,
+        // &(),
+        // self.bounding_box_level,
+        // |_| ColourRGBA::BLUE,
+        // ));*/
+        // out.push(SkeletonBbGroup::new(
+        // &self.hdr_fb,
+        // self.simpletail.bounding_box().unwrap(),
+        // self.simpletail.pose,
+        // Some(&self.skeletal_animation),
+        // time,
+        // &self.camera,
+        // &(),
+        // self.bounding_box_level,
+        // |_| ColourRGBA::GREEN,
+        // )?)*/
+        // }
 
-        if !self.draw_models {
-            out.push(SkeletonCubicGroup::new(
-                opengl_shaders::skeletal_quat(),
-                &self.hdr_fb,
-                &self.camera,
-                &(),
-                &self.ns_light_group,
-                vec![(
-                    &self.simpletail.model,
-                    Pose::IDENTITY,
-                    None, // Some(&self.skeletal_animation),
-                    time,
-                )],
-                vec![],
-            )?);
-        } else {
-            out.push(SimpleCubicGroup::new(
-                opengl_shaders::hdr(),
-                &self.hdr_fb,
-                &self.camera,
-                &(),
-                &self.ns_light_group,
-                cube,
-                vec![],
-            )?);
-            let cubgroup = SimpleCubicGroup::new(
-                opengl_shaders::hdr(),
-                &self.hdr_fb,
-                &self.camera,
-                &(),
-                &self.ns_light_group,
-                all_models,
-                vec![],
-            )?;
-            out.push(HasDrawnQuery::new(0, cubgroup))
-        }
+        // if !self.draw_models {
+        // out.push(SkeletonCubicGroup::new(
+        // opengl_shaders::skeletal_quat(),
+        // &self.hdr_fb,
+        // &self.camera,
+        // &(),
+        // &self.ns_light_group,
+        // vec![(
+        // &self.simpletail.model,
+        // Pose::IDENTITY,
+        // Some(&self.skeletal_animation),
+        // time,
+        // )],
+        // vec![],
+        // )?);*/
+        // } else {
+        // out.push(SimpleCubicGroup::new(
+        // opengl_shaders::hdr(),
+        // &self.hdr_fb,
+        // &self.camera,
+        // &(),
+        // &self.ns_light_group,
+        // cube,
+        // vec![],
+        // )?);
+        // let cubgroup = SimpleCubicGroup::new(
+        // opengl_shaders::hdr(),
+        // &self.hdr_fb,
+        // &self.camera,
+        // &(),
+        // &self.ns_light_group,
+        // all_models,
+        // vec![],
+        // )?;
+        // out.push(HasDrawnQuery::new(0, cubgroup))
+        // }
+
+        out.push(AggregateGroup::new(
+            opengl_shaders::skeletal_quat(),
+            &self.hdr_fb,
+            &self.camera,
+            &(),
+            &self.ns_light_group,
+            vec![(
+                &self.aggregate_tail,
+                Pose::IDENTITY,
+                Some(&self.skeletal_animation),
+                time / 60.0 + 0.5,
+                if self.draw_models {
+                    Some(&self.skeletal_animation)
+                } else {
+                    None
+                },
+                (time + 0.5),
+            )],
+            vec![],
+        ));
 
         if self.do_bloom {
             // println!("bloom_on");

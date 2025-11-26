@@ -1,13 +1,13 @@
 use std::num::NonZeroUsize;
 
-use crate::EngResult;
 use crate::modelling::cubic::geometry::{AnimationError, Pose, SkeletalAnimation};
 use crate::modelling::{SimpleCubic, Skeleton};
 use crate::transform::Transform;
+use crate::{EngResult, TransformBy};
 
 #[derive(Debug, Clone)]
 pub struct CalculatedAnimation {
-    offsets: Vec<usize>,
+    // offsets: Vec<usize>,
     poses: Vec<Pose>,
 }
 
@@ -18,12 +18,15 @@ pub struct CalculatedAnimationBuilder<'a> {
 }
 
 impl CalculatedAnimation {
+    pub const ROOT_MODEL: usize = 0;
+
     pub fn builder<'a>(
         root_pose: Pose,
         root_skeleton: &'a Skeleton,
         root_animation: Option<&'a SkeletalAnimation>,
+        root_time: f32,
     ) -> Result<CalculatedAnimationBuilder<'a>, AnimationError> {
-        CalculatedAnimationBuilder::new(root_pose, root_skeleton, root_animation)
+        CalculatedAnimationBuilder::new(root_pose, root_skeleton, root_animation, root_time)
     }
 
     pub fn poses(&self) -> &[Pose] {
@@ -38,10 +41,6 @@ impl CalculatedAnimation {
                 requested: index,
                 length: self.poses.len(),
             })
-    }
-
-    pub fn offsets(&self) -> &[usize] {
-        &self.offsets
     }
 }
 
@@ -58,6 +57,7 @@ struct AnimationUnit<'a> {
     // invariant: Skeleton and Skeletal Animation have same signature
     skeleton: &'a Skeleton,
     animation: Option<&'a SkeletalAnimation>,
+    time: f32,
 }
 
 impl<'a> CalculatedAnimationBuilder<'a> {
@@ -65,6 +65,7 @@ impl<'a> CalculatedAnimationBuilder<'a> {
         root_pose: Pose,
         root_skeleton: &'a Skeleton,
         root_animation: Option<&'a SkeletalAnimation>,
+        root_time: f32,
     ) -> Result<Self, AnimationError> {
         match root_animation {
             Some(animation) if animation.signature() != root_skeleton.signature() => {
@@ -79,18 +80,20 @@ impl<'a> CalculatedAnimationBuilder<'a> {
                     local_transform: root_pose,
                     skeleton: root_skeleton,
                     animation: other,
+                    time: root_time,
                 }],
             }),
         }
     }
 
-    pub fn push<NEVER>(
+    pub fn push(
         &mut self,
         parent: usize,
         attachment_point: usize,
         local_transform: Pose,
         skeleton: &'a Skeleton,
         animation: Option<&'a SkeletalAnimation>,
+        time: f32,
     ) -> Result<NonZeroUsize, AnimationError> {
         let output_index = self.units.len();
 
@@ -116,6 +119,7 @@ impl<'a> CalculatedAnimationBuilder<'a> {
                             local_transform,
                             skeleton,
                             animation: other,
+                            time,
                         });
 
                         Ok(NonZeroUsize::new(output_index)
@@ -137,7 +141,7 @@ impl<'a> CalculatedAnimationBuilder<'a> {
         }
     }
 
-    pub fn build(self, time: f32) -> CalculatedAnimation {
+    pub fn build(self) -> Vec<CalculatedAnimation> {
         #[derive(Debug, Copy, Clone)]
         struct PoseAndInverseBindPose {
             pose: Pose,
@@ -154,70 +158,84 @@ impl<'a> CalculatedAnimationBuilder<'a> {
                 let attachment_pose = parent_setup
                     .get(parent.attachment_point)
                     .expect("invariant, the existence of this is checked by the `push` method");
-                unit.local_transform.transform(&attachment_pose.pose)
+                attachment_pose.pose.transform(&unit.local_transform)
             } else {
                 unit.local_transform
             };
 
-            let mut poses = vec![PoseAndInverseBindPose {
-                pose: root,
-                inverse_bind_pose: Pose::IDENTITY,
-            }];
+            let poses = if let Some(animation) = unit.animation {
+                let mut poses = vec![PoseAndInverseBindPose {
+                    pose: root,
+                    inverse_bind_pose: Pose::IDENTITY,
+                }];
 
-            for (index, bone) in unit.skeleton.bones.iter().enumerate().map(|(index, bone)| {
-                (
-                    NonZeroUsize::new(index + 1).expect("x + 1 never zero, will never wrap"),
-                    bone,
-                )
-            }) {
-                // NOTE: all bone parents are above it in the heirarchy, so we can look up the
-                // total parent pose in the pre-filled `poses` vec.
+                for (index, bone) in unit.skeleton.bones.iter().enumerate().map(|(index, bone)| {
+                    (
+                        NonZeroUsize::new(index + 1).expect("x + 1 never zero, will never wrap"),
+                        bone,
+                    )
+                }) {
+                    // NOTE: all bone parents are above it in the heirarchy, so we can look up the
+                    // total parent pose in the pre-filled `poses` vec.
 
-                let PoseAndInverseBindPose { pose: parent, .. } = *poses.get(bone.parent).expect(
-                    "Skeleton invariant, each bone in a skeleton may only refer to bones before it",
-                );
-                let (total, inverse_bind_pose) = if let Some(animation) = unit.animation {
+                    let PoseAndInverseBindPose { pose: parent, .. } =
+                        *poses.get(bone.parent).expect(
+                            "Skeleton invariant, each bone in a skeleton may only refer to bones \
+                             before it",
+                        );
                     let total = animation
                         .get_animation(index)
                         .expect("invariant, signatures are the same so should exist")
-                        .get_pose(time)
-                        .transform(&parent);
+                        .get_pose(unit.time)
+                        .transform_by(&parent);
                     let inverse_bind_pose = bone.inverse_bind_pose();
-                    (total, inverse_bind_pose)
-                } else {
-                    (parent, Pose::IDENTITY)
-                };
 
-                poses.push(PoseAndInverseBindPose {
-                    pose: total,
-                    inverse_bind_pose,
-                });
-            }
+                    poses.push(PoseAndInverseBindPose {
+                        pose: total,
+                        inverse_bind_pose,
+                    });
+                }
+
+                debug_assert_eq!(poses.len(), unit.skeleton.bones.len() + 1);
+                poses
+            } else {
+                vec![
+                    PoseAndInverseBindPose {
+                        pose: root,
+                        inverse_bind_pose: Pose::IDENTITY,
+                    };
+                    unit.skeleton.bones.len() + 1
+                ]
+            };
 
             output.push(poses);
         }
 
-        let mut offsets = output.iter().fold(vec![0], |mut out, vec_pose| {
-            let cumulative = *out
-                .last()
-                .expect("init has at least one value and no values are popped");
-            out.push(cumulative + vec_pose.len());
-            out
-        });
-        let _ = offsets.pop();
+        // let mut offsets = output.iter().fold(vec![0], |mut out, vec_pose| {
+        // let cumulative = *out
+        // .last()
+        // .expect("init has at least one value and no values are popped");
+        // out.push(cumulative + vec_pose.len());
+        // out
+        // });
+        // let _ = offsets.pop();
 
-        let poses = output
+        output
             .into_iter()
-            .flat_map(|vec| {
-                vec.into_iter().map(
-                    |PoseAndInverseBindPose {
-                         pose,
-                         inverse_bind_pose,
-                     }| pose.transform(&inverse_bind_pose),
-                )
+            .map(|vec| {
+                let poses = vec
+                    .into_iter()
+                    .map(
+                        |PoseAndInverseBindPose {
+                             pose,
+                             inverse_bind_pose,
+                         }| pose.transform(&inverse_bind_pose),
+                    )
+                    .collect();
+
+                CalculatedAnimation { poses }
             })
-            .collect();
-        CalculatedAnimation { offsets, poses }
+            .collect()
     }
 }
 
@@ -229,7 +247,9 @@ pub(crate) fn process_vec<'a, M: AsRef<Skeleton>>(
         .map(|(cubic, root, animation, time)| {
             Ok((
                 cubic,
-                CalculatedAnimation::builder(root, cubic.as_ref(), animation)?.build(time),
+                CalculatedAnimation::builder(root, cubic.as_ref(), animation, time)?
+                    .build()
+                    .swap_remove(0), // select 0 because no aggregare entities exist yet
             ))
         })
         .collect()
