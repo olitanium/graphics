@@ -70,7 +70,7 @@ pub fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [SkeletalVertex; 3])]) -> T>(
 }
 
 impl<T> SkinningEntity<T> {
-    pub fn bounding_box(&self) -> Option<&SkeletonBb<SkeletalVertex, T>> {
+    pub const fn bounding_box(&self) -> Option<&SkeletonBb<SkeletalVertex, T>> {
         self.bounding_box.as_ref()
     }
 

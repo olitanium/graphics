@@ -56,7 +56,7 @@ pub fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
 }
 
 impl<T> SkeletonEntity<T> {
-    pub fn bounding_box(&self) -> Option<&SkeletonBb<SimpleVertex, T>>
+    pub const fn bounding_box(&self) -> Option<&SkeletonBb<SimpleVertex, T>>
     where
         Vector<3>: Volume<3>,
         [(); Vector::<3>::ELEMENT_COUNT]:,

@@ -7,11 +7,9 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
 
 use crate::EngResult;
-use crate::entity::{EntityInner, SkeletonEntity};
-use crate::modelling::cubic::SkeletonCubic;
+use crate::entity::EntityInner;
 use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
 use crate::modelling::cubic::lighting::simple::ListLights;
-use crate::modelling::{SkeletalVertex, SkeletonBb};
 
 mod group;
 pub use group::Group as AggregateGroup;
@@ -88,7 +86,7 @@ F: FnMut(&[(Vector<3>, [M::Vertex; 3])]) -> T
         let mut animations = animations.into_iter().chain(iter::repeat(None));
         let first_animation = animations.next().flatten();
         let mut anim_builder =
-            CalculatedAnimation::builder(root_pose, &self.base_model.skeleton(), first_animation)?;
+            CalculatedAnimation::builder(root_pose, self.base_model.skeleton(), first_animation)?;
         for (
             AggregateUnit {
                 model,
@@ -104,7 +102,7 @@ F: FnMut(&[(Vector<3>, [M::Vertex; 3])]) -> T
                 *parent_unit,
                 *attachment_point,
                 *offset,
-                &model.skeleton(),
+                model.skeleton(),
                 animation,
             )?;
         }

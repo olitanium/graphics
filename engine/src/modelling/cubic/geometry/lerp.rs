@@ -12,7 +12,7 @@ where
     T: Add<Output = T>,
     T: Mul<f32, Output = T>,
 {
-    pub fn new(start: T, finish: T, duration: f32) -> Self {
+    pub const fn new(start: T, finish: T, duration: f32) -> Self {
         Self {
             start,
             finish,

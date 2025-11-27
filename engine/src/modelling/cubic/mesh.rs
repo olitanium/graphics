@@ -23,7 +23,7 @@ impl<V: CubicVertex> Mesh<V> {
         MeshBuilder::new()
     }
 
-    pub fn new(vertex_array: Rc<VertexArray<V>>, material: Rc<Material>) -> Self {
+    pub const fn new(vertex_array: Rc<VertexArray<V>>, material: Rc<Material>) -> Self {
         Self {
             vertex_array,
             material,

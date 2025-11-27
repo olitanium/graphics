@@ -1,7 +1,7 @@
 use utils::builder;
 
 use super::Bone;
-use crate::modelling::{Skeleton, SkeletonBuilder};
+use crate::modelling::SkeletonBuilder;
 use crate::modelling::cubic::geometry::{BoneAnimation, Pose};
 use crate::modelling::cubic::skeleton::GetBone;
 use crate::transform::Transform;

@@ -45,7 +45,7 @@ impl<T> Entity<T> {
 }
 
 impl<T> Entity<T> {
-    pub fn bounding_box(&self) -> Option<&BoundingBox<SimpleVertex, 3, T>>
+    pub const fn bounding_box(&self) -> Option<&BoundingBox<SimpleVertex, 3, T>>
     where
         Vector<3>: Volume<3>,
         [(); Vector::<3>::ELEMENT_COUNT]:,

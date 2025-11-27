@@ -2,7 +2,7 @@ use std::num::NonZero;
 use std::rc::Rc;
 
 use engine::array_vec::{ArrayVec, arrvec};
-use engine::entity::{AggregateEntity, Mass, SkinningEntity};
+use engine::entity::{AggregateEntity, Mass};
 use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};

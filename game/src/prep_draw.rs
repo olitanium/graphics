@@ -1,18 +1,12 @@
 use engine::entity::AggregateGroup;
 use engine::framebuffer::DefaultFramebuffer;
-use engine::linear_algebra::Vector;
 use engine::modelling::cubic::geometry::Pose;
-use engine::modelling::cubic::{SkeletonCubicGroup};
 use engine::modelling::{
     BloomGroup,
-    BoundingBoxGroup,
     QuadGroup,
-    SimpleCubicGroup,
-    SkeletonBbGroup,
     SkyBoxGroup,
 };
-use engine::query::HasDrawnQuery;
-use engine::{ColourRGBA, EngResult, VecDraw, opengl_shaders};
+use engine::{EngResult, VecDraw, opengl_shaders};
 
 use crate::state::{State, StateError};
 

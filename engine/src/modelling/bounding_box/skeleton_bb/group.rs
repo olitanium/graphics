@@ -9,7 +9,7 @@ use graphics::{ApiResult, Draw, DrawOut, ShaderProgramContext};
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
-use crate::modelling::{CubicVertex, Skeleton, SkeletonBb, Volume};
+use crate::modelling::{CubicVertex, SkeletonBb, Volume};
 use crate::opengl_shaders::BoundingBoxShaderProgram;
 use crate::{EngError, EngResult};
 

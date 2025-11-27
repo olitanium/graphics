@@ -2,7 +2,7 @@ use std::{hash::{DefaultHasher, Hash}, num::NonZeroUsize};
 use std::hash::Hasher;
 use utils::new;
 
-use crate::modelling::cubic::geometry::{BoneAnimation, CalculatedAnimationBuilder, Pose};
+use crate::modelling::cubic::geometry::BoneAnimation;
 
 #[derive(Debug, Default)]
 pub struct SkeletalAnimationBuilder {
@@ -57,7 +57,7 @@ impl SkeletalAnimation {
         self.bones.get(bone.get() - 1)
     }
 
-    pub fn signature(&self) -> u64 {
+    pub const fn signature(&self) -> u64 {
         self.signature
     }
 }

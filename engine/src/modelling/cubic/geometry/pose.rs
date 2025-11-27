@@ -30,7 +30,7 @@ impl Pose {
         }),
     };
 
-    pub fn new_from_dual(dual_quaternion: UnitDualQuaternion) -> Self {
+    pub const fn new_from_dual(dual_quaternion: UnitDualQuaternion) -> Self {
         Self { dual_quaternion }
     }
 

@@ -1,4 +1,3 @@
-use std::clone;
 
 use graphics::linear_algebra::{UnitVector, Vector};
 

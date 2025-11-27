@@ -6,7 +6,7 @@ use graphics::shader_program::{ActiveShaderProgram, ShaderProgramContext, Unifor
 use graphics::texture::Texture;
 
 use super::{ShadowFarLight, ShadowPointLight, ShadowSpotLight};
-use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
+use crate::modelling::cubic::geometry::CalculatedAnimation;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
 use crate::modelling::{SimpleCubic, VertexHasTangent};
 use crate::{EngResult, opengl_shaders};

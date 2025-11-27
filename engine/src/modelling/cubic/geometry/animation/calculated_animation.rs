@@ -2,9 +2,9 @@ use std::num::NonZeroUsize;
 
 use crate::entity::EntityInner;
 use crate::modelling::cubic::geometry::{AnimationError, Pose, SkeletalAnimation};
-use crate::modelling::{SimpleCubic, Skeleton};
+use crate::modelling::Skeleton;
 use crate::transform::Transform;
-use crate::{EngResult, TransformBy};
+use crate::TransformBy;
 
 #[derive(Debug, Clone)]
 pub struct CalculatedAnimation {

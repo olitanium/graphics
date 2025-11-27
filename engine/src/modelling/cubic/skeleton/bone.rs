@@ -1,4 +1,4 @@
-use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
+use crate::modelling::cubic::geometry::Pose;
 
 mod builder;
 pub use builder::Builder;
@@ -14,7 +14,7 @@ impl Bone {
         Builder::new(parent)
     }
 
-    pub fn inverse_bind_pose(&self) -> Pose {
+    pub const fn inverse_bind_pose(&self) -> Pose {
         self.inverse_bind_pose
     }
 }

@@ -90,12 +90,12 @@ impl Skeleton {
     }
 
     /// Used to determine whether a skeleton and an animation are compatible
-    pub(crate) fn signature(&self) -> u64 {
+    pub(crate) const fn signature(&self) -> u64 {
         self.signature
         //self.bones.iter().map(|bone| bone.parent).collect()
     }
 
-    pub(crate) fn len_incl_root(&self) -> usize {
+    pub(crate) const fn len_incl_root(&self) -> usize {
         self.bones.len() + 1
     }
 
@@ -114,7 +114,7 @@ pub enum GetBone<'a> {
 }
 
 impl<'a> GetBone<'a> {
-    pub fn is_bone(&self) -> bool {
+    pub const fn is_bone(&self) -> bool {
         match self {
             Self::NoBone => false,
             Self::RootBone | Self::Bone { .. } => true,

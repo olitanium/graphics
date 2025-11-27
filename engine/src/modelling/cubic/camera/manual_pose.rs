@@ -19,28 +19,28 @@ pub enum ManualPose {
 impl ManualPose {
     const COS_NO_CONE: f32 = 0.99;
 
-    pub fn orientation(&self) -> Orientation {
+    pub const fn orientation(&self) -> Orientation {
         match self {
             Self::FixedUp { orientation, .. } => *orientation,
             Self::Flexible { orientation, .. } => *orientation,
         }
     }
 
-    pub fn orientation_mut(&mut self) -> &mut Orientation {
+    pub const fn orientation_mut(&mut self) -> &mut Orientation {
         match self {
             Self::FixedUp { orientation, .. } => orientation,
             Self::Flexible { orientation, .. } => orientation,
         }
     }
 
-    pub fn position(&self) -> Vector<3> {
+    pub const fn position(&self) -> Vector<3> {
         match self {
             Self::FixedUp { position, .. } => *position,
             Self::Flexible { position, .. } => *position,
         }
     }
 
-    pub fn position_mut(&mut self) -> &mut Vector<3> {
+    pub const fn position_mut(&mut self) -> &mut Vector<3> {
         match self {
             Self::FixedUp { position, .. } => position,
             Self::Flexible { position, .. } => position,

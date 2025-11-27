@@ -24,7 +24,7 @@ impl<P> Builder<P> {
         Builder { pose, ..self }
     }
 
-    pub fn perspective(mut self, fov: f32, aspect: f32, near: f32, far: f32) -> Self {
+    pub const fn perspective(mut self, fov: f32, aspect: f32, near: f32, far: f32) -> Self {
         self.projection = Some(Projection::Perspective {
             fov,
             aspect,
@@ -34,7 +34,7 @@ impl<P> Builder<P> {
         self
     }
 
-    pub fn orthographic(mut self, width: f32, height: f32, near: f32, far: f32) -> Self {
+    pub const fn orthographic(mut self, width: f32, height: f32, near: f32, far: f32) -> Self {
         self.projection = Some(Projection::Orthographic {
             width,
             height,

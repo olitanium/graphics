@@ -10,7 +10,7 @@ impl PoseSclerp {
         Pose::new_from_dual(self.sclerp.get(prop))
     }
 
-    pub fn new_from_sclerp(sclerp: Sclerp) -> Self {
+    pub const fn new_from_sclerp(sclerp: Sclerp) -> Self {
         Self { sclerp }
     }
 
