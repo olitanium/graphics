@@ -137,8 +137,8 @@ impl State {
                 Pose::IDENTITY,
                 vec![
                     Some((&self.skeletal_animation, time / 60.0 + 0.5)),
-                    if self.draw_models {
-                        Some((&self.skeletal_animation, time + 0.5))
+                    if self.toggle_m {
+                        Some((&self.skeletal_animation, time - self.sword_time + 0.5))
                     } else {
                         None
                     },

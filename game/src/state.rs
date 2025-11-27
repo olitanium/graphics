@@ -25,6 +25,7 @@ use engine::types::TexDim;
 use engine::{ApiState, ColourRGBA, EngError, EngResult, Entity, Event, VecDraw};
 
 pub struct State {
+    pub sword_time: f32,
     pub time: f32,
     pub game_start: Option<f32>,
     pub camera: Camera,
@@ -33,7 +34,7 @@ pub struct State {
     pub sensitivity: f32,
 
     pub do_bloom: bool,
-    pub show_bbs: bool,
+    pub toggle_b: bool,
 
     pub speed: [f32; 3],
 
@@ -54,7 +55,7 @@ pub struct State {
     pub skeletal_animation: SkeletalAnimation,
 
     pub bounding_box_level: usize,
-    pub draw_models: bool,
+    pub toggle_m: bool,
 
     pub which_animation: Option<SkeletalAnimation>,
 
@@ -128,7 +129,7 @@ impl EngState for State {
 
         // eprintln!("fps: {}", 1.0 / frame_time);
 
-        self.controls(mouse_delta, keyboard, &mut string, frame_time)?;
+        self.controls(mouse_delta, keyboard, &mut string, frame_time, self.time)?;
 
         self.physics(frame_time);
 

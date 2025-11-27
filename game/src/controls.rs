@@ -13,6 +13,7 @@ impl State {
         keyboard: HashSet<Key>,
         string: &mut String,
         frame_time: f32,
+        time: f32,
     ) -> EngResult<(), StateError> {
         if keyboard.contains(&Key::Escape) {
             return Err(ApiError::Close.into());
@@ -77,8 +78,11 @@ impl State {
                     });
                     self.angle += 0.1;
                 }
-                'b' | 'B' => self.show_bbs = !self.show_bbs,
-                'm' | 'M' => self.draw_models = !self.draw_models,
+                'b' | 'B' => self.toggle_b = !self.toggle_b,
+                'm' | 'M' => {
+                    self.toggle_m = !self.toggle_m;
+                    self.sword_time = time;
+                },
                 'o' => {
                     self.bounding_box_level = self.bounding_box_level.wrapping_add(1);
                 }

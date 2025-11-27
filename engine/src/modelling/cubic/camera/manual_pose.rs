@@ -150,11 +150,11 @@ impl ManualPose {
         }
     }
 
-    pub fn set_orientation(&mut self, orientation: Orientation) {
+    pub const fn set_orientation(&mut self, orientation: Orientation) {
         *self.orientation_mut() = orientation;
     }
 
-    pub fn set_position(&mut self, position: Vector<3>) {
+    pub const fn set_position(&mut self, position: Vector<3>) {
         *self.position_mut() = position;
     }
 

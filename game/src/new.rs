@@ -192,7 +192,8 @@ impl State {
         aggregate_tail.push(simpletail.clone(), offset, 9, 0, 1, |_| ());
 
         Ok(Self {
-            show_bbs: true,
+            toggle_b: true,
+            sword_time: 0.0,
             time: 0.0,
             game_start: None,
             line,
@@ -210,7 +211,7 @@ impl State {
             imported,
             imported_other,
             bounding_box_level,
-            draw_models: true,
+            toggle_m: true,
 
             aggregate_tail,
             simpletail,
