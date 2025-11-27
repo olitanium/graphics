@@ -1,10 +1,10 @@
 use std::num::NonZeroUsize;
 
-use crate::entity::EntityInner;
-use crate::modelling::cubic::geometry::{AnimationError, Pose, SkeletalAnimation};
-use crate::modelling::Skeleton;
-use crate::transform::Transform;
 use crate::TransformBy;
+use crate::entity::EntityInner;
+use crate::modelling::Skeleton;
+use crate::modelling::cubic::geometry::{AnimationError, Pose, SkeletalAnimation};
+use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
 pub struct CalculatedAnimation {
@@ -201,14 +201,16 @@ impl<'a> CalculatedAnimationBuilder<'a> {
 
                 (poses, Some(animation.signature()))
             } else {
-                (vec![
-                    PoseAndInverseBindPose {
-                        pose: root,
-                        inverse_bind_pose: Pose::IDENTITY,
-                    };
-                    unit.skeleton.len_incl_root()
-                ],
-                None,)
+                (
+                    vec![
+                        PoseAndInverseBindPose {
+                            pose: root,
+                            inverse_bind_pose: Pose::IDENTITY,
+                        };
+                        unit.skeleton.len_incl_root()
+                    ],
+                    None,
+                )
             };
 
             output.push(poses);
@@ -236,7 +238,10 @@ impl<'a> CalculatedAnimationBuilder<'a> {
                     )
                     .collect();
 
-                CalculatedAnimation { poses, signature: opt_signature }
+                CalculatedAnimation {
+                    poses,
+                    signature: opt_signature,
+                }
             })
             .collect()
     }

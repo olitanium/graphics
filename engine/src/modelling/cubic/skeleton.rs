@@ -1,7 +1,6 @@
 mod bone;
-use std::hash::{DefaultHasher, Hash};
+use std::hash::{DefaultHasher, Hash, Hasher};
 use std::num::NonZeroUsize;
-use std::hash::Hasher;
 
 pub use bone::Bone;
 use utils::new;
@@ -51,7 +50,10 @@ impl SkeletonBuilder {
         let signature: Vec<_> = self.bones.iter().map(|bone| bone.parent).collect();
         signature.hash(&mut hasher);
         let hash = hasher.finish();
-        Skeleton { bones: self.bones, signature: hash }
+        Skeleton {
+            bones: self.bones,
+            signature: hash,
+        }
     }
 }
 
@@ -92,7 +94,7 @@ impl Skeleton {
     /// Used to determine whether a skeleton and an animation are compatible
     pub(crate) const fn signature(&self) -> u64 {
         self.signature
-        //self.bones.iter().map(|bone| bone.parent).collect()
+        // self.bones.iter().map(|bone| bone.parent).collect()
     }
 
     pub(crate) const fn len_incl_root(&self) -> usize {
@@ -100,7 +102,12 @@ impl Skeleton {
     }
 
     pub(crate) fn iter_non_root(&self) -> impl Iterator<Item = (NonZeroUsize, &Bone)> {
-        self.bones.iter().enumerate().map(|(index, bone)| (NonZeroUsize::new(index+1).expect("x+1 > 0 for all x, no overflow"), bone))
+        self.bones.iter().enumerate().map(|(index, bone)| {
+            (
+                NonZeroUsize::new(index + 1).expect("x+1 > 0 for all x, no overflow"),
+                bone,
+            )
+        })
     }
 }
 

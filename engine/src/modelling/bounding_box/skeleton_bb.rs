@@ -55,8 +55,12 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
         let rhs_alter_meta = &rhs_alter_meta;
 
         const ERROR_MSG: &str = "CalulatedAnimation has been generated from this skeleton";
-        let lhs_calculated_animation = lhs_calculated_animation.poses(&lhs.skeleton).expect(ERROR_MSG);
-        let rhs_calculated_animation = rhs_calculated_animation.poses(&rhs.skeleton).expect(ERROR_MSG);
+        let lhs_calculated_animation = lhs_calculated_animation
+            .poses(&lhs.skeleton)
+            .expect(ERROR_MSG);
+        let rhs_calculated_animation = rhs_calculated_animation
+            .poses(&rhs.skeleton)
+            .expect(ERROR_MSG);
         lhs.per_bone
             .iter()
             .enumerate()

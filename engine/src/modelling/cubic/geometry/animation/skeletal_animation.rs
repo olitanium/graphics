@@ -1,5 +1,6 @@
-use std::{hash::{DefaultHasher, Hash}, num::NonZeroUsize};
-use std::hash::Hasher;
+use std::hash::{DefaultHasher, Hash, Hasher};
+use std::num::NonZeroUsize;
+
 use utils::new;
 
 use crate::modelling::cubic::geometry::BoneAnimation;
@@ -45,7 +46,10 @@ impl SkeletalAnimationBuilder {
         let mut hasher = DefaultHasher::new();
         self.signature.hash(&mut hasher);
         let hash = hasher.finish();
-        SkeletalAnimation { signature: hash, bones: self.bones }
+        SkeletalAnimation {
+            signature: hash,
+            bones: self.bones,
+        }
     }
 }
 
@@ -53,6 +57,7 @@ impl SkeletalAnimation {
     pub fn builder() -> SkeletalAnimationBuilder {
         SkeletalAnimationBuilder::new()
     }
+
     pub fn get_animation(&self, bone: NonZeroUsize) -> Option<&BoneAnimation> {
         self.bones.get(bone.get() - 1)
     }

@@ -18,7 +18,6 @@ use engine::modelling::cubic::material::Material;
 use engine::modelling::cubic::{SkeletonCubic, camera};
 use engine::modelling::{Bloom, Line, Quad, SimpleCubic, Skeleton, SkyBox, test_models};
 use engine::shader_program::CullFace;
-
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
 use engine::{ColourRGB, ColourRGBA, EngResult, Entity, TransformBy};
@@ -238,7 +237,9 @@ impl State {
     }
 }
 
-pub fn make_model(which_model: &str) -> EngResult<(Option<SkeletalAnimation>, SimpleCubic), StateError> {
+pub fn make_model(
+    which_model: &str,
+) -> EngResult<(Option<SkeletalAnimation>, SimpleCubic), StateError> {
     use engine::PostProcess as P;
     let model = match which_model {
         "morgan" => (

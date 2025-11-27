@@ -31,13 +31,15 @@ struct AggregateUnit<T: Debug, M: EntityInner> {
 }
 
 impl<T: Debug, M: EntityInner> AggregateEntity<T, M> {
-    pub fn new<
-F: FnMut(&[(Vector<3>, [M::Vertex; 3])]) -> T
-    >(base_model: M, depth: usize, init: F) -> Self {
+    pub fn new<F: FnMut(&[(Vector<3>, [M::Vertex; 3])]) -> T>(
+        base_model: M,
+        depth: usize,
+        init: F,
+    ) -> Self {
         let bounding_box = base_model.make_bounding_box(depth, init);
         Self {
             base_model,
-            bounding_box, 
+            bounding_box,
             children: Vec::new(),
         }
     }

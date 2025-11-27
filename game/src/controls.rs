@@ -82,7 +82,7 @@ impl State {
                 'm' | 'M' => {
                     self.toggle_m = !self.toggle_m;
                     self.sword_time = time;
-                },
+                }
                 'o' => {
                     self.bounding_box_level = self.bounding_box_level.wrapping_add(1);
                 }

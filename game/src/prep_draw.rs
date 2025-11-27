@@ -1,11 +1,7 @@
 use engine::entity::AggregateGroup;
 use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::geometry::Pose;
-use engine::modelling::{
-    BloomGroup,
-    QuadGroup,
-    SkyBoxGroup,
-};
+use engine::modelling::{BloomGroup, QuadGroup, SkyBoxGroup};
 use engine::{EngResult, VecDraw, opengl_shaders};
 
 use crate::state::{State, StateError};

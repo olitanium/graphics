@@ -1,4 +1,3 @@
-
 use graphics::linear_algebra::{UnitVector, Vector};
 
 use crate::modelling::cubic::geometry::Pose;

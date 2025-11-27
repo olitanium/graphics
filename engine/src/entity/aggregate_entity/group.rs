@@ -7,18 +7,22 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
 use graphics::{ApiResult, Draw, DrawOut};
 
-use crate::entity::{AggregateEntity, EntityInner};
-use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::{
-    Pose,
-    SkeletalAnimation,
-};
-use crate::modelling::cubic::lighting::simple::ListLights;
-use crate::modelling::cubic::Camera;
 use crate::EngError;
+use crate::entity::{AggregateEntity, EntityInner};
+use crate::modelling::cubic::Camera;
+use crate::modelling::cubic::camera::CameraPose;
+use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
+use crate::modelling::cubic::lighting::simple::ListLights;
 
 #[derive(Debug)]
-pub struct Group<'a, M: EntityInner, T: Debug, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
+pub struct Group<
+    'a,
+    M: EntityInner,
+    T: Debug,
+    const MAX: usize,
+    const OUT: usize,
+    D: FramebufferWithDepth<OUT>,
+> {
     shader: &'a ShaderProgram<M::Vertex, (M, ListLights<MAX>), OUT, D::Tex>,
     framebuffer: &'a D,
 
@@ -35,16 +39,17 @@ pub struct Group<'a, M: EntityInner, T: Debug, const MAX: usize, const OUT: usiz
     uniforms: Vec<(String, &'a dyn Uniform)>,
 }
 
-impl<'a, M: EntityInner, T: Debug, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = FlatTexture>>
-    Group<'a, M, T, MAX, OUT, D>
+impl<
+    'a,
+    M: EntityInner,
+    T: Debug,
+    const MAX: usize,
+    const OUT: usize,
+    D: FramebufferWithDepth<OUT, Tex = FlatTexture>,
+> Group<'a, M, T, MAX, OUT, D>
 {
     pub fn new<O: CameraPose>(
-        shader: &'a ShaderProgram<
-            M::Vertex,
-            (M, ListLights<MAX>),
-            OUT,
-            FlatTexture,
-        >,
+        shader: &'a ShaderProgram<M::Vertex, (M, ListLights<MAX>), OUT, FlatTexture>,
         framebuffer: &'a D,
 
         camera: &Camera<O>,
@@ -70,8 +75,15 @@ impl<'a, M: EntityInner, T: Debug, const MAX: usize, const OUT: usize, D: Frameb
     }
 }
 
-impl<'a, T: Debug, M: EntityInner, NEVER, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>>
-    Draw<EngError<NEVER>> for Group<'a, M, T, MAX, OUT, D>
+impl<
+    'a,
+    T: Debug,
+    M: EntityInner,
+    NEVER,
+    const MAX: usize,
+    const OUT: usize,
+    D: FramebufferWithDepth<OUT>,
+> Draw<EngError<NEVER>> for Group<'a, M, T, MAX, OUT, D>
 {
     fn draw(
         self: Box<Self>,
