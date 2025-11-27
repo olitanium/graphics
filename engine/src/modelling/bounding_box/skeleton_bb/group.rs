@@ -41,8 +41,7 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
         bounding_box: &'a SkeletonBb<V, T>,
         // skeleton: &'a Skeleton,
         pose: Pose,
-        animation: Option<&'a SkeletalAnimation>,
-        time: f32,
+        animation: Option<(&'a SkeletalAnimation, f32)>,
         camera: &Camera<P>,
         hint: &P::Hint,
         level: usize,
@@ -50,7 +49,7 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
     ) -> EngResult<Box<Self>, NEVER> {
         let look_at = camera.look_at(hint);
         let calculated_animation =
-            CalculatedAnimation::builder(pose, &bounding_box.skeleton, animation, time)?
+            CalculatedAnimation::builder(pose, &bounding_box.skeleton, animation)?
                 .build()
                 .swap_remove(0); //Take 0 because there are no aggregate groups
         Ok(Box::new(Self {

@@ -52,14 +52,12 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
         opaque: Vec<(
             &'a SimpleCubic,
             Pose,
-            Option<&'a SkeletalAnimation>, // animation
-            f32,                           // time
+            Option<(&'a SkeletalAnimation, f32)>, // animation
         )>,
         transparent: Vec<(
             &'a SimpleCubic,
             Pose,
-            Option<&'a SkeletalAnimation>, // animation
-            f32,                           // time
+            Option<(&'a SkeletalAnimation, f32)>, // animation
         )>,
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> EngResult<Box<Self>, NEVER> {
@@ -69,8 +67,8 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
 
             list_light,
             output_framebuffer,
-            opaque: geometry::process_vec(opaque)?,
-            transparent: geometry::process_vec(transparent)?,
+            opaque: geometry::process_vec_noaggregate(opaque)?,
+            transparent: geometry::process_vec_noaggregate(transparent)?,
             uniforms,
         }))
     }

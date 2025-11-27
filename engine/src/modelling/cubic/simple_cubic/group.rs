@@ -11,7 +11,7 @@ use crate::modelling::cubic::geometry::{
     CalculatedAnimation,
     Pose,
     SkeletalAnimation,
-    process_vec,
+    process_vec_noaggregate,
 };
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::{SimpleCubic, SimpleVertex};
@@ -44,13 +44,12 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
         opaque: Vec<(
             &'a SimpleCubic,
             Pose,
-            Option<&'a SkeletalAnimation>, // animation
-            f32,                           // time
+            Option<(&'a SkeletalAnimation, f32)>, // animation
         )>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> EngResult<Box<Self>, NEVER> {
-        let opaque = process_vec(opaque)?;
+        let opaque = process_vec_noaggregate(opaque)?;
         Ok(Box::new(Self {
             shader,
             framebuffer,

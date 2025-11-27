@@ -12,7 +12,7 @@ use crate::modelling::cubic::geometry::{BoneAnimation, Orientation, Pose, Skelet
 use crate::modelling::cubic::material::Material;
 use crate::modelling::cubic::{MeshBuilder, SkeletonCubic};
 use crate::modelling::quad::QuadVertex;
-use crate::modelling::{Bone, ExtendedVertex, SimpleCubic, Skeleton};
+use crate::modelling::{Bone, ExtendedVertex, SimpleCubic, Skeleton, SkeletonBuilder};
 
 pub fn cube_triangles(
     lower_bound: Vector<3>,
@@ -257,10 +257,10 @@ pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletalAnimation) {
         animation
     };
 
-    let mut skeleton = Skeleton::default();
-    let mut animation_1 = SkeletalAnimation::new();
+    let mut skeleton = Skeleton::builder();
+    let mut animation_1 = SkeletalAnimation::builder();
 
-    let mut current_bone = Skeleton::ROOT_BONE;
+    let mut current_bone = SkeletonBuilder::ROOT_BONE;
 
     let cube_push = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.0]));
     let mut cube_pose = Pose::IDENTITY;
@@ -281,7 +281,7 @@ pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletalAnimation) {
         current_bone = skeleton.push_bone(bone).unwrap().get();
     }
 
-    (skeleton, animation_1)
+    (skeleton.build(), animation_1.build())
 }
 
 pub fn tail_skeleton_cubic(max_len: usize) -> (SkeletonCubic, SkeletalAnimation) {

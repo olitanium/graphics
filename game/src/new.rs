@@ -2,7 +2,7 @@ use std::num::NonZero;
 use std::rc::Rc;
 
 use engine::array_vec::{ArrayVec, arrvec};
-use engine::entity::{Mass, SkinningEntity};
+use engine::entity::{AggregateEntity, Mass, SkinningEntity};
 use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
@@ -15,9 +15,10 @@ use engine::modelling::cubic::lighting::shadow::{
 };
 use engine::modelling::cubic::lighting::simple::{ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{AggregateCubic, SkeletonCubic, camera};
+use engine::modelling::cubic::{SkeletonCubic, camera};
 use engine::modelling::{Bloom, Line, Quad, SimpleCubic, Skeleton, SkyBox, test_models};
 use engine::shader_program::CullFace;
+
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
 use engine::{ColourRGB, ColourRGBA, EngResult, Entity, TransformBy};
@@ -183,12 +184,12 @@ impl State {
         // SkinningEntity::from_skeletoncubic(simpletail, 2, Mass(1.0), |_|
         // ()).unwrap();
 
-        let mut aggregate_tail = AggregateCubic::new(simpletail.clone());
+        let mut aggregate_tail = AggregateEntity::new(simpletail.clone(), 1, |_| ());
         let offset = Pose::new_from_orientation_translation(
             Orientation::new_forward_up(UnitVector::Y, -UnitVector::Z),
             Vector::new([0.0, 0.5, 0.5]),
         );
-        aggregate_tail.push(simpletail.clone(), offset, 9);
+        aggregate_tail.push(simpletail.clone(), offset, 9, 0, 1, |_| ());
 
         Ok(Self {
             show_bbs: true,
@@ -236,11 +237,11 @@ impl State {
     }
 }
 
-pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, SimpleCubic), StateError> {
+pub fn make_model(which_model: &str) -> EngResult<(Option<SkeletalAnimation>, SimpleCubic), StateError> {
     use engine::PostProcess as P;
     let model = match which_model {
         "morgan" => (
-            SkeletalAnimation::new(),
+            None,
             SimpleCubic::import(
                 "assets/Teddy Statue/Teddy Statue.obj",
                 vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
@@ -251,7 +252,7 @@ pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, SimpleCubi
             .build(),
         ),
         "backpack" => (
-            SkeletalAnimation::new(),
+            None,
             SimpleCubic::import(
                 "assets/backpack/backpack.obj",
                 vec![
@@ -266,7 +267,7 @@ pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, SimpleCubi
             .build(),
         ),
         "bigguy" => (
-            SkeletalAnimation::new(),
+            None,
             SimpleCubic::import(
                 "assets/vamp.fbx",
                 vec![
@@ -312,14 +313,14 @@ pub fn make_model(which_model: &str) -> EngResult<(SkeletalAnimation, SimpleCubi
             }
             let (skeleton, animation_1) = test_models::tail_animation(LENGTH_TAIL);
             (
-                animation_1,
+                Some(animation_1),
                 builder
                     .cull_face(CullFace::BackFace)
                     .skeleton(skeleton)
                     .build(),
             )
         }
-        _ => (SkeletalAnimation::new(), SimpleCubic::empty()),
+        _ => (None, SimpleCubic::empty()),
     };
     Ok(model)
 }

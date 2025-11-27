@@ -1,7 +1,7 @@
 use utils::builder;
 
 use super::Bone;
-use crate::modelling::Skeleton;
+use crate::modelling::{Skeleton, SkeletonBuilder};
 use crate::modelling::cubic::geometry::{BoneAnimation, Pose};
 use crate::modelling::cubic::skeleton::GetBone;
 use crate::transform::Transform;
@@ -40,7 +40,7 @@ impl Builder {
         }
     }
 
-    pub fn build(self, skeleton: &Skeleton) -> Option<Bone> {
+    pub fn build(self, skeleton: &SkeletonBuilder) -> Option<Bone> {
         let inverse_bind_pose = match (
             self.inverse_bind_pose_relative_to_parent,
             skeleton.get(self.parent),

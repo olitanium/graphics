@@ -1,7 +1,8 @@
+use engine::entity::AggregateGroup;
 use engine::framebuffer::DefaultFramebuffer;
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::geometry::Pose;
-use engine::modelling::cubic::{AggregateGroup, SkeletonCubicGroup};
+use engine::modelling::cubic::{SkeletonCubicGroup};
 use engine::modelling::{
     BloomGroup,
     BoundingBoxGroup,
@@ -140,14 +141,14 @@ impl State {
             vec![(
                 &self.aggregate_tail,
                 Pose::IDENTITY,
-                Some(&self.skeletal_animation),
-                time / 60.0 + 0.5,
-                if self.draw_models {
-                    Some(&self.skeletal_animation)
-                } else {
-                    None
-                },
-                (time + 0.5),
+                vec![
+                    Some((&self.skeletal_animation, time / 60.0 + 0.5)),
+                    if self.draw_models {
+                        Some((&self.skeletal_animation, time + 0.5))
+                    } else {
+                        None
+                    },
+                ],
             )],
             vec![],
         ));

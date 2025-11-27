@@ -1,9 +1,11 @@
-use std::num::NonZeroUsize;
+use std::{hash::{DefaultHasher, Hash}, num::NonZeroUsize};
+use std::hash::Hasher;
+use utils::new;
 
 use crate::modelling::cubic::geometry::{BoneAnimation, CalculatedAnimationBuilder, Pose};
 
 #[derive(Debug, Default)]
-pub struct SkeletalAnimation {
+pub struct SkeletalAnimationBuilder {
     /// Used to identify whether this animation is valid for a given skeleton.
     /// The skeleton's signature can be derived as the ordered list of bone
     /// parents.
@@ -14,10 +16,14 @@ pub struct SkeletalAnimation {
     bones: Vec<BoneAnimation>,
 }
 
-impl SkeletalAnimation {
-    pub fn new() -> Self {
-        Self::default()
-    }
+#[derive(Debug, Clone)]
+pub struct SkeletalAnimation {
+    signature: u64,
+    bones: Vec<BoneAnimation>,
+}
+
+impl SkeletalAnimationBuilder {
+    new!();
 
     pub fn push_animation(
         &mut self,
@@ -35,11 +41,23 @@ impl SkeletalAnimation {
         }
     }
 
+    pub fn build(self) -> SkeletalAnimation {
+        let mut hasher = DefaultHasher::new();
+        self.signature.hash(&mut hasher);
+        let hash = hasher.finish();
+        SkeletalAnimation { signature: hash, bones: self.bones }
+    }
+}
+
+impl SkeletalAnimation {
+    pub fn builder() -> SkeletalAnimationBuilder {
+        SkeletalAnimationBuilder::new()
+    }
     pub fn get_animation(&self, bone: NonZeroUsize) -> Option<&BoneAnimation> {
         self.bones.get(bone.get() - 1)
     }
 
-    pub fn signature(&self) -> &[usize] {
-        &self.signature
+    pub fn signature(&self) -> u64 {
+        self.signature
     }
 }

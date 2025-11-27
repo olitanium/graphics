@@ -14,8 +14,8 @@ pub enum Error {
         requested: usize,
     },
     SignaturesDoNotMatch {
-        animation: Vec<usize>,
-        skeleton: Vec<usize>,
+        animation: u64,
+        skeleton: u64,
     },
     BoneDoesNotExist {
         requested: usize,

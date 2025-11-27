@@ -1,36 +1,26 @@
 mod bone;
+use std::hash::{DefaultHasher, Hash};
 use std::num::NonZeroUsize;
+use std::hash::Hasher;
 
 pub use bone::Bone;
-use graphics::linear_algebra::Matrix;
+use utils::new;
 
-use super::geometry::Pose;
-use crate::modelling::cubic::geometry::SkeletalAnimation;
-use crate::transform::Transform;
-
-#[derive(Debug, Clone)]
-pub struct Skeleton {
+#[derive(Debug, Clone, Default)]
+pub struct SkeletonBuilder {
     // All accesses to `values` is offset by -1, where 0 means accessing the root node (given in
     // functions), 1 means accessing values[0], 2 => values[1] etc...
     pub(crate) bones: Vec<Bone>,
 }
 
-impl Default for Skeleton {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+impl SkeletonBuilder {
+    pub const ROOT_BONE: usize = Skeleton::ROOT_BONE;
 
-impl Skeleton {
-    pub const ROOT_BONE: usize = 0;
-
-    pub fn new() -> Self {
-        Self { bones: vec![] }
-    }
+    new!();
 
     /// Returns the index of that bone, or `None` if the parent does not exist.
     pub fn push_bone(&mut self, bone: Bone) -> Option<NonZeroUsize> {
-        let (GetBone::RootBone | GetBone::Bone { .. }) = self.get(bone.parent) else {
+        if !self.get(bone.parent).is_bone() {
             return None;
         };
 
@@ -56,9 +46,61 @@ impl Skeleton {
         }
     }
 
+    pub fn build(self) -> Skeleton {
+        let mut hasher = DefaultHasher::new();
+        let signature: Vec<_> = self.bones.iter().map(|bone| bone.parent).collect();
+        signature.hash(&mut hasher);
+        let hash = hasher.finish();
+        Skeleton { bones: self.bones, signature: hash }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Skeleton {
+    bones: Vec<Bone>,
+    signature: u64,
+}
+
+impl Default for Skeleton {
+    fn default() -> Self {
+        Self::builder().build()
+    }
+}
+
+impl Skeleton {
+    pub const ROOT_BONE: usize = 0;
+
+    pub fn builder() -> SkeletonBuilder {
+        SkeletonBuilder::new()
+    }
+
+    pub(crate) fn get(&self, index: usize) -> GetBone<'_> {
+        if let Some(non_zero_index) = NonZeroUsize::new(index) {
+            match self.bones.get(index - 1) {
+                Some(bone) => GetBone::Bone {
+                    bone_index: non_zero_index,
+                    bone,
+                },
+                None => GetBone::NoBone,
+            }
+        } else {
+            // i.e. index == 0
+            GetBone::RootBone
+        }
+    }
+
     /// Used to determine whether a skeleton and an animation are compatible
-    pub(crate) fn signature(&self) -> Vec<usize> {
-        self.bones.iter().map(|bone| bone.parent).collect()
+    pub(crate) fn signature(&self) -> u64 {
+        self.signature
+        //self.bones.iter().map(|bone| bone.parent).collect()
+    }
+
+    pub(crate) fn len_incl_root(&self) -> usize {
+        self.bones.len() + 1
+    }
+
+    pub(crate) fn iter_non_root(&self) -> impl Iterator<Item = (NonZeroUsize, &Bone)> {
+        self.bones.iter().enumerate().map(|(index, bone)| (NonZeroUsize::new(index+1).expect("x+1 > 0 for all x, no overflow"), bone))
     }
 }
 

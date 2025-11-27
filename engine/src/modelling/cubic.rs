@@ -6,12 +6,13 @@ mod import;
 pub use import::Error as ImportError;
 
 mod skeleton;
-pub use skeleton::{Bone, Skeleton};
+pub use skeleton::{Bone, Skeleton, SkeletonBuilder};
 
 pub mod camera;
 pub use camera::{Builder as CameraBuilder, Camera};
 
 pub mod geometry;
+pub use geometry::AnimationError;
 
 pub mod lighting;
 
@@ -27,6 +28,3 @@ pub use simple_cubic::{
 
 mod skeleton_cubic;
 pub use skeleton_cubic::{SkeletonCubic, SkeletonCubicGroup};
-
-mod aggregate_model;
-pub use aggregate_model::{AggregateCubic, AggregateGroup};

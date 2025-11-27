@@ -7,6 +7,7 @@ pub use cubic::{
     SimpleCubic,
     SimpleCubicGroup,
     Skeleton,
+    SkeletonBuilder,
 };
 mod line;
 pub use line::{Line, LineGroup, TestLineVertex};

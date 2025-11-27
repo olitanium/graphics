@@ -3,7 +3,7 @@ mod lerp;
 mod orientation;
 mod pose;
 
-pub(crate) use animation::process_vec;
+pub(crate) use animation::process_vec_noaggregate;
 pub use animation::{
     AnimationError,
     BoneAnimation,

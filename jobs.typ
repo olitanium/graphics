@@ -13,6 +13,7 @@
 - Animations signature matching with skeletons to remove unwraps
 - Bone cacheing or do animations different.
 - Camera ManualPose use Pose
+- ShaderProgram generics Vertex, Model and `Extra`
 - Import
 
 = Skeletal Animation Notes

@@ -11,7 +11,7 @@ use crate::modelling::cubic::geometry::{
     CalculatedAnimation,
     Pose,
     SkeletalAnimation,
-    process_vec,
+    process_vec_noaggregate,
 };
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::cubic::{Camera, SkeletonCubic};
@@ -49,8 +49,7 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
         opaque: Vec<(
             &'a SkeletonCubic,
             Pose,
-            Option<&'a SkeletalAnimation>,
-            f32, // time
+            Option<(&'a SkeletalAnimation, f32)>,
         )>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,
@@ -61,7 +60,7 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
             camera_pos: camera.position(hint),
             camera_look_at: camera.look_at(hint),
             lights,
-            opaque: process_vec(opaque)?,
+            opaque: process_vec_noaggregate(opaque)?,
             uniforms,
         }))
     }
@@ -92,7 +91,7 @@ impl<'a, NEVER, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>
             model.draw(
                 &mut active_shader,
                 &mut active_framebuffer,
-                calculated_animation,
+                &calculated_animation,
             )?;
         }
         DrawOut::OK

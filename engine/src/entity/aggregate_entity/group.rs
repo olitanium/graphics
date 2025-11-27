@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
@@ -5,6 +7,7 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
 use graphics::{ApiResult, Draw, DrawOut};
 
+use crate::entity::{AggregateEntity, EntityInner};
 use crate::modelling::SkeletalVertex;
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::geometry::{
@@ -12,15 +15,15 @@ use crate::modelling::cubic::geometry::{
     CalculatedAnimationBuilder,
     Pose,
     SkeletalAnimation,
-    process_vec,
+    process_vec_noaggregate,
 };
 use crate::modelling::cubic::lighting::simple::ListLights;
-use crate::modelling::cubic::{AggregateCubic, Camera, SkeletonCubic};
+use crate::modelling::cubic::{Camera, SkeletonCubic};
 use crate::{EngError, EngResult};
 
 #[derive(Debug)]
-pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
-    shader: &'a ShaderProgram<SkeletalVertex, (SkeletonCubic, ListLights<MAX>), OUT, D::Tex>,
+pub struct Group<'a, M: EntityInner, T: Debug, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
+    shader: &'a ShaderProgram<M::Vertex, (M, ListLights<MAX>), OUT, D::Tex>,
     framebuffer: &'a D,
 
     camera_pos: Vector<3>,
@@ -28,24 +31,21 @@ pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth
 
     lights: &'a ListLights<MAX>,
     opaque: Vec<(
-        &'a AggregateCubic,
+        &'a AggregateEntity<T, M>,
         Pose,
-        Option<&'a SkeletalAnimation>,
-        f32,
-        Option<&'a SkeletalAnimation>,
-        f32,
+        Vec<Option<(&'a SkeletalAnimation, f32)>>,
     )>,
 
     uniforms: Vec<(String, &'a dyn Uniform)>,
 }
 
-impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = FlatTexture>>
-    Group<'a, MAX, OUT, D>
+impl<'a, M: EntityInner, T: Debug, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = FlatTexture>>
+    Group<'a, M, T, MAX, OUT, D>
 {
     pub fn new<O: CameraPose>(
         shader: &'a ShaderProgram<
-            SkeletalVertex,
-            (SkeletonCubic, ListLights<MAX>),
+            M::Vertex,
+            (M, ListLights<MAX>),
             OUT,
             FlatTexture,
         >,
@@ -55,12 +55,9 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
         hint: &O::Hint,
         lights: &'a ListLights<MAX>,
         opaque: Vec<(
-            &'a AggregateCubic,
+            &'a AggregateEntity<T, M>,
             Pose,
-            Option<&'a SkeletalAnimation>,
-            f32, // time
-            Option<&'a SkeletalAnimation>,
-            f32,
+            Vec<Option<(&'a SkeletalAnimation, f32)>>, // time
         )>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,
@@ -77,8 +74,8 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
     }
 }
 
-impl<'a, NEVER, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>>
-    Draw<EngError<NEVER>> for Group<'a, MAX, OUT, D>
+impl<'a, T: Debug, M: EntityInner, NEVER, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>>
+    Draw<EngError<NEVER>> for Group<'a, M, T, MAX, OUT, D>
 {
     fn draw(
         self: Box<Self>,
@@ -98,15 +95,12 @@ impl<'a, NEVER, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>
 
         active_shader.set_uniform_dyn(self.uniforms)?;
 
-        for (model, pose, animation1, time1, animation2, time2) in self.opaque {
+        for (model, pose, animations) in self.opaque {
             model.draw(
                 &mut active_shader,
                 &mut active_framebuffer,
                 pose,
-                animation1,
-                time1,
-                animation2,
-                time2,
+                animations,
             )?;
         }
         DrawOut::OK

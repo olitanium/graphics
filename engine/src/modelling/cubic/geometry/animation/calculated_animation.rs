@@ -1,5 +1,6 @@
 use std::num::NonZeroUsize;
 
+use crate::entity::EntityInner;
 use crate::modelling::cubic::geometry::{AnimationError, Pose, SkeletalAnimation};
 use crate::modelling::{SimpleCubic, Skeleton};
 use crate::transform::Transform;
@@ -9,6 +10,7 @@ use crate::{EngResult, TransformBy};
 pub struct CalculatedAnimation {
     // offsets: Vec<usize>,
     poses: Vec<Pose>,
+    signature: Option<u64>,
 }
 
 pub struct CalculatedAnimationBuilder<'a> {
@@ -23,14 +25,24 @@ impl CalculatedAnimation {
     pub fn builder<'a>(
         root_pose: Pose,
         root_skeleton: &'a Skeleton,
-        root_animation: Option<&'a SkeletalAnimation>,
-        root_time: f32,
+        root_animation: Option<(&'a SkeletalAnimation, f32)>,
     ) -> Result<CalculatedAnimationBuilder<'a>, AnimationError> {
-        CalculatedAnimationBuilder::new(root_pose, root_skeleton, root_animation, root_time)
+        CalculatedAnimationBuilder::new(root_pose, root_skeleton, root_animation)
     }
 
-    pub fn poses(&self) -> &[Pose] {
-        &self.poses
+    pub fn poses(&self, skeleton: &Skeleton) -> Result<&[Pose], AnimationError> {
+        if let Some(signature) = self.signature {
+            if skeleton.signature() == signature {
+                Ok(&self.poses)
+            } else {
+                Err(AnimationError::SignaturesDoNotMatch {
+                    animation: signature,
+                    skeleton: skeleton.signature(),
+                })
+            }
+        } else {
+            Ok(&self.poses)
+        }
     }
 
     pub fn get(&self, index: usize) -> Result<Pose, AnimationError> {
@@ -56,21 +68,19 @@ struct AnimationUnit<'a> {
     local_transform: Pose,
     // invariant: Skeleton and Skeletal Animation have same signature
     skeleton: &'a Skeleton,
-    animation: Option<&'a SkeletalAnimation>,
-    time: f32,
+    animation: Option<(&'a SkeletalAnimation, f32)>,
 }
 
 impl<'a> CalculatedAnimationBuilder<'a> {
     pub fn new(
         root_pose: Pose,
         root_skeleton: &'a Skeleton,
-        root_animation: Option<&'a SkeletalAnimation>,
-        root_time: f32,
+        root_animation: Option<(&'a SkeletalAnimation, f32)>,
     ) -> Result<Self, AnimationError> {
         match root_animation {
-            Some(animation) if animation.signature() != root_skeleton.signature() => {
+            Some((animation, _)) if animation.signature() != root_skeleton.signature() => {
                 Err(AnimationError::SignaturesDoNotMatch {
-                    animation: animation.signature().to_vec(),
+                    animation: animation.signature(),
                     skeleton: root_skeleton.signature(),
                 })
             }
@@ -80,7 +90,6 @@ impl<'a> CalculatedAnimationBuilder<'a> {
                     local_transform: root_pose,
                     skeleton: root_skeleton,
                     animation: other,
-                    time: root_time,
                 }],
             }),
         }
@@ -92,8 +101,7 @@ impl<'a> CalculatedAnimationBuilder<'a> {
         attachment_point: usize,
         local_transform: Pose,
         skeleton: &'a Skeleton,
-        animation: Option<&'a SkeletalAnimation>,
-        time: f32,
+        animation: Option<(&'a SkeletalAnimation, f32)>,
     ) -> Result<NonZeroUsize, AnimationError> {
         let output_index = self.units.len();
 
@@ -104,9 +112,9 @@ impl<'a> CalculatedAnimationBuilder<'a> {
                 // parent IS in the builder and skeleton DOES have relevant attachement point
                 // (bone)
                 match animation {
-                    Some(in_animation) if in_animation.signature() != skeleton.signature() => {
+                    Some((in_animation, _)) if in_animation.signature() != skeleton.signature() => {
                         Err(AnimationError::SignaturesDoNotMatch {
-                            animation: in_animation.signature().to_vec(),
+                            animation: in_animation.signature(),
                             skeleton: skeleton.signature(),
                         })
                     }
@@ -119,7 +127,6 @@ impl<'a> CalculatedAnimationBuilder<'a> {
                             local_transform,
                             skeleton,
                             animation: other,
-                            time,
                         });
 
                         Ok(NonZeroUsize::new(output_index)
@@ -129,7 +136,7 @@ impl<'a> CalculatedAnimationBuilder<'a> {
             } else {
                 Err(AnimationError::AttachementPointDoesNotExist {
                     parent,
-                    available: parent_skeleton.skeleton.bones.len(),
+                    available: parent_skeleton.skeleton.len_incl_root(),
                     requested: attachment_point,
                 })
             }
@@ -148,7 +155,7 @@ impl<'a> CalculatedAnimationBuilder<'a> {
             inverse_bind_pose: Pose,
         }
 
-        let mut output: Vec<Vec<PoseAndInverseBindPose>> = Vec::new();
+        let mut output: Vec<(Vec<PoseAndInverseBindPose>, Option<u64>)> = Vec::new();
 
         for unit in self.units {
             let root = if let Some(parent) = unit.parent {
@@ -156,6 +163,7 @@ impl<'a> CalculatedAnimationBuilder<'a> {
                     "invariant, parent should exist earlier in the list than the descendent",
                 );
                 let attachment_pose = parent_setup
+                    .0
                     .get(parent.attachment_point)
                     .expect("invariant, the existence of this is checked by the `push` method");
                 attachment_pose.pose.transform(&unit.local_transform)
@@ -163,18 +171,13 @@ impl<'a> CalculatedAnimationBuilder<'a> {
                 unit.local_transform
             };
 
-            let poses = if let Some(animation) = unit.animation {
+            let poses = if let Some((animation, time)) = unit.animation {
                 let mut poses = vec![PoseAndInverseBindPose {
                     pose: root,
                     inverse_bind_pose: Pose::IDENTITY,
                 }];
 
-                for (index, bone) in unit.skeleton.bones.iter().enumerate().map(|(index, bone)| {
-                    (
-                        NonZeroUsize::new(index + 1).expect("x + 1 never zero, will never wrap"),
-                        bone,
-                    )
-                }) {
+                for (index, bone) in unit.skeleton.iter_non_root() {
                     // NOTE: all bone parents are above it in the heirarchy, so we can look up the
                     // total parent pose in the pre-filled `poses` vec.
 
@@ -186,7 +189,7 @@ impl<'a> CalculatedAnimationBuilder<'a> {
                     let total = animation
                         .get_animation(index)
                         .expect("invariant, signatures are the same so should exist")
-                        .get_pose(unit.time)
+                        .get_pose(time)
                         .transform_by(&parent);
                     let inverse_bind_pose = bone.inverse_bind_pose();
 
@@ -196,16 +199,16 @@ impl<'a> CalculatedAnimationBuilder<'a> {
                     });
                 }
 
-                debug_assert_eq!(poses.len(), unit.skeleton.bones.len() + 1);
-                poses
+                (poses, Some(animation.signature()))
             } else {
-                vec![
+                (vec![
                     PoseAndInverseBindPose {
                         pose: root,
                         inverse_bind_pose: Pose::IDENTITY,
                     };
-                    unit.skeleton.bones.len() + 1
-                ]
+                    unit.skeleton.len_incl_root()
+                ],
+                None,)
             };
 
             output.push(poses);
@@ -222,7 +225,7 @@ impl<'a> CalculatedAnimationBuilder<'a> {
 
         output
             .into_iter()
-            .map(|vec| {
+            .map(|(vec, opt_signature)| {
                 let poses = vec
                     .into_iter()
                     .map(
@@ -233,21 +236,21 @@ impl<'a> CalculatedAnimationBuilder<'a> {
                     )
                     .collect();
 
-                CalculatedAnimation { poses }
+                CalculatedAnimation { poses, signature: opt_signature }
             })
             .collect()
     }
 }
 
-pub(crate) fn process_vec<'a, M: AsRef<Skeleton>>(
-    input: Vec<(&'a M, Pose, Option<&'a SkeletalAnimation>, f32)>,
+pub(crate) fn process_vec_noaggregate<'a, M: EntityInner>(
+    input: Vec<(&'a M, Pose, Option<(&'a SkeletalAnimation, f32)>)>,
 ) -> Result<Vec<(&'a M, CalculatedAnimation)>, AnimationError> {
     input
         .into_iter()
-        .map(|(cubic, root, animation, time)| {
+        .map(|(cubic, root, animation)| {
             Ok((
                 cubic,
-                CalculatedAnimation::builder(root, cubic.as_ref(), animation, time)?
+                CalculatedAnimation::builder(root, cubic.skeleton(), animation)?
                     .build()
                     .swap_remove(0), // select 0 because no aggregare entities exist yet
             ))

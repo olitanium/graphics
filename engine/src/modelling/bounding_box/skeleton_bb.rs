@@ -19,6 +19,7 @@ pub use group::Group as SkeletonBbGroup;
 #[derive(Debug, Clone)]
 pub struct SkeletonBb<V: CubicVertex, T> {
     per_bone: Vec<BoundingBox<V, 3, T>>,
+    // TODO: try and remove this
     skeleton: Skeleton,
 }
 
@@ -58,20 +59,21 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
         let lhs_alter_meta = &lhs_alter_meta;
         let rhs_alter_meta = &rhs_alter_meta;
 
-        let lhs_calculated_animation = lhs_calculated_animation.poses();
-        let rhs_calculated_animation = rhs_calculated_animation.poses();
+        const ERROR_MSG: &str = "CalulatedAnimation has been generated from this skeleton";
+        let lhs_calculated_animation = lhs_calculated_animation.poses(&lhs.skeleton).expect(ERROR_MSG);
+        let rhs_calculated_animation = rhs_calculated_animation.poses(&rhs.skeleton).expect(ERROR_MSG);
         lhs.per_bone
             .iter()
             .enumerate()
             .flat_map(|(lhs_bone, lhs_bb)| {
                 let lhs_pose =
                     // TODO: well formed
-                    *lhs_calculated_animation.get(lhs_bone).unwrap();
+                    *lhs_calculated_animation.get(lhs_bone).expect(ERROR_MSG);
                 rhs.per_bone
                     .iter()
                     .enumerate()
                     .flat_map(move |(rhs_bone, rhs_bb)| {
-                        let rhs_pose = *rhs_calculated_animation.get(rhs_bone).unwrap();
+                        let rhs_pose = *rhs_calculated_animation.get(rhs_bone).expect(ERROR_MSG);
 
                         BoundingBox::detect_collision(
                             lhs_bb,

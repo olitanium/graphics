@@ -25,6 +25,7 @@ pub use uniform::{NameNotFoundError, Uniform};
 mod cull_face;
 pub use cull_face::CullFace;
 
+// TODO: Do I want to add another generic for "model extra", like lights?
 #[derive(Debug)]
 pub struct ShaderProgram<V: Vertex, M: ?Sized, const OUT: usize, T: Texture> {
     pub(crate) id: ShaderProgramId,

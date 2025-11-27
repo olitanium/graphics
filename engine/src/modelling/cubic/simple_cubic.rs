@@ -1,3 +1,4 @@
+use std::fmt::Debug;
 use std::path::Path;
 use std::rc::Rc;
 
@@ -7,13 +8,15 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Matrix;
 use graphics::shader_program::{ActiveShaderProgram, CullFace};
 use russimp::scene::PostProcess;
+use utils::partition;
 
 use super::material::Material;
 use super::{Mesh, Skeleton, import};
+use crate::entity::EntityInner;
 use crate::error::EngResult;
 use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
 use crate::modelling::simple_vertex::SimpleVertex;
-use crate::modelling::test_models;
+use crate::modelling::{SkeletonBb, test_models};
 
 mod group;
 pub use group::Group;
@@ -107,8 +110,33 @@ impl SimpleCubic {
     }
 }
 
-impl AsRef<Skeleton> for SimpleCubic {
-    fn as_ref(&self) -> &Skeleton {
+impl EntityInner for SimpleCubic {
+    type BoundingBox<T: Debug> = SkeletonBb<SimpleVertex, T>;
+    type Vertex = SimpleVertex;
+
+    fn make_bounding_box<
+        T: Debug,
+        F: FnMut(&[(graphics::linear_algebra::Vector<3>, [Self::Vertex; 3])]) -> T,
+    >(
+        &self,
+        depth: usize,
+        init: F,
+    ) -> Option<Self::BoundingBox<T>> {
+        let per_mesh = partition(self.triangles(), |(bone, _)| vec![*bone], |(_, tri)| tri);
+
+        SkeletonBb::from_vec_triangle(per_mesh, depth, self.skeleton.clone(), init)
+    }
+
+    fn skeleton(&self) -> &Skeleton {
         &self.skeleton
+    }
+
+    fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
+        &'a self,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self::Vertex, (Self, L), D::Tex, OUT>,
+        active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
+        calculated_animation: &CalculatedAnimation,
+    ) -> EngResult<(), NEVER> {
+        self.draw(active_shader, active_framebuffer, calculated_animation)
     }
 }
