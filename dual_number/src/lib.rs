@@ -4,10 +4,13 @@ use std::ops::{Add, Mul, Neg, Sub};
 mod dual_quaternion;
 pub use dual_quaternion::{DualQuaternion, Sclerp, UnitDualQuaternion};
 
+#[cfg(test)]
+mod test;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct DualNumber<Z> {
-    pub real: Z,
-    pub dual: Z,
+pub struct DualNumber<T> {
+    pub real: T,
+    pub dual: T,
 }
 
 impl<T> DualNumber<T> {
@@ -27,11 +30,10 @@ impl<M, T: Add<M>> Add<DualNumber<M>> for DualNumber<T> {
     }
 }
 
-impl<M, T> Mul<DualNumber<M>> for DualNumber<T>
+impl<M, T: Mul<M>> Mul<DualNumber<M>> for DualNumber<T>
 where
     M: Clone,
     T: Clone,
-    T: Mul<M>,
     <T as Mul<M>>::Output: Add<Output = <T as Mul<M>>::Output>,
 {
     type Output = DualNumber<<T as Mul<M>>::Output>;
@@ -44,6 +46,31 @@ where
     }
 }
 
+impl<T> Mul<f32> for DualNumber<T> 
+where 
+    T: Mul<f32>,
+{
+    type Output = DualNumber<<T as Mul<f32>>::Output>;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        Self::Output {
+            real: self.real * rhs,
+            dual: self.dual * rhs
+        }
+    }
+}
+
+impl<T> Mul<DualNumber<T>> for f32 
+where DualNumber<T>: Mul<Self>,
+{
+    type Output = <DualNumber<T> as Mul<Self>>::Output;
+
+    fn mul(self, rhs: DualNumber<T>) -> Self::Output {
+        rhs * self
+    }
+}
+
+
 impl<M, T: Sub<M>> Sub<DualNumber<M>> for DualNumber<T> {
     type Output = DualNumber<<T as Sub<M>>::Output>;
 
@@ -55,35 +82,13 @@ impl<M, T: Sub<M>> Sub<DualNumber<M>> for DualNumber<T> {
     }
 }
 
-impl<T: Neg<Output = T>> Neg for DualNumber<T> {
-    type Output = Self;
+impl<U, T: Neg<Output = U>> Neg for DualNumber<T> {
+    type Output = DualNumber<U>;
 
     fn neg(self) -> Self::Output {
-        Self {
+        Self::Output {
             real: -self.real,
             dual: -self.dual,
-        }
-    }
-}
-
-impl<T> Mul<DualNumber<T>> for f32
-where
-    DualNumber<T>: Mul<f32>,
-{
-    type Output = <DualNumber<T> as Mul<f32>>::Output;
-
-    fn mul(self, rhs: DualNumber<T>) -> Self::Output {
-        rhs * self
-    }
-}
-
-impl Mul<f32> for DualNumber<f32> {
-    type Output = Self;
-
-    fn mul(self, rhs: f32) -> Self::Output {
-        Self::Output {
-            real: self.real * rhs,
-            dual: self.dual * rhs,
         }
     }
 }

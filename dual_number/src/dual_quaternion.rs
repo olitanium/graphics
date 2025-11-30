@@ -18,15 +18,15 @@ impl DualQuaternion {
         }
     }
 
-    pub fn conjugate(self) -> Self {
+    pub fn quaternion_conjugate(self) -> Self {
         Self {
             real: self.real.conjugate(),
             dual: self.dual.conjugate(),
         }
     }
 
-    pub fn magnitude(self) -> DualNumber<f32> {
-        let magnitude = self * self.conjugate();
+    pub fn magnitude_sq(self) -> DualNumber<f32> {
+        let magnitude = self * self.quaternion_conjugate();
 
         // assert!(magnitude.real.vector().is_zero());
         // assert!(magnitude.dual.vector().is_zero());
@@ -55,6 +55,13 @@ impl DualQuaternion {
         Self {
             real: real_term,
             dual: dual_term,
+        }
+    }
+
+    pub fn conjugate(self) -> Self {
+        Self {
+            real: self.real.conjugate(),
+            dual: self.dual.conjugate(),
         }
     }
 

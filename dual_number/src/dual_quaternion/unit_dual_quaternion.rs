@@ -6,7 +6,7 @@ pub struct UnitDualQuaternion(DualQuaternion);
 impl UnitDualQuaternion {
     pub fn normalize_dual_quaternion(dual_quaternion: DualQuaternion) -> Self {
         // https://stackoverflow.com/questions/23174899/properly-normalizing-a-dual-quaternion
-        let DualNumber { real: s, dual: t } = dual_quaternion.magnitude();
+        let DualNumber { real: s, dual: t } = dual_quaternion.magnitude_sq();
         let u = 1.0 / s.sqrt();
 
         let factor = DualNumber {
@@ -23,7 +23,7 @@ impl UnitDualQuaternion {
     }
 
     pub fn conjugate(self) -> Self {
-        Self(self.0.conjugate())
+        Self(self.0.quaternion_conjugate())
     }
 
     pub fn inverse(self) -> Self {
