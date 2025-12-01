@@ -6,7 +6,7 @@ mod import;
 pub use import::Error as ImportError;
 
 mod skeleton;
-pub use skeleton::{Bone, Skeleton, SkeletonBuilder};
+pub use skeleton::{Bone, Skeleton, SkeletonBoneIndex, SkeletonBuilder};
 
 pub mod camera;
 pub use camera::{Builder as CameraBuilder, Camera};

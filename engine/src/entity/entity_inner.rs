@@ -1,4 +1,3 @@
-use std::fmt::Debug;
 
 use graphics::ActiveShaderProgram;
 use graphics::framebuffer::ActiveFramebuffer;
@@ -10,10 +9,10 @@ use crate::modelling::cubic::geometry::CalculatedAnimation;
 use crate::modelling::{CubicVertex, Skeleton};
 
 pub trait EntityInner: Sized {
-    type BoundingBox<T: Debug>: Debug;
+    type BoundingBox<T>;
     type Vertex: CubicVertex;
 
-    fn make_bounding_box<T: Debug, F: FnMut(&[(Vector<3>, [Self::Vertex; 3])]) -> T>(
+    fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [Self::Vertex; 3])]) -> T>(
         &self,
         depth: usize,
         init: F,

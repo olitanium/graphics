@@ -1,13 +1,14 @@
+use std::iter;
 use std::num::NonZero;
 use std::rc::Rc;
 
 use engine::array_vec::{ArrayVec, arrvec};
-use engine::entity::{AggregateEntity, Mass};
+use engine::entity::{AggregateEntity, AggregateModelIndex, Mass};
 use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::camera::ManualPose;
-use engine::modelling::cubic::geometry::{Orientation, Pose, SkeletalAnimation};
+use engine::modelling::cubic::geometry::{BoneAnimation, Orientation, Pose, SkeletalAnimation};
 use engine::modelling::cubic::lighting::shadow::{
     ShadowListLights,
     ShadowPointLight,
@@ -15,13 +16,14 @@ use engine::modelling::cubic::lighting::shadow::{
 };
 use engine::modelling::cubic::lighting::simple::{ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{SkeletonCubic, camera};
-use engine::modelling::{Bloom, Line, Quad, SimpleCubic, Skeleton, SkyBox, test_models};
+use engine::modelling::cubic::{SkeletonBoneIndex, SkeletonCubic, camera};
+use engine::modelling::{Bloom, Bone, Line, Quad, SimpleCubic, Skeleton, SkyBox, test_models};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
 use engine::{ColourRGB, ColourRGBA, EngResult, Entity, TransformBy};
 
+use crate::new;
 use crate::state::{State, StateError};
 
 impl State {
@@ -177,7 +179,7 @@ impl State {
 
         let line = Line::new(vec![]);
 
-        let (simpletail, skeletal_animation) = SkeletonCubic::debug_tail();
+        let (simpletail, end_attachment_point, skeletal_animation) = SkeletonCubic::debug_tail();
 
         // let simpletail =
         // SkinningEntity::from_skeletoncubic(simpletail, 2, Mass(1.0), |_|
@@ -188,11 +190,20 @@ impl State {
             Orientation::new_forward_up(UnitVector::Y, -UnitVector::Z),
             Vector::new([0.0, 0.5, 0.5]),
         );
-        aggregate_tail.push(simpletail.clone(), offset, 9, 0, 1, |_| ());
+        aggregate_tail.push(
+            simpletail.clone(),
+            offset,
+            end_attachment_point,
+            AggregateModelIndex::ROOT_MODEL_INDEX,
+            1,
+            |_| (),
+        );
+
+        let (grappling_hook, grapple_chain_anim) = grappling_hook();
 
         Ok(Self {
             toggle_b: true,
-            sword_time: 0.0,
+            reset_time: 0.0,
             time: 0.0,
             game_start: None,
             line,
@@ -211,6 +222,9 @@ impl State {
             imported_other,
             bounding_box_level,
             toggle_m: true,
+
+            grapple_chain_anim,
+            grappling_hook,
 
             aggregate_tail,
             simpletail,
@@ -283,46 +297,154 @@ pub fn make_model(
             .scale(0.01)
             .build(),
         ),
-        "oliver" => {
-            let material = Rc::new(
-                Material::builder()
-                    .diffuse(FlatTexture::monochrome(ColourRGBA::new([
-                        1.0, 0.0, 0.0, 1.0,
-                    ])))
-                    .build(),
-            );
-
-            let mut builder = SimpleCubic::builder();
-            const LENGTH_TAIL: usize = 10;
-            let cube_push = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.0]));
-            let mut cube_pose = Pose::IDENTITY;
-
-            builder.push_cube(cube_pose, material, 1.0, Skeleton::ROOT_BONE);
-
-            for current_bone in 1..LENGTH_TAIL {
-                cube_pose = cube_pose.transform_by(&cube_push);
-
-                let material = Rc::new(
-                    Material::builder()
-                        .diffuse(FlatTexture::grayscale(
-                            current_bone as f32 / LENGTH_TAIL as f32,
-                            1.0,
-                        ))
-                        .build(),
-                );
-
-                builder.push_cube(cube_pose, material, 1.0, current_bone);
-            }
-            let (skeleton, animation_1) = test_models::tail_animation(LENGTH_TAIL);
-            (
-                Some(animation_1),
-                builder
-                    .cull_face(CullFace::BackFace)
-                    .skeleton(skeleton)
-                    .build(),
-            )
-        }
+        // "oliver" => {
+        // let material = Rc::new(
+        // Material::builder()
+        // .diffuse(FlatTexture::monochrome(ColourRGBA::new([
+        // 1.0, 0.0, 0.0, 1.0,
+        // ])))
+        // .build(),
+        // );
+        //
+        // let mut builder = SimpleCubic::builder();
+        // const LENGTH_TAIL: usize = 10;
+        // let cube_push = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.0]));
+        // let mut cube_pose = Pose::IDENTITY;
+        //
+        // builder.push_cube(cube_pose, material, 1.0, SkeletonBoneIndex::SKELETON_ROOT_BONE);
+        //
+        // for current_bone in 1..LENGTH_TAIL {
+        // cube_pose = cube_pose.transform_by(&cube_push);
+        //
+        // let material = Rc::new(
+        // Material::builder()
+        // .diffuse(FlatTexture::grayscale(
+        // current_bone as f32 / LENGTH_TAIL as f32,
+        // 1.0,
+        // ))
+        // .build(),
+        // );
+        //
+        // builder.push_cube(cube_pose, material, 1.0, current_bone);
+        // }
+        // let (skeleton, _, animation_1) = test_models::tail_animation(LENGTH_TAIL);
+        // (
+        // Some(animation_1),
+        // builder
+        // .cull_face(CullFace::BackFace)
+        // .skeleton(skeleton)
+        // .build(),
+        // )
+        // }
         _ => (None, SimpleCubic::empty()),
     };
     Ok(model)
+}
+
+fn grappling_hook() -> (AggregateEntity<(), SimpleCubic>, SkeletalAnimation) {
+    // Need origin cube
+    // Need chain
+    // Need hook
+
+    const ORIGIN_BOX_SIZE: f32 = 1.0;
+    let origin_cube = SimpleCubic::cube(
+        ORIGIN_BOX_SIZE,
+        Rc::new(Material::from_colour(ColourRGBA::RED)),
+    )
+    .build();
+
+    let mut chain = SimpleCubic::builder();
+    let mut skeleton_builder = Skeleton::builder();
+    let mut animation_builder = SkeletalAnimation::builder();
+    let mut end_bone = SkeletonBoneIndex::SKELETON_ROOT_BONE;
+    let mut bones_back_to_front = Vec::new();
+    // No chain link is bound to the root bone, so that the root of the origin cube
+    // and the
+    let white_material = Rc::new(Material::white());
+
+    const EXPECT_MESSAGE: &str = "have not yet finished the animation";
+    const SEC_PER_UNIT: f32 = 0.05;
+    const CHAIN_LINK_SIZE: f32 = 0.5;
+    const LEN: usize = 20;
+    for index in 1..=LEN {
+        // Create Animation, using end_bone as the current bone
+        let mut bone_animation = BoneAnimation::new();
+        // do not move for LEN-`index` timesteps
+        bone_animation
+            .push(Pose::IDENTITY, (LEN - index) as f32 * SEC_PER_UNIT)
+            .expect(EXPECT_MESSAGE);
+        // then move one distance in one timesteps
+        bone_animation
+            .push(Pose::IDENTITY, 1.0 * SEC_PER_UNIT)
+            .expect(EXPECT_MESSAGE);
+        bone_animation
+            .push(
+                Pose::new_from_translation(Vector::new([0.0, 0.0, CHAIN_LINK_SIZE])),
+                (LEN + index) as f32 * SEC_PER_UNIT,
+            )
+            .expect(EXPECT_MESSAGE);
+        bone_animation
+            .push_final_non_repeat(Pose::IDENTITY)
+            .expect(EXPECT_MESSAGE);
+
+        animation_builder
+            .push_animation(bone_animation, end_bone)
+            .expect("end bone exists");
+
+        // Create new bone to correspond to the created animation
+        let new_bone = Bone::builder(end_bone).bind_pose_relative_to_parent(Pose::IDENTITY);
+
+        end_bone = skeleton_builder
+            .push_bone(new_bone)
+            .expect("new_bone parent exists");
+        bones_back_to_front.push(end_bone);
+        // attach a cube to this bone
+        chain.push_cube(
+            Pose::IDENTITY,
+            white_material.clone(),
+            CHAIN_LINK_SIZE,
+            end_bone,
+        );
+    }
+    let skeleton = skeleton_builder.build();
+    let animation = animation_builder.build();
+    let chain = chain.skeleton(skeleton).build();
+
+    // `end_bone` now has the bone which I should attach the hook to (plus offset)
+
+    const HOOK_SIZE: f32 = 2.0;
+    let hook =
+        SimpleCubic::cube(HOOK_SIZE, Rc::new(Material::from_colour(ColourRGBA::GREEN))).build();
+
+    let mut aggregate = AggregateEntity::new(origin_cube, 1, |_| ());
+    let chain_attachment_point = aggregate
+        .push(
+            chain,
+            Pose::new_from_translation(Vector::new([
+                0.0,
+                0.0,
+                0.5 * (ORIGIN_BOX_SIZE - CHAIN_LINK_SIZE),
+            ])),
+            SkeletonBoneIndex::SKELETON_ROOT_BONE,
+            AggregateModelIndex::ROOT_MODEL_INDEX,
+            0,
+            |_| (),
+        )
+        .expect("Root model at ROOT_MODEL_INDEX");
+    let _hook_attachment_point = aggregate
+        .push(
+            hook,
+            Pose::new_from_translation(Vector::new([
+                0.0,
+                0.0,
+                0.5 * (CHAIN_LINK_SIZE + HOOK_SIZE),
+            ])),
+            end_bone,
+            chain_attachment_point,
+            1,
+            |_| (),
+        )
+        .expect("chain attachment at given index");
+
+    (aggregate, animation)
 }

@@ -8,10 +8,16 @@ mod slerp;
 mod unit_quaternion;
 pub use slerp::Slerp;
 
-#[derive(Debug, Clone, Copy, Default, PartialEq)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Quaternion {
     real: f32,
     vector: Vector<3>,
+}
+
+impl PartialEq for Quaternion {
+    fn eq(&self, other: &Self) -> bool {
+        (*self - *other).is_zero()
+    }
 }
 
 impl Quaternion {

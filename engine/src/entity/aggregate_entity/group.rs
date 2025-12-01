@@ -11,10 +11,9 @@ use crate::EngError;
 use crate::entity::{AggregateEntity, EntityInner};
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
+use crate::modelling::cubic::geometry::SkeletalAnimation;
 use crate::modelling::cubic::lighting::simple::ListLights;
 
-#[derive(Debug)]
 pub struct Group<
     'a,
     M: EntityInner,
@@ -32,7 +31,6 @@ pub struct Group<
     lights: &'a ListLights<MAX>,
     opaque: Vec<(
         &'a AggregateEntity<T, M>,
-        Pose,
         Vec<Option<(&'a SkeletalAnimation, f32)>>,
     )>,
 
@@ -57,7 +55,6 @@ impl<
         lights: &'a ListLights<MAX>,
         opaque: Vec<(
             &'a AggregateEntity<T, M>,
-            Pose,
             Vec<Option<(&'a SkeletalAnimation, f32)>>, // time
         )>,
 
@@ -103,13 +100,8 @@ impl<
 
         active_shader.set_uniform_dyn(self.uniforms)?;
 
-        for (model, pose, animations) in self.opaque {
-            model.draw(
-                &mut active_shader,
-                &mut active_framebuffer,
-                pose,
-                animations,
-            )?;
+        for (model, animations) in self.opaque {
+            model.draw(&mut active_shader, &mut active_framebuffer, animations)?;
         }
         DrawOut::OK
     }

@@ -3,6 +3,7 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use std::num::NonZeroUsize;
 
 pub use bone::Bone;
+use bone::BoneBuilder;
 use utils::new;
 
 #[derive(Debug, Clone, Default)]
@@ -13,30 +14,23 @@ pub struct SkeletonBuilder {
 }
 
 impl SkeletonBuilder {
-    pub const ROOT_BONE: usize = Skeleton::ROOT_BONE;
-
     new!();
 
     /// Returns the index of that bone, or `None` if the parent does not exist.
-    pub fn push_bone(&mut self, bone: Bone) -> Option<NonZeroUsize> {
-        if !self.get(bone.parent).is_bone() {
-            return None;
-        };
+    pub fn push_bone(&mut self, bone: BoneBuilder) -> Option<SkeletonBoneIndex> {
+        let bone = bone.build(self)?;
 
         self.bones.push(bone);
 
         // len is one more than the highest index, but this is correct because the root
         // is at 0
-        Some(NonZeroUsize::new(self.bones.len()).expect("just pushed at least one value"))
+        Some(SkeletonBoneIndex(self.bones.len()))
     }
 
-    pub(crate) fn get(&self, index: usize) -> GetBone<'_> {
-        if let Some(non_zero_index) = NonZeroUsize::new(index) {
-            match self.bones.get(index - 1) {
-                Some(bone) => GetBone::Bone {
-                    bone_index: non_zero_index,
-                    bone,
-                },
+    pub(crate) fn get(&self, index: SkeletonBoneIndex) -> GetBone<'_> {
+        if index.0 != 0 {
+            match self.bones.get(index.0 - 1) {
+                Some(bone) => GetBone::Bone { bone },
                 None => GetBone::NoBone,
             }
         } else {
@@ -70,19 +64,14 @@ impl Default for Skeleton {
 }
 
 impl Skeleton {
-    pub const ROOT_BONE: usize = 0;
-
     pub fn builder() -> SkeletonBuilder {
         SkeletonBuilder::new()
     }
 
-    pub(crate) fn get(&self, index: usize) -> GetBone<'_> {
-        if let Some(non_zero_index) = NonZeroUsize::new(index) {
-            match self.bones.get(index - 1) {
-                Some(bone) => GetBone::Bone {
-                    bone_index: non_zero_index,
-                    bone,
-                },
+    pub(crate) fn get(&self, index: SkeletonBoneIndex) -> GetBone<'_> {
+        if index.0 != 0 {
+            match self.bones.get(index.0 - 1) {
+                Some(bone) => GetBone::Bone { bone },
                 None => GetBone::NoBone,
             }
         } else {
@@ -114,10 +103,7 @@ impl Skeleton {
 pub enum GetBone<'a> {
     NoBone,
     RootBone,
-    Bone {
-        bone_index: NonZeroUsize,
-        bone: &'a Bone,
-    },
+    Bone { bone: &'a Bone },
 }
 
 impl<'a> GetBone<'a> {
@@ -127,4 +113,11 @@ impl<'a> GetBone<'a> {
             Self::RootBone | Self::Bone { .. } => true,
         }
     }
+}
+
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+pub struct SkeletonBoneIndex(pub(crate) usize);
+
+impl SkeletonBoneIndex {
+    pub const SKELETON_ROOT_BONE: Self = Self(0);
 }

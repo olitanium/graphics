@@ -5,6 +5,7 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
 
 use crate::EngResult;
+use crate::modelling::cubic::SkeletonBoneIndex;
 use crate::modelling::cubic::geometry::CalculatedAnimation;
 use crate::modelling::{BoundingBox, CubicVertex, Skeleton};
 
@@ -96,6 +97,8 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
         colour: F,
     ) -> EngResult<(), NEVER> {
         for (bone, bbox) in self.per_bone.iter().enumerate() {
+            // HACK
+            let bone = SkeletonBoneIndex(bone);
             let pose = calculated_animation.get(bone)?;
             bbox.draw(level, pose, active_shader, active_framebuffer, &colour)?
         }

@@ -14,9 +14,9 @@ impl PoseSclerp {
         Self { sclerp }
     }
 
-    pub fn new(from: Pose, to: Pose, duration: f32) -> Self {
+    pub fn new(from: Pose, to: Pose, duration: f32, shortest_path: bool) -> Self {
         Self {
-            sclerp: Sclerp::new(from.into_inner(), to.into_inner(), duration),
+            sclerp: Sclerp::new(from.into_inner(), to.into_inner(), duration, shortest_path),
         }
     }
 }

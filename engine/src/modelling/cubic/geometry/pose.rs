@@ -7,7 +7,6 @@ use graphics::linear_algebra::Vector;
 pub use posesclerp::PoseSclerp;
 
 use super::Orientation;
-use crate::TransformBy;
 use crate::modelling::cubic::camera::CameraPose;
 use crate::transform::Transform;
 
@@ -111,11 +110,6 @@ impl Pose {
 
     pub fn push_change(&mut self, pose: Self) {
         *self = pose.transform(self);
-    }
-
-    #[deprecated(note = "use Transform")]
-    pub fn apply_to<V: TransformBy<Pose>>(self, value: V) -> V {
-        self.transform(&value)
     }
 }
 

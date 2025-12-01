@@ -5,7 +5,7 @@ use crate::modelling::cubic::geometry::{Pose, PoseSclerp};
 #[derive(Debug, Clone)]
 pub struct BoneAnimation {
     // time is the cumulative START TIME of the keyframe.
-    pub(crate) keyframes: Vec<(f32 /* time */, Pose)>,
+    pub(crate) keyframes: Vec<(f32 /* start time */, Pose)>,
     duration: Option<f32>,
 }
 
@@ -44,7 +44,7 @@ impl BoneAnimation {
     }
 
     pub fn set(&mut self, pose: Pose) {
-        self.duration = None;
+        self.duration = Some(0.0);
         self.keyframes.clear();
         self.keyframes.push((0.0, pose));
     }
@@ -81,7 +81,7 @@ impl BoneAnimation {
 
                 end_time = if end_time == 0.0 { duration } else { end_time };
 
-                let sclerp = PoseSclerp::new(start_pose, end_pose, end_time - start_time);
+                let sclerp = PoseSclerp::new(start_pose, end_pose, end_time - start_time, true);
                 sclerp.get_pose(local_time - start_time)
             }
             (slice @ &[.., (_, final_pose)], None) => slice
@@ -90,7 +90,8 @@ impl BoneAnimation {
                 .map_or(
                     final_pose,
                     |&[(start_time, start_pose), (end_time, end_pose)]| {
-                        let sclerp = PoseSclerp::new(start_pose, end_pose, end_time - start_time);
+                        let sclerp =
+                            PoseSclerp::new(start_pose, end_pose, end_time - start_time, true);
                         sclerp.get_pose(time - start_time)
                     },
                 ),

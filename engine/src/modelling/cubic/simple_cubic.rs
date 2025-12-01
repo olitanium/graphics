@@ -15,6 +15,7 @@ use super::{Mesh, Skeleton, import};
 use crate::entity::EntityInner;
 use crate::error::EngResult;
 use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
+use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
 use crate::modelling::simple_vertex::SimpleVertex;
 use crate::modelling::{SkeletonBb, test_models};
 
@@ -33,7 +34,7 @@ pub struct SimpleCubic {
 
 #[derive(Debug, Clone)]
 pub struct BoneAndMesh {
-    pub(crate) bone: usize,
+    pub(crate) bone: SkeletonBoneIndex,
     pub(crate) mesh: Mesh<SimpleVertex>,
 }
 
@@ -48,12 +49,18 @@ impl SimpleCubic {
 
     pub fn cube(side_length: f32, material: Rc<Material>) -> Builder {
         let mut out = Self::builder();
-        out.push_cube(Pose::IDENTITY, material, side_length, 0);
+        out.push_cube(
+            Pose::IDENTITY,
+            material,
+            side_length,
+            SkeletonBoneIndex::SKELETON_ROOT_BONE,
+        );
         out
     }
 
     pub fn tail(max_len: usize) -> (Self, SkeletalAnimation) {
-        test_models::tail_simplecubic(max_len)
+        let (a, _, b) = test_models::tail_simplecubic(max_len);
+        (a, b)
     }
 
     pub fn temp_set_all_material(&mut self, mat: Rc<Material>) {
@@ -62,7 +69,7 @@ impl SimpleCubic {
             .for_each(|BoneAndMesh { mesh, .. }| mesh.material = mat.clone());
     }
 
-    pub fn triangles(&self) -> Vec<(usize, [SimpleVertex; 3])> {
+    pub fn triangles(&self) -> Vec<(SkeletonBoneIndex, [SimpleVertex; 3])> {
         self.meshes
             .iter()
             .flat_map(|BoneAndMesh { bone, mesh }| {
@@ -82,7 +89,12 @@ impl SimpleCubic {
         let import_output = import::import(path, post_process, load_tangent_space)?;
 
         let mut out = Self::builder();
-        out.extend_meshes(import_output.meshes.into_iter().map(|builder| (0, builder)));
+        out.extend_meshes(
+            import_output
+                .meshes
+                .into_iter()
+                .map(|builder| (SkeletonBoneIndex::SKELETON_ROOT_BONE, builder)),
+        );
 
         Ok(out)
     }
@@ -111,18 +123,18 @@ impl SimpleCubic {
 }
 
 impl EntityInner for SimpleCubic {
-    type BoundingBox<T: Debug> = SkeletonBb<SimpleVertex, T>;
+    type BoundingBox<T> = SkeletonBb<SimpleVertex, T>;
     type Vertex = SimpleVertex;
 
     fn make_bounding_box<
-        T: Debug,
+        T,
         F: FnMut(&[(graphics::linear_algebra::Vector<3>, [Self::Vertex; 3])]) -> T,
     >(
         &self,
         depth: usize,
         init: F,
     ) -> Option<Self::BoundingBox<T>> {
-        let per_mesh = partition(self.triangles(), |(bone, _)| vec![*bone], |(_, tri)| tri);
+        let per_mesh = partition(self.triangles(), |(bone, _)| vec![bone.0], |(_, tri)| tri);
 
         SkeletonBb::from_vec_triangle(per_mesh, depth, self.skeleton.clone(), init)
     }

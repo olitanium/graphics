@@ -27,7 +27,7 @@ fn mul_noncommut() {
         type Output = Self;
 
         fn mul(self, rhs: Self) -> Self::Output {
-            Self((self.0 + 1)*(rhs.0))
+            Self((self.0 + 1) * (rhs.0))
         }
     }
 
@@ -39,13 +39,17 @@ fn mul_noncommut() {
         }
     }
 
-
     let lhs = DualNumber::new(NonCommutative(1), NonCommutative(4));
     let rhs = DualNumber::new(NonCommutative(2), NonCommutative(3));
 
-
-    assert_eq!(lhs * rhs, DualNumber::new(NonCommutative(4), NonCommutative(16)));
-    assert_eq!(rhs * lhs, DualNumber::new(NonCommutative(3), NonCommutative(16)));
+    assert_eq!(
+        lhs * rhs,
+        DualNumber::new(NonCommutative(4), NonCommutative(16))
+    );
+    assert_eq!(
+        rhs * lhs,
+        DualNumber::new(NonCommutative(3), NonCommutative(16))
+    );
 }
 
 #[test]

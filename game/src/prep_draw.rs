@@ -121,27 +121,41 @@ impl State {
         // )?;
         // out.push(HasDrawnQuery::new(0, cubgroup))
         // }
-
         out.push(AggregateGroup::new(
-            opengl_shaders::skeletal_quat(),
+            opengl_shaders::hdr(),
             &self.hdr_fb,
             &self.camera,
             &(),
             &self.ns_light_group,
             vec![(
-                &self.aggregate_tail,
-                Pose::IDENTITY,
+                &self.grappling_hook,
                 vec![
-                    Some((&self.skeletal_animation, time / 60.0 + 0.5)),
-                    if self.toggle_m {
-                        Some((&self.skeletal_animation, time - self.sword_time + 0.5))
-                    } else {
-                        None
-                    },
+                    None,
+                    Some((&self.grapple_chain_anim, time - self.reset_time)),
+                    None,
                 ],
             )],
             vec![],
         ));
+        // out.push(AggregateGroup::new(
+        // opengl_shaders::skeletal_quat(),
+        // &self.hdr_fb,
+        // &self.camera,
+        // &(),
+        // &self.ns_light_group,
+        // vec![(
+        // &self.aggregate_tail,
+        // vec![
+        // Some((&self.skeletal_animation, time / 60.0 + 0.5)),
+        // if self.toggle_m {
+        // Some((&self.skeletal_animation, time - self.sword_time + 0.5))
+        // } else {
+        // None
+        // },
+        // ],
+        // )],
+        // vec![],
+        // ));
 
         if self.do_bloom {
             // println!("bloom_on");

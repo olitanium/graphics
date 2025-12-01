@@ -46,8 +46,8 @@ where
     }
 }
 
-impl<T> Mul<f32> for DualNumber<T> 
-where 
+impl<T> Mul<f32> for DualNumber<T>
+where
     T: Mul<f32>,
 {
     type Output = DualNumber<<T as Mul<f32>>::Output>;
@@ -55,13 +55,14 @@ where
     fn mul(self, rhs: f32) -> Self::Output {
         Self::Output {
             real: self.real * rhs,
-            dual: self.dual * rhs
+            dual: self.dual * rhs,
         }
     }
 }
 
-impl<T> Mul<DualNumber<T>> for f32 
-where DualNumber<T>: Mul<Self>,
+impl<T> Mul<DualNumber<T>> for f32
+where
+    DualNumber<T>: Mul<Self>,
 {
     type Output = <DualNumber<T> as Mul<Self>>::Output;
 
@@ -69,7 +70,6 @@ where DualNumber<T>: Mul<Self>,
         rhs * self
     }
 }
-
 
 impl<M, T: Sub<M>> Sub<DualNumber<M>> for DualNumber<T> {
     type Output = DualNumber<<T as Sub<M>>::Output>;

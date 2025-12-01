@@ -10,9 +10,9 @@ use crate::TransformBy;
 use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::cubic::geometry::{BoneAnimation, Orientation, Pose, SkeletalAnimation};
 use crate::modelling::cubic::material::Material;
-use crate::modelling::cubic::{MeshBuilder, SkeletonCubic};
+use crate::modelling::cubic::{MeshBuilder, SkeletonBoneIndex, SkeletonCubic};
 use crate::modelling::quad::QuadVertex;
-use crate::modelling::{Bone, ExtendedVertex, SimpleCubic, Skeleton, SkeletonBuilder};
+use crate::modelling::{Bone, ExtendedVertex, SimpleCubic, Skeleton};
 
 pub fn cube_triangles(
     lower_bound: Vector<3>,
@@ -227,7 +227,7 @@ pub fn tail_with_bone(max_len: usize) -> impl Iterator<Item = [IncompleteVertex<
 }
 
 // num_bones does not include the root bone.
-pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletalAnimation) {
+pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletonBoneIndex, SkeletalAnimation) {
     let animation1 = {
         let mut animation = BoneAnimation::new();
         animation
@@ -260,31 +260,28 @@ pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletalAnimation) {
     let mut skeleton = Skeleton::builder();
     let mut animation_1 = SkeletalAnimation::builder();
 
-    let mut current_bone = SkeletonBuilder::ROOT_BONE;
+    let mut current_bone = SkeletonBoneIndex::SKELETON_ROOT_BONE;
 
     let cube_push = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.0]));
     let mut cube_pose = Pose::IDENTITY;
 
     for _ in 0..num_bones {
-        // TODO: remove unwrap
-        let bone = Bone::builder(current_bone)
-            //.animations(animation)
-            .bind_pose_relative_to_parent(cube_push)
-            .build(&skeleton)
-            .expect("parent bone always exists");
+        let bone = Bone::builder(current_bone).bind_pose_relative_to_parent(cube_push);
 
         animation_1
             .push_animation(animation1.clone(), current_bone)
             .expect("parent bone always exists");
 
         cube_pose = cube_pose.transform_by(&cube_push);
-        current_bone = skeleton.push_bone(bone).unwrap().get();
+        current_bone = skeleton.push_bone(bone).unwrap();
     }
 
-    (skeleton.build(), animation_1.build())
+    (skeleton.build(), current_bone, animation_1.build())
 }
 
-pub fn tail_skeleton_cubic(max_len: usize) -> (SkeletonCubic, SkeletalAnimation) {
+pub fn tail_skeleton_cubic(
+    max_len: usize,
+) -> (SkeletonCubic, SkeletonBoneIndex, SkeletalAnimation) {
     // MESHES
     let triangles = tail_with_bone(max_len);
 
@@ -295,24 +292,28 @@ pub fn tail_skeleton_cubic(max_len: usize) -> (SkeletonCubic, SkeletalAnimation)
     let vec_mesh = vec![mesh];
 
     // SKELETON
-    let (skeleton, animation) = tail_animation(max_len);
+    let (skeleton, end_bone, animation) = tail_animation(max_len);
 
-    (SkeletonCubic::debug_new(vec_mesh, skeleton), animation)
+    (
+        SkeletonCubic::debug_new(vec_mesh, skeleton),
+        end_bone,
+        animation,
+    )
 }
 
-pub fn tail_simplecubic(max_len: usize) -> (SimpleCubic, SkeletalAnimation) {
+pub fn tail_simplecubic(max_len: usize) -> (SimpleCubic, SkeletonBoneIndex, SkeletalAnimation) {
     let triangles = tail_with_bone(max_len);
 
     let mut mesh_builder = MeshBuilder::new().material(Rc::new(Material::white()));
     mesh_builder.extend_triangle(triangles);
 
     let mut builder = SimpleCubic::builder();
-    builder.push_mesh(0, mesh_builder);
+    builder.push_mesh(SkeletonBoneIndex::SKELETON_ROOT_BONE, mesh_builder);
     // SKELETON
-    let (skeleton, animation) = tail_animation(max_len);
+    let (skeleton, end_bone_index, animation) = tail_animation(max_len);
     // let animation = SkeletalAnimation::new();
     builder = builder.skeleton(skeleton);
 
     let cubic = builder.build();
-    (cubic, animation)
+    (cubic, end_bone_index, animation)
 }

@@ -2,6 +2,7 @@
 #![feature(result_option_map_or_default)]
 #![expect(incomplete_features)]
 #![feature(generic_const_exprs)]
+#![feature(array_windows)]
 
 use engine::eng_state::EngState;
 use engine::{EngResult, Environment};

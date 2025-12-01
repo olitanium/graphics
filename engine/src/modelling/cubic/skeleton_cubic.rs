@@ -9,8 +9,8 @@ use utils::partition;
 
 use crate::EngResult;
 use crate::entity::EntityInner;
-use crate::modelling::cubic::Mesh;
 use crate::modelling::cubic::geometry::{CalculatedAnimation, SkeletalAnimation};
+use crate::modelling::cubic::{Mesh, SkeletonBoneIndex};
 use crate::modelling::{SkeletalVertex, Skeleton, SkeletonBb, test_models};
 
 mod group;
@@ -32,7 +32,7 @@ impl SkeletonCubic {
         }
     }
 
-    pub fn debug_tail() -> (Self, SkeletalAnimation) {
+    pub fn debug_tail() -> (Self, SkeletonBoneIndex, SkeletalAnimation) {
         test_models::tail_skeleton_cubic(10)
     }
 
@@ -75,11 +75,11 @@ impl SkeletonCubic {
 }
 
 impl EntityInner for SkeletonCubic {
-    type BoundingBox<T: Debug> = SkeletonBb<SkeletalVertex, T>;
+    type BoundingBox<T> = SkeletonBb<SkeletalVertex, T>;
     type Vertex = SkeletalVertex;
 
     fn make_bounding_box<
-        T: Debug,
+        T,
         F: FnMut(&[(graphics::linear_algebra::Vector<3>, [Self::Vertex; 3])]) -> T,
     >(
         &self,

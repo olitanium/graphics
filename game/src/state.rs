@@ -25,7 +25,7 @@ use engine::types::TexDim;
 use engine::{ApiState, ColourRGBA, EngError, EngResult, Entity, Event, VecDraw};
 
 pub struct State {
-    pub sword_time: f32,
+    pub reset_time: f32,
     pub time: f32,
     pub game_start: Option<f32>,
     pub camera: Camera,
@@ -53,6 +53,9 @@ pub struct State {
     pub simpletail: SkeletonCubic,
     pub aggregate_tail: AggregateEntity<(), SkeletonCubic>,
     pub skeletal_animation: SkeletalAnimation,
+
+    pub grappling_hook: AggregateEntity<(), SimpleCubic>,
+    pub grapple_chain_anim: SkeletalAnimation,
 
     pub bounding_box_level: usize,
     pub toggle_m: bool,

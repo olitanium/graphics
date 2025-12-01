@@ -1,14 +1,14 @@
 use std::num::NonZeroUsize;
 
 use crate::TransformBy;
-use crate::entity::EntityInner;
+use crate::entity::{AggregateModelIndex, EntityInner};
 use crate::modelling::Skeleton;
 use crate::modelling::cubic::geometry::{AnimationError, Pose, SkeletalAnimation};
+use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
 use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
 pub struct CalculatedAnimation {
-    // offsets: Vec<usize>,
     poses: Vec<Pose>,
     signature: Option<u64>,
 }
@@ -20,8 +20,6 @@ pub struct CalculatedAnimationBuilder<'a> {
 }
 
 impl CalculatedAnimation {
-    pub const ROOT_MODEL: usize = 0;
-
     pub fn builder<'a>(
         root_pose: Pose,
         root_skeleton: &'a Skeleton,
@@ -45,20 +43,20 @@ impl CalculatedAnimation {
         }
     }
 
-    pub fn get(&self, index: usize) -> Result<Pose, AnimationError> {
+    pub fn get(&self, index: SkeletonBoneIndex) -> Result<Pose, AnimationError> {
         self.poses
-            .get(index)
+            .get(index.0)
             .copied()
             .ok_or(AnimationError::BoneDoesNotExist {
-                requested: index,
+                requested: index.0,
                 length: self.poses.len(),
             })
     }
 }
 
 struct Parent {
-    index: usize,
-    attachment_point: usize,
+    index: AggregateModelIndex,
+    bone_attachment_point: SkeletonBoneIndex,
 }
 
 /// All Animation units can only refer to units before them in the heirarchy.
@@ -97,15 +95,15 @@ impl<'a> CalculatedAnimationBuilder<'a> {
 
     pub fn push(
         &mut self,
-        parent: usize,
-        attachment_point: usize,
+        parent: AggregateModelIndex,
+        attachment_point: SkeletonBoneIndex,
         local_transform: Pose,
         skeleton: &'a Skeleton,
         animation: Option<(&'a SkeletalAnimation, f32)>,
     ) -> Result<NonZeroUsize, AnimationError> {
         let output_index = self.units.len();
 
-        if let Some(parent_skeleton) = self.units.get(parent) {
+        if let Some(parent_skeleton) = self.units.get(parent.0) {
             if parent_skeleton.skeleton.get(attachment_point).is_bone() {
                 // Asserted that there is a valid parent and that parent has a bone to attach
                 // to.
@@ -122,7 +120,7 @@ impl<'a> CalculatedAnimationBuilder<'a> {
                         self.units.push(AnimationUnit {
                             parent: Some(Parent {
                                 index: parent,
-                                attachment_point,
+                                bone_attachment_point: attachment_point,
                             }),
                             local_transform,
                             skeleton,
@@ -135,14 +133,14 @@ impl<'a> CalculatedAnimationBuilder<'a> {
                 }
             } else {
                 Err(AnimationError::AttachementPointDoesNotExist {
-                    parent,
+                    parent: parent.0,
                     available: parent_skeleton.skeleton.len_incl_root(),
-                    requested: attachment_point,
+                    requested: attachment_point.0,
                 })
             }
         } else {
             Err(AnimationError::ParentDoesNotExist {
-                requested: parent,
+                requested: parent.0,
                 available: output_index - 1,
             })
         }
@@ -159,12 +157,12 @@ impl<'a> CalculatedAnimationBuilder<'a> {
 
         for unit in self.units {
             let root = if let Some(parent) = unit.parent {
-                let parent_setup = output.get(parent.index).expect(
+                let parent_setup = output.get(parent.index.0).expect(
                     "invariant, parent should exist earlier in the list than the descendent",
                 );
                 let attachment_pose = parent_setup
                     .0
-                    .get(parent.attachment_point)
+                    .get(parent.bone_attachment_point.0)
                     .expect("invariant, the existence of this is checked by the `push` method");
                 attachment_pose.pose.transform(&unit.local_transform)
             } else {
@@ -182,7 +180,7 @@ impl<'a> CalculatedAnimationBuilder<'a> {
                     // total parent pose in the pre-filled `poses` vec.
 
                     let PoseAndInverseBindPose { pose: parent, .. } =
-                        *poses.get(bone.parent).expect(
+                        *poses.get(bone.parent.0).expect(
                             "Skeleton invariant, each bone in a skeleton may only refer to bones \
                              before it",
                         );
@@ -215,15 +213,6 @@ impl<'a> CalculatedAnimationBuilder<'a> {
 
             output.push(poses);
         }
-
-        // let mut offsets = output.iter().fold(vec![0], |mut out, vec_pose| {
-        // let cumulative = *out
-        // .last()
-        // .expect("init has at least one value and no values are popped");
-        // out.push(cumulative + vec_pose.len());
-        // out
-        // });
-        // let _ = offsets.pop();
 
         output
             .into_iter()

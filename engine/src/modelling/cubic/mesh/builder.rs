@@ -5,32 +5,28 @@ use utils::{builder, new};
 
 use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::cubic::Mesh;
+use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::cubic::material::Material;
 use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex};
 
 #[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct Builder {
     pub triangles: Vec<[IncompleteVertex<3>; 3]>,
     pub material: Rc<Material>,
-    pub scale: f32,
+    pub scale: Option<f32>,
+    transform: Option<Pose>,
 }
 
-impl Default for Builder {
-    fn default() -> Self {
-        Self {
-            triangles: Default::default(),
-            material: Default::default(),
-            scale: 1.0,
-        }
-    }
-}
 
 impl Builder {
     new!();
 
-    builder!(scale: f32);
+    builder!(scale: Option<f32>);
 
     builder!(material: Rc<Material>);
+
+    builder!(transform, opt_transform: Option<Pose>);
 
     pub fn push_triangle(&mut self, triangle: [IncompleteVertex<3>; 3]) {
         self.triangles.push(triangle);
@@ -69,13 +65,18 @@ impl Builder {
     where
         [(); V::ELEMENT_COUNT]:,
     {
-        if self.scale != 1.0 {
+        if let Some(scale) = self.scale {
             for triangle in &mut self.triangles {
                 for vertex in triangle {
-                    vertex.position *= self.scale;
+                    vertex.position *= scale;
                 }
             }
         }
+        // if let Some(transform) = self.transformation {
+        // for triangle in &mut self.triangles {
+        // triangle = triangle.transform_by(&transform);
+        // }
+        // }
 
         let mut vertex_array_builder = VertexArray::builder();
         vertex_array_builder.extend_triangles(

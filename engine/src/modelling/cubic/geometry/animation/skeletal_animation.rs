@@ -4,14 +4,15 @@ use std::num::NonZeroUsize;
 use utils::new;
 
 use crate::modelling::cubic::geometry::BoneAnimation;
+use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
 
 #[derive(Debug, Default)]
 pub struct SkeletalAnimationBuilder {
     /// Used to identify whether this animation is valid for a given skeleton.
     /// The skeleton's signature can be derived as the ordered list of bone
     /// parents.
-    signature: Vec<usize>,
-    // The 0th bone is the Root bone, and isn't animated. bones[0] refers to skeletin bone 1.
+    signature: Vec<SkeletonBoneIndex>,
+    // The 0th bone is the Root bone, and isn't animated. bones[0] refers to skeleton bone 1.
     // All accesses to bones must go through get() which returns an option in case of accessing
     // bone 0.
     bones: Vec<BoneAnimation>,
@@ -29,9 +30,9 @@ impl SkeletalAnimationBuilder {
     pub fn push_animation(
         &mut self,
         animation: BoneAnimation,
-        parent_bone: usize,
+        parent_bone: SkeletonBoneIndex,
     ) -> Result<(), BoneAnimation> {
-        if parent_bone <= self.bones.len() {
+        if parent_bone.0 <= self.bones.len() {
             // The parent bone is part of the animation.
             self.signature.push(parent_bone);
             self.bones.push(animation);
