@@ -1,5 +1,4 @@
 use std::fmt::Debug;
-use std::ops::ControlFlow;
 use std::{iter, mem};
 
 use graphics::ActiveShaderProgram;
@@ -11,7 +10,7 @@ use crate::entity::{EntityInner, SkeletonEntity, SkinningEntity};
 use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::cubic::{SkeletonBoneIndex, SkeletonCubic};
-use crate::modelling::{SimpleCubic, SkeletalVertex, SkeletonBb};
+use crate::modelling::{SimpleCubic, SkeletonBb};
 use crate::{EngResult, SimpleEntity};
 
 mod group;
