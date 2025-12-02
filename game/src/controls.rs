@@ -101,16 +101,16 @@ impl State {
                 't' => {
                     self.grappling_hook.pop(self.hook_pos);
                     if let Some(morgan_model) = mem::take(&mut self.morgan) {
-                    let (attachment_point, bone_index) = self.join_pos;
-                    self.hook_pos = self
-                        .grappling_hook
-                        .push_simple_entity(
-                            morgan_model,
-                            Pose::new_from_translation(Vector::new([0.0, 0.0, 0.5])),
-                            attachment_point,
-                            bone_index,
-                        )
-                        .unwrap()
+                        let (attachment_point, bone_index) = self.join_pos;
+                        self.hook_pos = self
+                            .grappling_hook
+                            .push_simple_entity(
+                                morgan_model,
+                                Pose::new_from_translation(Vector::new([0.0, 0.0, 0.5])),
+                                attachment_point,
+                                bone_index,
+                            )
+                            .unwrap()
                     }
                 }
 

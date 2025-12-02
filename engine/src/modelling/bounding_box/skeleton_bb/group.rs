@@ -48,10 +48,9 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
         colour: F,
     ) -> EngResult<Box<Self>, NEVER> {
         let look_at = camera.look_at(hint);
-        let calculated_animation =
-            CalculatedAnimation::builder(pose, skeleton, animation)?
-                .build()
-                .swap_remove(0); //Take 0 because there are no aggregate groups
+        let calculated_animation = CalculatedAnimation::builder(pose, skeleton, animation)?
+            .build()
+            .swap_remove(0); //Take 0 because there are no aggregate groups
         Ok(Box::new(Self {
             framebuffer,
             bounding_box,

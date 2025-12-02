@@ -31,14 +31,14 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
 
         Some(Self {
             per_bone: opt_per_mesh?,
-            //skeleton,
+            // skeleton,
         })
     }
 
     pub fn from_single(bbox: BoundingBox<V, 3, T>) -> Self {
         Self {
             per_bone: vec![bbox],
-            //skeleton: Skeleton::builder().build(),
+            // skeleton: Skeleton::builder().build(),
         }
     }
 }

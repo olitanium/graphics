@@ -7,12 +7,12 @@ use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
 
-use crate::{EngResult, SimpleEntity};
 use crate::entity::{EntityInner, SkeletonEntity, SkinningEntity};
-use crate::modelling::{SimpleCubic, SkeletalVertex, SkeletonBb};
-use crate::modelling::cubic::{SkeletonBoneIndex, SkeletonCubic};
 use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
 use crate::modelling::cubic::lighting::simple::ListLights;
+use crate::modelling::cubic::{SkeletonBoneIndex, SkeletonCubic};
+use crate::modelling::{SimpleCubic, SkeletalVertex, SkeletonBb};
+use crate::{EngResult, SimpleEntity};
 
 mod group;
 pub use group::Group as AggregateGroup;
@@ -237,10 +237,20 @@ impl<T, M: EntityInner> AggregateEntity<T, M> {
 }
 
 impl<T> AggregateEntity<T, SimpleCubic> {
-    pub fn push_skeleton_entity(&mut self, entity: SkeletonEntity<T>, offset: Pose, parent_unit: AggregateModelIndex, skeketon_attachment: SkeletonBoneIndex) -> Option<AggregateModelIndex> { 
+    pub fn push_skeleton_entity(
+        &mut self,
+        entity: SkeletonEntity<T>,
+        offset: Pose,
+        parent_unit: AggregateModelIndex,
+        skeketon_attachment: SkeletonBoneIndex,
+    ) -> Option<AggregateModelIndex> {
         self.check_parent_and_bone(skeketon_attachment, parent_unit)?;
 
-        let SkeletonEntity { model, bounding_box, ..} = entity;
+        let SkeletonEntity {
+            model,
+            bounding_box,
+            ..
+        } = entity;
 
         let unit = AggregateUnit {
             model,
@@ -250,16 +260,26 @@ impl<T> AggregateEntity<T, SimpleCubic> {
             parent_unit,
             children: Vec::new(),
         };
-        
+
         Some(self.push_aggregate_unit(unit))
     }
 }
 
 impl<T> AggregateEntity<T, SimpleCubic> {
-    pub fn push_simple_entity(&mut self, entity: SimpleEntity<T>, offset: Pose, parent_unit: AggregateModelIndex, skeleton_attachment: SkeletonBoneIndex) -> Option<AggregateModelIndex> {
+    pub fn push_simple_entity(
+        &mut self,
+        entity: SimpleEntity<T>,
+        offset: Pose,
+        parent_unit: AggregateModelIndex,
+        skeleton_attachment: SkeletonBoneIndex,
+    ) -> Option<AggregateModelIndex> {
         self.check_parent_and_bone(skeleton_attachment, parent_unit)?;
 
-        let SimpleEntity { model, bounding_box, ..} = entity;
+        let SimpleEntity {
+            model,
+            bounding_box,
+            ..
+        } = entity;
         let bounding_box_new = bounding_box.map(|bbox| SkeletonBb::from_single(bbox));
 
         let unit = AggregateUnit {
@@ -275,10 +295,20 @@ impl<T> AggregateEntity<T, SimpleCubic> {
     }
 }
 impl<T> AggregateEntity<T, SkeletonCubic> {
-    pub fn push_skinning_entity(&mut self, entity: SkinningEntity<T>, offset: Pose, parent_unit: AggregateModelIndex, skeleton_attachment: SkeletonBoneIndex) -> Option<AggregateModelIndex> {
+    pub fn push_skinning_entity(
+        &mut self,
+        entity: SkinningEntity<T>,
+        offset: Pose,
+        parent_unit: AggregateModelIndex,
+        skeleton_attachment: SkeletonBoneIndex,
+    ) -> Option<AggregateModelIndex> {
         self.check_parent_and_bone(skeleton_attachment, parent_unit)?;
 
-        let SkinningEntity { model, bounding_box, ..} = entity;
+        let SkinningEntity {
+            model,
+            bounding_box,
+            ..
+        } = entity;
 
         let unit = AggregateUnit {
             model,
