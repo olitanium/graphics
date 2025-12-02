@@ -15,8 +15,6 @@ pub use group::Group as SkeletonBbGroup;
 #[derive(Debug, Clone)]
 pub struct SkeletonBb<V: CubicVertex, T> {
     per_bone: Vec<BoundingBox<V, 3, T>>,
-    // TODO: try and remove this
-    skeleton: Skeleton,
 }
 
 impl<V: CubicVertex, T> SkeletonBb<V, T> {
@@ -33,19 +31,28 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
 
         Some(Self {
             per_bone: opt_per_mesh?,
-            skeleton,
+            //skeleton,
         })
+    }
+
+    pub fn from_single(bbox: BoundingBox<V, 3, T>) -> Self {
+        Self {
+            per_bone: vec![bbox],
+            //skeleton: Skeleton::builder().build(),
+        }
     }
 }
 
 impl<V: CubicVertex, T> SkeletonBb<V, T> {
-    pub fn overlap<F, O>(
+    pub fn detect_collision<F, O>(
         lhs: &Self,
         lhs_calculated_animation: &CalculatedAnimation,
+        lhs_skeleton: &Skeleton,
         lhs_alter_meta: F,
 
         rhs: &Self,
         rhs_calculated_animation: &CalculatedAnimation,
+        rhs_skeleton: &Skeleton,
         rhs_alter_meta: O,
     ) -> Vec<(Vec<[V; 3]>, Vec<[V; 3]>)>
     where
@@ -57,10 +64,10 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
 
         const ERROR_MSG: &str = "CalulatedAnimation has been generated from this skeleton";
         let lhs_calculated_animation = lhs_calculated_animation
-            .poses(&lhs.skeleton)
+            .poses(lhs_skeleton)
             .expect(ERROR_MSG);
         let rhs_calculated_animation = rhs_calculated_animation
-            .poses(&rhs.skeleton)
+            .poses(rhs_skeleton)
             .expect(ERROR_MSG);
         lhs.per_bone
             .iter()

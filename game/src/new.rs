@@ -1,4 +1,3 @@
-use std::iter;
 use std::num::NonZero;
 use std::rc::Rc;
 
@@ -7,7 +6,7 @@ use engine::entity::{AggregateEntity, AggregateModelIndex, Mass};
 use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
-use engine::modelling::cubic::camera::ManualPose;
+use engine::modelling::cubic::camera::{CameraPose, ManualPose};
 use engine::modelling::cubic::geometry::{BoneAnimation, Orientation, Pose, SkeletalAnimation};
 use engine::modelling::cubic::lighting::shadow::{
     ShadowListLights,
@@ -17,13 +16,12 @@ use engine::modelling::cubic::lighting::shadow::{
 use engine::modelling::cubic::lighting::simple::{ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
 use engine::modelling::cubic::{SkeletonBoneIndex, SkeletonCubic, camera};
-use engine::modelling::{Bloom, Bone, Line, Quad, SimpleCubic, Skeleton, SkyBox, test_models};
+use engine::modelling::{Bloom, Bone, Line, Quad, SimpleCubic, Skeleton, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
-use engine::{ColourRGB, ColourRGBA, EngResult, Entity, TransformBy};
+use engine::{ColourRGB, ColourRGBA, EngResult, SimpleEntity};
 
-use crate::new;
 use crate::state::{State, StateError};
 
 impl State {
@@ -50,54 +48,52 @@ impl State {
                 .build(),
         );
 
-        let cube_positions = [
-            [0.0, 0.0, 0.0],
-            //[2.0, 0.0, 0.0],
-            //[-2.0, 0.0, 0.0],
-            //[0.0, 2.0, 0.0],
-            //[0.0, -2.0, 0.0],
-            //[0.0, 0.0, 2.0],
-            //[0.0, 0.0, -2.0],
-        ];
+        // let cube_positions = [
+        // [0.0, 0.0, 0.0],
+        // [2.0, 0.0, 0.0],
+        // [-2.0, 0.0, 0.0],
+        // [0.0, 2.0, 0.0],
+        // [0.0, -2.0, 0.0],
+        // [0.0, 0.0, 2.0],
+        // [0.0, 0.0, -2.0],
+        // ];
+        //
+        // let containers = cube_positions
+        // .into_iter()
+        // .map(|arr| {
+        // let material = Rc::new(
+        // Material::builder()
+        // .diffuse(FlatTexture::monochrome(ColourRGBA::new_from_arr_alpha(
+        // arr, 1.0,
+        // )))
+        // .build(),
+        // );
+        //
+        // SimpleCubic::cube(0.1, material)
+        // .cull_face(CullFace::BackFace)
+        // .build()
+        // })
+        // .collect();
 
-        let containers = cube_positions
-            .into_iter()
-            .map(|arr| {
-                let material = Rc::new(
-                    Material::builder()
-                        .diffuse(FlatTexture::monochrome(ColourRGBA::new_from_arr_alpha(
-                            arr, 1.0,
-                        )))
-                        .build(),
-                );
+        let (_, morgan) = make_model("morgan")?;
+        let morgan = SimpleEntity::from_cubic(morgan, 20, Mass(1.0), |_| ());
 
-                SimpleCubic::cube(0.1, material)
-                    .cull_face(CullFace::BackFace)
-                    .build()
-            })
-            .collect();
-
-        let (animation, model) = make_model("morgan")?;
-        let imported = Entity::from_cubic(model, 20, Mass(1.0), |_| ()).unwrap();
-
-        let mut imported_other = Entity::from_cubic(
+        let origin_cube = SimpleEntity::from_cubic(
             SimpleCubic::cube(1.0, Rc::new(Material::black())).build(),
             20,
             Mass(3.0),
             |_| (),
         )
         .unwrap();
-        imported_other.velocity = Vector::new([0.0, 0.0, -0.05]);
-        imported_other.pose = Pose::new_from_translation(Vector::new([0.0, 0.0, 2.1]));
 
         let bounding_box_level = 0;
 
-        const START_LOC: Vector<3> = Vector::new([-2.0, 1.7, 0.0]);
+        const START_LOC: Vector<3> = Vector::new([-2.0, 0.0, -2.0]);
 
         let camera = camera::builder()
-            .pose(ManualPose::new_fixed_forward_up(
+            .pose(ManualPose::new_fixed_up_from_to(
                 START_LOC,
-                UnitVector::X,
+                Vector::ZERO,
                 UnitVector::Y,
             ))
             .perspective(90.0, hdr_fb.aspect_ratio(), 0.01, 100.0)
@@ -190,7 +186,7 @@ impl State {
             Orientation::new_forward_up(UnitVector::Y, -UnitVector::Z),
             Vector::new([0.0, 0.5, 0.5]),
         );
-        aggregate_tail.push(
+        aggregate_tail.push_model(
             simpletail.clone(),
             offset,
             end_attachment_point,
@@ -199,7 +195,7 @@ impl State {
             |_| (),
         );
 
-        let (grappling_hook, grapple_chain_anim) = grappling_hook();
+        let (grappling_hook, grapple_chain_anim, join_pos, hook_pos) = grappling_hook();
 
         Ok(Self {
             toggle_b: true,
@@ -213,26 +209,24 @@ impl State {
             sensitivity,
             speed,
 
-            light,
-            containers,
             skybox,
 
-            testbool: false,
-            imported,
-            imported_other,
+            morgan,
+            origin_cube,
             bounding_box_level,
             toggle_m: true,
 
             grapple_chain_anim,
             grappling_hook,
+            join_pos,
+            hook_pos,
 
             aggregate_tail,
             simpletail,
             skeletal_animation,
-            which_animation: animation,
 
             hdr_fb,
-            do_bloom: false,
+            toggle_g: false,
             bloom,
 
             light_group: ShadowListLights {
@@ -265,6 +259,9 @@ pub fn make_model(
             )?
             .cull_face(CullFace::BackFace)
             .scale(0.01)
+            .apply_transformation(Pose::new_from_translation(Vector::new([
+                0.0, -1.2773916, 0.42744067,
+            ])))
             .build(),
         ),
         "backpack" => (
@@ -341,7 +338,12 @@ pub fn make_model(
     Ok(model)
 }
 
-fn grappling_hook() -> (AggregateEntity<(), SimpleCubic>, SkeletalAnimation) {
+fn grappling_hook() -> (
+    AggregateEntity<(), SimpleCubic>,
+    SkeletalAnimation,
+    (AggregateModelIndex, SkeletonBoneIndex),
+    AggregateModelIndex,
+) {
     // Need origin cube
     // Need chain
     // Need hook
@@ -406,6 +408,26 @@ fn grappling_hook() -> (AggregateEntity<(), SimpleCubic>, SkeletalAnimation) {
             end_bone,
         );
     }
+
+    let mut bone_animation = BoneAnimation::new();
+    bone_animation
+        .push_final_non_repeat(Pose::new_from_translation(Vector::new([
+            0.0,
+            0.0,
+            CHAIN_LINK_SIZE * 0.5,
+        ])))
+        .expect(EXPECT_MESSAGE);
+
+    animation_builder
+        .push_animation(bone_animation, end_bone)
+        .expect("end bone exists");
+    let new_bone = Bone::builder(end_bone).bind_pose_relative_to_parent(
+        Pose::new_from_translation(Vector::new([0.0, 0.0, CHAIN_LINK_SIZE * 0.5])),
+    );
+    end_bone = skeleton_builder
+        .push_bone(new_bone)
+        .expect("new_bone parent exists");
+
     let skeleton = skeleton_builder.build();
     let animation = animation_builder.build();
     let chain = chain.skeleton(skeleton).build();
@@ -418,7 +440,7 @@ fn grappling_hook() -> (AggregateEntity<(), SimpleCubic>, SkeletalAnimation) {
 
     let mut aggregate = AggregateEntity::new(origin_cube, 1, |_| ());
     let chain_attachment_point = aggregate
-        .push(
+        .push_model(
             chain,
             Pose::new_from_translation(Vector::new([
                 0.0,
@@ -431,14 +453,10 @@ fn grappling_hook() -> (AggregateEntity<(), SimpleCubic>, SkeletalAnimation) {
             |_| (),
         )
         .expect("Root model at ROOT_MODEL_INDEX");
-    let _hook_attachment_point = aggregate
-        .push(
+    let hook_attachment_point = aggregate
+        .push_model(
             hook,
-            Pose::new_from_translation(Vector::new([
-                0.0,
-                0.0,
-                0.5 * (CHAIN_LINK_SIZE + HOOK_SIZE),
-            ])),
+            Pose::new_from_translation(Vector::new([0.0, 0.0, 0.5 * (HOOK_SIZE)])),
             end_bone,
             chain_attachment_point,
             1,
@@ -446,5 +464,10 @@ fn grappling_hook() -> (AggregateEntity<(), SimpleCubic>, SkeletalAnimation) {
         )
         .expect("chain attachment at given index");
 
-    (aggregate, animation)
+    (
+        aggregate,
+        animation,
+        (chain_attachment_point, end_bone),
+        hook_attachment_point,
+    )
 }

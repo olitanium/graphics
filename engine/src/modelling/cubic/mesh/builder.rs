@@ -3,21 +3,20 @@ use std::rc::Rc;
 use graphics::vertex_array::VertexArray;
 use utils::{builder, new};
 
+use crate::TransformBy;
 use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::cubic::Mesh;
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::cubic::material::Material;
 use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex};
 
-#[derive(Debug, Clone)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct Builder {
     pub triangles: Vec<[IncompleteVertex<3>; 3]>,
     pub material: Rc<Material>,
     pub scale: Option<f32>,
     transform: Option<Pose>,
 }
-
 
 impl Builder {
     new!();
@@ -72,11 +71,11 @@ impl Builder {
                 }
             }
         }
-        // if let Some(transform) = self.transformation {
-        // for triangle in &mut self.triangles {
-        // triangle = triangle.transform_by(&transform);
-        // }
-        // }
+        if let Some(transform) = self.transform {
+            for triangle in &mut self.triangles {
+                *triangle = triangle.transform_by(&transform);
+            }
+        }
 
         let mut vertex_array_builder = VertexArray::builder();
         vertex_array_builder.extend_triangles(

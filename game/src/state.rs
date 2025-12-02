@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use engine::eng_state::EngState;
-use engine::entity::AggregateEntity;
+use engine::entity::{AggregateEntity, AggregateModelIndex};
 use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
@@ -11,7 +11,7 @@ use engine::modelling::cubic::geometry::SkeletalAnimation;
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{Camera, SkeletonCubic};
+use engine::modelling::cubic::{Camera, SkeletonBoneIndex, SkeletonCubic};
 use engine::modelling::{
     Bloom,
     Line,
@@ -22,7 +22,7 @@ use engine::modelling::{
     TestLineVertex,
 };
 use engine::types::TexDim;
-use engine::{ApiState, ColourRGBA, EngError, EngResult, Entity, Event, VecDraw};
+use engine::{ApiState, ColourRGBA, EngError, EngResult, Event, SimpleEntity, VecDraw};
 
 pub struct State {
     pub reset_time: f32,
@@ -33,7 +33,7 @@ pub struct State {
     pub exposure: f32,
     pub sensitivity: f32,
 
-    pub do_bloom: bool,
+    pub toggle_g: bool,
     pub toggle_b: bool,
 
     pub speed: [f32; 3],
@@ -45,22 +45,19 @@ pub struct State {
     pub light_group: ShadowListLights<SHADOW_SHADER_MAX_LIGHTS>,
     pub ns_light_group: ListLights<SHADOW_SHADER_MAX_LIGHTS>,
 
-    pub light: SimpleCubic,
-    pub containers: Vec<SimpleCubic>,
-    pub testbool: bool,
-    pub imported: Entity<()>,
-    pub imported_other: Entity<()>,
+    pub morgan: Option<SimpleEntity<()>>,
+    pub origin_cube: SimpleEntity<()>,
     pub simpletail: SkeletonCubic,
     pub aggregate_tail: AggregateEntity<(), SkeletonCubic>,
     pub skeletal_animation: SkeletalAnimation,
 
     pub grappling_hook: AggregateEntity<(), SimpleCubic>,
     pub grapple_chain_anim: SkeletalAnimation,
+    pub join_pos: (AggregateModelIndex, SkeletonBoneIndex),
+    pub hook_pos: AggregateModelIndex,
 
     pub bounding_box_level: usize,
     pub toggle_m: bool,
-
-    pub which_animation: Option<SkeletalAnimation>,
 
     pub skybox: SkyBox,
     pub hdr_fb: Framebuffer<2, WithDepth>,
@@ -87,11 +84,12 @@ impl EngState for State {
         let mut mouse_delta = (0.0, 0.0);
         let mut local_string = None;
         let mut default_fb = None;
+        let mut actual_time = 0.0;
         for event in events {
             match event {
                 Event::WindowBuffer(buffer) => default_fb = Some(buffer),
                 Event::FrameTime(ft) => frame_time = ft as f32,
-                Event::ActualTime(at) => self.time = at as f32,
+                Event::ActualTime(at) => actual_time = at as f32,
                 Event::WindowResize(size) => {
                     self.hdr_fb.resize(size);
                     // self.bloom.resize(size);
@@ -113,12 +111,12 @@ impl EngState for State {
                 }
                 Event::Query(queries) => match queries.as_slice() {
                     [(0, query)] if query.get_answer() => {
-                        self.imported_other
+                        self.origin_cube
                             .model
                             .temp_set_all_material(Rc::new(Material::from_colour(ColourRGBA::RED)));
                     }
                     [(0, query)] if !query.get_answer() => {
-                        self.imported_other.model.temp_set_all_material(Rc::new(
+                        self.origin_cube.model.temp_set_all_material(Rc::new(
                             Material::from_colour(ColourRGBA::BLUE),
                         ));
                     }
@@ -129,6 +127,9 @@ impl EngState for State {
         }
 
         let mut string = local_string.unwrap();
+
+        let game_start = *self.game_start.get_or_insert(self.time);
+        self.time = actual_time - game_start;
 
         // eprintln!("fps: {}", 1.0 / frame_time);
 

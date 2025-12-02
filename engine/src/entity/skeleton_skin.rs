@@ -13,7 +13,7 @@ pub struct SkinningEntity<T> {
     pub model: SkeletonCubic,
     pub pose: Pose,
     pub mass: Mass,
-    bounding_box: Option<SkeletonBb<SkeletalVertex, T>>,
+    pub(crate) bounding_box: Option<SkeletonBb<SkeletalVertex, T>>,
     pub velocity: Vector<3>,
 }
 

@@ -9,7 +9,7 @@ use graphics::{ApiResult, Draw, DrawOut, ShaderProgramContext};
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
-use crate::modelling::{CubicVertex, SkeletonBb, Volume};
+use crate::modelling::{CubicVertex, Skeleton, SkeletonBb, Volume};
 use crate::opengl_shaders::BoundingBoxShaderProgram;
 use crate::{EngError, EngResult};
 
@@ -39,7 +39,7 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
     pub fn new<P: CameraPose, NEVER>(
         framebuffer: &'a D,
         bounding_box: &'a SkeletonBb<V, T>,
-        // skeleton: &'a Skeleton,
+        skeleton: &'a Skeleton,
         pose: Pose,
         animation: Option<(&'a SkeletalAnimation, f32)>,
         camera: &Camera<P>,
@@ -49,7 +49,7 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
     ) -> EngResult<Box<Self>, NEVER> {
         let look_at = camera.look_at(hint);
         let calculated_animation =
-            CalculatedAnimation::builder(pose, &bounding_box.skeleton, animation)?
+            CalculatedAnimation::builder(pose, skeleton, animation)?
                 .build()
                 .swap_remove(0); //Take 0 because there are no aggregate groups
         Ok(Box::new(Self {

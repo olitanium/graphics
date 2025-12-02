@@ -11,7 +11,7 @@ pub struct SkeletonEntity<T> {
     pub model: SimpleCubic,
     pub pose: Pose,
     pub mass: Mass,
-    bounding_box: Option<SkeletonBb<SimpleVertex, T>>,
+    pub(crate) bounding_box: Option<SkeletonBb<SimpleVertex, T>>,
     pub velocity: Vector<3>,
 }
 

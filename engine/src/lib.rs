@@ -20,7 +20,7 @@ mod error;
 pub mod modelling;
 pub mod opengl_shaders;
 pub use array_vec;
-pub use entity::Entity;
+pub use entity::SimpleEntity;
 pub use error::{EngError, EngResult};
 pub use graphics::colour::{ColourRGB, ColourRGBA};
 pub use graphics::framebuffer::Builder as FrameBufferBuilder;

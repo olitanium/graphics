@@ -6,15 +6,15 @@ use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{BoundingBox, SimpleCubic, SimpleVertex, Volume};
 
 #[derive(Debug)]
-pub struct Entity<T> {
+pub struct SimpleEntity<T> {
     pub model: SimpleCubic,
     pub pose: Pose,
     pub mass: Mass,
-    bounding_box: Option<BoundingBox<SimpleVertex, 3, T>>,
+    pub(crate) bounding_box: Option<BoundingBox<SimpleVertex, 3, T>>,
     pub velocity: Vector<3>,
 }
 
-impl<T> Default for Entity<T> {
+impl<T> Default for SimpleEntity<T> {
     fn default() -> Self {
         Self {
             mass: Default::default(),
@@ -26,7 +26,7 @@ impl<T> Default for Entity<T> {
     }
 }
 
-impl<T> Entity<T> {
+impl<T> SimpleEntity<T> {
     pub fn from_cubic<F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
         model: SimpleCubic,
         depth: usize,
@@ -44,7 +44,7 @@ impl<T> Entity<T> {
     }
 }
 
-impl<T> Entity<T> {
+impl<T> SimpleEntity<T> {
     pub const fn bounding_box(&self) -> Option<&BoundingBox<SimpleVertex, 3, T>>
     where
         Vector<3>: Volume<3>,

@@ -1,4 +1,3 @@
-
 use super::DualQuaternion;
 use crate::UnitDualQuaternion;
 

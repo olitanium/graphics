@@ -1,5 +1,3 @@
-use std::num::NonZeroI64;
-
 use crate::DualNumber;
 
 #[test]

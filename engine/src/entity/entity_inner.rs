@@ -1,4 +1,3 @@
-
 use graphics::ActiveShaderProgram;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
