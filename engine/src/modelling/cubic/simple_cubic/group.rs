@@ -14,12 +14,12 @@ use crate::modelling::cubic::geometry::{
     process_vec_noaggregate,
 };
 use crate::modelling::cubic::lighting::simple::ListLights;
-use crate::modelling::{SimpleCubic, SimpleVertex};
+use crate::modelling::SimpleCubic;
 use crate::{EngError, EngResult};
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
-    shader: &'a ShaderProgram<SimpleVertex, (SimpleCubic, ListLights<MAX>), OUT, D::Tex>,
+    shader: &'a ShaderProgram<SimpleCubic, ListLights<MAX>, OUT, D::Tex>,
     framebuffer: &'a D,
 
     camera_pos: Vector<3>,
@@ -35,7 +35,7 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
     Group<'a, MAX, OUT, D>
 {
     pub fn new<O: CameraPose, NEVER>(
-        shader: &'a ShaderProgram<SimpleVertex, (SimpleCubic, ListLights<MAX>), OUT, FlatTexture>,
+        shader: &'a ShaderProgram<SimpleCubic, ListLights<MAX>, OUT, FlatTexture>,
         framebuffer: &'a D,
 
         camera: &Camera<O>,

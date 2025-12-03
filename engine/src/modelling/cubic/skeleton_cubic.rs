@@ -4,7 +4,7 @@ use std::{convert, iter};
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::shader_program::CullFace;
-use graphics::{ActiveShaderProgram, ApiResult};
+use graphics::{ActiveShaderProgram, ApiResult, Model};
 use utils::partition;
 
 use crate::EngResult;
@@ -45,7 +45,7 @@ impl SkeletonCubic {
 
     pub(crate) fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, SkeletalVertex, (Self, L), D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         calculated_animation: &CalculatedAnimation,
     ) -> EngResult<(), NEVER> {
@@ -76,7 +76,6 @@ impl SkeletonCubic {
 
 impl EntityInner for SkeletonCubic {
     type BoundingBox<T> = SkeletonBb<SkeletalVertex, T>;
-    type Vertex = SkeletalVertex;
 
     fn make_bounding_box<
         T,
@@ -108,10 +107,14 @@ impl EntityInner for SkeletonCubic {
 
     fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self::Vertex, (Self, L), D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         calculated_animation: &CalculatedAnimation,
     ) -> EngResult<(), NEVER> {
         self.draw(active_shader, active_framebuffer, calculated_animation)
     }
+}
+
+impl Model for SkeletonCubic {
+    type Vertex = SkeletalVertex;
 }

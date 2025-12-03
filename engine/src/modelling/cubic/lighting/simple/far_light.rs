@@ -1,3 +1,4 @@
+use graphics::Model;
 use graphics::colour::ColourRGB;
 use graphics::linear_algebra::UnitVector;
 use graphics::shader_program::ActiveShaderProgram;
@@ -23,14 +24,16 @@ impl FarLight {
         const MAX: usize,
         L: ListLightCompatible<MAX>,
         T: Texture,
-        M,
-        V: CubicVertex,
+        M: Model,
     >(
         &self,
-        shader: &mut ActiveShaderProgram<'_, '_, '_, V, (M, L), T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
         name: &str,
         index: usize,
-    ) -> EngResult<(), NEVER> {
+    ) -> EngResult<(), NEVER>
+    where
+        M::Vertex: CubicVertex,
+    {
         shader.set_uniform(format!("{name}_vary[{index}].direction"), &self.direction)?;
         shader.set_uniform(format!("{name}[{index}].ambient"), &self.ambient)?;
         shader.set_uniform(format!("{name}[{index}].diffuse"), &self.diffuse)?;

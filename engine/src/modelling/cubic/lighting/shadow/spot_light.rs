@@ -1,3 +1,4 @@
+use graphics::Model;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::attachments::WithDepth;
 use graphics::framebuffer::{Builder, Framebuffer};
@@ -54,14 +55,16 @@ impl ShadowSpotLight {
         const MAX: usize,
         L: ShadowLightCompatible<MAX>,
         T: Texture,
-        M,
-        V: VertexHasTangent,
+        M: Model,
     >(
         &'c self,
-        shader: &mut ActiveShaderProgram<'_, '_, 'c, V, (M, L), T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, 'c, M, L, T, N>,
         name: &str,
         index: usize,
-    ) -> EngResult<(), NEVER> {
+    ) -> EngResult<(), NEVER>
+    where
+        M::Vertex: VertexHasTangent,
+    {
         self.light.bind_to(shader, name, index)?;
         shader.set_uniform(format!("{name}[{index}].matrix"), &self.projtimesview())?;
         // SAFETY: Reference must not live to a point where the
@@ -77,13 +80,14 @@ impl ShadowSpotLight {
         const MAX: usize,
         L: ShadowLightCompatible<MAX>,
         T: Texture,
-        M,
-        V: VertexHasTangent,
+        M: Model,
     >(
-        shader: &mut ActiveShaderProgram<'_, '_, '_, V, (M, L), T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
         name: &str,
         index: usize,
-    ) {
+    ) where
+        M::Vertex: VertexHasTangent,
+    {
         shader.register_texture(Some((
             format!("{name}[{index}].depth"),
             FlatTexture::dyn_blank(),

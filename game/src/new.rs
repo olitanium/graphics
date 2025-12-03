@@ -6,7 +6,7 @@ use engine::entity::{AggregateEntity, AggregateModelIndex, Mass};
 use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
-use engine::modelling::cubic::camera::{CameraPose, ManualPose};
+use engine::modelling::cubic::camera::ManualPose;
 use engine::modelling::cubic::geometry::{BoneAnimation, Orientation, Pose, SkeletalAnimation};
 use engine::modelling::cubic::lighting::shadow::{
     ShadowListLights,

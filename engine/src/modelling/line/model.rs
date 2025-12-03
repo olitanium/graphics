@@ -3,7 +3,7 @@ use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::shader_program::Uniform;
 use graphics::types::ElementArrayLen;
 use graphics::vertex::NoVertex;
-use graphics::{ActiveShaderProgram, vertex_array};
+use graphics::{ActiveShaderProgram, Model, vertex_array};
 
 use crate::EngResult;
 use crate::opengl_shaders::LINE_SHADER_MAX_VERTICES;
@@ -27,9 +27,9 @@ impl<U: Uniform> Line<U> {
 }
 
 impl<U: Uniform> Line<U> {
-    pub(crate) fn draw<'a, const OUT: usize, F: FramebufferWithoutExtra<OUT>>(
+    pub(crate) fn draw<'a, const OUT: usize, O, F: FramebufferWithoutExtra<OUT>>(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, NoVertex, Self, F::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, O, F::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, F>,
     ) -> EngResult<(), !> {
         active_shader.set_uniform("vertex".to_string(), &self.vertices)?;
@@ -42,4 +42,8 @@ impl<U: Uniform> Line<U> {
 
         Ok(())
     }
+}
+
+impl<U: Uniform> Model for Line<U> {
+    type Vertex = NoVertex;
 }

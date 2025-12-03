@@ -3,6 +3,8 @@ use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
+use graphics::texture::FlatTexture;
+use graphics::vertex_array::VertexArray;
 
 use crate::EngResult;
 use crate::modelling::cubic::SkeletonBoneIndex;
@@ -95,16 +97,24 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
             .collect()
     }
 
-    pub(crate) fn draw<NEVER, D: FramebufferWithDepth<1>, F: Fn(&T) -> ColourRGBA>(
+    pub(crate) fn draw<NEVER, D: FramebufferWithDepth<1, Tex = FlatTexture>, F: Fn(&T) -> ColourRGBA>(
         &self,
         level: usize,
-        active_shader: &mut ActiveShaderProgram<'_, '_, '_, Vector<3>, (), D::Tex, 1>,
+        active_shader: &mut ActiveShaderProgram<
+            '_,
+            '_,
+            '_,
+            VertexArray<Vector<3>>,
+            (),
+            D::Tex,
+            1,
+        >,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
         calculated_animation: CalculatedAnimation,
         colour: F,
     ) -> EngResult<(), NEVER> {
         for (bone, bbox) in self.per_bone.iter().enumerate() {
-            // HACK
+            // HACK do I want to store the index for "completeness"?
             let bone = SkeletonBoneIndex(bone);
             let pose = calculated_animation.get(bone)?;
             bbox.draw(level, pose, active_shader, active_framebuffer, &colour)?

@@ -2,9 +2,9 @@ use std::num::NonZeroUsize;
 
 use crate::TransformBy;
 use crate::entity::{AggregateModelIndex, EntityInner};
-use crate::modelling::Skeleton;
 use crate::modelling::cubic::geometry::{AnimationError, Pose, SkeletalAnimation};
 use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
+use crate::modelling::{CubicVertex, Skeleton};
 use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
@@ -48,7 +48,7 @@ impl CalculatedAnimation {
             .get(index.0)
             .copied()
             .ok_or(AnimationError::BoneDoesNotExist {
-                requested: index.0,
+                requested: index,
                 length: self.poses.len(),
             })
     }
@@ -67,6 +67,12 @@ struct AnimationUnit<'a> {
     // invariant: Skeleton and Skeletal Animation have same signature
     skeleton: &'a Skeleton,
     animation: Option<(&'a SkeletalAnimation, f32)>,
+}
+
+#[derive(Debug, Copy, Clone)]
+struct PoseAndInverseBindPose {
+    pose: Pose,
+    inverse_bind_pose: Pose,
 }
 
 impl<'a> CalculatedAnimationBuilder<'a> {
@@ -132,27 +138,21 @@ impl<'a> CalculatedAnimationBuilder<'a> {
                     }
                 }
             } else {
-                Err(AnimationError::AttachementPointDoesNotExist {
-                    parent: parent.0,
-                    available: parent_skeleton.skeleton.len_incl_root(),
-                    requested: attachment_point.0,
+                Err(AnimationError::BoneInParentDoesNotExist {
+                    unit: parent,
+                    length: parent_skeleton.skeleton.len_incl_root(),
+                    requested: attachment_point,
                 })
             }
         } else {
             Err(AnimationError::ParentDoesNotExist {
-                requested: parent.0,
+                requested: parent,
                 available: output_index - 1,
             })
         }
     }
 
-    pub fn build(self) -> Vec<CalculatedAnimation> {
-        #[derive(Debug, Copy, Clone)]
-        struct PoseAndInverseBindPose {
-            pose: Pose,
-            inverse_bind_pose: Pose,
-        }
-
+    fn get_world_positions(self) -> Vec<(Vec<PoseAndInverseBindPose>, Option<u64>)> {
         let mut output: Vec<(Vec<PoseAndInverseBindPose>, Option<u64>)> = Vec::new();
 
         for unit in self.units {
@@ -215,6 +215,60 @@ impl<'a> CalculatedAnimationBuilder<'a> {
         }
 
         output
+    }
+
+    pub fn build_fixing_bone(
+        self,
+        unit: AggregateModelIndex,
+        bone: SkeletonBoneIndex,
+        pose: Pose,
+    ) -> Result<Vec<CalculatedAnimation>, AnimationError> {
+        let world_positions = self.get_world_positions();
+
+        let poses_this_unit = &world_positions
+            .get(unit.0)
+            .ok_or_else(|| AnimationError::UnitDoesNotExist {
+                available: world_positions.len(),
+                requested: unit,
+            })?
+            .0;
+        let fixed_pose = poses_this_unit
+            .get(bone.0)
+            .ok_or_else(|| AnimationError::BoneInParentDoesNotExist {
+                unit,
+                requested: bone,
+                length: poses_this_unit.len(),
+            })?
+            .pose;
+
+        let deviation = pose.transform(&fixed_pose.inverse());
+
+        Ok(world_positions
+            .into_iter()
+            .map(|(vec, opt_signature)| {
+                let poses = vec
+                    .into_iter()
+                    .map(
+                        |PoseAndInverseBindPose {
+                             pose,
+                             inverse_bind_pose,
+                         }| {
+                            deviation.transform(&pose).transform(&inverse_bind_pose)
+                        },
+                    )
+                    .collect();
+
+                CalculatedAnimation {
+                    poses,
+                    signature: opt_signature,
+                }
+            })
+            .collect())
+    }
+
+    pub fn build(self) -> Vec<CalculatedAnimation> {
+        let world_positions = self.get_world_positions();
+        world_positions
             .into_iter()
             .map(|(vec, opt_signature)| {
                 let poses = vec
@@ -238,7 +292,10 @@ impl<'a> CalculatedAnimationBuilder<'a> {
 
 pub(crate) fn process_vec_noaggregate<'a, M: EntityInner>(
     input: Vec<(&'a M, Pose, Option<(&'a SkeletalAnimation, f32)>)>,
-) -> Result<Vec<(&'a M, CalculatedAnimation)>, AnimationError> {
+) -> Result<Vec<(&'a M, CalculatedAnimation)>, AnimationError>
+where
+    M::Vertex: CubicVertex,
+{
     input
         .into_iter()
         .map(|(cubic, root, animation)| {

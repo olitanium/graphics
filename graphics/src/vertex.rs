@@ -1,7 +1,5 @@
 use std::mem;
 
-// mod incomplete;
-// pub use incomplete::IncompleteVertex;
 use linear_algebra::Vector;
 
 use crate::types::VertexAttrType;

@@ -6,12 +6,12 @@ use utils::{builder, new};
 
 use super::{CullFace, ShaderProgram};
 use crate::error::ApiResult;
-use crate::gl_call;
 use crate::shader_program::Error;
 use crate::shader_program::shader::Shader;
 use crate::texture::Texture;
 use crate::types::{self, ShaderProgramId};
 use crate::vertex::Vertex;
+use crate::{Model, gl_call};
 
 #[derive(Debug)]
 pub struct VertexShader(Shader);
@@ -24,16 +24,16 @@ pub struct FragmentShader(Shader);
 pub struct MissingFragmentShader;
 
 #[derive(Debug)]
-pub struct Builder<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize, V, F> {
+pub struct Builder<M: Model, O, T: Texture, const OUT: usize, V, F> {
     vertex_shader: V,
     fragment_shader: F,
     geometry_shader: Option<Shader>,
     force_cull_face: Option<CullFace>,
-    _phantom_model: PhantomData<fn(M, Vx, T)>,
+    _phantom_model: PhantomData<fn(M, O, T)>,
 }
 
-impl<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize> Default
-    for Builder<Vx, M, T, OUT, MissingVertexShader, MissingFragmentShader>
+impl<M: Model, O, T: Texture, const OUT: usize> Default
+    for Builder<M, O, T, OUT, MissingVertexShader, MissingFragmentShader>
 {
     fn default() -> Self {
         Self {
@@ -46,19 +46,19 @@ impl<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize> Default
     }
 }
 
-impl<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize>
-    Builder<Vx, M, T, OUT, MissingVertexShader, MissingFragmentShader>
+impl<M: Model, O, T: Texture, const OUT: usize>
+    Builder<M, O, T, OUT, MissingVertexShader, MissingFragmentShader>
 {
     new!();
 }
 
-impl<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize, V, F> Builder<Vx, M, T, OUT, V, F> {
+impl<M: Model, O, T: Texture, const OUT: usize, V, F> Builder<M, O, T, OUT, V, F> {
     builder!(force_cull_face: Option<CullFace>);
 
     pub fn vertex_shader<NEVER, P: AsRef<Path>>(
         self,
         source: P,
-    ) -> ApiResult<Builder<Vx, M, T, OUT, VertexShader, F>, NEVER> {
+    ) -> ApiResult<Builder<M, O, T, OUT, VertexShader, F>, NEVER> {
         Shader::new(gl::VERTEX_SHADER, source).map(|shader| Builder {
             vertex_shader: VertexShader(shader),
             ..self
@@ -68,7 +68,7 @@ impl<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize, V, F> Builder<Vx, M, T
     pub fn vertex_shader_raw<NEVER>(
         self,
         source: &[u8],
-    ) -> ApiResult<Builder<Vx, M, T, OUT, VertexShader, F>, NEVER> {
+    ) -> ApiResult<Builder<M, O, T, OUT, VertexShader, F>, NEVER> {
         Shader::new_from_slice(gl::VERTEX_SHADER, source).map(|shader| Builder {
             vertex_shader: VertexShader(shader),
             ..self
@@ -78,7 +78,7 @@ impl<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize, V, F> Builder<Vx, M, T
     pub fn fragment_shader<NEVER, P: AsRef<Path>>(
         self,
         source: P,
-    ) -> ApiResult<Builder<Vx, M, T, OUT, V, FragmentShader>, NEVER> {
+    ) -> ApiResult<Builder<M, O, T, OUT, V, FragmentShader>, NEVER> {
         Shader::new(gl::FRAGMENT_SHADER, source).map(|shader| Builder {
             fragment_shader: FragmentShader(shader),
             ..self
@@ -88,7 +88,7 @@ impl<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize, V, F> Builder<Vx, M, T
     pub fn fragment_shader_raw<NEVER>(
         self,
         source: &[u8],
-    ) -> ApiResult<Builder<Vx, M, T, OUT, V, FragmentShader>, NEVER> {
+    ) -> ApiResult<Builder<M, O, T, OUT, V, FragmentShader>, NEVER> {
         Shader::new_from_slice(gl::FRAGMENT_SHADER, source).map(|shader| Builder {
             fragment_shader: FragmentShader(shader),
             ..self
@@ -109,10 +109,10 @@ impl<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize, V, F> Builder<Vx, M, T
         })
     }
 }
-impl<Vx: Vertex, M: ?Sized, T: Texture, const OUT: usize>
-    Builder<Vx, M, T, OUT, VertexShader, FragmentShader>
+impl<M: Model, O, T: Texture, const OUT: usize>
+    Builder<M, O, T, OUT, VertexShader, FragmentShader>
 {
-    pub fn build<NEVER>(mut self) -> ApiResult<ShaderProgram<Vx, M, OUT, T>, NEVER> {
+    pub fn build<NEVER>(mut self) -> ApiResult<ShaderProgram<M, O, OUT, T>, NEVER> {
         let program_id = gl_call! { ShaderProgramId::new(gl::CreateProgram()) };
         let mut total_string = String::default();
         gl_call! {

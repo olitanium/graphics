@@ -5,7 +5,6 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
 use graphics::{ApiResult, Draw, DrawOut};
 
-use crate::modelling::SkeletalVertex;
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::geometry::{
     CalculatedAnimation,
@@ -19,7 +18,7 @@ use crate::{EngError, EngResult};
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
-    shader: &'a ShaderProgram<SkeletalVertex, (SkeletonCubic, ListLights<MAX>), OUT, D::Tex>,
+    shader: &'a ShaderProgram<SkeletonCubic, ListLights<MAX>, OUT, D::Tex>,
     framebuffer: &'a D,
 
     camera_pos: Vector<3>,
@@ -35,12 +34,7 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
     Group<'a, MAX, OUT, D>
 {
     pub fn new<O: CameraPose, NEVER>(
-        shader: &'a ShaderProgram<
-            SkeletalVertex,
-            (SkeletonCubic, ListLights<MAX>),
-            OUT,
-            FlatTexture,
-        >,
+        shader: &'a ShaderProgram<SkeletonCubic, ListLights<MAX>, OUT, FlatTexture>,
         framebuffer: &'a D,
 
         camera: &Camera<O>,

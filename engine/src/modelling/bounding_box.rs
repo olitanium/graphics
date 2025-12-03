@@ -1,10 +1,13 @@
 use std::fmt::Debug;
+use std::sync::LazyLock;
 
-use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
+use graphics::texture::FlatTexture;
+use graphics::vertex_array::VertexArray;
+use graphics::{ActiveShaderProgram, Model, ShaderProgram};
 
 mod element;
 pub use element::BoundingBoxElement;
@@ -22,14 +25,14 @@ mod error;
 pub use error::Error as BoundingBoxError;
 
 use crate::modelling::advanced_vertex::ExtendedVertex;
-use crate::modelling::cubic::geometry::Pose;
-use crate::modelling::{CubicVertex, SimpleCubic, SimpleVertex, Volume};
-use crate::{EngResult, TransformBy};
+use crate::modelling::{SimpleCubic, SimpleVertex, Volume};
+use crate::transform::Transform;
+use crate::EngResult;
 
 #[derive(Debug, Clone)]
 pub struct BoundingBox<V: ExtendedVertex<DIMS>, const DIMS: usize, T>
 where
-    Vector<DIMS>: Volume<DIMS>,
+    Vector<DIMS>: ExtendedVertex<DIMS>,
     [(); Vector::<DIMS>::ELEMENT_COUNT]:,
 {
     inner: Vec<BoundingBoxElement<V, DIMS, T>>,
@@ -37,7 +40,7 @@ where
 
 impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T>
 where
-    Vector<DIMS>: Volume<DIMS>,
+    Vector<DIMS>: ExtendedVertex<DIMS>,
     [(); Vector::<DIMS>::ELEMENT_COUNT]:,
 {
     fn get(&self, index: usize) -> &BoundingBoxElement<V, DIMS, T> {
@@ -90,35 +93,18 @@ where
     pub fn encloses_point(&self, point: Vector<DIMS>) -> bool {
         self.get(0).encloses_point_and_children(self, point)
     }
-}
-impl<V: CubicVertex, T> BoundingBox<V, 3, T> {
-    pub(crate) fn draw<NEVER, D: FramebufferWithDepth<1>, F: Fn(&T) -> ColourRGBA>(
-        &self,
-        level: usize,
-        pose: Pose,
-        active_shader: &mut ActiveShaderProgram<'_, '_, '_, Vector<3>, (), D::Tex, 1>,
-        active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
-        colour: F,
-    ) -> EngResult<(), NEVER> {
-        // active_shader.set_uniform("model", &pose.as_transformation_matrix())?;
-        self.get(0).draw_recursive(
-            self,
-            &pose,
-            level,
-            active_shader,
-            active_framebuffer,
-            &colour,
-        )
-    }
 
-    pub fn detect_collision<F: Fn(&mut T), O: Fn(&mut T)>(
+    pub fn detect_collision<F: Fn(&mut T), O: Fn(&mut T), P: Transform<Vector<DIMS>>>(
         lhs: &Self,
-        lhs_pose: Pose,
+        lhs_pose: P,
         lhs_alter_meta: F,
         rhs: &Self,
-        rhs_pose: Pose,
+        rhs_pose: P,
         rhs_alter_meta: O,
-    ) -> Vec<(Vec<[V; 3]>, Vec<[V; 3]>)> {
+    ) -> Vec<(Vec<[V; 3]>, Vec<[V; 3]>)>
+    where
+        P: Transform<[V; 3]>,
+    {
         BoundingBoxElement::overlaps_bounding_box_and_children(
             lhs.get(0),
             lhs,
@@ -133,17 +119,55 @@ impl<V: CubicVertex, T> BoundingBox<V, 3, T> {
             (
                 lhs.get_triangles()
                     .iter()
-                    .map(|triangle| triangle.transform_by(&lhs_pose))
+                    .map(|triangle| lhs_pose.transform(triangle))
                     //.copied()
                     .collect(),
                 rhs.get_triangles()
                     .iter()
-                    .map(|triangle| triangle.transform_by(&rhs_pose))
+                    .map(|triangle| rhs_pose.transform(triangle))
                     //.copied()
                     .collect(),
             )
         })
         .collect()
+    }
+}
+
+impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T>
+where
+    BoundingBoxElement<V, DIMS, T>: BoundingBoxShaderProgram<DIMS>,
+    Vector<DIMS>: Volume<DIMS>,
+    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+{
+    pub(crate) fn draw<
+        NEVER,
+        P: Transform<Vector<DIMS>>,
+        D: FramebufferWithDepth<1, Tex = FlatTexture>,
+        F: Fn(&T) -> ColourRGBA,
+    >(
+        &self,
+        level: usize,
+        pose: P,
+        active_shader: &mut ActiveShaderProgram<
+            '_,
+            '_,
+            '_,
+            VertexArray<Vector<DIMS>>,
+            (),
+            D::Tex,
+            1,
+        >,
+        active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
+        colour: F,
+    ) -> EngResult<(), NEVER> {
+        self.get(0).draw_recursive(
+            self,
+            &pose,
+            level,
+            active_shader,
+            active_framebuffer,
+            &colour,
+        )
     }
 }
 
@@ -159,6 +183,32 @@ impl<T> BoundingBox<SimpleVertex, 3, T> {
             .map(|(_, triangle)| triangle)
             .collect();
         Self::new_from_triangles(triangles, depth, init)
+    }
+}
+
+// Can I remove or change DIMS?
+pub trait BoundingBoxShaderProgram<const DIMS: usize>: Model + Sized
+where
+    Vector<DIMS>: Vertex,
+{
+    fn shader_program() -> &'static ShaderProgram<VertexArray<Vector<DIMS>>, (), 1, FlatTexture>;
+}
+
+impl<V: ExtendedVertex<3>, T> BoundingBoxShaderProgram<3> for BoundingBoxElement<V, 3, T> {
+    fn shader_program() -> &'static ShaderProgram<VertexArray<Vector<3>>, (), 1, FlatTexture> {
+        static SHADER_PROGRAM: LazyLock<ShaderProgram<VertexArray<Vector<3>>, (), 1, FlatTexture>> =
+            LazyLock::new(|| {
+                let out: EngResult<ShaderProgram<VertexArray<Vector<3>>, (), 1, FlatTexture>, !> = try {
+                    ShaderProgram::builder()
+                        .vertex_shader("shaders/bounding_box/bounding_box.vert")?
+                        .fragment_shader("shaders/bounding_box/bounding_box.frag")?
+                        .build()?
+                };
+
+                out.expect("ERROR")
+            });
+
+        &SHADER_PROGRAM
     }
 }
 

@@ -8,11 +8,10 @@ use super::SkyBox;
 use crate::EngError;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::skybox::SkyBoxVertex;
 
 #[derive(Debug)]
-pub struct Group<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> {
-    shader: &'a ShaderProgram<SkyBoxVertex, SkyBox, OUT, D::Tex>,
+pub struct Group<'a, const OUT: usize, O, D: FramebufferWithDepth<OUT>> {
+    shader: &'a ShaderProgram<SkyBox, O, OUT, D::Tex>,
     framebuffer: &'a D,
 
     skybox: &'a SkyBox,
@@ -20,13 +19,13 @@ pub struct Group<'a, const OUT: usize, D: FramebufferWithDepth<OUT>> {
     uniforms: Vec<(String, &'a dyn Uniform)>,
 }
 
-impl<'a, const OUT: usize, X: FramebufferWithDepth<OUT>> Group<'a, OUT, X> {
-    pub fn new<O: CameraPose>(
-        shader: &'a ShaderProgram<SkyBoxVertex, SkyBox, OUT, X::Tex>,
+impl<'a, const OUT: usize, O, X: FramebufferWithDepth<OUT>> Group<'a, OUT, O, X> {
+    pub fn new<P: CameraPose>(
+        shader: &'a ShaderProgram<SkyBox, O, OUT, X::Tex>,
         framebuffer: &'a X,
         skybox: &'a SkyBox,
-        camera: &Camera<O>,
-        camera_hint: &O::Hint,
+        camera: &Camera<P>,
+        camera_hint: &P::Hint,
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Box<Self> {
         let proj = camera.projection;
@@ -49,8 +48,8 @@ impl<'a, const OUT: usize, X: FramebufferWithDepth<OUT>> Group<'a, OUT, X> {
     }
 }
 
-impl<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw<EngError<NEVER>>
-    for Group<'a, OUT, D>
+impl<'a, NEVER, const OUT: usize, O, D: FramebufferWithDepth<OUT>> Draw<EngError<NEVER>>
+    for Group<'a, OUT, O, D>
 {
     fn draw(
         self: Box<Self>,

@@ -1,7 +1,8 @@
 use engine::entity::AggregateGroup;
 use engine::framebuffer::DefaultFramebuffer;
+use engine::modelling::cubic::SkeletonBoneIndex;
 use engine::modelling::cubic::geometry::Pose;
-use engine::modelling::{BloomGroup, QuadGroup, SimpleCubicGroup, SkeletonBbGroup, SkyBoxGroup};
+use engine::modelling::{BloomGroup, QuadGroup, SkyBoxGroup};
 use engine::{EngResult, VecDraw, opengl_shaders};
 
 use crate::state::{State, StateError};
@@ -38,6 +39,15 @@ impl State {
                     None,
                 ],
             )],
+            if self.toggle_b {
+                Some((
+                    self.hook_pos,
+                    SkeletonBoneIndex::SKELETON_ROOT_BONE,
+                    Pose::IDENTITY,
+                ))
+            } else {
+                None
+            },
             vec![],
         ));
 

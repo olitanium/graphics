@@ -2,9 +2,9 @@ use std::sync::Mutex;
 
 use super::{CullFace, Error, ShaderProgram};
 use crate::error::ApiResult;
-use crate::gl_call;
 use crate::texture::Texture;
 use crate::vertex::Vertex;
+use crate::{Model, gl_call};
 
 #[derive(Debug)]
 pub struct ShaderProgramContext {
@@ -30,9 +30,9 @@ impl ShaderProgramContext {
         }
     }
 
-    pub fn use_program<V: Vertex, M, const OUT: usize, T: Texture>(
+    pub fn use_program<M: Model, O, const OUT: usize, T: Texture>(
         &mut self,
-        program: &ShaderProgram<V, M, OUT, T>,
+        program: &ShaderProgram<M, O, OUT, T>,
     ) {
         gl_call! {
             gl::UseProgram(program.id().as_primitive());

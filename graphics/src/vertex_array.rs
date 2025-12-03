@@ -12,7 +12,7 @@ use crate::shader_program::ActiveShaderProgram;
 use crate::types::{ElementArrayLen, VertexArrayId};
 use crate::vertex::{NoVertex, Vertex};
 use crate::vertex_buffer::VertexBuffer;
-use crate::{gl_call, types};
+use crate::{Model, gl_call, types};
 
 mod builder;
 
@@ -134,9 +134,15 @@ where
         }
     }
 
-    pub fn draw<NEVER, M, const OUT: usize, D: FramebufferWithoutExtra<OUT>>(
+    pub fn draw<
+        NEVER,
+        M: Model<Vertex = V>,
+        O,
+        const OUT: usize,
+        D: FramebufferWithoutExtra<OUT>,
+    >(
         &self,
-        active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, V, M, D::Tex, OUT>,
+        active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, O, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
     ) -> ApiResult<(), NEVER> {
         self.bind();
@@ -187,9 +193,15 @@ pub fn dummy_vertex_array() -> &'static VertexArray<NoVertex> {
 }
 
 impl VertexArray<NoVertex> {
-    pub fn draw_len<NEVER, M, const OUT: usize, D: FramebufferWithoutExtra<OUT>>(
+    pub fn draw_len<
+        NEVER,
+        M: Model<Vertex = NoVertex>,
+        O,
+        const OUT: usize,
+        D: FramebufferWithoutExtra<OUT>,
+    >(
         &self,
-        active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, NoVertex, M, D::Tex, OUT>,
+        active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, O, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         len: ElementArrayLen,
     ) -> ApiResult<(), NEVER> {

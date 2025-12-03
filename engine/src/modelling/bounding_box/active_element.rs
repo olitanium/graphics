@@ -5,12 +5,12 @@ use graphics::vertex::Vertex;
 
 use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::bounding_box::BoundingBoxElement;
-use crate::modelling::{BoundingBox, Volume};
+use crate::modelling::BoundingBox;
 use crate::transform::Transform;
 
 impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T>
 where
-    Vector<DIMS>: Volume<DIMS>,
+    Vector<DIMS>: ExtendedVertex<DIMS>,
 {
     pub fn transform_by<P: Transform<Vector<DIMS>>>(
         &self,

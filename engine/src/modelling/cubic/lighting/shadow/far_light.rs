@@ -1,3 +1,4 @@
+use graphics::Model;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::attachments::WithDepth;
 use graphics::framebuffer::{Builder, Framebuffer};
@@ -66,15 +67,17 @@ impl ShadowFarLight {
         const MAX: usize,
         L: ShadowLightCompatible<MAX>,
         T: Texture,
-        M,
-        V: VertexHasTangent,
+        M: Model,
     >(
         &'a self,
-        shader: &mut ActiveShaderProgram<'_, '_, 'a, V, (M, L), T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, 'a, M, L, T, N>,
         name: &str,
         index: usize,
         target: Vector<3>,
-    ) -> EngResult<(), NEVER> {
+    ) -> EngResult<(), NEVER>
+    where
+        M::Vertex: VertexHasTangent,
+    {
         self.light.bind_to(shader, name, index)?;
         shader.set_uniform(
             format!("{name}[{index}].matrix"),
@@ -97,13 +100,14 @@ impl ShadowFarLight {
         const MAX: usize,
         L: ShadowLightCompatible<MAX>,
         T: Texture,
-        M,
-        V: VertexHasTangent,
+        M: Model,
     >(
-        shader: &mut ActiveShaderProgram<'a, 'b, 'c, V, (M, L), T, N>,
+        shader: &mut ActiveShaderProgram<'a, 'b, 'c, M, L, T, N>,
         name: &str,
         index: usize,
-    ) {
+    ) where
+        M::Vertex: VertexHasTangent,
+    {
         shader.register_texture(Some((
             format!("{name}[{index}].depth"),
             FlatTexture::dyn_blank(),

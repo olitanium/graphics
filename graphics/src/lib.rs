@@ -19,6 +19,7 @@ pub mod types;
 
 pub mod element_array_buffer;
 pub mod framebuffer;
+pub mod model;
 pub mod vertex;
 pub mod vertex_array;
 pub mod vertex_buffer;
@@ -26,6 +27,7 @@ pub mod vertex_buffer;
 pub(crate) use environment::PrivateToken;
 pub use environment::{ApiState, Draw, DrawNothing, DrawOut, Environment, Event, Key};
 pub use error::{ApiError, ApiResult};
+pub use model::Model;
 pub use shader_program::{ActiveShaderProgram, ShaderProgram, ShaderProgramContext};
 pub use {colour, linear_algebra};
 

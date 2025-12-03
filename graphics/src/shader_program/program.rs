@@ -1,13 +1,14 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::ffi::CString;
+use std::fmt::Debug;
 use std::marker::PhantomData;
 
 pub use super::Error;
 use crate::texture::Texture;
 use crate::types::{ShaderProgramId, UniformLocation};
 use crate::vertex::Vertex;
-use crate::{ApiResult, gl_call};
+use crate::{ApiResult, Draw, Model, gl_call};
 
 mod active_shader;
 mod utils;
@@ -25,23 +26,29 @@ pub use uniform::{NameNotFoundError, Uniform};
 mod cull_face;
 pub use cull_face::CullFace;
 
-// TODO: Do I want to add another generic for "model extra", like lights?
-#[derive(Debug)]
-pub struct ShaderProgram<V: Vertex, M: ?Sized, const OUT: usize, T: Texture> {
+pub struct ShaderProgram<M: Model, O, const OUT: usize, T: Texture> {
     pub(crate) id: ShaderProgramId,
     concat_all_text: String,
     uniform_locations: RefCell<HashMap<CString, i32>>,
     force_cull_face: Option<CullFace>,
-    _phantom_model: PhantomData<fn(M, V, T)>,
+    _phantom_model: PhantomData<fn(M, O, T)>,
+}
+
+impl<M: Model, O, const OUT: usize, T: Texture> Debug for ShaderProgram<M, O, OUT, T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct(stringify!(ShaderProgram))
+            .field("concat_all_text", &self.concat_all_text)
+            .finish_non_exhaustive()
+    }
 }
 
 /// # SAFETY
 /// This is safe because only one ActiveShaderProgram can exist,
 /// which is the only way of accessing the internal RefCell
-unsafe impl<V: Vertex, M, const OUT: usize, T: Texture> Sync for ShaderProgram<V, M, OUT, T> {}
+unsafe impl<M: Model, O, const OUT: usize, T: Texture> Sync for ShaderProgram<M, O, OUT, T> {}
 
-impl<V: Vertex, M: ?Sized, const OUT: usize, T: Texture> ShaderProgram<V, M, OUT, T> {
-    pub fn builder() -> Builder<V, M, T, OUT, MissingVertexShader, MissingFragmentShader> {
+impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
+    pub fn builder() -> Builder<M, O, T, OUT, MissingVertexShader, MissingFragmentShader> {
         Builder::new()
     }
 
@@ -52,7 +59,7 @@ impl<V: Vertex, M: ?Sized, const OUT: usize, T: Texture> ShaderProgram<V, M, OUT
     pub fn use_program<'a, 'b, 'c>(
         &'a self,
         marker: &'b mut ShaderProgramContext,
-    ) -> ActiveShaderProgram<'a, 'b, 'c, V, M, T, OUT> {
+    ) -> ActiveShaderProgram<'a, 'b, 'c, M, O, T, OUT> {
         gl_call! {
             gl::UseProgram(self.id.as_primitive());
         }
@@ -90,7 +97,7 @@ impl<V: Vertex, M: ?Sized, const OUT: usize, T: Texture> ShaderProgram<V, M, OUT
     }
 }
 
-impl<V: Vertex, M: ?Sized, T: Texture, const OUT: usize> Drop for ShaderProgram<V, M, OUT, T> {
+impl<M: Model, O, T: Texture, const OUT: usize> Drop for ShaderProgram<M, O, OUT, T> {
     fn drop(&mut self) {
         gl_call! {
             gl::DeleteProgram(self.id.as_primitive());

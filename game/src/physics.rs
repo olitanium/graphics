@@ -1,5 +1,4 @@
 use engine::linear_algebra::Vector;
-use engine::opengl_shaders::exposure;
 
 use crate::state::State;
 

@@ -1,3 +1,4 @@
+use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::shader_program::{ActiveShaderProgram, CullFace};
@@ -24,9 +25,9 @@ impl SkyBox {
         Self { model, texture }
     }
 
-    pub(crate) fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>>(
+    pub(crate) fn draw<'a, NEVER, const OUT: usize, O, D: FramebufferWithDepth<OUT>>(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, SkyBoxVertex, SkyBox, D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, SkyBox, O, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
     ) -> EngResult<(), NEVER> {
         active_shader.cull_face(CullFace::DoNotCull)?;
@@ -36,4 +37,8 @@ impl SkyBox {
 
         Ok(())
     }
+}
+
+impl Model for SkyBox {
+    type Vertex = SkyBoxVertex;
 }

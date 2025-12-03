@@ -2,13 +2,13 @@ use std::array;
 use std::cell::RefCell;
 use std::num::NonZeroUsize;
 
-use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::vertex::Vertex;
 use graphics::vertex_array::VertexArray;
+use graphics::{ActiveShaderProgram, Model};
 
 use crate::EngResult;
 use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
@@ -17,7 +17,7 @@ use crate::transform::Transform;
 #[derive(Debug, Clone)]
 pub struct BoundingBoxElement<V: ExtendedVertex<DIMS>, const DIMS: usize, T>
 where
-    Vector<DIMS>: Vertex,
+    Vector<DIMS>: ExtendedVertex<DIMS>,
 {
     pub(crate) meta: RefCell<T>,
 
@@ -33,7 +33,7 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T: Default> Default
     for BoundingBoxElement<V, DIMS, T>
 where
     [(); Vector::<DIMS>::ELEMENT_COUNT]:,
-    Vector<DIMS>: Vertex,
+    Vector<DIMS>: ExtendedVertex<DIMS>,
 {
     fn default() -> Self {
         Self {
@@ -69,7 +69,7 @@ fn make_lower_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
 
 impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T>
 where
-    Vector<DIMS>: Volume<DIMS>,
+    Vector<DIMS>: ExtendedVertex<DIMS>, // Volume<DIMS>,
     [(); Vector::<DIMS>::ELEMENT_COUNT]:,
 {
     pub fn new_from_many_inner<F: FnMut(&[(Vector<DIMS>, [V; 3])]) -> T>(
@@ -86,12 +86,6 @@ where
         let lower_bounds = make_lower_bound(&vectors)?;
 
         let destination_index = so_far.len();
-
-        // let positions_triangles = Volume::volume(lower_bounds, upper_bounds)
-        // .map(|triangle| Vector::<DIMS>::from_incomplete_triangle(triangle).unwrap());
-        // let mut vertex_array_builder = VertexArray::builder();
-        // vertex_array_builder.extend_triangles(positions_triangles);
-        // let vertex_array = vertex_array_builder.build();
 
         so_far.push(Self {
             meta: RefCell::new(init(triangles)),
@@ -159,7 +153,13 @@ where
     pub fn get_triangles(&self) -> &[[V; 3]] {
         &self.triangles
     }
+}
 
+impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T>
+where
+    Vector<DIMS>: Volume<DIMS>,
+    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+{
     pub fn draw_recursive<
         NEVER,
         D: FramebufferWithDepth<OUT>,
@@ -171,7 +171,15 @@ where
         bounding_box: &BoundingBox<V, DIMS, T>,
         pose: &P,
         level: usize,
-        active_shader: &mut ActiveShaderProgram<'_, '_, '_, Vector<DIMS>, (), D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<
+            '_,
+            '_,
+            '_,
+            VertexArray<Vector<DIMS>>,
+            (),
+            D::Tex,
+            OUT,
+        >,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         colour: &F,
     ) -> EngResult<(), NEVER> {
@@ -207,10 +215,17 @@ where
 
             active_shader.set_uniform("colour", &chosen_colour)?;
             active_shader.set_uniform("model", &Matrix::<4, 4>::identity())?;
+
             vertex_array.draw(active_shader, active_framebuffer)?;
-            // self.vertex_array.draw(active_shader, active_framebuffer)?;
 
             Ok(())
         }
     }
+}
+
+impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> Model for BoundingBoxElement<V, DIMS, T>
+where
+    Vector<DIMS>: Volume<DIMS>,
+{
+    type Vertex = Vector<DIMS>;
 }

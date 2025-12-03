@@ -2,13 +2,13 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::{array, mem};
 
-use graphics::ApiResult;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::linear_algebra::Vector;
 use graphics::shader_program::{ActiveShaderProgram, CullFace};
 use graphics::texture::{FlatTexture, Texture};
 use graphics::vertex_array::VertexArray;
+use graphics::{ApiResult, Model};
 use utils::RefOwned;
 
 use super::{Builder, QuadVertex};
@@ -53,9 +53,9 @@ impl<const N: usize> Quad<N> {
         }
     }
 
-    pub(crate) fn draw<'a, NEVER, const OUT: usize, I: FramebufferWithoutExtra<OUT>>(
+    pub(crate) fn draw<'a, NEVER, const OUT: usize, O, I: FramebufferWithoutExtra<OUT>>(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, QuadVertex, Self, I::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, O, I::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, I>,
     ) -> EngResult<(), NEVER> {
         let _: ApiResult<_, !> = active_shader.cull_face(CullFace::BackFace);
@@ -72,4 +72,8 @@ impl<const N: usize> Quad<N> {
 
         Ok(())
     }
+}
+
+impl<const N: usize> Model for Quad<N> {
+    type Vertex = QuadVertex;
 }

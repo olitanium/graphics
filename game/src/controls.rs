@@ -4,7 +4,7 @@ use std::mem;
 use engine::linear_algebra::Vector;
 use engine::modelling::TestLineVertex;
 use engine::modelling::cubic::geometry::Pose;
-use engine::{ApiError, ColourRGB, EngResult, Key, TransformBy};
+use engine::{ApiError, ColourRGB, EngResult, Key};
 
 use crate::state::{State, StateError};
 

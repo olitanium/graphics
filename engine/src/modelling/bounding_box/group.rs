@@ -7,26 +7,30 @@ use graphics::vertex::Vertex;
 use graphics::{ApiResult, Draw, DrawOut, ShaderProgramContext};
 
 use crate::EngError;
+use crate::modelling::bounding_box::BoundingBoxShaderProgram;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::Pose;
-use crate::modelling::{BoundingBox, CubicVertex, ExtendedVertex, Volume};
-use crate::opengl_shaders::BoundingBoxShaderProgram;
+use crate::modelling::{BoundingBox, BoundingBoxElement, ExtendedVertex, Volume};
+use crate::transform::Transform;
+
 pub struct Group<
     'a,
     const OUT: usize,
     const DIMS: usize,
     D: FramebufferWithDepth<OUT, Tex = FlatTexture>,
     V: ExtendedVertex<DIMS>,
-    T,
-    F: Fn(&T) -> ColourRGBA,
+    T: Transform<Vector<DIMS>>,
+    Bt,
+    F: Fn(&Bt) -> ColourRGBA,
 > where
+    BoundingBoxElement<V, DIMS, Bt>: BoundingBoxShaderProgram<DIMS>,
+    T: Transform<Vector<DIMS>>,
     Vector<DIMS>: Volume<DIMS>,
     [(); Vector::<DIMS>::ELEMENT_COUNT]:,
 {
     framebuffer: &'a D,
-    bounding_box: &'a BoundingBox<V, DIMS, T>,
-    pose: Pose,
+    bounding_box: &'a BoundingBox<V, DIMS, Bt>,
+    transform: T,
     look_at: Matrix<4, 4>,
     level: usize,
     colour: F,
@@ -34,16 +38,23 @@ pub struct Group<
 
 impl<
     'a,
+    const DIMS: usize,
     D: FramebufferWithDepth<1, Tex = FlatTexture>,
-    V: ExtendedVertex<3>,
+    V: ExtendedVertex<DIMS>,
+    Bt,
     T,
-    F: Fn(&T) -> ColourRGBA,
-> Group<'a, 1, 3, D, V, T, F>
+    F: Fn(&Bt) -> ColourRGBA,
+> Group<'a, 1, DIMS, D, V, T, Bt, F>
+where
+    BoundingBoxElement<V, DIMS, Bt>: BoundingBoxShaderProgram<DIMS>,
+    T: Transform<Vector<DIMS>>,
+    Vector<DIMS>: Volume<DIMS>,
+    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
 {
     pub fn new<P: CameraPose>(
         framebuffer: &'a D,
-        bounding_box: &'a BoundingBox<V, 3, T>,
-        pose: Pose,
+        bounding_box: &'a BoundingBox<V, DIMS, Bt>,
+        transform: T,
         camera: &Camera<P>,
         hint: &P::Hint,
         level: usize,
@@ -53,7 +64,7 @@ impl<
         Box::new(Self {
             framebuffer,
             bounding_box,
-            pose,
+            transform,
             look_at,
             level,
             colour,
@@ -64,11 +75,18 @@ impl<
 impl<
     'a,
     NEVER,
+    const DIMS: usize,
     D: FramebufferWithDepth<1, Tex = FlatTexture>,
-    V: CubicVertex,
+    V: ExtendedVertex<DIMS>,
     T,
-    F: Fn(&T) -> ColourRGBA,
-> Draw<EngError<NEVER>> for Group<'a, 1, 3, D, V, T, F>
+    Bt,
+    F: Fn(&Bt) -> ColourRGBA,
+> Draw<EngError<NEVER>> for Group<'a, 1, DIMS, D, V, T, Bt, F>
+where
+    Vector<DIMS>: Volume<DIMS>,
+    T: Transform<Vector<DIMS>>,
+    BoundingBoxElement<V, DIMS, Bt>: BoundingBoxShaderProgram<DIMS>,
+    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
 {
     fn draw(
         self: Box<Self>,
@@ -76,13 +94,14 @@ impl<
         marker: &mut ShaderProgramContext,
     ) -> ApiResult<DrawOut, EngError<NEVER>> {
         let mut active_framebuffer = self.framebuffer.bind(register);
-        let mut active_shader = Vector::shader_program().use_program(marker);
+        let mut active_shader =
+            BoundingBoxElement::<V, DIMS, Bt>::shader_program().use_program(marker);
 
         active_shader.set_uniform("projtimesview", &self.look_at)?;
 
         self.bounding_box.draw(
             self.level,
-            self.pose,
+            self.transform,
             &mut active_shader,
             &mut active_framebuffer,
             self.colour,

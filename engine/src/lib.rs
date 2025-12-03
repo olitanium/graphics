@@ -10,6 +10,7 @@
 #![feature(result_option_map_or_default)]
 #![feature(iter_map_windows)]
 #![feature(associated_type_defaults)]
+#![feature(generic_const_items)]
 #![deny(unused_must_use)]
 #![deny(clippy::missing_const_for_fn)]
 

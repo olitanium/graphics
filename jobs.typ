@@ -1,8 +1,9 @@
 = Jobs
 
 == Longer term
-- ExtendedVertex no longer generic, instead has associated const DIMS
-- Types use Self::Primitive as the inner value. Blocked on RustAnalyser failure
+- ExtendedVertex no longer generic, instead has associated const DIMS,
+- Volume no longer generic, instead has associated const DIMS,
+- Types use Self::Primitive as the inner value. Blocked on RustAnalyser failure,
 - Yeet instead of Err(...into()) or Err(...)?
 
 == Can Do Now
@@ -12,5 +13,6 @@
 - BoneAnimation don't store poses, store ScLERPS
 - Camera ManualPose use Pose
 - ShaderProgram generics Vertex, Model and `Extra`
+  - Shadow Lights can then be generic over model type
 - Import
 - Bounding Box dyn

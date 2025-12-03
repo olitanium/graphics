@@ -5,20 +5,21 @@ use graphics::{ApiResult, Draw, DrawOut};
 
 use super::Quad;
 use crate::EngError;
-use crate::modelling::quad::QuadVertex;
 
 #[derive(Debug)]
-pub struct Group<'a, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> {
-    shader: &'a ShaderProgram<QuadVertex, Quad<N>, OUT, D::Tex>,
+pub struct Group<'a, const N: usize, const OUT: usize, O, D: FramebufferWithoutExtra<OUT>> {
+    shader: &'a ShaderProgram<Quad<N>, O, OUT, D::Tex>,
     framebuffer: &'a D,
 
     quads: Vec<&'a Quad<N>>,
     uniforms: Vec<(String, &'a dyn Uniform)>,
 }
 
-impl<'a, const N: usize, const OUT: usize, X: FramebufferWithoutExtra<OUT>> Group<'a, N, OUT, X> {
+impl<'a, const N: usize, const OUT: usize, O, X: FramebufferWithoutExtra<OUT>>
+    Group<'a, N, OUT, O, X>
+{
     pub fn new(
-        shader: &'a ShaderProgram<QuadVertex, Quad<N>, OUT, X::Tex>,
+        shader: &'a ShaderProgram<Quad<N>, O, OUT, X::Tex>,
         framebuffer: &'a X,
 
         quads: Vec<&'a Quad<N>>,
@@ -33,8 +34,8 @@ impl<'a, const N: usize, const OUT: usize, X: FramebufferWithoutExtra<OUT>> Grou
     }
 }
 
-impl<'a, NEVER, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>>
-    Draw<EngError<NEVER>> for Group<'a, N, OUT, D>
+impl<'a, NEVER, O, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>>
+    Draw<EngError<NEVER>> for Group<'a, N, OUT, O, D>
 {
     fn draw(
         self: Box<Self>,

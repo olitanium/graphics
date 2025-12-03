@@ -10,19 +10,23 @@ use crate::entity::{EntityInner, SkeletonEntity, SkinningEntity};
 use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::cubic::{SkeletonBoneIndex, SkeletonCubic};
-use crate::modelling::{SimpleCubic, SkeletonBb};
+use crate::modelling::{CubicVertex, SimpleCubic, SkeletonBb};
 use crate::{EngResult, SimpleEntity};
 
 mod group;
 pub use group::Group as AggregateGroup;
 
-pub struct AggregateEntity<T, M: EntityInner> {
+pub struct AggregateEntity<T, M: EntityInner>
+where
+    M::Vertex: CubicVertex,
+{
     base: AggregateUnit<T, M>,
     children: Vec<Option<AggregateUnit<T, M>>>,
 }
 
 impl<T: Debug, M: EntityInner + Debug> Debug for AggregateEntity<T, M>
 where
+    M::Vertex: CubicVertex,
     M::BoundingBox<T>: Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -34,7 +38,10 @@ where
 }
 
 #[derive(Debug)]
-struct AggregateUnit<T, M: EntityInner> {
+struct AggregateUnit<T, M: EntityInner>
+where
+    M::Vertex: CubicVertex,
+{
     model: M,
     bounding_box: Option<M::BoundingBox<T>>,
     offset: Pose,
@@ -45,11 +52,15 @@ struct AggregateUnit<T, M: EntityInner> {
 
 #[derive(Debug, Clone, Copy)]
 pub struct AggregateModelIndex(pub(crate) usize);
+
 impl AggregateModelIndex {
     pub const ROOT_MODEL_INDEX: Self = Self(0);
 }
 
-impl<T, M: EntityInner> AggregateEntity<T, M> {
+impl<T, M: EntityInner> AggregateEntity<T, M>
+where
+    M::Vertex: CubicVertex,
+{
     pub fn new<F: FnMut(&[(Vector<3>, [M::Vertex; 3])]) -> T>(
         base_model: M,
         depth: usize,
@@ -181,17 +192,10 @@ impl<T, M: EntityInner> AggregateEntity<T, M> {
         F: FramebufferWithDepth<OUT>,
     >(
         &'a self,
-        active_sp: &mut ActiveShaderProgram<
-            '_,
-            '_,
-            'a,
-            M::Vertex,
-            (M, ListLights<MAX>),
-            F::Tex,
-            OUT,
-        >,
+        active_sp: &mut ActiveShaderProgram<'_, '_, 'a, M, ListLights<MAX>, F::Tex, OUT>,
         active_fb: &mut ActiveFramebuffer<'_, '_, OUT, F>,
         animations: Vec<Option<(&SkeletalAnimation, f32)>>,
+        fix_anim: Option<&(AggregateModelIndex, SkeletonBoneIndex, Pose)>,
     ) -> EngResult<(), NEVER> {
         let mut animations = animations.into_iter().chain(iter::repeat(None));
         let first_animation = animations.next().flatten();
@@ -221,7 +225,11 @@ impl<T, M: EntityInner> AggregateEntity<T, M> {
             )?;
         }
 
-        let anim = anim_builder.build();
+        let anim = if let Some(&(unit_index, bone_index, pose)) = fix_anim {
+            anim_builder.build_fixing_bone(unit_index, bone_index, pose)?
+        } else {
+            anim_builder.build()
+        };
 
         for (model, calc) in iter::once(&self.base)
             .chain(self.children.iter().flatten())

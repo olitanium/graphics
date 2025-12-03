@@ -3,10 +3,10 @@ use std::rc::Rc;
 
 mod builder;
 pub use builder::Builder as MeshBuilder;
-use graphics::ActiveShaderProgram;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::vertex_array::VertexArray;
+use graphics::{ActiveShaderProgram, Model};
 
 use crate::EngResult;
 use crate::modelling::CubicVertex;
@@ -35,9 +35,16 @@ impl<V: CubicVertex> Mesh<V>
 where
     [(); V::ELEMENT_COUNT]:,
 {
-    pub(crate) fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>, M>(
+    pub(crate) fn draw<
+        'a,
+        M: Model<Vertex = V>,
+        NEVER,
+        O,
+        const OUT: usize,
+        D: FramebufferWithDepth<OUT>,
+    >(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, V, M, D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, M, O, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
     ) -> EngResult<(), NEVER> {
         let _: EngResult<_, !> = self.material.register_to(active_shader, "material");

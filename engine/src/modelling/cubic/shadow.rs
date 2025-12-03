@@ -110,9 +110,7 @@ impl<'a, NEVER, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw<EngError<NEV
             model.draw(
                 &mut active_shadow_shader,
                 &mut active_output_framebuffer,
-                &calculated_animation, /* pose,
-                                        * animation,
-                                        * time, */
+                &calculated_animation,
             )?;
         }
 

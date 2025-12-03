@@ -1,3 +1,4 @@
+use graphics::Model;
 use graphics::framebuffer::attachments::CubeWithDepth;
 use graphics::framebuffer::{Builder, Framebuffer};
 use graphics::linear_algebra::{Matrix, UnitVector, Vector};
@@ -88,14 +89,16 @@ impl ShadowPointLight {
         const MAX: usize,
         L: ShadowLightCompatible<MAX>,
         T: Texture,
-        M,
-        V: VertexHasTangent,
+        M: Model,
     >(
         &'a self,
-        shader: &mut ActiveShaderProgram<'_, '_, 'a, V, (M, L), T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, 'a, M, L, T, N>,
         name: &str,
         index: usize,
-    ) -> EngResult<(), NEVER> {
+    ) -> EngResult<(), NEVER>
+    where
+        M::Vertex: VertexHasTangent,
+    {
         self.light.bind_to(shader, name, index)?;
         shader.set_uniform(format!("{name}[{index}].far_plane"), &self.far_plane())?;
         // SAFETY: Reference must not live to a point where RefCell::borrow_mut can be
@@ -112,13 +115,14 @@ impl ShadowPointLight {
         const MAX: usize,
         L: ShadowLightCompatible<MAX>,
         T: Texture,
-        M,
-        V: VertexHasTangent,
+        M: Model,
     >(
-        shader: &mut ActiveShaderProgram<'_, '_, '_, V, (M, L), T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
         name: &str,
         index: usize,
-    ) {
+    ) where
+        M::Vertex: VertexHasTangent,
+    {
         shader.register_texture(Some((
             format!("{name}[{index}].depth"),
             CubeMap::dyn_blank(),

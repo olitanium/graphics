@@ -1,4 +1,5 @@
 use array_vec::ArrayVec;
+use graphics::Model;
 use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::Texture;
 
@@ -16,17 +17,13 @@ pub struct ListLights<const MAX: usize> {
 }
 
 impl<const MAX: usize> ListLights<MAX> {
-    pub(crate) fn bind<
-        NEVER,
-        const N: usize,
-        L: ListLightCompatible<MAX>,
-        T: Texture,
-        M,
-        V: CubicVertex,
-    >(
+    pub(crate) fn bind<NEVER, const N: usize, L: ListLightCompatible<MAX>, T: Texture, M: Model>(
         &self,
-        shader_program: &mut ActiveShaderProgram<'_, '_, '_, V, (M, L), T, N>,
-    ) -> EngResult<(), NEVER> {
+        shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
+    ) -> EngResult<(), NEVER>
+    where
+        M::Vertex: CubicVertex,
+    {
         shader_program.set_uniform("num_point", &(self.point.len() as i32))?;
         for (index, light) in self.point.iter().enumerate() {
             light.bind_to(shader_program, "point", index)?;

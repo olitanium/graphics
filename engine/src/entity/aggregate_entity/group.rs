@@ -8,11 +8,12 @@ use graphics::texture::FlatTexture;
 use graphics::{ApiResult, Draw, DrawOut};
 
 use crate::EngError;
-use crate::entity::{AggregateEntity, EntityInner};
-use crate::modelling::cubic::Camera;
+use crate::entity::{AggregateEntity, AggregateModelIndex, EntityInner};
+use crate::modelling::CubicVertex;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::SkeletalAnimation;
+use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
 use crate::modelling::cubic::lighting::simple::ListLights;
+use crate::modelling::cubic::{Camera, SkeletonBoneIndex};
 
 pub struct Group<
     'a,
@@ -21,8 +22,10 @@ pub struct Group<
     const MAX: usize,
     const OUT: usize,
     D: FramebufferWithDepth<OUT>,
-> {
-    shader: &'a ShaderProgram<M::Vertex, (M, ListLights<MAX>), OUT, D::Tex>,
+> where
+    M::Vertex: CubicVertex,
+{
+    shader: &'a ShaderProgram<M, ListLights<MAX>, OUT, D::Tex>,
     framebuffer: &'a D,
 
     camera_pos: Vector<3>,
@@ -34,6 +37,7 @@ pub struct Group<
         Vec<Option<(&'a SkeletalAnimation, f32)>>,
     )>,
 
+    fix_anim: Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,
     uniforms: Vec<(String, &'a dyn Uniform)>,
 }
 
@@ -45,9 +49,11 @@ impl<
     const OUT: usize,
     D: FramebufferWithDepth<OUT, Tex = FlatTexture>,
 > Group<'a, M, T, MAX, OUT, D>
+where
+    M::Vertex: CubicVertex,
 {
     pub fn new<O: CameraPose>(
-        shader: &'a ShaderProgram<M::Vertex, (M, ListLights<MAX>), OUT, FlatTexture>,
+        shader: &'a ShaderProgram<M, ListLights<MAX>, OUT, FlatTexture>,
         framebuffer: &'a D,
 
         camera: &Camera<O>,
@@ -57,6 +63,7 @@ impl<
             &'a AggregateEntity<T, M>,
             Vec<Option<(&'a SkeletalAnimation, f32)>>, // time
         )>,
+        fix_anim: Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Box<Self> {
@@ -68,6 +75,7 @@ impl<
             lights,
             opaque,
             uniforms,
+            fix_anim,
         })
     }
 }
@@ -81,6 +89,8 @@ impl<
     const OUT: usize,
     D: FramebufferWithDepth<OUT>,
 > Draw<EngError<NEVER>> for Group<'a, M, T, MAX, OUT, D>
+where
+    M::Vertex: CubicVertex,
 {
     fn draw(
         self: Box<Self>,
@@ -101,7 +111,12 @@ impl<
         active_shader.set_uniform_dyn(self.uniforms)?;
 
         for (model, animations) in self.opaque {
-            model.draw(&mut active_shader, &mut active_framebuffer, animations)?;
+            model.draw(
+                &mut active_shader,
+                &mut active_framebuffer,
+                animations,
+                self.fix_anim.as_ref(),
+            )?;
         }
         DrawOut::OK
     }

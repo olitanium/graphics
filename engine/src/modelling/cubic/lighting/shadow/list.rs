@@ -1,4 +1,5 @@
 use array_vec::ArrayVec;
+use graphics::Model;
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::linear_algebra::Vector;
@@ -110,13 +111,15 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         const N: usize,
         L: ShadowLightCompatible<MAX>,
         T: Texture,
-        M,
-        V: VertexHasTangent,
+        M: Model,
     >(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, V, (M, L), T, N>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, M, L, T, N>,
         target: Vector<3>,
-    ) -> EngResult<(), NEVER> {
+    ) -> EngResult<(), NEVER>
+    where
+        M::Vertex: VertexHasTangent,
+    {
         const FAR_LIGHT_NAME: &str = "far";
         active_shader.set_uniform(format!("num_{FAR_LIGHT_NAME}"), &(self.far.len() as i32))?;
         for (index, light) in self.far.iter().enumerate() {

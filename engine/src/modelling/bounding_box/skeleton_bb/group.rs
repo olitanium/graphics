@@ -1,30 +1,30 @@
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
-use graphics::linear_algebra::{Matrix, Vector};
+use graphics::linear_algebra::Matrix;
 use graphics::texture::FlatTexture;
-use graphics::vertex::Vertex;
 use graphics::{ApiResult, Draw, DrawOut, ShaderProgramContext};
 
+use crate::modelling::bounding_box::BoundingBoxShaderProgram;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
-use crate::modelling::{CubicVertex, Skeleton, SkeletonBb, Volume};
-use crate::opengl_shaders::BoundingBoxShaderProgram;
+use crate::modelling::{
+    BoundingBoxElement,
+    CubicVertex,
+    Skeleton,
+    SkeletonBb,
+};
 use crate::{EngError, EngResult};
 
 pub struct Group<
     'a,
     const OUT: usize,
-    const DIMS: usize,
     D: FramebufferWithDepth<OUT, Tex = FlatTexture>,
     V: CubicVertex,
     T,
     F: Fn(&T) -> ColourRGBA,
-> where
-    Vector<DIMS>: Volume<DIMS>,
-    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
-{
+> {
     framebuffer: &'a D,
     bounding_box: &'a SkeletonBb<V, T>,
     calculated_animation: CalculatedAnimation,
@@ -34,7 +34,7 @@ pub struct Group<
 }
 
 impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn(&T) -> ColourRGBA>
-    Group<'a, 1, 3, D, V, T, F>
+    Group<'a, 1, D, V, T, F>
 {
     pub fn new<P: CameraPose, NEVER>(
         framebuffer: &'a D,
@@ -69,7 +69,7 @@ impl<
     V: CubicVertex,
     T,
     F: Fn(&T) -> ColourRGBA,
-> Draw<EngError<NEVER>> for Group<'a, 1, 3, D, V, T, F>
+> Draw<EngError<NEVER>> for Group<'a, 1, D, V, T, F>
 {
     fn draw(
         self: Box<Self>,
@@ -77,7 +77,7 @@ impl<
         marker: &mut ShaderProgramContext,
     ) -> ApiResult<DrawOut, EngError<NEVER>> {
         let mut active_framebuffer = self.framebuffer.bind(register);
-        let mut active_shader = Vector::shader_program().use_program(marker);
+        let mut active_shader = BoundingBoxElement::<V, 3, T>::shader_program().use_program(marker);
 
         active_shader.set_uniform("projtimesview", &self.look_at)?;
 

@@ -1,24 +1,30 @@
 use utils::error_boilerplate;
 
 use crate::EngError;
+use crate::entity::AggregateModelIndex;
+use crate::modelling::cubic::SkeletonBoneIndex;
 
 #[derive(Debug, Clone)]
 pub enum Error {
     ParentDoesNotExist {
-        requested: usize,
+        requested: AggregateModelIndex,
         available: usize,
     },
-    AttachementPointDoesNotExist {
-        parent: usize,
+    UnitDoesNotExist {
+        requested: AggregateModelIndex,
         available: usize,
-        requested: usize,
     },
     SignaturesDoNotMatch {
         animation: u64,
         skeleton: u64,
     },
+    BoneInParentDoesNotExist {
+        unit: AggregateModelIndex,
+        requested: SkeletonBoneIndex,
+        length: usize,
+    },
     BoneDoesNotExist {
-        requested: usize,
+        requested: SkeletonBoneIndex,
         length: usize,
     },
 }

@@ -1,10 +1,11 @@
+use graphics::Model;
 use graphics::colour::{ColourRGB, ColourRGBA};
 use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{FlatTexture, Texture};
 use utils::{builder, new};
 
 use crate::EngResult;
-use crate::modelling::ExtendedVertex;
+use crate::modelling::CubicVertex;
 
 #[derive(Debug)]
 pub struct Material {
@@ -51,11 +52,14 @@ impl Material {
         Self::from_colour(ColourRGBA::WHITE)
     }
 
-    pub fn register_to<'a, NEVER, const N: usize, T: Texture, V: ExtendedVertex<3>, M>(
+    pub fn register_to<'a, NEVER, const N: usize, T: Texture, M: Model, O>(
         &'a self,
-        shader: &mut ActiveShaderProgram<'_, '_, 'a, V, M, T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, 'a, M, O, T, N>,
         name: &str,
-    ) -> EngResult<(), NEVER> {
+    ) -> EngResult<(), NEVER>
+    where
+        M::Vertex: CubicVertex,
+    {
         shader.set_uniform(format!("{name}.shininess"), &self.shininess)?;
         shader.register_texture(
             vec![

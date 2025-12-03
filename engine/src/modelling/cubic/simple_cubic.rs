@@ -2,11 +2,11 @@ use std::fmt::Debug;
 use std::path::Path;
 use std::rc::Rc;
 
-use graphics::ApiResult;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Matrix;
 use graphics::shader_program::{ActiveShaderProgram, CullFace};
+use graphics::{ApiResult, Model};
 use russimp::scene::PostProcess;
 use utils::partition;
 
@@ -16,8 +16,7 @@ use crate::entity::EntityInner;
 use crate::error::EngResult;
 use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
 use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
-use crate::modelling::simple_vertex::SimpleVertex;
-use crate::modelling::{SkeletonBb, test_models};
+use crate::modelling::{SimpleVertex, SkeletonBb, test_models};
 
 mod group;
 pub use group::Group;
@@ -35,7 +34,7 @@ pub struct SimpleCubic {
 #[derive(Debug, Clone)]
 pub struct BoneAndMesh {
     pub(crate) bone: SkeletonBoneIndex,
-    pub(crate) mesh: Mesh<SimpleVertex>,
+    pub(crate) mesh: Mesh<<SimpleCubic as Model>::Vertex>,
 }
 
 impl SimpleCubic {
@@ -69,7 +68,7 @@ impl SimpleCubic {
             .for_each(|BoneAndMesh { mesh, .. }| mesh.material = mat.clone());
     }
 
-    pub fn triangles(&self) -> Vec<(SkeletonBoneIndex, [SimpleVertex; 3])> {
+    pub fn triangles(&self) -> Vec<(SkeletonBoneIndex, [<SimpleCubic as Model>::Vertex; 3])> {
         self.meshes
             .iter()
             .flat_map(|BoneAndMesh { bone, mesh }| {
@@ -101,7 +100,7 @@ impl SimpleCubic {
 
     pub(crate) fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, SimpleVertex, (Self, L), D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         calculated_animation: &CalculatedAnimation,
     ) -> EngResult<(), NEVER> {
@@ -123,8 +122,7 @@ impl SimpleCubic {
 }
 
 impl EntityInner for SimpleCubic {
-    type BoundingBox<T> = SkeletonBb<SimpleVertex, T>;
-    type Vertex = SimpleVertex;
+    type BoundingBox<T> = SkeletonBb<<SimpleCubic as Model>::Vertex, T>;
 
     fn make_bounding_box<
         T,
@@ -145,10 +143,14 @@ impl EntityInner for SimpleCubic {
 
     fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self::Vertex, (Self, L), D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         calculated_animation: &CalculatedAnimation,
     ) -> EngResult<(), NEVER> {
         self.draw(active_shader, active_framebuffer, calculated_animation)
     }
+}
+
+impl Model for SimpleCubic {
+    type Vertex = SimpleVertex;
 }
