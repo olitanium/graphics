@@ -2,15 +2,13 @@ use std::marker::PhantomData;
 use std::mem;
 use std::path::Path;
 
-use utils::{builder, new};
+use gl::LinkProgram;
+use utils::{builder, error_boilerplate, new};
 
 use super::{CullFace, ShaderProgram};
-use crate::error::ApiResult;
-use crate::shader_program::Error;
-use crate::shader_program::shader::Shader;
+use crate::shader_program::shader::{NewFromSliceError, NewShaderError, Shader};
 use crate::texture::Texture;
 use crate::types::{self, ShaderProgramId};
-use crate::vertex::Vertex;
 use crate::{Model, gl_call};
 
 #[derive(Debug)]
@@ -55,65 +53,80 @@ impl<M: Model, O, T: Texture, const OUT: usize>
 impl<M: Model, O, T: Texture, const OUT: usize, V, F> Builder<M, O, T, OUT, V, F> {
     builder!(force_cull_face: Option<CullFace>);
 
-    pub fn vertex_shader<NEVER, P: AsRef<Path>>(
+    pub fn vertex_shader<P: AsRef<Path>>(
         self,
         source: P,
-    ) -> ApiResult<Builder<M, O, T, OUT, VertexShader, F>, NEVER> {
-        Shader::new(gl::VERTEX_SHADER, source).map(|shader| Builder {
+    ) -> Result<Builder<M, O, T, OUT, VertexShader, F>, NewShaderError> {
+        let shader = Shader::new(gl::VERTEX_SHADER, source)?;
+        Ok(Builder {
             vertex_shader: VertexShader(shader),
             ..self
         })
     }
 
-    pub fn vertex_shader_raw<NEVER>(
+    pub fn vertex_shader_raw(
         self,
         source: &[u8],
-    ) -> ApiResult<Builder<M, O, T, OUT, VertexShader, F>, NEVER> {
-        Shader::new_from_slice(gl::VERTEX_SHADER, source).map(|shader| Builder {
+    ) -> Result<Builder<M, O, T, OUT, VertexShader, F>, NewFromSliceError> {
+        let shader = Shader::new_from_slice(gl::VERTEX_SHADER, source)?;
+        Ok(Builder {
             vertex_shader: VertexShader(shader),
             ..self
         })
     }
 
-    pub fn fragment_shader<NEVER, P: AsRef<Path>>(
+    pub fn fragment_shader<P: AsRef<Path>>(
         self,
         source: P,
-    ) -> ApiResult<Builder<M, O, T, OUT, V, FragmentShader>, NEVER> {
-        Shader::new(gl::FRAGMENT_SHADER, source).map(|shader| Builder {
+    ) -> Result<Builder<M, O, T, OUT, V, FragmentShader>, NewShaderError> {
+        let shader = Shader::new(gl::FRAGMENT_SHADER, source)?;
+        Ok(Builder {
             fragment_shader: FragmentShader(shader),
             ..self
         })
     }
 
-    pub fn fragment_shader_raw<NEVER>(
+    pub fn fragment_shader_raw(
         self,
         source: &[u8],
-    ) -> ApiResult<Builder<M, O, T, OUT, V, FragmentShader>, NEVER> {
-        Shader::new_from_slice(gl::FRAGMENT_SHADER, source).map(|shader| Builder {
+    ) -> Result<Builder<M, O, T, OUT, V, FragmentShader>, NewFromSliceError> {
+        let shader = Shader::new_from_slice(gl::FRAGMENT_SHADER, source)?;
+        Ok(Builder {
             fragment_shader: FragmentShader(shader),
             ..self
         })
     }
 
-    pub fn geometry_shader<NEVER, P: AsRef<Path>>(self, source: P) -> ApiResult<Self, NEVER> {
-        Shader::new(gl::GEOMETRY_SHADER, source).map(|shader| Builder {
+    pub fn geometry_shader<P: AsRef<Path>>(self, source: P) -> Result<Self, NewShaderError> {
+        let shader = Shader::new(gl::GEOMETRY_SHADER, source)?;
+        Ok(Builder {
             geometry_shader: Some(shader),
             ..self
         })
     }
 
-    pub fn geometry_shader_raw<NEVER>(self, source: &[u8]) -> ApiResult<Self, NEVER> {
-        Shader::new_from_slice(gl::GEOMETRY_SHADER, source).map(|shader| Builder {
+    pub fn geometry_shader_raw(self, source: &[u8]) -> Result<Self, NewFromSliceError> {
+        let shader = Shader::new_from_slice(gl::GEOMETRY_SHADER, source)?;
+        Ok(Builder {
             geometry_shader: Some(shader),
             ..self
         })
     }
 }
+
+#[derive(Debug)]
+pub struct LinkError {
+    pub info_log: String,
+    pub total_string: String,
+}
+error_boilerplate!(LinkError);
+
 impl<M: Model, O, T: Texture, const OUT: usize>
     Builder<M, O, T, OUT, VertexShader, FragmentShader>
 {
-    pub fn build<NEVER>(mut self) -> ApiResult<ShaderProgram<M, O, OUT, T>, NEVER> {
+    pub fn build(self) -> Result<ShaderProgram<M, O, OUT, T>, LinkError> {
         let program_id = gl_call! { ShaderProgramId::new(gl::CreateProgram()) };
+
         let mut total_string = String::default();
         gl_call! {
             gl::AttachShader(program_id.as_primitive(), self.vertex_shader.0.id().as_primitive());
@@ -148,13 +161,9 @@ impl<M: Model, O, T: Texture, const OUT: usize>
             v.truncate(len as usize);
             let info_log = String::from_utf8(v).expect("ascii is a subset of UTF-8");
 
-            Err(Error::ProgramLinkError {
+            Err(LinkError {
                 info_log,
-                vertex_shader: mem::take(&mut self.vertex_shader.0.source),
-                fragment_shader: mem::take(&mut self.fragment_shader.0.source),
-                geometry_shader: self
-                    .geometry_shader
-                    .map(|mut shader| mem::take(&mut shader.source)),
+                total_string,
             }
             .into())
         } else {

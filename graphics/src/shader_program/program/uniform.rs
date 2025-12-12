@@ -3,35 +3,37 @@ use std::fmt::Debug;
 use colour::{ColourRGB, ColourRGBA};
 use linear_algebra::{Matrix, UnitVector, Vector};
 
-use crate::shader_program::program::active_shader::IsActiveShaderProgram;
+use crate::gl_call;
+use crate::shader_program::program::GetUniformLocationError;
+use crate::shader_program::program::active_shader::{IsActiveShaderProgram, SetUniformError};
 use crate::types::UniformLocation;
-use crate::{ApiResult, gl_call};
 
 pub struct NameNotFoundError;
 
 pub trait Uniform: Debug {
-    fn set_uniform(
+    fn set_uniform<'a>(
         &self,
         name: String,
-        shader_program: &dyn IsActiveShaderProgram,
-    ) -> ApiResult<(), !>;
+        shader_program: &dyn IsActiveShaderProgram<'a>,
+    ) -> Result<(), SetUniformError<'a>>;
 }
 
 macro_rules! define_uniform {
     ($typ:ty => | $self:ident, $loc:ident, $shader:ident | $out:expr) => {
         impl Uniform for $typ {
-            fn set_uniform(
+            fn set_uniform<'a>(
                 &self,
                 name: String,
-                shader_program: &dyn IsActiveShaderProgram,
-            ) -> ApiResult<(), !> {
-                shader_program.get_uniform_location(name).map(|location| {
-                    (|$self: &Self, $loc: UniformLocation, $shader| $out)(
+                shader_program: &dyn IsActiveShaderProgram<'a>,
+            ) -> Result<(), SetUniformError<'a>> {
+                match shader_program.get_uniform_location(name) {
+                    Ok(location) => Ok((|$self: &Self, $loc: UniformLocation, $shader| $out)(
                         self,
                         location,
                         shader_program,
-                    );
-                })
+                    )),
+                    Err(err) => Err(SetUniformError::GetLocation(err)),
+                }
             }
         }
     };
@@ -40,11 +42,11 @@ macro_rules! define_uniform {
 macro_rules! named_define_uniform {
     ($typ:ty => | $self:ident, $name:ident, $shader:ident | $out:expr) => {
         impl Uniform for $typ {
-            fn set_uniform(
+            fn set_uniform<'a>(
                 &self,
                 name: String,
-                shader_program: &dyn IsActiveShaderProgram,
-            ) -> $crate::ApiResult<(), !> {
+                shader_program: &dyn IsActiveShaderProgram<'a>,
+            ) -> Result<(), SetUniformError<'a>> {
                 (|$self: &Self, $name: String, $shader| $out)(self, name, shader_program)
             }
         }
@@ -93,11 +95,11 @@ named_define_uniform!(ColourRGB => |value, name, s| value.as_ref().set_uniform(n
 named_define_uniform!(ColourRGBA => |value, name, s| value.as_ref().set_uniform(name, s));
 
 impl<U: Uniform> Uniform for [U] {
-    fn set_uniform(
+    fn set_uniform<'a>(
         &self,
         name: String,
-        shader_program: &dyn IsActiveShaderProgram,
-    ) -> ApiResult<(), !> {
+        shader_program: &dyn IsActiveShaderProgram<'a>,
+    ) -> Result<(), SetUniformError<'a>> {
         for (index, value) in self.iter().enumerate() {
             value.set_uniform(format!("{name}[{index}]"), shader_program)?;
         }
@@ -107,21 +109,21 @@ impl<U: Uniform> Uniform for [U] {
 }
 
 impl<U: Uniform> Uniform for Vec<U> {
-    fn set_uniform(
+    fn set_uniform<'a>(
         &self,
         name: String,
-        shader_program: &dyn IsActiveShaderProgram,
-    ) -> ApiResult<(), !> {
+        shader_program: &dyn IsActiveShaderProgram<'a>,
+    ) -> Result<(), SetUniformError<'a>> {
         self.as_slice().set_uniform(name, shader_program)
     }
 }
 
 impl<U: Uniform> Uniform for &U {
-    fn set_uniform(
+    fn set_uniform<'a>(
         &self,
         name: String,
-        shader_program: &dyn IsActiveShaderProgram,
-    ) -> ApiResult<(), !> {
+        shader_program: &dyn IsActiveShaderProgram<'a>,
+    ) -> Result<(), SetUniformError<'a>> {
         (*self).set_uniform(name, shader_program)
     }
 }

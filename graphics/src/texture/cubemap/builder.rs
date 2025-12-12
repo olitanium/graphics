@@ -5,13 +5,12 @@ use std::path::Path;
 
 use colour::ColourRGB;
 use image::DynamicImage;
-use utils::{builder, new};
+use utils::{builder, error_boilerplate, new};
 
 use super::CubeMap;
-use crate::error::ApiResult;
 use crate::framebuffer::attachments::CubeWithDepth;
 use crate::framebuffer::traits::Attachment;
-use crate::texture::{Error, Magnification, Minification, TexBuilder, TexBuilderCanBuild};
+use crate::texture::{Magnification, Minification, TexBuilder, TexBuilderCanBuild};
 use crate::types::{TexDim, TexId};
 use crate::{gl_call, types};
 
@@ -56,15 +55,18 @@ impl TexBuilder for Builder<MissingData> {
     }
 }
 
-fn load_image<E, P: AsRef<Path>>(path: P) -> ApiResult<DynamicImage, E> {
+#[derive(Debug)]
+pub enum LoadImageError {
+    Io(std::io::Error),
+    Parse(image::ImageError),
+}
+error_boilerplate!(LoadImageError);
+
+fn load_image<P: AsRef<Path>>(path: P) -> Result<DynamicImage, LoadImageError> {
     let image = image::ImageReader::open(&path)
-        .map_err(|_| Error::OpeningTexture {
-            path: path.as_ref().into(),
-        })?
+        .map_err(|err| LoadImageError::Io(err))?
         .decode()
-        .map_err(|_| Error::ParsingTextureImage {
-            path: path.as_ref().into(),
-        })?;
+        .map_err(|err| LoadImageError::Parse(err))?;
 
     Ok(image)
 }
@@ -94,7 +96,7 @@ impl<T> Builder<T> {
 impl Builder<MissingData> {
     new!();
 
-    pub fn image<NEVER, P: AsRef<Path>>(
+    pub fn image<P: AsRef<Path>>(
         self,
         positive_x: P,
         negative_x: P,
@@ -102,7 +104,7 @@ impl Builder<MissingData> {
         negative_y: P,
         positive_z: P,
         negative_z: P,
-    ) -> ApiResult<Builder<HasSomeImage>, NEVER> {
+    ) -> Result<Builder<HasSomeImage>, LoadImageError> {
         let data = HasSomeImage {
             positive_x: load_image(positive_x)?,
             negative_x: load_image(negative_x)?,

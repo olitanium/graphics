@@ -7,12 +7,11 @@ use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::linear_algebra::Vector;
 use graphics::shader_program::{ActiveShaderProgram, CullFace};
 use graphics::texture::{FlatTexture, Texture};
-use graphics::vertex_array::VertexArray;
-use graphics::{ApiResult, Model};
-use utils::RefOwned;
+use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
+use graphics::{Draw, Model};
+use utils::{RefOwned, error_boilerplate};
 
 use super::{Builder, QuadVertex};
-use crate::EngResult;
 use crate::modelling::test_models;
 
 #[derive(Debug)]
@@ -52,13 +51,21 @@ impl<const N: usize> Quad<N> {
             texture,
         }
     }
+}
 
-    pub(crate) fn draw<'a, NEVER, const OUT: usize, O, I: FramebufferWithoutExtra<OUT>>(
-        &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, O, I::Tex, OUT>,
+#[derive(Debug)]
+pub enum DrawError<'a> {
+    VertexArrayDraw(VertexArrayDrawError<'a>),
+}
+error_boilerplate!(<'a> DrawError<'a>);
+
+impl<const N: usize> Quad<N> {
+    pub(crate) fn draw<'a, 'b, const OUT: usize, O, I: FramebufferWithoutExtra<OUT>>(
+        &'b self,
+        active_shader: &mut ActiveShaderProgram<'a, '_, 'b, Self, O, I::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, I>,
-    ) -> EngResult<(), NEVER> {
-        let _: ApiResult<_, !> = active_shader.cull_face(CullFace::BackFace);
+    ) -> Result<(), DrawError<'a>> {
+        _ = active_shader.cull_face(CullFace::BackFace);
 
         let input = self.texture
             .iter()
@@ -68,7 +75,9 @@ impl<const N: usize> Quad<N> {
 
         active_shader.register_texture(input);
 
-        self.vertex_array.draw(active_shader, active_framebuffer)?;
+        self.vertex_array
+            .draw(active_shader, active_framebuffer)
+            .map_err(|err| DrawError::VertexArrayDraw(err))?;
 
         Ok(())
     }

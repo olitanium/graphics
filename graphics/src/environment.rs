@@ -1,5 +1,6 @@
 use std::cell::RefMut;
 use std::collections::HashSet;
+use std::fmt::{Debug, Pointer};
 
 mod draw;
 mod global_state;
@@ -15,25 +16,31 @@ pub use input::mouse::Button;
 use utils::error_boilerplate;
 pub use window::Window;
 
-use crate::error::ApiResult;
+pub use crate::environment::draw::PollResult;
+use crate::environment::window::GlfwError;
 use crate::framebuffer::{DefaultFramebuffer, FramebufferContext};
 use crate::gl_call;
 use crate::shader_program::ShaderProgramContext;
 use crate::types::{Query, TexDim};
 
-#[derive(Debug, Clone)]
-pub enum Error {
-    GlfwInit { glfw_error: glfw::InitError },
-    GlfwWindow,
+pub enum NewError<G: ApiState> {
+    GlfwInit(glfw::InitError),
+    GlfwWindow(GlfwError),
+    StateInit(G::Error),
 }
-
-error_boilerplate!(Error);
-
-impl<E> From<Error> for crate::error::ApiError<E> {
-    fn from(value: Error) -> Self {
-        Self::Window(value)
+impl<G: ApiState> Debug for NewError<G>
+where
+    G::Error: Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::GlfwInit(x) => f.debug_tuple("NewError::GlfwInit").field(x).finish(),
+            Self::GlfwWindow(x) => f.debug_tuple("NewError::GlfwWindow").field(x).finish(),
+            Self::StateInit(x) => f.debug_tuple("NewError::StateInit").field(x).finish(),
+        }
     }
 }
+error_boilerplate!({G: ApiState} NewError<G>);
 
 use std::ffi::{CStr, c_void};
 #[expect(unused_variables)]
@@ -113,9 +120,9 @@ impl<G: ApiState> Environment<G> {
         screen_dims: (u32, u32),
         title: &str,
         mouse_fix_to_centre: bool,
-    ) -> ApiResult<Self, G::Error> {
+    ) -> Result<Self, NewError<G>> {
         let mut glfw =
-            glfw::init(fail_on_errors!()).map_err(|glfw_error| Error::GlfwInit { glfw_error })?;
+            glfw::init(fail_on_errors!()).map_err(|glfw_error| NewError::GlfwInit(glfw_error))?;
 
         let (gl_major, gl_minor) = gl_version;
         glfw.window_hint(glfw::WindowHint::ContextVersionMajor(gl_major));
@@ -132,7 +139,8 @@ impl<G: ApiState> Environment<G> {
             .title(title.to_string())
             .raw_motion(true)
             .glfw(&mut glfw)
-            .build()?;
+            .build()
+            .map_err(|err| NewError::GlfwWindow(err))?;
 
         glfw.set_swap_interval(glfw::SwapInterval::None);
 
@@ -146,18 +154,18 @@ impl<G: ApiState> Environment<G> {
 
         window.configure();
 
-        let global_state = G::new(window.get_framebuffer_size())?;
+        let global_state =
+            G::new(window.get_framebuffer_size()).map_err(|err| NewError::StateInit(err))?;
 
         Ok(Self {
             glfw,
             window,
-            // window2,
             global_state,
             old_frame: None,
         })
     }
 
-    pub fn run(mut self) -> ApiResult<(), G::Error> {
+    pub fn run(mut self) -> Result<(), G::Error> {
         // Substitute for `for to_draw in env.iter() {`
         // self.window.make_current();
 
@@ -169,33 +177,36 @@ impl<G: ApiState> Environment<G> {
         let mut frame_iter = self.iter();
 
         let mut query_outputs = None;
-        while let Some(result) = frame_iter.next(query_outputs.take()) {
+
+        loop {
+            let result = frame_iter.next(query_outputs.take());
             match result {
-                Ok(to_draw) => {
+                PollResult::Close => return Ok(()),
+                PollResult::Error(err) => return Err(err),
+                PollResult::Draw(to_draw) => {
                     framebuffer_register.clear();
                     // Begin rendering code
-                    match to_draw
-                        .into_boxed_slice()
-                        .draw(&mut framebuffer_register, &mut shader_program_marker)?
-                    {
-                        DrawOut::Draw => query_outputs = None,
-                        DrawOut::QueryOutput {
-                            name, query_object, ..
-                        } => query_outputs = Some(vec![(name, query_object)]),
-                        DrawOut::MultiQueryOutput { values, .. } => query_outputs = Some(values),
+                    for drawable in to_draw {
+                        let draw_out =
+                            drawable.draw(&mut framebuffer_register, &mut shader_program_marker);
+                        match draw_out {
+                            DrawOut::Draw => query_outputs = None,
+                            DrawOut::QueryOutput {
+                                name, query_object, ..
+                            } => query_outputs
+                                .get_or_insert_default()
+                                .push((name, query_object)),
+                            DrawOut::MultiQueryOutput { values, .. } => {
+                                query_outputs.get_or_insert_default().extend(values)
+                            }
+                        }
                     }
                 }
-                Err(error) => return Err(error),
             }
         }
-
-        Ok(())
     }
 
-    fn poll(
-        &mut self,
-        queries: Option<Vec<(usize, Query)>>,
-    ) -> ApiResult<Vec<Box<dyn Draw<G::Error> + '_>>, G::Error> {
+    fn poll(&mut self, queries: Option<Vec<(usize, Query)>>) -> PollResult<'_, G::Error> {
         let curr_time = self.glfw.get_time();
         let frametime = curr_time - *self.old_frame.get_or_insert(curr_time);
         self.old_frame = Some(curr_time);
@@ -229,22 +240,16 @@ impl<'env, G: ApiState> FrameIter<'env, G> {
 }
 
 impl<G: ApiState> FrameIter<'_, G> {
-    pub fn next(
-        &mut self,
-        queries: Option<Vec<(usize, Query)>>,
-    ) -> Option<ApiResult<Vec<Box<dyn Draw<G::Error> + '_>>, G::Error>> {
+    pub fn next(&mut self, queries: Option<Vec<(usize, Query)>>) -> PollResult<'_, G::Error> {
         if !self.env.window.should_close() {
             // Poll for and process events
             self.env.glfw.poll_events();
             // Swap front and back buffers
             self.env.window.swap_buffers();
 
-            match self.env.poll(queries) {
-                Err(crate::error::ApiError::Close) => None,
-                x => Some(x),
-            }
+            self.env.poll(queries)
         } else {
-            None
+            PollResult::Close
         }
     }
 }

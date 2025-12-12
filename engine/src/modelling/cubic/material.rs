@@ -1,10 +1,9 @@
 use graphics::Model;
 use graphics::colour::{ColourRGB, ColourRGBA};
-use graphics::shader_program::ActiveShaderProgram;
+use graphics::shader_program::{ActiveShaderProgram, SetUniformError};
 use graphics::texture::{FlatTexture, Texture};
 use utils::{builder, new};
 
-use crate::EngResult;
 use crate::modelling::CubicVertex;
 
 #[derive(Debug)]
@@ -51,16 +50,24 @@ impl Material {
     pub fn white() -> Self {
         Self::from_colour(ColourRGBA::WHITE)
     }
+}
 
-    pub fn register_to<'a, NEVER, const N: usize, T: Texture, M: Model, O>(
+pub enum RegisterToError<'a> {
+    SetUniformError(SetUniformError<'a>),
+}
+
+impl Material {
+    pub fn register_to<'a, 'b, const N: usize, T: Texture, M: Model, O>(
         &'a self,
-        shader: &mut ActiveShaderProgram<'_, '_, 'a, M, O, T, N>,
+        shader: &mut ActiveShaderProgram<'b, '_, 'a, M, O, T, N>,
         name: &str,
-    ) -> EngResult<(), NEVER>
+    ) -> Result<(), RegisterToError<'b>>
     where
         M::Vertex: CubicVertex,
     {
-        shader.set_uniform(format!("{name}.shininess"), &self.shininess)?;
+        shader
+            .set_uniform(format!("{name}.shininess"), &self.shininess)
+            .map_err(|err| RegisterToError::SetUniformError(err))?;
         shader.register_texture(
             vec![
                 (format!("{name}.diffuse"), &self.diffuse),

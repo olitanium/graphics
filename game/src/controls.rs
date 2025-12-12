@@ -1,12 +1,63 @@
 use std::collections::HashSet;
+use std::convert::Infallible;
 use std::mem;
+use std::ops::{FromResidual, Try};
 
 use engine::linear_algebra::Vector;
 use engine::modelling::TestLineVertex;
 use engine::modelling::cubic::geometry::Pose;
-use engine::{ApiError, ColourRGB, EngResult, Key};
+use engine::{ColourRGB, Key, PollResult};
 
 use crate::state::{State, StateError};
+
+pub enum ControlOutput<T> {
+    Data(T),
+    Error(StateError),
+    Close,
+}
+
+impl<T> Try for ControlOutput<T> {
+    type Output = T;
+    type Residual = ControlOutput<!>;
+
+    fn branch(self) -> std::ops::ControlFlow<Self::Residual, Self::Output> {
+        match self {
+            Self::Data(x) => std::ops::ControlFlow::Continue(x),
+            Self::Close => std::ops::ControlFlow::Break(ControlOutput::Close),
+            Self::Error(e) => std::ops::ControlFlow::Break(ControlOutput::Error(e)),
+        }
+    }
+
+    fn from_output(output: Self::Output) -> Self {
+        Self::Data(output)
+    }
+}
+
+impl<T> FromResidual for ControlOutput<T> {
+    fn from_residual(residual: <Self as Try>::Residual) -> Self {
+        match residual {
+            ControlOutput::Close => Self::Close,
+            ControlOutput::Error(e) => Self::Error(e),
+        }
+    }
+}
+
+impl<T, E: Into<StateError>> FromResidual<Result<Infallible, E>> for ControlOutput<T> {
+    fn from_residual(residual: Result<Infallible, E>) -> Self {
+        match residual {
+            Err(x) => ControlOutput::Error(x.into()),
+        }
+    }
+}
+
+impl FromResidual<ControlOutput<!>> for PollResult<'_, StateError> {
+    fn from_residual(residual: ControlOutput<!>) -> Self {
+        match residual {
+            ControlOutput::Close => PollResult::Close,
+            ControlOutput::Error(err) => PollResult::Error(err),
+        }
+    }
+}
 
 impl State {
     pub fn controls(
@@ -16,9 +67,9 @@ impl State {
         string: &mut String,
         frame_time: f32,
         time: f32,
-    ) -> EngResult<(), StateError> {
+    ) -> ControlOutput<()> {
         if keyboard.contains(&Key::Escape) {
-            return Err(ApiError::Close.into());
+            return ControlOutput::Close;
         }
         if keyboard.contains(&Key::W) {
             self.camera.pose.move_forward(self.speed[2] * frame_time);
@@ -99,18 +150,25 @@ impl State {
                     self.bounding_box_level = self.bounding_box_level.wrapping_sub(1);
                 }
                 't' => {
-                    self.grappling_hook.pop(self.hook_pos);
                     if let Some(morgan_model) = mem::take(&mut self.morgan) {
-                        let (attachment_point, bone_index) = self.join_pos;
-                        self.hook_pos = self
+                        let new_pos_index = self
                             .grappling_hook
+                            .entity
                             .push_simple_entity(
                                 morgan_model,
                                 Pose::new_from_translation(Vector::new([0.0, 0.0, 0.5])),
-                                attachment_point,
-                                bone_index,
+                                self.grappling_hook.chain,
+                                self.grappling_hook.chain_end_bone,
                             )
-                            .unwrap()
+                            .unwrap();
+
+                        eprintln!(
+                            "old: {:?}, new: {:?}",
+                            self.grappling_hook.hook, new_pos_index
+                        );
+
+                        self.grappling_hook.entity.pop(self.grappling_hook.hook);
+                        self.grappling_hook.hook = new_pos_index;
                     }
                 }
 
@@ -123,6 +181,6 @@ impl State {
             .look_left(-mouse_delta.0 * self.sensitivity);
         self.camera.pose.look_up(mouse_delta.1 * self.sensitivity);
 
-        Ok(())
+        ControlOutput::Data(())
     }
 }

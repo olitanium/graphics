@@ -1,9 +1,8 @@
 use std::path::Path;
 
 use colour::ColourRGBA;
+use utils::error_boilerplate;
 
-use crate::ApiResult;
-use crate::texture::Error;
 use crate::types::{self, TexDim};
 
 #[derive(Debug, Clone)]
@@ -18,20 +17,27 @@ pub enum ImageType {
     Srgba(Vec<ColourRGBA>),
 }
 
-fn new_from_file<NEVER, P: AsRef<Path>>(
+#[derive(Debug)]
+pub enum NewImageError {
+    Io(std::io::Error),
+    Parse(image::error::ImageError),
+}
+error_boilerplate!(NewImageError);
+
+fn new_from_file<P: AsRef<Path>>(
     path: P,
-) -> ApiResult<((TexDim, TexDim), Vec<ColourRGBA>), NEVER> {
+) -> Result<((TexDim, TexDim), Vec<ColourRGBA>), NewImageError> {
     let path_ref = path.as_ref();
 
-    fn new_from_file_path<NEVER>(
+    fn new_from_file_path(
         path: &Path,
-    ) -> ApiResult<((TexDim, TexDim), Vec<ColourRGBA>), NEVER> {
+    ) -> Result<((TexDim, TexDim), Vec<ColourRGBA>), NewImageError> {
         let image = image::ImageReader::open(path)
-            .map_err(|_| Error::OpeningTexture { path: path.into() })?
+            .map_err(|err| NewImageError::Io(err))?
             .with_guessed_format()
-            .map_err(|_| Error::ParsingTextureImage { path: path.into() })?
+            .map_err(|err| NewImageError::Io(err))?
             .decode()
-            .map_err(|_| Error::ParsingTextureImage { path: path.into() })?
+            .map_err(|err| NewImageError::Parse(err))?
             .flipv() // All OpenGL texture images are flipped (maybe)
             .into_rgba32f();
 
@@ -54,7 +60,7 @@ fn new_from_file<NEVER, P: AsRef<Path>>(
 
 macro_rules! new_from_file {
     ($name:ident $enum_name:ident) => {
-        pub fn $name<NEVER, P: AsRef<Path>>(path: P) -> ApiResult<Self, NEVER> {
+        pub fn $name<P: AsRef<Path>>(path: P) -> Result<Self, NewImageError> {
             let (size, buffer) = new_from_file(path)?;
             Ok(Self {
                 size,

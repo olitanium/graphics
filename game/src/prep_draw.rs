@@ -1,17 +1,19 @@
+use std::collections::HashMap;
+
 use engine::entity::AggregateGroup;
 use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::SkeletonBoneIndex;
 use engine::modelling::cubic::geometry::Pose;
 use engine::modelling::{BloomGroup, QuadGroup, SkyBoxGroup};
-use engine::{EngResult, VecDraw, opengl_shaders};
+use engine::{PollResult, VecDraw, opengl_shaders};
 
 use crate::state::{State, StateError};
 
 impl State {
-    pub fn prep_draw<'a>(
+    pub fn draw<'a>(
         &'a mut self,
         default_framebuffer: &'a DefaultFramebuffer,
-    ) -> EngResult<VecDraw<'a, StateError>, StateError> {
+    ) -> PollResult<StateError> {
         let time = self.time;
 
         let mut out = VecDraw::new();
@@ -25,31 +27,33 @@ impl State {
             vec![],
         ));
 
-        out.push(AggregateGroup::new(
-            opengl_shaders::hdr(),
-            &self.hdr_fb,
-            &self.camera,
-            &(),
-            &self.ns_light_group,
-            vec![(
-                &self.grappling_hook,
-                vec![
-                    None,
-                    Some((&self.grapple_chain_anim, time - self.reset_time)),
-                    None,
-                ],
-            )],
-            if self.toggle_b {
-                Some((
-                    self.hook_pos,
-                    SkeletonBoneIndex::SKELETON_ROOT_BONE,
-                    Pose::IDENTITY,
-                ))
-            } else {
-                None
-            },
-            vec![],
-        ));
+        out.push(
+            AggregateGroup::new(
+                opengl_shaders::hdr(),
+                &self.hdr_fb,
+                &self.camera,
+                &(),
+                &self.ns_light_group,
+                vec![(
+                    &self.grappling_hook.entity,
+                    HashMap::from([(
+                        self.grappling_hook.chain,
+                        (&self.grappling_hook.chain_animation, time - self.reset_time),
+                    )]),
+                    if self.toggle_b {
+                        Some((
+                            self.grappling_hook.hook,
+                            SkeletonBoneIndex::SKELETON_ROOT_BONE,
+                            Pose::IDENTITY,
+                        ))
+                    } else {
+                        None
+                    },
+                )],
+                vec![],
+            )
+            .unwrap(),
+        );
 
         // out.push(SimpleCubicGroup::new(
         // opengl_shaders::hdr(),
@@ -82,6 +86,6 @@ impl State {
             ));
         }
 
-        Ok(out)
+        PollResult::Draw(out)
     }
 }

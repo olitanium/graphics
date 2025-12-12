@@ -5,10 +5,10 @@ mod builder;
 pub use builder::Builder as MeshBuilder;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
-use graphics::vertex_array::VertexArray;
+use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
 use graphics::{ActiveShaderProgram, Model};
+use utils::error_boilerplate;
 
-use crate::EngResult;
 use crate::modelling::CubicVertex;
 use crate::modelling::cubic::material::Material;
 
@@ -31,25 +31,33 @@ impl<V: CubicVertex> Mesh<V> {
     }
 }
 
+#[derive(Debug)]
+pub enum DrawError<'a> {
+    VertexArrayDraw(VertexArrayDrawError<'a>),
+}
+error_boilerplate!(<'a> DrawError<'a>);
+
 impl<V: CubicVertex> Mesh<V>
 where
     [(); V::ELEMENT_COUNT]:,
 {
     pub(crate) fn draw<
         'a,
+        'b,
         M: Model<Vertex = V>,
-        NEVER,
         O,
         const OUT: usize,
         D: FramebufferWithDepth<OUT>,
     >(
-        &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, M, O, D::Tex, OUT>,
+        &'b self,
+        active_shader: &mut ActiveShaderProgram<'a, '_, 'b, M, O, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-    ) -> EngResult<(), NEVER> {
-        let _: EngResult<_, !> = self.material.register_to(active_shader, "material");
+    ) -> Result<(), DrawError<'a>> {
+        _ = self.material.register_to(active_shader, "material");
 
-        self.vertex_array.draw(active_shader, active_framebuffer)?;
+        self.vertex_array
+            .draw(active_shader, active_framebuffer)
+            .map_err(|err| DrawError::VertexArrayDraw(err))?;
 
         Ok(())
     }

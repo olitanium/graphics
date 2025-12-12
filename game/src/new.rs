@@ -20,12 +20,12 @@ use engine::modelling::{Bloom, Bone, Line, Quad, SimpleCubic, Skeleton, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
-use engine::{ColourRGB, ColourRGBA, EngResult, SimpleEntity};
+use engine::{ColourRGB, ColourRGBA, SimpleEntity};
 
 use crate::state::{State, StateError};
 
 impl State {
-    pub fn new_internal(size: (TexDim, TexDim)) -> EngResult<Self, StateError> {
+    pub fn new_internal(size: (TexDim, TexDim)) -> Result<Self, StateError> {
         let speed = [1.0, 1.0, 1.0];
         let exposure = 1.0;
 
@@ -44,7 +44,8 @@ impl State {
                     "assets/skybox/bottom.jpg",
                     "assets/skybox/front.jpg",
                     "assets/skybox/back.jpg",
-                )?
+                )
+                .unwrap()
                 .build(),
         );
 
@@ -75,7 +76,7 @@ impl State {
         // })
         // .collect();
 
-        let (_, morgan) = make_model("morgan")?;
+        let (_, morgan) = make_model("morgan").unwrap();
         let morgan = SimpleEntity::from_cubic(morgan, 20, Mass(1.0), |_| ());
 
         let origin_cube = SimpleEntity::from_cubic(
@@ -195,10 +196,10 @@ impl State {
             |_| (),
         );
 
-        let (grappling_hook, grapple_chain_anim, join_pos, hook_pos) = grappling_hook();
+        let grappling_hook = grappling_hook();
 
         Ok(Self {
-            toggle_b: true,
+            toggle_b: false,
             reset_time: 0.0,
             time: 0.0,
             game_start: None,
@@ -214,12 +215,13 @@ impl State {
             morgan,
             origin_cube,
             bounding_box_level,
-            toggle_m: true,
+            toggle_m: false,
 
-            grapple_chain_anim,
+            // grapple_chain_anim,
+            // grappling_hook,
+            // join_pos,
+            // hook_pos,
             grappling_hook,
-            join_pos,
-            hook_pos,
 
             aggregate_tail,
             simpletail,
@@ -247,7 +249,7 @@ impl State {
 
 pub fn make_model(
     which_model: &str,
-) -> EngResult<(Option<SkeletalAnimation>, SimpleCubic), StateError> {
+) -> Result<(Option<SkeletalAnimation>, SimpleCubic), StateError> {
     use engine::PostProcess as P;
     let model = match which_model {
         "morgan" => (
@@ -256,7 +258,8 @@ pub fn make_model(
                 "assets/Teddy Statue/Teddy Statue.obj",
                 vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
                 true,
-            )?
+            )
+            .unwrap()
             .cull_face(CullFace::BackFace)
             .scale(0.01)
             .apply_transformation(Pose::new_from_translation(Vector::new([
@@ -275,7 +278,8 @@ pub fn make_model(
                     P::OptimizeMeshes,
                 ],
                 false,
-            )?
+            )
+            .unwrap()
             .material(Rc::new(Material::white()))
             .build(),
         ),
@@ -290,7 +294,8 @@ pub fn make_model(
                     P::OptimizeMeshes,
                 ],
                 true,
-            )?
+            )
+            .unwrap()
             .scale(0.01)
             .build(),
         ),
@@ -338,12 +343,16 @@ pub fn make_model(
     Ok(model)
 }
 
-fn grappling_hook() -> (
-    AggregateEntity<(), SimpleCubic>,
-    SkeletalAnimation,
-    (AggregateModelIndex, SkeletonBoneIndex),
-    AggregateModelIndex,
-) {
+pub struct GrapplingHook {
+    pub entity: AggregateEntity<(), SimpleCubic>,
+    pub base: AggregateModelIndex,
+    pub chain: AggregateModelIndex,
+    pub chain_end_bone: SkeletonBoneIndex,
+    pub hook: AggregateModelIndex,
+    pub chain_animation: SkeletalAnimation,
+}
+
+fn grappling_hook() -> GrapplingHook {
     // Need origin cube
     // Need chain
     // Need hook
@@ -464,10 +473,12 @@ fn grappling_hook() -> (
         )
         .expect("chain attachment at given index");
 
-    (
-        aggregate,
-        animation,
-        (chain_attachment_point, end_bone),
-        hook_attachment_point,
-    )
+    GrapplingHook {
+        entity: aggregate,
+        base: AggregateModelIndex::ROOT_MODEL_INDEX,
+        chain: chain_attachment_point,
+        chain_end_bone: end_bone,
+        hook: hook_attachment_point,
+        chain_animation: animation,
+    }
 }

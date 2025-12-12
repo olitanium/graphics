@@ -4,9 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+russimp = "3"
 graphics = { path = "../graphics" }
 utils = {path = "../utils" }
-russimp = "3"
 infinite_window = {path = "../infinite_window" }
 array_vec = {path = "../array_vec"}
 quaternion = {path = "../quaternion"}

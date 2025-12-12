@@ -3,12 +3,10 @@ use std::ptr;
 use std::rc::Rc;
 
 use glfw::{Context, Glfw, GlfwReceiver, PWindow, WindowEvent};
-use utils::{builder, new};
+use utils::{builder, error_boilerplate, new};
 
 use super::input::keyboard::Keyboard;
 use super::input::mouse::{CursorMode, Mouse};
-use crate::environment::Error;
-use crate::error::ApiResult;
 use crate::framebuffer::DefaultFramebuffer;
 use crate::types::TexDim;
 use crate::{Event, gl_call};
@@ -151,8 +149,12 @@ impl<G> Builder<G> {
     builder!(windowed: bool);
 }
 
+#[derive(Debug)]
+pub struct GlfwError;
+error_boilerplate!(GlfwError);
+
 impl Builder<HasGlfw<'_>> {
-    pub(crate) fn build<NEVER>(self) -> ApiResult<Window, NEVER> {
+    pub(crate) fn build(self) -> Result<Window, GlfwError> {
         // Create a windowed mode window and its OpenGL context
         let (glfw_window, events) = self
             .maker
@@ -164,10 +166,11 @@ impl Builder<HasGlfw<'_>> {
                 if self.windowed {
                     glfw::WindowMode::Windowed
                 } else {
+                    // TODO: Fullscreen
                     todo!("Full Screen not yet supported")
                 },
             )
-            .ok_or(Error::GlfwWindow)?;
+            .ok_or(GlfwError)?;
         Ok(make_window(self, glfw_window, events))
     }
 }

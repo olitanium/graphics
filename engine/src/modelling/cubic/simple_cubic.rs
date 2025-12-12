@@ -2,20 +2,25 @@ use std::fmt::Debug;
 use std::path::Path;
 use std::rc::Rc;
 
+use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Matrix;
-use graphics::shader_program::{ActiveShaderProgram, CullFace};
-use graphics::{ApiResult, Model};
+use graphics::shader_program::{
+    ActiveShaderProgram,
+    CullFace,
+    FaceCullingForcedByProgramError,
+    SetUniformError,
+};
 use russimp::scene::PostProcess;
-use utils::partition;
+use utils::{error_boilerplate, partition};
 
 use super::material::Material;
 use super::{Mesh, Skeleton, import};
 use crate::entity::EntityInner;
-use crate::error::EngResult;
 use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
 use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
+use crate::modelling::cubic::{MeshDrawError, mesh};
 use crate::modelling::{SimpleVertex, SkeletonBb, test_models};
 
 mod group;
@@ -80,11 +85,11 @@ impl SimpleCubic {
             .collect()
     }
 
-    pub fn import<NEVER: Clone, PA: AsRef<Path>>(
-        path: PA,
+    pub fn import<P: AsRef<Path>>(
+        path: P,
         post_process: Vec<PostProcess>,
         load_tangent_space: bool,
-    ) -> EngResult<Builder, NEVER> {
+    ) -> Result<Builder, import::Error> {
         let import_output = import::import(path, post_process, load_tangent_space)?;
 
         let mut out = Self::builder();
@@ -97,24 +102,36 @@ impl SimpleCubic {
 
         Ok(out)
     }
+}
 
-    pub(crate) fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
-        &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, L, D::Tex, OUT>,
+#[derive(Debug)]
+pub enum DrawError<'a> {
+    Mesh(mesh::DrawError<'a>),
+    SetUniform(SetUniformError<'a>),
+}
+error_boilerplate!(<'a> DrawError<'a>);
+
+impl SimpleCubic {
+    pub(crate) fn draw<'a, 'c, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
+        &'c self,
+        active_shader: &mut ActiveShaderProgram<'a, '_, 'c, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         calculated_animation: &CalculatedAnimation,
-    ) -> EngResult<(), NEVER> {
+    ) -> Result<(), DrawError<'a>> {
         // Ignore cull_face error
-        let _: ApiResult<_, !> = active_shader.cull_face(self.cull_face);
+        _ = active_shader.cull_face(self.cull_face);
         for BoneAndMesh { bone, mesh } in self.meshes.iter() {
-            active_shader.set_uniform(
-                "model",
-                &calculated_animation
-                    .get(*bone)
-                    .map_or_else(|_| Matrix::identity(), Pose::as_transformation_matrix),
-            )?;
+            active_shader
+                .set_uniform(
+                    "model",
+                    &calculated_animation
+                        .get(*bone, &self.skeleton)
+                        .map_or_else(|_| Matrix::identity(), Pose::as_transformation_matrix),
+                )
+                .map_err(|err| DrawError::SetUniform(err))?;
 
-            mesh.draw(active_shader, active_framebuffer)?;
+            mesh.draw(active_shader, active_framebuffer)
+                .map_err(|err| DrawError::Mesh(err))?;
         }
 
         Ok(())
@@ -123,6 +140,7 @@ impl SimpleCubic {
 
 impl EntityInner for SimpleCubic {
     type BoundingBox<T> = SkeletonBb<<SimpleCubic as Model>::Vertex, T>;
+    type DrawError<'a> = DrawError<'a>;
 
     fn make_bounding_box<
         T,
@@ -134,19 +152,19 @@ impl EntityInner for SimpleCubic {
     ) -> Option<Self::BoundingBox<T>> {
         let per_mesh = partition(self.triangles(), |(bone, _)| vec![bone.0], |(_, tri)| tri);
 
-        SkeletonBb::from_vec_triangle(per_mesh, depth, self.skeleton.clone(), init)
+        SkeletonBb::from_vec_triangle(per_mesh, depth, init)
     }
 
     fn skeleton(&self) -> &Skeleton {
         &self.skeleton
     }
 
-    fn draw<'a, NEVER, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
+    fn draw<'a, 'b, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, L, D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'b, '_, 'a, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         calculated_animation: &CalculatedAnimation,
-    ) -> EngResult<(), NEVER> {
+    ) -> Result<(), Self::DrawError<'b>> {
         self.draw(active_shader, active_framebuffer, calculated_animation)
     }
 }

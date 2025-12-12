@@ -3,12 +3,13 @@ use std::sync::LazyLock;
 use std::{iter, ptr};
 
 use builder::Builder;
+use utils::error_boilerplate;
 
 use super::framebuffer::ActiveFramebuffer;
 use crate::element_array_buffer::ElementArrayBuffer;
-use crate::error::ApiResult;
+// use crate::error::ApiResult;
 use crate::framebuffer::traits::FramebufferWithoutExtra;
-use crate::shader_program::ActiveShaderProgram;
+use crate::shader_program::{ActiveShaderProgram, BindTexturesError, ValidateError};
 use crate::types::{ElementArrayLen, VertexArrayId};
 use crate::vertex::{NoVertex, Vertex};
 use crate::vertex_buffer::VertexBuffer;
@@ -133,23 +134,33 @@ where
             _ => Cow::Owned(vec![]),
         }
     }
+}
 
-    pub fn draw<
-        NEVER,
-        M: Model<Vertex = V>,
-        O,
-        const OUT: usize,
-        D: FramebufferWithoutExtra<OUT>,
-    >(
+#[derive(Debug)]
+pub enum VertexArrayDrawError<'a> {
+    BindTextures(BindTexturesError<'a>),
+    Validate(ValidateError),
+}
+error_boilerplate!(<'a> VertexArrayDrawError<'a>);
+
+impl<V: Vertex> VertexArray<V>
+where
+    [(); V::ELEMENT_COUNT]:,
+{
+    pub fn draw<'a, M: Model<Vertex = V>, O, const OUT: usize, D: FramebufferWithoutExtra<OUT>>(
         &self,
-        active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, O, D::Tex, OUT>,
+        active_shader_program: &mut ActiveShaderProgram<'a, '_, '_, M, O, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-    ) -> ApiResult<(), NEVER> {
+    ) -> Result<(), VertexArrayDrawError<'a>> {
         self.bind();
-        active_shader_program.bind_textures()?;
+        active_shader_program
+            .bind_textures()
+            .map_err(|err| VertexArrayDrawError::BindTextures(err))?;
 
         #[cfg(debug_assertions)]
-        active_shader_program.validate()?;
+        active_shader_program
+            .validate()
+            .map_err(|err| VertexArrayDrawError::Validate(err))?;
 
         if let Some(element_buffer) = &self.element_array_buffer {
             element_buffer.bind();
@@ -194,20 +205,21 @@ pub fn dummy_vertex_array() -> &'static VertexArray<NoVertex> {
 
 impl VertexArray<NoVertex> {
     pub fn draw_len<
-        NEVER,
+        'a,
         M: Model<Vertex = NoVertex>,
         O,
         const OUT: usize,
         D: FramebufferWithoutExtra<OUT>,
     >(
         &self,
-        active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, O, D::Tex, OUT>,
+        active_shader_program: &mut ActiveShaderProgram<'a, '_, '_, M, O, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         len: ElementArrayLen,
-    ) -> ApiResult<(), NEVER> {
+    ) -> Result<(), VertexArrayDrawError<'a>> {
         self.bind();
-        active_shader_program.bind_textures()?;
-        active_shader_program.validate()?;
+        active_shader_program
+            .validate()
+            .map_err(|err| VertexArrayDrawError::Validate(err))?;
 
         gl_call! {
             gl::DrawArrays(gl::LINE_STRIP, 0, len.as_primitive());

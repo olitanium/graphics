@@ -6,13 +6,7 @@ use graphics::texture::{CubeMap, FlatTexture};
 use crate::modelling::cubic::SkeletonCubic;
 use crate::modelling::cubic::lighting::shadow::ShadowListLights;
 use crate::modelling::cubic::lighting::simple::ListLights;
-use crate::modelling::{
-    Line,
-    Quad,
-    SimpleCubic,
-    SkyBox,
-    TestLineVertex,
-};
+use crate::modelling::{Line, Quad, SimpleCubic, SkyBox, TestLineVertex};
 
 static ERROR_MESSAGE: &str = "Engine defined shader should exist and not have errors";
 
@@ -20,16 +14,12 @@ macro_rules! make_included {
     ($typ:ty, $fn_name:ident, $vertex:literal, $fragment:literal $(, $geometry:literal)? $(, cull_face: $cull_face:path)? $(,)?) => {
         pub fn $fn_name() -> &'static $typ {
             static PROGRAM: LazyLock<$typ> = LazyLock::new(|| {
-                let out: $crate::ApiResult<$typ, !> = try {
                     ShaderProgram::builder()
-                    .vertex_shader($vertex)?
-                    .fragment_shader($fragment)?
-                    $(.geometry_shader($geometry)?)?
+                    .vertex_shader($vertex).expect(ERROR_MESSAGE)
+                    .fragment_shader($fragment).expect(ERROR_MESSAGE)
+                    $(.geometry_shader($geometry).expect(ERROR_MESSAGE))?
                     $(.force_cull_face($cull_face))?
-                    .build()?
-                };
-
-                out.expect(ERROR_MESSAGE)
+                    .build().expect(ERROR_MESSAGE)
             });
 
             &PROGRAM

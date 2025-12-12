@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt::Debug;
 
 use graphics::framebuffer::FramebufferContext;
@@ -5,13 +6,12 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
-use graphics::{ApiResult, Draw, DrawOut};
+use graphics::{Draw, DrawOut};
 
-use crate::EngError;
-use crate::entity::{AggregateEntity, AggregateModelIndex, EntityInner};
+use crate::entity::{AggregateEntity, AggregateModelIndex, CalculateAnimationError, EntityInner};
 use crate::modelling::CubicVertex;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
+use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::cubic::{Camera, SkeletonBoneIndex};
 
@@ -32,12 +32,7 @@ pub struct Group<
     camera_look_at: Matrix<4, 4>,
 
     lights: &'a ListLights<MAX>,
-    opaque: Vec<(
-        &'a AggregateEntity<T, M>,
-        Vec<Option<(&'a SkeletalAnimation, f32)>>,
-    )>,
-
-    fix_anim: Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,
+    opaque: Vec<(&'a AggregateEntity<T, M>, Vec<CalculatedAnimation>)>,
     uniforms: Vec<(String, &'a dyn Uniform)>,
 }
 
@@ -61,34 +56,32 @@ where
         lights: &'a ListLights<MAX>,
         opaque: Vec<(
             &'a AggregateEntity<T, M>,
-            Vec<Option<(&'a SkeletalAnimation, f32)>>, // time
+            HashMap<AggregateModelIndex, (&'a SkeletalAnimation, f32)>, // time
+            Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,     // fix_anim
         )>,
-        fix_anim: Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,
-    ) -> Box<Self> {
-        Box::new(Self {
+    ) -> Result<Box<Self>, CalculateAnimationError> {
+        let opaque: Result<_, CalculateAnimationError> = opaque
+            .into_iter()
+            .map(|(entity, animations, fix_anim)| {
+                Ok((entity, entity.calculate_animation(fix_anim, &animations)?))
+            })
+            .collect();
+        Ok(Box::new(Self {
             shader,
             framebuffer,
             camera_pos: camera.position(hint),
             camera_look_at: camera.look_at(hint),
             lights,
-            opaque,
+            opaque: opaque?,
             uniforms,
-            fix_anim,
-        })
+        }))
     }
 }
 
-impl<
-    'a,
-    T: Debug,
-    M: EntityInner,
-    NEVER,
-    const MAX: usize,
-    const OUT: usize,
-    D: FramebufferWithDepth<OUT>,
-> Draw<EngError<NEVER>> for Group<'a, M, T, MAX, OUT, D>
+impl<'a, T: Debug, M: EntityInner, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>>
+    Draw for Group<'a, M, T, MAX, OUT, D>
 where
     M::Vertex: CubicVertex,
 {
@@ -96,27 +89,28 @@ where
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> ApiResult<DrawOut, EngError<NEVER>> {
+    ) -> DrawOut {
         let mut active_shader = self.shader.use_program(sp_context);
         let mut active_framebuffer = self.framebuffer.bind(fb_context);
 
-        self.lights.bind(&mut active_shader)?;
+        self.lights.bind(&mut active_shader).unwrap();
 
-        active_shader.set_uniform("projtimesview".to_string(), &self.camera_look_at)?;
-        active_shader.set_uniform(
-            "camera_position".to_string(),
-            &self.camera_pos.homogeneous(),
-        )?;
+        active_shader
+            .set_uniform("projtimesview".to_string(), &self.camera_look_at)
+            .unwrap();
+        active_shader
+            .set_uniform(
+                "camera_position".to_string(),
+                &self.camera_pos.homogeneous(),
+            )
+            .unwrap();
 
-        active_shader.set_uniform_dyn(self.uniforms)?;
+        active_shader.set_uniform_dyn(self.uniforms).unwrap();
 
         for (model, animations) in self.opaque {
-            model.draw(
-                &mut active_shader,
-                &mut active_framebuffer,
-                animations,
-                self.fix_anim.as_ref(),
-            )?;
+            model
+                .draw(&mut active_shader, &mut active_framebuffer, animations)
+                .unwrap();
         }
         DrawOut::OK
     }

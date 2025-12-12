@@ -1,13 +1,14 @@
 use array_vec::ArrayVec;
 use graphics::Model;
-use graphics::shader_program::ActiveShaderProgram;
+use graphics::shader_program::{ActiveShaderProgram, SetUniformError};
 use graphics::texture::Texture;
+use utils::error_boilerplate;
 
 use super::super::shadow::ShadowListLights;
 use super::super::traits::ListLightCompatible;
 use super::{FarLight, PointLight, SpotLight};
-use crate::EngResult;
 use crate::modelling::CubicVertex;
+use crate::modelling::cubic::lighting::simple::SimpleBindError;
 
 #[derive(Clone, Debug, Default)]
 pub struct ListLights<const MAX: usize> {
@@ -17,10 +18,10 @@ pub struct ListLights<const MAX: usize> {
 }
 
 impl<const MAX: usize> ListLights<MAX> {
-    pub(crate) fn bind<NEVER, const N: usize, L: ListLightCompatible<MAX>, T: Texture, M: Model>(
-        &self,
-        shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
-    ) -> EngResult<(), NEVER>
+    pub(crate) fn bind<'a, 'b, const N: usize, L: ListLightCompatible<MAX>, T: Texture, M: Model>(
+        &'b self,
+        shader_program: &mut ActiveShaderProgram<'a, '_, '_, M, L, T, N>,
+    ) -> Result<(), SimpleBindError<'a>>
     where
         M::Vertex: CubicVertex,
     {

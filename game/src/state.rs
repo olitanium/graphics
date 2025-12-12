@@ -1,7 +1,8 @@
 use std::collections::HashSet;
+use std::error::Error;
 use std::rc::Rc;
+use std::task::Poll;
 
-use engine::eng_state::EngState;
 use engine::entity::{AggregateEntity, AggregateModelIndex};
 use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
@@ -22,7 +23,10 @@ use engine::modelling::{
     TestLineVertex,
 };
 use engine::types::TexDim;
-use engine::{ApiState, ColourRGBA, EngError, EngResult, Event, SimpleEntity, VecDraw};
+use engine::{ApiState, ColourRGBA, Event, PollResult, SimpleEntity, VecDraw};
+
+use crate::controls::ControlOutput;
+use crate::new::GrapplingHook;
 
 pub struct State {
     pub reset_time: f32,
@@ -51,10 +55,11 @@ pub struct State {
     pub aggregate_tail: AggregateEntity<(), SkeletonCubic>,
     pub skeletal_animation: SkeletalAnimation,
 
-    pub grappling_hook: AggregateEntity<(), SimpleCubic>,
-    pub grapple_chain_anim: SkeletalAnimation,
-    pub join_pos: (AggregateModelIndex, SkeletonBoneIndex),
-    pub hook_pos: AggregateModelIndex,
+    // pub grappling_hook: AggregateEntity<(), SimpleCubic>,
+    // pub grapple_chain_anim: SkeletalAnimation,
+    // pub join_pos: (AggregateModelIndex, SkeletonBoneIndex),
+    // pub hook_pos: AggregateModelIndex,
+    pub grappling_hook: GrapplingHook,
 
     pub bounding_box_level: usize,
     pub toggle_m: bool,
@@ -65,20 +70,19 @@ pub struct State {
     pub bloom: Bloom,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub struct StateError;
 
 utils::error_boilerplate!(StateError);
-engine::derive_api_state!(State);
 
-impl EngState for State {
+impl ApiState for State {
     type Error = StateError;
 
     fn poll<'a>(
         &'a mut self,
         events: Vec<Event<'a>>,
         // default_framebuffer: &'a DefaultFramebuffer,
-    ) -> EngResult<VecDraw<'a, StateError>, StateError> {
+    ) -> PollResult<Self::Error> {
         let mut frame_time = 0.0;
         let mut keyboard = HashSet::new();
         let mut mouse_delta = (0.0, 0.0);
@@ -133,15 +137,18 @@ impl EngState for State {
 
         // eprintln!("fps: {}", 1.0 / frame_time);
 
-        self.controls(mouse_delta, keyboard, &mut string, frame_time, self.time)?;
+        match self.controls(mouse_delta, keyboard, &mut string, frame_time, self.time) {
+            ControlOutput::Close => return PollResult::Close,
+            ControlOutput::Data(()) => (),
+            ControlOutput::Error(x) => return PollResult::Error(x),
+        }
 
         self.physics(frame_time);
 
-        let out = self.prep_draw(default_fb.unwrap())?;
-        Ok(out)
+        self.draw(default_fb.unwrap())
     }
 
-    fn new(initial_size: (TexDim, TexDim)) -> EngResult<Self, StateError> {
+    fn new(initial_size: (TexDim, TexDim)) -> Result<Self, Self::Error> {
         let output = Self::new_internal(initial_size)?;
         Ok(output)
     }

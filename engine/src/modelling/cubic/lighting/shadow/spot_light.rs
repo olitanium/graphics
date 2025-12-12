@@ -7,10 +7,10 @@ use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::{FlatTexture, Magnification, Texture, WrapType};
 use graphics::types::TexDim;
 
-use crate::EngResult;
 use crate::modelling::VertexHasTangent;
 use crate::modelling::cubic::camera::{self, Camera};
 use crate::modelling::cubic::geometry::{Orientation, Pose};
+use crate::modelling::cubic::lighting::shadow::ShadowBindError;
 use crate::modelling::cubic::lighting::simple::SpotLight;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
 
@@ -49,8 +49,8 @@ impl ShadowSpotLight {
     }
 
     pub(crate) unsafe fn bind_to<
+        'a,
         'c,
-        NEVER,
         const N: usize,
         const MAX: usize,
         L: ShadowLightCompatible<MAX>,
@@ -58,10 +58,10 @@ impl ShadowSpotLight {
         M: Model,
     >(
         &'c self,
-        shader: &mut ActiveShaderProgram<'_, '_, 'c, M, L, T, N>,
+        shader: &mut ActiveShaderProgram<'a, '_, 'c, M, L, T, N>,
         name: &str,
         index: usize,
-    ) -> EngResult<(), NEVER>
+    ) -> Result<(), ShadowBindError<'a>>
     where
         M::Vertex: VertexHasTangent,
     {

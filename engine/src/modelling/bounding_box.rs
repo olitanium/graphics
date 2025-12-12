@@ -19,15 +19,12 @@ mod group;
 pub use group::Group as BoundingBoxGroup;
 
 pub mod skeleton_bb;
-pub use skeleton_bb::{SkeletonBb, SkeletonBbGroup};
-
-mod error;
-pub use error::Error as BoundingBoxError;
+pub use skeleton_bb::{DrawError as SkeletonBbDrawError, SkeletonBb, SkeletonBbGroup};
 
 use crate::modelling::advanced_vertex::ExtendedVertex;
+use crate::modelling::bounding_box::element::DrawRecurisveError;
 use crate::modelling::{SimpleCubic, SimpleVertex, Volume};
 use crate::transform::Transform;
-use crate::EngResult;
 
 #[derive(Debug, Clone)]
 pub struct BoundingBox<V: ExtendedVertex<DIMS>, const DIMS: usize, T>
@@ -140,7 +137,7 @@ where
     [(); Vector::<DIMS>::ELEMENT_COUNT]:,
 {
     pub(crate) fn draw<
-        NEVER,
+        'a,
         P: Transform<Vector<DIMS>>,
         D: FramebufferWithDepth<1, Tex = FlatTexture>,
         F: Fn(&T) -> ColourRGBA,
@@ -149,7 +146,7 @@ where
         level: usize,
         pose: P,
         active_shader: &mut ActiveShaderProgram<
-            '_,
+            'a,
             '_,
             '_,
             VertexArray<Vector<DIMS>>,
@@ -159,7 +156,7 @@ where
         >,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
         colour: F,
-    ) -> EngResult<(), NEVER> {
+    ) -> Result<(), DrawRecurisveError<'a>> {
         self.get(0).draw_recursive(
             self,
             &pose,
@@ -198,14 +195,13 @@ impl<V: ExtendedVertex<3>, T> BoundingBoxShaderProgram<3> for BoundingBoxElement
     fn shader_program() -> &'static ShaderProgram<VertexArray<Vector<3>>, (), 1, FlatTexture> {
         static SHADER_PROGRAM: LazyLock<ShaderProgram<VertexArray<Vector<3>>, (), 1, FlatTexture>> =
             LazyLock::new(|| {
-                let out: EngResult<ShaderProgram<VertexArray<Vector<3>>, (), 1, FlatTexture>, !> = try {
-                    ShaderProgram::builder()
-                        .vertex_shader("shaders/bounding_box/bounding_box.vert")?
-                        .fragment_shader("shaders/bounding_box/bounding_box.frag")?
-                        .build()?
-                };
-
-                out.expect("ERROR")
+                ShaderProgram::builder()
+                    .vertex_shader("shaders/bounding_box/bounding_box.vert")
+                    .expect("ERROR")
+                    .fragment_shader("shaders/bounding_box/bounding_box.frag")
+                    .expect("ERROR")
+                    .build()
+                    .expect("ERROR")
             });
 
         &SHADER_PROGRAM

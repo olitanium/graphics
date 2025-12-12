@@ -6,11 +6,11 @@ use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
+use graphics::shader_program::SetUniformError;
 use graphics::vertex::Vertex;
-use graphics::vertex_array::VertexArray;
+use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
 use graphics::{ActiveShaderProgram, Model};
 
-use crate::EngResult;
 use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
 use crate::transform::Transform;
 
@@ -155,13 +155,19 @@ where
     }
 }
 
+#[derive(Debug)]
+pub enum DrawRecurisveError<'a> {
+    SetUniform(SetUniformError<'a>),
+    VertexArrayDraw(VertexArrayDrawError<'a>),
+}
+
 impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T>
 where
     Vector<DIMS>: Volume<DIMS>,
     [(); Vector::<DIMS>::ELEMENT_COUNT]:,
 {
     pub fn draw_recursive<
-        NEVER,
+        'a,
         D: FramebufferWithDepth<OUT>,
         P: Transform<Vector<DIMS>>,
         const OUT: usize,
@@ -172,7 +178,7 @@ where
         pose: &P,
         level: usize,
         active_shader: &mut ActiveShaderProgram<
-            '_,
+            'a,
             '_,
             '_,
             VertexArray<Vector<DIMS>>,
@@ -182,7 +188,7 @@ where
         >,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         colour: &F,
-    ) -> EngResult<(), NEVER> {
+    ) -> Result<(), DrawRecurisveError<'a>> {
         if let Some([lhs, rhs]) = self.get_children(bounding_box)
             && level != 0
         {
@@ -213,10 +219,16 @@ where
             vertex_array_builder.extend_triangles(positions_triangles);
             let vertex_array = vertex_array_builder.build();
 
-            active_shader.set_uniform("colour", &chosen_colour)?;
-            active_shader.set_uniform("model", &Matrix::<4, 4>::identity())?;
+            active_shader
+                .set_uniform("colour", &chosen_colour)
+                .map_err(|err| DrawRecurisveError::SetUniform(err))?;
+            active_shader
+                .set_uniform("model", &Matrix::<4, 4>::identity())
+                .map_err(|err| DrawRecurisveError::SetUniform(err))?;
 
-            vertex_array.draw(active_shader, active_framebuffer)?;
+            vertex_array
+                .draw(active_shader, active_framebuffer)
+                .map_err(|err| DrawRecurisveError::VertexArrayDraw(err))?;
 
             Ok(())
         }

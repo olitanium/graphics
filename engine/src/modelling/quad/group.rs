@@ -1,10 +1,10 @@
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
-use graphics::{ApiResult, Draw, DrawOut};
+use graphics::{Draw, DrawOut};
 
 use super::Quad;
-use crate::EngError;
+use crate::modelling::quad::model::DrawError;
 
 #[derive(Debug)]
 pub struct Group<'a, const N: usize, const OUT: usize, O, D: FramebufferWithoutExtra<OUT>> {
@@ -34,20 +34,20 @@ impl<'a, const N: usize, const OUT: usize, O, X: FramebufferWithoutExtra<OUT>>
     }
 }
 
-impl<'a, NEVER, O, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>>
-    Draw<EngError<NEVER>> for Group<'a, N, OUT, O, D>
+impl<'a, O, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> Draw
+    for Group<'a, N, OUT, O, D>
 {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> ApiResult<DrawOut, EngError<NEVER>> {
+    ) -> DrawOut {
         let mut active_framebuffer = self.framebuffer.bind(fb_context);
         let mut shader = self.shader.use_program(sp_context);
-        shader.set_uniform_dyn(self.uniforms)?;
+        shader.set_uniform_dyn(self.uniforms).unwrap();
 
         for quad in self.quads {
-            quad.draw(&mut shader, &mut active_framebuffer)?;
+            quad.draw(&mut shader, &mut active_framebuffer).unwrap();
         }
 
         DrawOut::OK

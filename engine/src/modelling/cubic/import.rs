@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use graphics::linear_algebra::{Matrix, UnitVector, Vector};
-use graphics::texture::{FlatTexture, Image, TextureHasBuilder};
+use graphics::texture::{FlatTexture, Image, NewImageError, TextureHasBuilder};
 use graphics::types::ElementArrayElem;
 use russimp::Matrix4x4;
 use russimp::material::{PropertyTypeInfo, TextureType};
@@ -12,7 +12,6 @@ use russimp::scene::{PostProcess, Scene};
 
 use super::material::Material;
 use crate::TransformBy;
-use crate::error::EngResult;
 use crate::modelling::Bone;
 use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::cubic::geometry::Pose;
@@ -23,8 +22,6 @@ mod error {
     use std::path::PathBuf;
 
     use utils::error_boilerplate;
-
-    use crate::EngError;
 
     #[derive(Debug, Clone)]
     pub enum Error {
@@ -56,12 +53,6 @@ mod error {
     }
 
     error_boilerplate!(Error);
-
-    impl<NEVER> From<Error> for EngError<NEVER> {
-        fn from(value: Error) -> Self {
-            Self::Import(value)
-        }
-    }
 }
 
 pub use error::Error;
@@ -70,11 +61,11 @@ pub(crate) struct ImportOutput {
     pub meshes: Vec<MeshBuilder>,
 }
 
-pub(super) fn import<NEVER: Clone, P: AsRef<Path>>(
+pub(super) fn import<P: AsRef<Path>>(
     path: P,
     post_process: Vec<PostProcess>,
     load_tangent_space: bool,
-) -> EngResult<ImportOutput, NEVER> {
+) -> Result<ImportOutput, Error> {
     let path = path.as_ref();
 
     let dir = path
@@ -121,15 +112,15 @@ fn assimp_matrix_to_pose(matrix: Matrix4x4) -> Pose {
     Pose::new_from_matrix(matrix)
 }
 
-fn process_node<NEVER: Clone>(
+fn process_node(
     scene: &Scene,
     node: &Node,
     dir: &Path,
-    current_mat: &mut HashMap<u32, EngResult<Rc<Material>, NEVER>>,
+    current_mat: &mut HashMap<u32, Result<Rc<Material>, Rc<ParseMaterialError>>>,
     _current_bones: &mut HashMap<String, Bone>,
     accum_transform: Pose,
     load_tangent_space: bool,
-) -> EngResult<Vec<MeshBuilder>, NEVER> {
+) -> Result<Vec<MeshBuilder>, Error> {
     // process current node and recursively process each in node.children.
     let node_transform = assimp_matrix_to_pose(node.transformation);
     let accum_transform = node_transform.transform(&accum_transform);
@@ -183,21 +174,15 @@ fn process_node<NEVER: Clone>(
                 .flat_map(|face| face.0.iter().copied().map(Into::into))
                 .collect();
 
-            fn is_no_vec_or_element_exists<'a, T, NEVER>(
-                name: &'static str,
+            fn is_no_vec_or_element_exists<'a, T>(
                 opt_value: &'a Option<Vec<T>>,
                 index: usize,
-            ) -> EngResult<Option<&'a T>, NEVER> {
+            ) -> Result<Option<&'a T>, usize> {
                 match opt_value {
                     None => Ok(None),
                     Some(vector) => match vector.get(index) {
                         Some(value) => Ok(Some(value)),
-                        None => Err(Error::ElementArrayOverflow {
-                            which: name,
-                            index_asked: index,
-                            actual_len: vector.len(),
-                        }
-                        .into()),
+                        None => Err(vector.len()),
                     },
                 }
             }
@@ -209,26 +194,38 @@ fn process_node<NEVER: Clone>(
                 .map(|triangle| {
                     triangle.try_map(|index| {
                         let index = index.as_usize();
-                        let triangle_position =
-                            *positions.get(index).ok_or(Error::ElementArrayOverflow {
+                        let triangle_position = *positions
+                            .get(index)
+                            .ok_or_else(|| positions.len())
+                            .map_err(|actual_len| Error::ElementArrayOverflow {
                                 which: "position",
                                 index_asked: index,
-                                actual_len: positions.len(),
+                                actual_len,
                             })?;
                         let triangle_texture =
-                            *textures.get(index).ok_or(Error::ElementArrayOverflow {
-                                which: "texture",
+                            *textures.get(index).ok_or_else(|| textures.len()).map_err(
+                                |actual_len| Error::ElementArrayOverflow {
+                                    which: "texture",
+                                    index_asked: index,
+                                    actual_len,
+                                },
+                            )?;
+                        let triangle_normal = is_no_vec_or_element_exists(&opt_normal, index)
+                            .map_err(|actual_len| Error::ElementArrayOverflow {
+                                which: "normal",
                                 index_asked: index,
-                                actual_len: textures.len(),
-                            })?;
-                        let triangle_normal =
-                            is_no_vec_or_element_exists("normal", &opt_normal, index)?
-                                .copied()
-                                .flatten();
-                        let triangle_tangent =
-                            is_no_vec_or_element_exists("tangent", &opt_tangent, index)?
-                                .copied()
-                                .flatten();
+                                actual_len,
+                            })?
+                            .copied()
+                            .flatten();
+                        let triangle_tangent = is_no_vec_or_element_exists(&opt_tangent, index)
+                            .map_err(|actual_len| Error::ElementArrayOverflow {
+                                which: "tangent",
+                                index_asked: index,
+                                actual_len,
+                            })?
+                            .copied()
+                            .flatten();
 
                         Ok(IncompleteVertex::new(triangle_position)
                             .texture(triangle_texture)
@@ -237,7 +234,7 @@ fn process_node<NEVER: Clone>(
                             .transform_by(&accum_transform))
                     }) //;
                 })
-                .collect::<EngResult<Vec<_>, _>>();
+                .collect::<Result<Vec<_>, Error>>();
             let mesh_buffer = mesh_buffer?;
 
             let mat = current_mat
@@ -251,7 +248,7 @@ fn process_node<NEVER: Clone>(
 
             Ok(builder)
         })
-        .collect::<EngResult<Vec<_>, NEVER>>()?;
+        .collect::<Result<Vec<_>, Error>>()?;
 
     let children = node.children.borrow();
     let child_meshes = children
@@ -267,7 +264,7 @@ fn process_node<NEVER: Clone>(
                 load_tangent_space,
             )
         })
-        .collect::<EngResult<Vec<_>, NEVER>>()?
+        .collect::<Result<Vec<_>, Error>>()?
         .into_iter()
         .flatten();
 
@@ -275,10 +272,20 @@ fn process_node<NEVER: Clone>(
     Ok(curr_meshes)
 }
 
-fn parse_material<NEVER>(
+pub enum ParseMaterialError {
+    NewTexture {
+        path: PathBuf,
+        new_image: NewImageError,
+    },
+    DuplicateProperty {
+        key: String,
+    },
+}
+
+fn parse_material(
     material: &russimp::material::Material,
     dir: &Path,
-) -> EngResult<Rc<Material>, NEVER> {
+) -> Result<Rc<Material>, Rc<ParseMaterialError>> {
     // get semantic -> key -> data
     let mut material_properties = HashMap::new();
 
@@ -286,10 +293,14 @@ fn parse_material<NEVER>(
         material_properties
             .entry(property.semantic)
             .or_insert_with(HashMap::new)
-            .insert(property.key, property.data)
+            .insert(property.key.clone(), property.data)
             .map_or_else(
                 || Ok(()),
-                |_| Err(Error::DuplicateProperty { dir: dir.into() }),
+                |_| {
+                    Err(Rc::new(ParseMaterialError::DuplicateProperty {
+                        key: property.key,
+                    }))
+                },
             )?;
     }
 
@@ -299,37 +310,43 @@ fn parse_material<NEVER>(
         .get(&TextureType::Diffuse)
         .map(|x| x.get("$tex.file"))
     {
-        builder = builder.diffuse(
+        builder = builder.diffuse({
+            let path = [dir, filepath.as_ref()].into_iter().collect::<PathBuf>();
             FlatTexture::builder()
-                .image(Image::new_from_srgba(
-                    [dir, filepath.as_ref()].into_iter().collect::<PathBuf>(),
-                )?)
-                .build(),
-        );
+                .image(
+                    Image::new_from_srgba(&path)
+                        .map_err(|new_image| ParseMaterialError::NewTexture { new_image, path })?,
+                )
+                .build()
+        });
     }
     if let Some(Some(PropertyTypeInfo::String(filepath))) = material_properties
         .get(&TextureType::Specular)
         .map(|x| x.get("$tex.file"))
     {
-        builder = builder.specular(
+        builder = builder.specular({
+            let path = [dir, filepath.as_ref()].into_iter().collect::<PathBuf>();
             FlatTexture::builder()
-                .image(Image::new_from_srgba(
-                    [dir, filepath.as_ref()].into_iter().collect::<PathBuf>(),
-                )?)
-                .build(),
-        );
+                .image(
+                    Image::new_from_srgba(&path)
+                        .map_err(|new_image| ParseMaterialError::NewTexture { path, new_image })?,
+                )
+                .build()
+        });
     }
     if let Some(Some(PropertyTypeInfo::String(filepath))) = material_properties
         .get(&TextureType::Height)
         .map(|x| x.get("$tex.file"))
     {
-        builder = builder.normal_map(
+        builder = builder.normal_map({
+            let path = [dir, filepath.as_ref()].into_iter().collect::<PathBuf>();
             FlatTexture::builder()
-                .image(Image::new_from_rgba(
-                    [dir, filepath.as_ref()].into_iter().collect::<PathBuf>(),
-                )?)
-                .build(),
-        );
+                .image(
+                    Image::new_from_rgba(&path)
+                        .map_err(|new_image| ParseMaterialError::NewTexture { path, new_image })?,
+                )
+                .build()
+        });
     }
     if let Some(Some(PropertyTypeInfo::FloatArray(arr))) = material_properties
         .get(&TextureType::None)

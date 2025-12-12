@@ -1,8 +1,8 @@
 use crate::types::{TexDim, TexId};
 
 mod cubemap;
-mod error;
-pub use error::Error;
+// mod error;
+// pub use error::Error;
 mod flat_texture;
 
 pub use cubemap::CubeMap;
@@ -12,7 +12,7 @@ pub(crate) use flat_texture::{FlatTextureBuilder, FramebufferAttachment};
 mod parameters;
 pub use parameters::{Magnification, Minification, MipMapInfo, WrapType};
 mod image;
-pub use image::Image;
+pub use image::{Image, NewImageError};
 
 pub trait Texture {
     fn dyn_blank() -> &'static dyn Texture

@@ -1,11 +1,12 @@
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
-use graphics::shader_program::Uniform;
+use graphics::shader_program::{SetUniformError, Uniform};
 use graphics::types::ElementArrayLen;
 use graphics::vertex::NoVertex;
-use graphics::{ActiveShaderProgram, Model, vertex_array};
+use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
+use graphics::{ActiveShaderProgram, Draw, Model, vertex_array};
+use utils::error_boilerplate;
 
-use crate::EngResult;
 use crate::opengl_shaders::LINE_SHADER_MAX_VERTICES;
 
 pub struct Line<U> {
@@ -26,19 +27,35 @@ impl<U: Uniform> Line<U> {
     }
 }
 
-impl<U: Uniform> Line<U> {
-    pub(crate) fn draw<'a, const OUT: usize, O, F: FramebufferWithoutExtra<OUT>>(
-        &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, O, F::Tex, OUT>,
-        active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, F>,
-    ) -> EngResult<(), !> {
-        active_shader.set_uniform("vertex".to_string(), &self.vertices)?;
+#[derive(Debug)]
+pub enum DrawError<'a> {
+    SetUniform(SetUniformError<'a>),
+    VertexArrayDraw(VertexArrayDrawError<'a>),
+    LineTooLong { len: usize },
+}
+error_boilerplate!(<'a> DrawError<'a>);
 
-        vertex_array::dummy_vertex_array().draw_len(
-            active_shader,
-            active_framebuffer,
-            ElementArrayLen::new(Ord::min(self.vertices.len(), LINE_SHADER_MAX_VERTICES) as _),
-        )?;
+impl<U: Uniform> Line<U> {
+    pub(crate) fn draw<'b, 'a, const OUT: usize, O, F: FramebufferWithoutExtra<OUT>>(
+        &'a self,
+        active_shader: &mut ActiveShaderProgram<'b, '_, 'a, Self, O, F::Tex, OUT>,
+        active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, F>,
+    ) -> Result<(), DrawError<'b>> {
+        active_shader
+            .set_uniform("vertex".to_string(), &self.vertices)
+            .map_err(|err| DrawError::SetUniform(err))?;
+
+        let len = if self.vertices.len() <= LINE_SHADER_MAX_VERTICES {
+            ElementArrayLen::new(self.vertices.len() as _)
+        } else {
+            return Err(DrawError::LineTooLong {
+                len: self.vertices.len(),
+            });
+        };
+
+        vertex_array::dummy_vertex_array()
+            .draw_len(active_shader, active_framebuffer, len)
+            .map_err(|err| DrawError::VertexArrayDraw(err))?;
 
         Ok(())
     }

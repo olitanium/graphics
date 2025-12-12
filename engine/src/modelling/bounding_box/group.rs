@@ -4,9 +4,8 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::texture::FlatTexture;
 use graphics::vertex::Vertex;
-use graphics::{ApiResult, Draw, DrawOut, ShaderProgramContext};
+use graphics::{Draw, DrawOut, ShaderProgramContext};
 
-use crate::EngError;
 use crate::modelling::bounding_box::BoundingBoxShaderProgram;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
@@ -74,14 +73,13 @@ where
 
 impl<
     'a,
-    NEVER,
     const DIMS: usize,
     D: FramebufferWithDepth<1, Tex = FlatTexture>,
     V: ExtendedVertex<DIMS>,
     T,
     Bt,
     F: Fn(&Bt) -> ColourRGBA,
-> Draw<EngError<NEVER>> for Group<'a, 1, DIMS, D, V, T, Bt, F>
+> Draw for Group<'a, 1, DIMS, D, V, T, Bt, F>
 where
     Vector<DIMS>: Volume<DIMS>,
     T: Transform<Vector<DIMS>>,
@@ -92,20 +90,24 @@ where
         self: Box<Self>,
         register: &mut FramebufferContext,
         marker: &mut ShaderProgramContext,
-    ) -> ApiResult<DrawOut, EngError<NEVER>> {
+    ) -> DrawOut {
         let mut active_framebuffer = self.framebuffer.bind(register);
         let mut active_shader =
             BoundingBoxElement::<V, DIMS, Bt>::shader_program().use_program(marker);
 
-        active_shader.set_uniform("projtimesview", &self.look_at)?;
+        active_shader
+            .set_uniform("projtimesview", &self.look_at)
+            .unwrap();
 
-        self.bounding_box.draw(
-            self.level,
-            self.transform,
-            &mut active_shader,
-            &mut active_framebuffer,
-            self.colour,
-        )?;
+        self.bounding_box
+            .draw(
+                self.level,
+                self.transform,
+                &mut active_shader,
+                &mut active_framebuffer,
+                self.colour,
+            )
+            .unwrap();
 
         DrawOut::OK
     }

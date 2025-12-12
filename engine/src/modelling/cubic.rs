@@ -1,7 +1,7 @@
 mod shadow;
 pub use shadow::{Group as ShadowGroup, SHADOW_SHADER_MAX_LIGHTS};
 mod mesh;
-pub use mesh::{Mesh, MeshBuilder};
+pub use mesh::{DrawError as MeshDrawError, Mesh, MeshBuilder};
 mod import;
 pub use import::Error as ImportError;
 
@@ -12,7 +12,6 @@ pub mod camera;
 pub use camera::{Builder as CameraBuilder, Camera};
 
 pub mod geometry;
-pub use geometry::AnimationError;
 
 pub mod lighting;
 

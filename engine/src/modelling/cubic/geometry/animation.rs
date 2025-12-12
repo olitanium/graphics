@@ -5,8 +5,12 @@ mod skeletal_animation;
 pub use skeletal_animation::SkeletalAnimation;
 
 mod calculated_animation;
-pub use calculated_animation::{CalculatedAnimation, CalculatedAnimationBuilder};
-
-mod error;
-pub(crate) use calculated_animation::process_vec_noaggregate;
-pub use error::Error as AnimationError;
+pub use calculated_animation::{
+    BuildFixingBoneError,
+    CalculatedAnimation,
+    CalculatedAnimationBuilder,
+    GetAnimationError,
+    PushAnimationError,
+    SignaturesDoNotMatchError,
+};
+pub(crate) use calculated_animation::{CalcAnimUnitIndex, process_vec_noaggregate};

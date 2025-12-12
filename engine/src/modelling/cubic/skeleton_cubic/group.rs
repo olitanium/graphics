@@ -3,18 +3,18 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
-use graphics::{ApiResult, Draw, DrawOut};
+use graphics::{Draw, DrawOut};
 
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::geometry::{
     CalculatedAnimation,
     Pose,
+    SignaturesDoNotMatchError,
     SkeletalAnimation,
     process_vec_noaggregate,
 };
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::cubic::{Camera, SkeletonCubic};
-use crate::{EngError, EngResult};
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
@@ -47,7 +47,7 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
         )>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,
-    ) -> EngResult<Box<Self>, NEVER> {
+    ) -> Result<Box<Self>, SignaturesDoNotMatchError> {
         Ok(Box::new(Self {
             shader,
             framebuffer,
@@ -60,33 +60,39 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
     }
 }
 
-impl<'a, NEVER, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>>
-    Draw<EngError<NEVER>> for Group<'a, MAX, OUT, D>
+impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
+    for Group<'a, MAX, OUT, D>
 {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> ApiResult<DrawOut, EngError<NEVER>> {
+    ) -> DrawOut {
         let mut active_shader = self.shader.use_program(sp_context);
         let mut active_framebuffer = self.framebuffer.bind(fb_context);
 
-        self.lights.bind(&mut active_shader)?;
+        self.lights.bind(&mut active_shader).unwrap();
 
-        active_shader.set_uniform("projtimesview".to_string(), &self.camera_look_at)?;
-        active_shader.set_uniform(
-            "camera_position".to_string(),
-            &self.camera_pos.homogeneous(),
-        )?;
+        active_shader
+            .set_uniform("projtimesview".to_string(), &self.camera_look_at)
+            .unwrap();
+        active_shader
+            .set_uniform(
+                "camera_position".to_string(),
+                &self.camera_pos.homogeneous(),
+            )
+            .unwrap();
 
-        active_shader.set_uniform_dyn(self.uniforms)?;
+        active_shader.set_uniform_dyn(self.uniforms).unwrap();
 
         for (model, calculated_animation) in self.opaque {
-            model.draw(
-                &mut active_shader,
-                &mut active_framebuffer,
-                &calculated_animation,
-            )?;
+            model
+                .draw(
+                    &mut active_shader,
+                    &mut active_framebuffer,
+                    &calculated_animation,
+                )
+                .unwrap();
         }
         DrawOut::OK
     }

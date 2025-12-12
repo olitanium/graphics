@@ -1,11 +1,11 @@
 use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
-use graphics::shader_program::{ActiveShaderProgram, CullFace};
+use graphics::shader_program::{ActiveShaderProgram, CullFace, FaceCullingForcedByProgramError};
 use graphics::texture::{CubeMap, Texture};
-use graphics::vertex_array::VertexArray;
+use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
+use utils::error_boilerplate;
 
-use crate::EngResult;
 use crate::modelling::skybox::SkyBoxVertex;
 use crate::modelling::{ExtendedVertex, test_models};
 
@@ -24,16 +24,30 @@ impl SkyBox {
         let model = model_builder.build();
         Self { model, texture }
     }
+}
 
-    pub(crate) fn draw<'a, NEVER, const OUT: usize, O, D: FramebufferWithDepth<OUT>>(
-        &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, SkyBox, O, D::Tex, OUT>,
+#[derive(Debug)]
+pub enum DrawError<'a> {
+    FaceCulling(FaceCullingForcedByProgramError),
+    VertexArrayDraw(VertexArrayDrawError<'a>),
+}
+
+error_boilerplate!(<'a> DrawError<'a>);
+
+impl SkyBox {
+    pub(crate) fn draw<'a, 'b, const OUT: usize, O, D: FramebufferWithDepth<OUT>>(
+        &'b self,
+        active_shader: &mut ActiveShaderProgram<'a, '_, 'b, SkyBox, O, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-    ) -> EngResult<(), NEVER> {
-        active_shader.cull_face(CullFace::DoNotCull)?;
+    ) -> Result<(), DrawError<'a>> {
+        active_shader
+            .cull_face(CullFace::DoNotCull)
+            .map_err(|err| DrawError::FaceCulling(err))?;
         active_shader.register_texture(Some(("skybox".to_string(), &self.texture as &dyn Texture)));
 
-        self.model.draw(active_shader, active_framebuffer)?;
+        self.model
+            .draw(active_shader, active_framebuffer)
+            .map_err(|err| DrawError::VertexArrayDraw(err))?;
 
         Ok(())
     }

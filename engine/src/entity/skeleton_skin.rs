@@ -66,7 +66,7 @@ pub fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [SkeletalVertex; 3])]) -> T>(
         convert::identity,
     );
 
-    SkeletonBb::from_vec_triangle(per_mesh, depth, cubic.skeleton.clone(), init)
+    SkeletonBb::from_vec_triangle(per_mesh, depth, init)
 }
 
 impl<T> SkinningEntity<T> {

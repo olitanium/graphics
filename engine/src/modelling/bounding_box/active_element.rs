@@ -3,9 +3,9 @@ use std::array;
 use graphics::linear_algebra::Vector;
 use graphics::vertex::Vertex;
 
+use crate::modelling::BoundingBox;
 use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::bounding_box::BoundingBoxElement;
-use crate::modelling::BoundingBox;
 use crate::transform::Transform;
 
 impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T>

@@ -5,8 +5,8 @@ use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::Texture;
 
 use super::super::traits::ListLightCompatible;
-use crate::EngResult;
 use crate::modelling::CubicVertex;
+use crate::modelling::cubic::lighting::simple::SimpleBindError;
 
 #[derive(Clone, Debug)]
 pub struct PointLight {
@@ -21,7 +21,7 @@ pub struct PointLight {
 
 impl PointLight {
     pub(crate) fn bind_to<
-        NEVER,
+        'a,
         const N: usize,
         const MAX: usize,
         L: ListLightCompatible<MAX>,
@@ -29,10 +29,10 @@ impl PointLight {
         M: Model,
     >(
         &self,
-        shader: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
+        shader: &mut ActiveShaderProgram<'a, '_, '_, M, L, T, N>,
         name: &str,
         index: usize,
-    ) -> EngResult<(), NEVER>
+    ) -> Result<(), SimpleBindError<'a>>
     where
         M::Vertex: CubicVertex,
     {

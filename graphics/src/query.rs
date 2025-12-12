@@ -1,17 +1,14 @@
-use std::marker::PhantomData;
-
 use crate::framebuffer::FramebufferContext;
 use crate::types::Query;
-use crate::{ApiResult, Draw, DrawOut, ShaderProgramContext, gl_call};
+use crate::{Draw, DrawOut, ShaderProgramContext, gl_call};
 
-pub struct HasDrawnQuery<E: std::error::Error, D: Draw<E>> {
+pub struct HasDrawnQuery<D: Draw> {
     name: usize,
     query: Query,
     target: Box<D>,
-    _error: PhantomData<fn() -> E>,
 }
 
-impl<E: std::error::Error, D: Draw<E>> HasDrawnQuery<E, D> {
+impl<D: Draw> HasDrawnQuery<D> {
     pub fn new(name: usize, target: Box<D>) -> Box<Self> {
         let query = {
             let mut value = 0;
@@ -22,20 +19,19 @@ impl<E: std::error::Error, D: Draw<E>> HasDrawnQuery<E, D> {
             name,
             query,
             target,
-            _error: PhantomData,
         })
     }
 }
 
-impl<E: std::error::Error, D: Draw<E>> Draw<E> for HasDrawnQuery<E, D> {
+impl<D: Draw> Draw for HasDrawnQuery<D> {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> ApiResult<DrawOut, E> {
+    ) -> DrawOut {
         gl_call! {gl::BeginQuery(gl::ANY_SAMPLES_PASSED, self.query.as_primitive()); }
 
-        let _ = self.target.draw(fb_context, sp_context)?;
+        _ = self.target.draw(fb_context, sp_context);
 
         gl_call! {gl::EndQuery(gl::ANY_SAMPLES_PASSED);}
 
@@ -44,7 +40,8 @@ impl<E: std::error::Error, D: Draw<E>> Draw<E> for HasDrawnQuery<E, D> {
             query_object: self.query,
             name: self.name,
         };
-        Ok(out)
+
+        out
     }
 }
 

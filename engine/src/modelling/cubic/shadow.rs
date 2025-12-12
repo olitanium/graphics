@@ -5,14 +5,20 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::shader_program::Uniform;
 use graphics::texture::FlatTexture;
-use graphics::{ApiResult, Draw, DrawOut, ShaderProgramContext};
+use graphics::{Draw, DrawOut, ShaderProgramContext};
 
 use super::camera::Camera;
 use super::lighting::shadow::ShadowListLights;
 use crate::modelling::SimpleCubic;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::{self, CalculatedAnimation, Pose, SkeletalAnimation};
-use crate::{EngError, EngResult, opengl_shaders};
+use crate::modelling::cubic::geometry::{
+    self,
+    CalculatedAnimation,
+    Pose,
+    SignaturesDoNotMatchError,
+    SkeletalAnimation,
+};
+use crate::opengl_shaders;
 
 pub const SHADOW_SHADER_MAX_LIGHTS: usize = 2;
 
@@ -60,7 +66,7 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
             Option<(&'a SkeletalAnimation, f32)>, // animation
         )>,
         uniforms: Vec<(String, &'a dyn Uniform)>,
-    ) -> EngResult<Box<Self>, NEVER> {
+    ) -> Result<Box<Self>, SignaturesDoNotMatchError> {
         Ok(Box::new(Self {
             look_at: camera.look_at(hint),
             position: camera.position(hint),
@@ -74,21 +80,21 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
     }
 }
 
-impl<'a, NEVER, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw<EngError<NEVER>>
-    for Group<'a, X>
-{
+impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw for Group<'a, X> {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> ApiResult<DrawOut, EngError<NEVER>> {
-        self.list_light.gen_depth(
-            sp_context,
-            fb_context,
-            &self.opaque,
-            self.position,
-            self.uniforms.clone(),
-        )?;
+    ) -> DrawOut {
+        self.list_light
+            .gen_depth(
+                sp_context,
+                fb_context,
+                &self.opaque,
+                self.position,
+                self.uniforms.clone(),
+            )
+            .unwrap();
 
         // At this point, all lights have their framebuffers filled with depth
         // information
@@ -97,21 +103,27 @@ impl<'a, NEVER, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw<EngError<NEV
         // function, the references stored cannot leak
         unsafe {
             self.list_light
-                .bind(&mut active_shadow_shader, self.position)?;
+                .bind(&mut active_shadow_shader, self.position)
+                .unwrap();
         }
 
-        active_shadow_shader.set_uniform("projtimesview".to_string(), &self.look_at)?;
         active_shadow_shader
-            .set_uniform("camera_position".to_string(), &self.position.homogeneous())?;
-        active_shadow_shader.set_uniform_dyn(self.uniforms)?;
+            .set_uniform("projtimesview".to_string(), &self.look_at)
+            .unwrap();
+        active_shadow_shader
+            .set_uniform("camera_position".to_string(), &self.position.homogeneous())
+            .unwrap();
+        active_shadow_shader.set_uniform_dyn(self.uniforms).unwrap();
 
         let mut active_output_framebuffer = self.output_framebuffer.bind(fb_context);
         for (model, calculated_animation) in iter::chain(self.opaque, self.transparent) {
-            model.draw(
-                &mut active_shadow_shader,
-                &mut active_output_framebuffer,
-                &calculated_animation,
-            )?;
+            model
+                .draw(
+                    &mut active_shadow_shader,
+                    &mut active_output_framebuffer,
+                    &calculated_animation,
+                )
+                .unwrap();
         }
 
         drop(active_shadow_shader);

@@ -1,7 +1,8 @@
 use std::sync::Mutex;
 
-use super::{CullFace, Error, ShaderProgram};
-use crate::error::ApiResult;
+use utils::error_boilerplate;
+
+use super::{CullFace, ShaderProgram};
 use crate::texture::Texture;
 use crate::vertex::Vertex;
 use crate::{Model, gl_call};
@@ -68,22 +69,31 @@ impl ShaderProgramContext {
             self.cull_face_after_check(cull_face);
         }
     }
+}
 
-    pub fn cull_face<NEVER>(&mut self, cull_face: CullFace) -> ApiResult<(), NEVER> {
+#[derive(Debug)]
+pub struct FaceCullingForcedByProgramError {
+    pub forced: CullFace,
+}
+error_boilerplate!(FaceCullingForcedByProgramError);
+
+impl ShaderProgramContext {
+    pub fn cull_face(
+        &mut self,
+        cull_face: CullFace,
+    ) -> Result<(), FaceCullingForcedByProgramError> {
         match self.forced_cull_face {
             None => {
                 self.cull_face_after_check(cull_face);
 
                 Ok(())
             }
-            Some(forced) => Err(Error::TriedToCullFaceWhenFaceCullingForcedByProgram {
-                forced,
-                attempted: cull_face,
-            }
-            .into()),
+            Some(forced) => Err(FaceCullingForcedByProgramError { forced }),
         }
     }
+}
 
+impl ShaderProgramContext {
     pub fn drawing_skybox(&mut self, drawing_skybox: bool) {
         if drawing_skybox == self.current_drawing_skybox {
             return;

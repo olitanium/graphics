@@ -1,26 +1,41 @@
-use std::fmt::Debug;
+use std::collections::HashMap;
+use std::fmt::{Debug, Display};
 use std::{iter, mem};
 
 use graphics::ActiveShaderProgram;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
+use utils::error_boilerplate;
 
+use crate::SimpleEntity;
 use crate::entity::{EntityInner, SkeletonEntity, SkinningEntity};
-use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
+use crate::modelling::cubic::geometry::{
+    BuildFixingBoneError,
+    CalcAnimUnitIndex,
+    CalculatedAnimation,
+    Pose,
+    PushAnimationError,
+    SignaturesDoNotMatchError,
+    SkeletalAnimation,
+};
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::cubic::{SkeletonBoneIndex, SkeletonCubic};
 use crate::modelling::{CubicVertex, SimpleCubic, SkeletonBb};
-use crate::{EngResult, SimpleEntity};
 
 mod group;
 pub use group::Group as AggregateGroup;
+
+mod error;
+pub use error::PushModelError;
 
 pub struct AggregateEntity<T, M: EntityInner>
 where
     M::Vertex: CubicVertex,
 {
-    base: AggregateUnit<T, M>,
+    base_model: M,
+    base_bounding_box: Option<M::BoundingBox<T>>,
+    base_pose: Pose,
     children: Vec<Option<AggregateUnit<T, M>>>,
 }
 
@@ -31,7 +46,9 @@ where
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct(stringify!(AggregateEntity))
-            .field("base", &self.base)
+            .field("base_model", &self.base_model)
+            .field("base_bounding_box", &self.base_bounding_box)
+            .field("base_pose", &self.base_pose)
             .field("children", &self.children)
             .finish()
     }
@@ -50,7 +67,7 @@ where
     children: Vec<AggregateModelIndex>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct AggregateModelIndex(pub(crate) usize);
 
 impl AggregateModelIndex {
@@ -68,21 +85,19 @@ where
     ) -> Self {
         let bounding_box = base_model.make_bounding_box(depth, init);
 
-        let base = AggregateUnit {
-            model: base_model,
-            bounding_box,
-            offset: Pose::IDENTITY,
-            skeleton_attachment_point: SkeletonBoneIndex::SKELETON_ROOT_BONE,
-            parent_unit: AggregateModelIndex::ROOT_MODEL_INDEX,
-            children: Vec::new(),
-        };
-
         Self {
-            base,
+            base_bounding_box: bounding_box,
+            base_model,
+            base_pose: Pose::IDENTITY,
             children: Vec::new(),
         }
     }
+}
 
+impl<T, M: EntityInner> AggregateEntity<T, M>
+where
+    M::Vertex: CubicVertex,
+{
     pub fn push_model<F: FnMut(&[(Vector<3>, [M::Vertex; 3])]) -> T>(
         &mut self,
         other_model: M,
@@ -92,7 +107,7 @@ where
 
         bounding_box_depth: usize,
         bounding_box_init: F,
-    ) -> Option<AggregateModelIndex> {
+    ) -> Result<AggregateModelIndex, PushModelError> {
         // check that the parent unit is Some and the bone exists
         self.check_parent_and_bone(attachment_point, parent_unit)?;
 
@@ -110,22 +125,38 @@ where
 
         let child_at = self.push_aggregate_unit(child);
 
-        Some(child_at)
+        Ok(child_at)
     }
 
     fn check_parent_and_bone(
         &self,
         attachment_point: SkeletonBoneIndex,
         parent_unit: AggregateModelIndex,
-    ) -> Option<()> {
-        self.get(parent_unit)?
-            .model
+    ) -> Result<(), PushModelError> {
+        let model = if parent_unit == AggregateModelIndex::ROOT_MODEL_INDEX {
+            &self.base_model
+        } else {
+            &self
+                .children
+                .get(parent_unit.0 - 1)
+                .ok_or(PushModelError::ParentUnitDoesNotExist)?
+                .as_ref()
+                .ok_or(PushModelError::ParentUnitDoesNotExist)?
+                .model
+        };
+
+        model
             .skeleton()
             .get(attachment_point)
             .is_bone()
-            .then_some(())
+            .ok_or(PushModelError::BoneInParentDoesNotExist)
     }
+}
 
+impl<T, M: EntityInner> AggregateEntity<T, M>
+where
+    M::Vertex: CubicVertex,
+{
     fn push_aggregate_unit(&mut self, unit: AggregateUnit<T, M>) -> AggregateModelIndex {
         let parent_unit = unit.parent_unit;
         let child_at = if let Some((index, child_dest)) = self
@@ -142,14 +173,21 @@ where
             AggregateModelIndex(output)
         };
 
-        let parent_mut = self.get_mut(parent_unit).expect("asserted before");
-        parent_mut.children.push(child_at);
+        if parent_unit != AggregateModelIndex::ROOT_MODEL_INDEX {
+            let parent_mut = self
+                .children
+                .get_mut(parent_unit.0 - 1)
+                .expect("parent in aggregate unit must exist")
+                .as_mut()
+                .expect("parent in aggregate unit must exist");
+            parent_mut.children.push(child_at);
+        }
 
         child_at
     }
 
     pub fn pop(&mut self, index: AggregateModelIndex) {
-        if index.0 == AggregateModelIndex::ROOT_MODEL_INDEX.0 {
+        if index == AggregateModelIndex::ROOT_MODEL_INDEX {
             return;
         }
         if let Some(Some(unit)) = self.children.get_mut(index.0 - 1) {
@@ -158,85 +196,164 @@ where
             }
         }
         if let Some(opt_empty_unit) = self.children.get_mut(index.0 - 1) {
+            eprintln!("pop: {index:?}");
             *opt_empty_unit = None;
         }
     }
+}
 
-    fn get(&self, index: AggregateModelIndex) -> Option<&AggregateUnit<T, M>> {
-        if index.0 == AggregateModelIndex::ROOT_MODEL_INDEX.0 {
-            Some(&self.base)
-        } else {
-            self.children.get(index.0 - 1).and_then(|opt| opt.as_ref())
-        }
-    }
+#[derive(Debug)]
+pub enum CalculateAnimationError {
+    BadAnimationInput {
+        error: SignaturesDoNotMatchError,
+        parent: AggregateModelIndex,
+    },
+    FixAnimationUnitDoesNotExist,
+    FixAnimationBoneDoesNotExist,
+}
+error_boilerplate!(CalculateAnimationError);
 
-    fn get_mut(&mut self, index: AggregateModelIndex) -> Option<&mut AggregateUnit<T, M>> {
-        if index.0 == AggregateModelIndex::ROOT_MODEL_INDEX.0 {
-            Some(&mut self.base)
-        } else {
-            self.children
-                .get_mut(index.0 - 1)
-                .and_then(|opt| opt.as_mut())
-        }
-    }
-
-    fn iter_units(&self) -> impl Iterator<Item = &AggregateUnit<T, M>> {
-        iter::once(&self.base).chain(self.children.iter().flatten())
-    }
-
-    pub(crate) fn draw<
-        'a,
-        NEVER,
-        const MAX: usize,
-        const OUT: usize,
-        F: FramebufferWithDepth<OUT>,
-    >(
+impl<T, M: EntityInner> AggregateEntity<T, M>
+where
+    M::Vertex: CubicVertex,
+{
+    pub fn calculate_animation<'a>(
         &'a self,
-        active_sp: &mut ActiveShaderProgram<'_, '_, 'a, M, ListLights<MAX>, F::Tex, OUT>,
-        active_fb: &mut ActiveFramebuffer<'_, '_, OUT, F>,
-        animations: Vec<Option<(&SkeletalAnimation, f32)>>,
-        fix_anim: Option<&(AggregateModelIndex, SkeletonBoneIndex, Pose)>,
-    ) -> EngResult<(), NEVER> {
-        let mut animations = animations.into_iter().chain(iter::repeat(None));
-        let first_animation = animations.next().flatten();
+        fix_anim: Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,
+        animations: &HashMap<AggregateModelIndex, (&'a SkeletalAnimation, f32)>,
+    ) -> Result<Vec<CalculatedAnimation>, CalculateAnimationError> {
+        let indices = (1..).map(AggregateModelIndex);
+        let first_animation = animations
+            .get(&AggregateModelIndex::ROOT_MODEL_INDEX)
+            .copied();
 
         let mut anim_builder = CalculatedAnimation::builder(
-            self.base.offset,
-            self.base.model.skeleton(),
+            self.base_pose,
+            self.base_model.skeleton(),
             first_animation,
-        )?;
+        )
+        .map_err(|error| CalculateAnimationError::BadAnimationInput {
+            error,
+            parent: AggregateModelIndex::ROOT_MODEL_INDEX,
+        })?;
+
+        let mut parent_locations = HashMap::from([(
+            AggregateModelIndex::ROOT_MODEL_INDEX,
+            CalcAnimUnitIndex::ROOT_UNIT_INDEX,
+        )]);
+
         for (
             AggregateUnit {
                 model,
                 offset,
                 skeleton_attachment_point: attachment_point,
-                parent_unit,
+                parent_unit: parent_model_unit,
                 ..
             },
-            animation,
-        ) in self.children.iter().flatten().zip(animations)
+            index,
+        ) in self
+            .children
+            .iter()
+            .zip(indices)
+            .filter_map(|(opt, index)| opt.as_ref().map(|unit| (unit, index)))
         {
-            anim_builder.push(
-                *parent_unit,
-                *attachment_point,
-                *offset,
-                model.skeleton(),
-                animation,
-            )?;
+            let animation = animations.get(&index).copied();
+            let parent_unit_index = parent_locations
+                .get(parent_model_unit)
+                .expect("parent comes before child in `self.children`");
+            let destination = anim_builder
+                .push(
+                    *parent_unit_index,
+                    *attachment_point,
+                    *offset,
+                    model.skeleton(),
+                    animation,
+                )
+                .map_err(|error| match error {
+                    PushAnimationError::SignaturesDoNotMatch(error) => {
+                        CalculateAnimationError::BadAnimationInput {
+                            error,
+                            parent: *parent_model_unit,
+                        }
+                    }
+                    _ => unreachable!("should be well formed animation tree"),
+                })?;
+            parent_locations.insert(index, destination);
         }
 
-        let anim = if let Some(&(unit_index, bone_index, pose)) = fix_anim {
-            anim_builder.build_fixing_bone(unit_index, bone_index, pose)?
+        let anim = if let Some((unit_index, bone_index, pose)) = fix_anim {
+            let unit_index = *parent_locations
+                .get(&unit_index)
+                .ok_or(CalculateAnimationError::FixAnimationUnitDoesNotExist)?;
+            anim_builder
+                .build_fixing_bone(unit_index, bone_index, pose)
+                .map_err(|error| match error {
+                    BuildFixingBoneError::BoneDoesNotExist => {
+                        CalculateAnimationError::FixAnimationBoneDoesNotExist
+                    }
+                    BuildFixingBoneError::UnitDoesNotExist => {
+                        unreachable!("checked above when getting CalcAnimUnitIndex")
+                    }
+                })?
         } else {
             anim_builder.build()
         };
 
-        for (model, calc) in iter::once(&self.base)
-            .chain(self.children.iter().flatten())
-            .map(|AggregateUnit { model, .. }| model)
-            .zip(anim)
+        Ok(anim)
+    }
+}
+
+pub enum DrawError<'a, M: EntityInner + 'a>
+where
+    M::Vertex: CubicVertex,
+{
+    ModelDraw(M::DrawError<'a>),
+}
+
+impl<'a, M: EntityInner + 'a> Debug for DrawError<'a, M>
+where
+    M::Vertex: CubicVertex,
+    M::DrawError<'a>: Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            DrawError::ModelDraw(err) => Debug::fmt(err, f),
+        }
+    }
+}
+
+impl<'a, M: EntityInner + 'a> Display for DrawError<'a, M>
+where
+    M::Vertex: CubicVertex,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Debug::fmt(&self, f)
+    }
+}
+
+impl<'a, M: EntityInner + 'a> std::error::Error for DrawError<'a, M> where M::Vertex: CubicVertex {}
+
+impl<T, M: EntityInner> AggregateEntity<T, M>
+where
+    M::Vertex: CubicVertex,
+{
+    pub(crate) fn draw<'a, 'b, const MAX: usize, const OUT: usize, F: FramebufferWithDepth<OUT>>(
+        &'a self,
+        active_sp: &mut ActiveShaderProgram<'b, '_, 'a, M, ListLights<MAX>, F::Tex, OUT>,
+        active_fb: &mut ActiveFramebuffer<'_, '_, OUT, F>,
+        calculated_animation: Vec<CalculatedAnimation>,
+    ) -> Result<(), DrawError<'b, M>> {
+        for (model, calc) in iter::once(&self.base_model)
+            .chain(
+                self.children
+                    .iter()
+                    .filter_map(|unit| unit.as_ref().map(|unit| &unit.model)),
+            )
+            .zip(calculated_animation)
         {
-            model.draw(active_sp, active_fb, &calc)?;
+            model
+                .draw(active_sp, active_fb, &calc)
+                .map_err(|err| DrawError::<M>::ModelDraw(err))?;
         }
 
         Ok(())
@@ -250,7 +367,7 @@ impl<T> AggregateEntity<T, SimpleCubic> {
         offset: Pose,
         parent_unit: AggregateModelIndex,
         skeketon_attachment: SkeletonBoneIndex,
-    ) -> Option<AggregateModelIndex> {
+    ) -> Result<AggregateModelIndex, PushModelError> {
         self.check_parent_and_bone(skeketon_attachment, parent_unit)?;
 
         let SkeletonEntity {
@@ -268,7 +385,7 @@ impl<T> AggregateEntity<T, SimpleCubic> {
             children: Vec::new(),
         };
 
-        Some(self.push_aggregate_unit(unit))
+        Ok(self.push_aggregate_unit(unit))
     }
 }
 
@@ -279,7 +396,7 @@ impl<T> AggregateEntity<T, SimpleCubic> {
         offset: Pose,
         parent_unit: AggregateModelIndex,
         skeleton_attachment: SkeletonBoneIndex,
-    ) -> Option<AggregateModelIndex> {
+    ) -> Result<AggregateModelIndex, PushModelError> {
         self.check_parent_and_bone(skeleton_attachment, parent_unit)?;
 
         let SimpleEntity {
@@ -298,9 +415,10 @@ impl<T> AggregateEntity<T, SimpleCubic> {
             children: Vec::new(),
         };
 
-        Some(self.push_aggregate_unit(unit))
+        Ok(self.push_aggregate_unit(unit))
     }
 }
+
 impl<T> AggregateEntity<T, SkeletonCubic> {
     pub fn push_skinning_entity(
         &mut self,
@@ -308,7 +426,7 @@ impl<T> AggregateEntity<T, SkeletonCubic> {
         offset: Pose,
         parent_unit: AggregateModelIndex,
         skeleton_attachment: SkeletonBoneIndex,
-    ) -> Option<AggregateModelIndex> {
+    ) -> Result<AggregateModelIndex, PushModelError> {
         self.check_parent_and_bone(skeleton_attachment, parent_unit)?;
 
         let SkinningEntity {
@@ -326,6 +444,6 @@ impl<T> AggregateEntity<T, SkeletonCubic> {
             children: Vec::new(),
         };
 
-        Some(self.push_aggregate_unit(unit))
+        Ok(self.push_aggregate_unit(unit))
     }
 }

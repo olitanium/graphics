@@ -1,21 +1,26 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::ffi::CString;
+use std::ffi::{CString, NulError};
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
-pub use super::Error;
 use crate::texture::Texture;
 use crate::types::{ShaderProgramId, UniformLocation};
 use crate::vertex::Vertex;
-use crate::{ApiResult, Draw, Model, gl_call};
+use crate::{Draw, Model, gl_call};
 
 mod active_shader;
 mod utils;
-pub use active_shader::{ActiveShaderProgram, IsActiveShaderProgram};
+pub use active_shader::{
+    ActiveShaderProgram,
+    BindTexturesError,
+    IsActiveShaderProgram,
+    SetUniformError,
+    ValidateError,
+};
 
 mod context;
-pub use context::ShaderProgramContext;
+pub use context::{FaceCullingForcedByProgramError, ShaderProgramContext};
 
 mod builder;
 pub use builder::Builder;
@@ -24,6 +29,7 @@ mod uniform;
 pub use uniform::{NameNotFoundError, Uniform};
 
 mod cull_face;
+use ::utils::error_boilerplate;
 pub use cull_face::CullFace;
 
 pub struct ShaderProgram<M: Model, O, const OUT: usize, T: Texture> {
@@ -68,14 +74,24 @@ impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
 
         ActiveShaderProgram::new(self, marker)
     }
+}
 
-    pub(crate) fn get_uniform_location<NEVER>(
+#[derive(Debug)]
+pub enum GetUniformLocationError<'a> {
+    NameNul(NulError),
+    NotFound {
+        c_name: CString,
+        shader_source: &'a str,
+    },
+}
+error_boilerplate!(<'a> GetUniformLocationError<'a>);
+
+impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
+    pub(crate) fn get_uniform_location(
         &self,
         name: String,
-    ) -> ApiResult<UniformLocation, NEVER> {
-        let c_name = CString::new(name).map_err(|err| Error::UniformNameNulError {
-            name: String::try_from(err.into_vec()).expect("vec came from `String`"),
-        })?;
+    ) -> Result<UniformLocation, GetUniformLocationError<'_>> {
+        let c_name = CString::new(name).map_err(|err| GetUniformLocationError::NameNul(err))?;
 
         let out = *self
             .uniform_locations
@@ -88,11 +104,10 @@ impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
         if out != -1 {
             Ok(UniformLocation::new(out))
         } else {
-            Err(Error::UniformNotFound {
-                shader_source: self.concat_all_text.clone(),
-                name: c_name,
-            }
-            .into())
+            Err(GetUniformLocationError::NotFound {
+                c_name,
+                shader_source: &self.concat_all_text,
+            })
         }
     }
 }

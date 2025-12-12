@@ -52,7 +52,7 @@ pub fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
 ) -> Option<SkeletonBb<SimpleVertex, T>> {
     let per_mesh = partition(cubic.triangles(), |(bone, _)| vec![bone.0], |(_, tri)| tri);
 
-    SkeletonBb::from_vec_triangle(per_mesh, depth, cubic.skeleton.clone(), init)
+    SkeletonBb::from_vec_triangle(per_mesh, depth, init)
 }
 
 impl<T> SkeletonEntity<T> {

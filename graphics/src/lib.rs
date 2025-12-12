@@ -10,9 +10,10 @@
 #![feature(never_type)]
 #![feature(option_array_transpose)]
 #![feature(generic_const_items)]
+#![feature(try_trait_v2)]
+#![feature(unwrap_infallible)]
 
 mod environment;
-pub mod error;
 pub mod shader_program;
 pub mod texture;
 pub mod types;
@@ -25,8 +26,7 @@ pub mod vertex_array;
 pub mod vertex_buffer;
 
 pub(crate) use environment::PrivateToken;
-pub use environment::{ApiState, Draw, DrawNothing, DrawOut, Environment, Event, Key};
-pub use error::{ApiError, ApiResult};
+pub use environment::{ApiState, Draw, DrawNothing, DrawOut, Environment, Event, Key, PollResult};
 pub use model::Model;
 pub use shader_program::{ActiveShaderProgram, ShaderProgram, ShaderProgramContext};
 pub use {colour, linear_algebra};

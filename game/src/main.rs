@@ -3,9 +3,10 @@
 #![expect(incomplete_features)]
 #![feature(generic_const_exprs)]
 #![feature(array_windows)]
+#![feature(try_trait_v2)]
+#![feature(try_trait_v2_residual)]
 
-use engine::eng_state::EngState;
-use engine::{EngResult, Environment};
+use engine::Environment;
 
 mod controls;
 mod new;
@@ -13,8 +14,9 @@ mod physics;
 mod prep_draw;
 mod state;
 
-fn main() -> EngResult<(), <state::State as EngState>::Error> {
-    Environment::<state::State>::new((4, 5), (2000, 1000), "Window", true)?.run()?;
-
-    Ok(())
+fn main() {
+    Environment::<state::State>::new((4, 5), (2000, 1000), "Window", true)
+        .unwrap()
+        .run()
+        .unwrap();
 }

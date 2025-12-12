@@ -2,13 +2,14 @@ use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::linear_algebra::Matrix;
 use graphics::shader_program::Uniform;
 use graphics::texture::FlatTexture;
-use graphics::{ApiResult, Draw, DrawOut};
+use graphics::{Draw, DrawOut};
 
 use crate::modelling::TestLineVertex;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::line::Line;
-use crate::{EngError, EngResult, opengl_shaders};
+use crate::modelling::line::model::DrawError;
+use crate::opengl_shaders;
 
 pub struct Group<'a, U, const OUT: usize, F: FramebufferWithoutExtra<OUT>> {
     destination: &'a F,
@@ -31,20 +32,24 @@ impl<'a, U: Uniform, const OUT: usize, F: FramebufferWithoutExtra<OUT>> Group<'a
     }
 }
 
-impl<'a, NEVER, F: FramebufferWithoutExtra<1, Tex = FlatTexture>> Draw<EngError<NEVER>>
+impl<'a, F: FramebufferWithoutExtra<1, Tex = FlatTexture>> Draw
     for Group<'a, TestLineVertex, 1, F>
 {
     fn draw(
         self: Box<Self>,
         fb_context: &mut graphics::framebuffer::FramebufferContext,
         shader_context: &mut graphics::ShaderProgramContext,
-    ) -> ApiResult<DrawOut, EngError<NEVER>> {
+    ) -> DrawOut {
         let mut active_framebuffer = self.destination.bind(fb_context);
         let mut active_shader = opengl_shaders::line_test().use_program(shader_context);
 
-        active_shader.set_uniform("projtimesview".to_string(), &self.look_at)?;
+        active_shader
+            .set_uniform("projtimesview".to_string(), &self.look_at)
+            .unwrap();
 
-        let _: EngResult<(), !> = self.line.draw(&mut active_shader, &mut active_framebuffer);
+        self.line
+            .draw(&mut active_shader, &mut active_framebuffer)
+            .unwrap();
 
         DrawOut::OK
     }

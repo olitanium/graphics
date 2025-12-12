@@ -3,19 +3,18 @@ use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Matrix;
 use graphics::texture::FlatTexture;
-use graphics::{ApiResult, Draw, DrawOut, ShaderProgramContext};
+use graphics::{Draw, DrawOut, ShaderProgramContext};
 
 use crate::modelling::bounding_box::BoundingBoxShaderProgram;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
-use crate::modelling::{
-    BoundingBoxElement,
-    CubicVertex,
-    Skeleton,
-    SkeletonBb,
+use crate::modelling::cubic::geometry::{
+    CalculatedAnimation,
+    Pose,
+    SignaturesDoNotMatchError,
+    SkeletalAnimation,
 };
-use crate::{EngError, EngResult};
+use crate::modelling::{BoundingBoxElement, CubicVertex, Skeleton, SkeletonBb};
 
 pub struct Group<
     'a,
@@ -28,6 +27,7 @@ pub struct Group<
     framebuffer: &'a D,
     bounding_box: &'a SkeletonBb<V, T>,
     calculated_animation: CalculatedAnimation,
+    skeleton: &'a Skeleton,
     look_at: Matrix<4, 4>,
     level: usize,
     colour: F,
@@ -46,15 +46,15 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
         hint: &P::Hint,
         level: usize,
         colour: F,
-    ) -> EngResult<Box<Self>, NEVER> {
+    ) -> Result<Box<Self>, SignaturesDoNotMatchError> {
         let look_at = camera.look_at(hint);
-        let calculated_animation = CalculatedAnimation::builder(pose, skeleton, animation)?
-            .build()
-            .swap_remove(0); //Take 0 because there are no aggregate groups
+        let calculated_animation = CalculatedAnimation::once(pose, skeleton, animation)?;
+
         Ok(Box::new(Self {
             framebuffer,
             bounding_box,
             calculated_animation,
+            skeleton,
             look_at,
             level,
             colour,
@@ -62,32 +62,31 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
     }
 }
 
-impl<
-    'a,
-    NEVER,
-    D: FramebufferWithDepth<1, Tex = FlatTexture>,
-    V: CubicVertex,
-    T,
-    F: Fn(&T) -> ColourRGBA,
-> Draw<EngError<NEVER>> for Group<'a, 1, D, V, T, F>
+impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn(&T) -> ColourRGBA>
+    Draw for Group<'a, 1, D, V, T, F>
 {
     fn draw(
         self: Box<Self>,
         register: &mut FramebufferContext,
         marker: &mut ShaderProgramContext,
-    ) -> ApiResult<DrawOut, EngError<NEVER>> {
+    ) -> DrawOut {
         let mut active_framebuffer = self.framebuffer.bind(register);
         let mut active_shader = BoundingBoxElement::<V, 3, T>::shader_program().use_program(marker);
 
-        active_shader.set_uniform("projtimesview", &self.look_at)?;
+        active_shader
+            .set_uniform("projtimesview", &self.look_at)
+            .unwrap();
 
-        self.bounding_box.draw(
-            self.level,
-            &mut active_shader,
-            &mut active_framebuffer,
-            self.calculated_animation,
-            self.colour,
-        )?;
+        self.bounding_box
+            .draw(
+                self.level,
+                &mut active_shader,
+                &mut active_framebuffer,
+                self.skeleton,
+                self.calculated_animation,
+                self.colour,
+            )
+            .expect("calculated animation was created from given skeleton");
 
         DrawOut::OK
     }

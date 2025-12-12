@@ -1,16 +1,20 @@
 use std::collections::HashMap;
+use std::collections::btree_map::Values;
 use std::ffi::CString;
 use std::fmt::Debug;
 use std::sync::LazyLock;
 use std::{iter, ptr};
 
+use utils::error_boilerplate;
+
 use super::uniform::Uniform;
-use super::{CullFace, Error, ShaderProgram, ShaderProgramContext};
-use crate::error::ApiResult;
+use super::{CullFace, ShaderProgram, ShaderProgramContext};
+use crate::shader_program::program::GetUniformLocationError;
+use crate::shader_program::program::context::FaceCullingForcedByProgramError;
 use crate::texture::{self, Texture};
 use crate::types::{self, UniformLocation};
 use crate::vertex::Vertex;
-use crate::{ApiError, Model, gl_call};
+use crate::{Model, gl_call};
 
 pub struct ActiveShaderProgram<'a, 'b, 'c, M: Model, O, T: Texture, const OUT: usize> {
     shader_program: &'a ShaderProgram<M, O, OUT, T>,
@@ -65,8 +69,16 @@ impl<'c, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 
             self.texture_list.insert(string, texture);
         }
     }
+}
 
-    pub fn validate<NEVER>(&self) -> ApiResult<(), NEVER> {
+#[derive(Debug)]
+pub struct ValidateError {
+    pub message: CString,
+}
+error_boilerplate!(ValidateError);
+
+impl<'c, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, O, T, OUT> {
+    pub fn validate(&self) -> Result<(), ValidateError> {
         gl_call! { gl::ValidateProgram(self.shader_program.id.as_primitive()); }
 
         let mut error = 0;
@@ -86,11 +98,53 @@ impl<'c, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 
                 CString::from_vec_with_nul(error_message.into_iter().map(|x| x as u8).collect())
                     .unwrap_or_else(|_| c"no useful message".into());
 
-            Err(Error::Validate { message }.into())
+            Err(ValidateError { message })
         }
     }
+}
 
-    pub(crate) fn bind_textures<NEVER>(&mut self) -> ApiResult<(), NEVER> {
+#[derive(Debug)]
+pub enum SetUniformError<'a> {
+    GetLocation(GetUniformLocationError<'a>),
+}
+error_boilerplate!(<'a> SetUniformError<'a>);
+
+impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, '_, M, O, T, OUT> {
+    pub fn set_uniform<U: Uniform + ?Sized, S: Into<String>>(
+        &mut self,
+        name: S,
+        value: &U,
+    ) -> Result<(), SetUniformError<'a>> {
+        value.set_uniform(name.into(), self)
+    }
+
+    pub fn set_uniform_dyn(
+        &mut self,
+        values: Vec<(String, &dyn Uniform)>,
+    ) -> Result<(), SetUniformError<'a>> {
+        for (name, value) in values {
+            value.set_uniform(name, self)?;
+        }
+        Ok(())
+    }
+
+    pub fn get_uniform_location(
+        &self,
+        name: String,
+    ) -> Result<UniformLocation, GetUniformLocationError<'_>> {
+        self.shader_program.get_uniform_location(name)
+    }
+}
+
+#[derive(Debug)]
+pub enum BindTexturesError<'a> {
+    BindTooHigh { maximum: usize },
+    SetUniform(SetUniformError<'a>),
+}
+error_boilerplate!(<'a> BindTexturesError<'a>);
+
+impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, '_, M, O, T, OUT> {
+    pub(crate) fn bind_textures(&mut self) -> Result<(), BindTexturesError<'a>> {
         static MAX_TEX_UNITS: LazyLock<usize> = LazyLock::new(|| {
             let mut out = 0;
             gl_call! {
@@ -103,45 +157,22 @@ impl<'c, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 
             for (index, (name, tex)) in self.texture_list.clone().into_iter().enumerate() {
                 tex.bind_to(index as u32);
                 self.set_uniform(name, &(index as i32))
-                    .map_err(ApiError::to_any)?;
+                    .map_err(|err| BindTexturesError::SetUniform(err))?;
             }
             Ok(())
         } else {
-            Err(texture::Error::BindTooHigh {
+            Err(BindTexturesError::BindTooHigh {
                 maximum: *MAX_TEX_UNITS,
-                requested: self.texture_list.len(),
-            }
-            .into())
+            })
         }
     }
+}
 
-    pub fn set_uniform<NEVER, U: Uniform + ?Sized, S: Into<String>>(
+impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, '_, M, O, T, OUT> {
+    pub fn cull_face(
         &mut self,
-        name: S,
-        value: &U,
-    ) -> ApiResult<(), NEVER> {
-        value
-            .set_uniform(name.into(), self)
-            .map_err(ApiError::to_any)
-    }
-
-    pub fn set_uniform_dyn<NEVER>(
-        &mut self,
-        values: Vec<(String, &dyn Uniform)>,
-    ) -> ApiResult<(), NEVER> {
-        for (name, value) in values {
-            value.set_uniform(name, self).map_err(ApiError::to_any)?;
-        }
-        Ok(())
-    }
-
-    pub fn get_uniform_location<NEVER>(&self, name: String) -> ApiResult<UniformLocation, NEVER> {
-        self.shader_program
-            .get_uniform_location(name)
-            .map_err(ApiError::to_any)
-    }
-
-    pub fn cull_face<NEVER>(&mut self, cull_face: CullFace) -> ApiResult<(), NEVER> {
+        cull_face: CullFace,
+    ) -> Result<(), FaceCullingForcedByProgramError> {
         self.context.cull_face(cull_face)
     }
 
@@ -151,14 +182,20 @@ impl<'c, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 
     }
 }
 
-pub trait IsActiveShaderProgram {
-    fn get_uniform_location(&self, name: String) -> ApiResult<UniformLocation, !>;
+pub trait IsActiveShaderProgram<'a> {
+    fn get_uniform_location(
+        &self,
+        name: String,
+    ) -> Result<UniformLocation, GetUniformLocationError<'a>>;
 }
 
-impl<'a, 'b, 'c, M: Model, O, T: Texture, const OUT: usize> IsActiveShaderProgram
+impl<'a, 'b, 'c, M: Model, O, T: Texture, const OUT: usize> IsActiveShaderProgram<'a>
     for ActiveShaderProgram<'a, 'b, 'c, M, O, T, OUT>
 {
-    fn get_uniform_location(&self, name: String) -> ApiResult<UniformLocation, !> {
+    fn get_uniform_location(
+        &self,
+        name: String,
+    ) -> Result<UniformLocation, GetUniformLocationError<'a>> {
         self.shader_program.get_uniform_location(name)
     }
 }

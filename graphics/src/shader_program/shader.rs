@@ -1,8 +1,8 @@
-use std::fs;
 use std::path::Path;
+use std::{fs, io};
 
-use super::error::Error;
-use crate::error::ApiResult;
+use utils::error_boilerplate;
+
 use crate::gl_call;
 use crate::types::{GLenum, ShaderId};
 
@@ -12,31 +12,48 @@ pub struct Shader {
     pub(crate) source: String,
 }
 
+#[derive(Debug)]
+pub enum NewShaderError {
+    Io(io::Error),
+    NewFromSlice(NewFromSliceError),
+}
+error_boilerplate!(NewShaderError);
+
 impl Shader {
-    pub fn new<NEVER, P: AsRef<Path>>(shader_type: GLenum, source: P) -> ApiResult<Self, NEVER> {
+    pub fn new<P: AsRef<Path>>(shader_type: GLenum, source: P) -> Result<Self, NewShaderError> {
         let source = source.as_ref();
 
-        let shader_source = fs::read_to_string(source).map_err(|_| Error::NoSourceFile {
-            path: source.into(),
-        })?;
+        let shader_source = fs::read_to_string(source).map_err(|err| NewShaderError::Io(err))?;
 
         Self::new_from_slice(shader_type, shader_source.as_bytes())
+            .map_err(|err| NewShaderError::NewFromSlice(err))
     }
+}
 
-    pub(crate) fn new_from_slice<NEVER>(
+#[derive(Debug)]
+pub enum NewFromSliceError {
+    SourceTooLong,
+    CompileError,
+}
+error_boilerplate!(NewFromSliceError);
+
+impl Shader {
+    pub(crate) fn new_from_slice(
         shader_type: GLenum,
         cstr: &[u8],
-    ) -> ApiResult<Self, NEVER> {
+    ) -> Result<Self, NewFromSliceError> {
         let shader_id = ShaderId::new(gl_call! { gl::CreateShader(shader_type) });
 
-        let len = [cstr.len().try_into().map_err(|_| Error::SourceTooLong {
-            source: String::from_utf8_lossy(cstr).into_owned(),
-            len: cstr.len(),
-        })?];
-        let arr_cstr = [cstr.as_ptr().cast()];
+        let len = cstr
+            .len()
+            .try_into()
+            .map_err(|_| NewFromSliceError::SourceTooLong)?;
+
+        let ptr_len = &raw const len;
+        let ptr_cstr = cstr.as_ptr().cast();
 
         gl_call! {
-            gl::ShaderSource(shader_id.as_primitive(), 1, arr_cstr.as_ptr(), len.as_ptr());
+            gl::ShaderSource(shader_id.as_primitive(), 1, &raw const ptr_cstr, ptr_len);
         }
         gl_call! {
             gl::CompileShader(shader_id.as_primitive());
@@ -52,14 +69,13 @@ impl Shader {
         }
 
         if is_success != gl::TRUE.into() {
-            Err(Error::CompileError {
-                source: String::from_utf8_lossy(cstr).into_owned(),
-            }
-            .into())
+            // TODO: find error reasons
+            Err(NewFromSliceError::CompileError)
         } else {
+            let source = String::from_utf8_lossy_owned(cstr.to_vec());
             Ok(Self {
                 id: shader_id,
-                source: String::from_utf8_lossy_owned(cstr.to_vec()),
+                source,
             })
         }
     }

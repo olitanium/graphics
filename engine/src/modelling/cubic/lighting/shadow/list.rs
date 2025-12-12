@@ -3,14 +3,22 @@ use graphics::Model;
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::linear_algebra::Vector;
-use graphics::shader_program::{ActiveShaderProgram, ShaderProgramContext, Uniform};
+use graphics::shader_program::{
+    ActiveShaderProgram,
+    SetUniformError,
+    ShaderProgramContext,
+    Uniform,
+};
 use graphics::texture::Texture;
+use utils::error_boilerplate;
 
 use super::{ShadowFarLight, ShadowPointLight, ShadowSpotLight};
 use crate::modelling::cubic::geometry::CalculatedAnimation;
+use crate::modelling::cubic::lighting::shadow::ShadowBindError;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
+use crate::modelling::cubic::simple_cubic;
 use crate::modelling::{SimpleCubic, VertexHasTangent};
-use crate::{EngResult, opengl_shaders};
+use crate::opengl_shaders;
 
 #[derive(Debug, Default)]
 pub struct ShadowListLights<const MAX: usize> {
@@ -19,15 +27,31 @@ pub struct ShadowListLights<const MAX: usize> {
     pub point: ArrayVec<ShadowPointLight, MAX>,
 }
 
+#[derive(Debug)]
+pub enum GenDepthError<'a> {
+    Model {
+        error: simple_cubic::DrawError<'static>,
+        model: &'a SimpleCubic,
+    },
+    SetUniform(SetUniformError<'static>),
+}
+error_boilerplate!(<'a> GenDepthError<'a>);
+
+impl From<SetUniformError<'static>> for GenDepthError<'_> {
+    fn from(value: SetUniformError<'static>) -> Self {
+        Self::SetUniform(value)
+    }
+}
+
 impl<const MAX: usize> ShadowListLights<MAX> {
-    pub(crate) fn gen_depth<NEVER>(
+    pub(crate) fn gen_depth<'a>(
         &self,
         sp_context: &mut ShaderProgramContext,
         fb_context: &mut FramebufferContext,
-        complete_models: &[(&SimpleCubic, CalculatedAnimation)],
+        complete_models: &[(&'a SimpleCubic, CalculatedAnimation)],
         target_position: Vector<3>,
         uniforms: Vec<(String, &dyn Uniform)>,
-    ) -> EngResult<(), NEVER> {
+    ) -> Result<(), GenDepthError<'a>> {
         let mut active_depth_only_shader =
             opengl_shaders::far_light_depth().use_program(sp_context);
         active_depth_only_shader.set_uniform_dyn(uniforms.clone())?;
@@ -43,11 +67,13 @@ impl<const MAX: usize> ShadowListLights<MAX> {
             let mut active_light_framebuffer = light.framebuffer.bind(fb_context);
 
             for (model, calculated_animation) in complete_models {
-                model.draw(
-                    &mut active_depth_only_shader,
-                    &mut active_light_framebuffer,
-                    calculated_animation,
-                )?;
+                model
+                    .draw(
+                        &mut active_depth_only_shader,
+                        &mut active_light_framebuffer,
+                        calculated_animation,
+                    )
+                    .map_err(|error| GenDepthError::Model { error, model })?;
             }
         }
         drop(active_depth_only_shader);
@@ -65,11 +91,13 @@ impl<const MAX: usize> ShadowListLights<MAX> {
             let mut active_light_framebuffer = light.framebuffer.bind(fb_context);
 
             for (model, calculated_animation) in complete_models {
-                model.draw(
-                    &mut active_depth_only_shader,
-                    &mut active_light_framebuffer,
-                    calculated_animation,
-                )?;
+                model
+                    .draw(
+                        &mut active_depth_only_shader,
+                        &mut active_light_framebuffer,
+                        calculated_animation,
+                    )
+                    .map_err(|error| GenDepthError::Model { error, model })?;
             }
         }
         drop(active_depth_only_shader);
@@ -88,11 +116,13 @@ impl<const MAX: usize> ShadowListLights<MAX> {
             let mut active_light_framebuffer = light.framebuffer.bind(fb_context);
 
             for (model, calculated_animation) in complete_models {
-                model.draw(
-                    &mut active_depth_only_shader_point,
-                    &mut active_light_framebuffer,
-                    calculated_animation,
-                )?;
+                model
+                    .draw(
+                        &mut active_depth_only_shader_point,
+                        &mut active_light_framebuffer,
+                        calculated_animation,
+                    )
+                    .map_err(|error| GenDepthError::Model { error, model })?;
             }
         }
 
@@ -107,16 +137,16 @@ impl<const MAX: usize> ShadowListLights<MAX> {
     /// internal framebuffers is applied
     pub(crate) unsafe fn bind<
         'a,
-        NEVER,
+        'c,
         const N: usize,
         L: ShadowLightCompatible<MAX>,
         T: Texture,
         M: Model,
     >(
-        &'a self,
-        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, M, L, T, N>,
+        &'c self,
+        active_shader: &mut ActiveShaderProgram<'a, '_, 'c, M, L, T, N>,
         target: Vector<3>,
-    ) -> EngResult<(), NEVER>
+    ) -> Result<(), ShadowBindError<'a>>
     where
         M::Vertex: VertexHasTangent,
     {
