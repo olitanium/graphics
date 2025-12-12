@@ -3,8 +3,8 @@ use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::shader_program::{SetUniformError, Uniform};
 use graphics::types::ElementArrayLen;
 use graphics::vertex::NoVertex;
-use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
-use graphics::{ActiveShaderProgram, Draw, Model, vertex_array};
+use graphics::vertex_array::VertexArrayDrawError;
+use graphics::{ActiveShaderProgram, Model, vertex_array};
 use utils::error_boilerplate;
 
 use crate::opengl_shaders::LINE_SHADER_MAX_VERTICES;

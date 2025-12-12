@@ -9,6 +9,7 @@ use russimp::Matrix4x4;
 use russimp::material::{PropertyTypeInfo, TextureType};
 use russimp::node::Node;
 use russimp::scene::{PostProcess, Scene};
+use utils::error_boilerplate;
 
 use super::material::Material;
 use crate::TransformBy;
@@ -18,44 +19,36 @@ use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::cubic::mesh::MeshBuilder;
 use crate::transform::Transform;
 
-mod error {
-    use std::path::PathBuf;
-
-    use utils::error_boilerplate;
-
-    #[derive(Debug, Clone)]
-    pub enum Error {
-        FileInsteadOfDir {
-            path: PathBuf,
-        },
-        PathNotIntoStr {
-            path: PathBuf,
-        },
-        FileCannotBeParsed {
-            path: PathBuf,
-            as_text: String,
-        },
-        NoRootNode {
-            path: PathBuf,
-        },
-        NoTexCoords {
-            dir: PathBuf,
-        },
-        DuplicateProperty {
-            dir: PathBuf,
-        },
-        ShouldNotOccur,
-        ElementArrayOverflow {
-            which: &'static str,
-            index_asked: usize,
-            actual_len: usize,
-        },
-    }
-
-    error_boilerplate!(Error);
+#[derive(Debug, Clone)]
+pub enum ImportError {
+    FileInsteadOfDir {
+        path: PathBuf,
+    },
+    PathNotIntoStr {
+        path: PathBuf,
+    },
+    FileCannotBeParsed {
+        path: PathBuf,
+        as_text: String,
+    },
+    NoRootNode {
+        path: PathBuf,
+    },
+    NoTexCoords {
+        dir: PathBuf,
+    },
+    DuplicateProperty {
+        dir: PathBuf,
+    },
+    ShouldNotOccur,
+    ElementArrayOverflow {
+        which: &'static str,
+        index_asked: usize,
+        actual_len: usize,
+    },
 }
 
-pub use error::Error;
+error_boilerplate!(ImportError);
 
 pub(crate) struct ImportOutput {
     pub meshes: Vec<MeshBuilder>,
@@ -65,22 +58,23 @@ pub(super) fn import<P: AsRef<Path>>(
     path: P,
     post_process: Vec<PostProcess>,
     load_tangent_space: bool,
-) -> Result<ImportOutput, Error> {
+) -> Result<ImportOutput, ImportError> {
     let path = path.as_ref();
 
     let dir = path
         .parent()
-        .ok_or_else(|| Error::FileInsteadOfDir { path: path.into() })?;
+        .ok_or_else(|| ImportError::FileInsteadOfDir { path: path.into() })?;
 
     let file_path = path
         .to_str()
-        .ok_or_else(|| Error::PathNotIntoStr { path: path.into() })?;
+        .ok_or_else(|| ImportError::PathNotIntoStr { path: path.into() })?;
 
-    let scene =
-        Scene::from_file(file_path, post_process).map_err(|error| Error::FileCannotBeParsed {
+    let scene = Scene::from_file(file_path, post_process).map_err(|error| {
+        ImportError::FileCannotBeParsed {
             path: path.into(),
             as_text: error.to_string(),
-        })?;
+        }
+    })?;
 
     let mut bones = HashMap::new();
     let meshes = process_node(
@@ -88,7 +82,7 @@ pub(super) fn import<P: AsRef<Path>>(
         scene
             .root
             .as_ref()
-            .ok_or_else(|| Error::NoRootNode { path: path.into() })?,
+            .ok_or_else(|| ImportError::NoRootNode { path: path.into() })?,
         dir,
         &mut HashMap::new(),
         &mut bones,
@@ -120,7 +114,7 @@ fn process_node(
     _current_bones: &mut HashMap<String, Bone>,
     accum_transform: Pose,
     load_tangent_space: bool,
-) -> Result<Vec<MeshBuilder>, Error> {
+) -> Result<Vec<MeshBuilder>, ImportError> {
     // process current node and recursively process each in node.children.
     let node_transform = assimp_matrix_to_pose(node.transformation);
     let accum_transform = node_transform.transform(&accum_transform);
@@ -140,9 +134,9 @@ fn process_node(
             let textures: Vec<Vector<2>> = mesh
                 .texture_coords
                 .first()
-                .ok_or(Error::ShouldNotOccur)?
+                .ok_or(ImportError::ShouldNotOccur)?
                 .as_ref()
-                .ok_or_else(|| Error::NoTexCoords { dir: dir.into() })?
+                .ok_or_else(|| ImportError::NoTexCoords { dir: dir.into() })?
                 .iter()
                 .map(|vec3d| Vector::new([vec3d.x, vec3d.y]))
                 .collect();
@@ -197,21 +191,21 @@ fn process_node(
                         let triangle_position = *positions
                             .get(index)
                             .ok_or_else(|| positions.len())
-                            .map_err(|actual_len| Error::ElementArrayOverflow {
+                            .map_err(|actual_len| ImportError::ElementArrayOverflow {
                                 which: "position",
                                 index_asked: index,
                                 actual_len,
                             })?;
                         let triangle_texture =
                             *textures.get(index).ok_or_else(|| textures.len()).map_err(
-                                |actual_len| Error::ElementArrayOverflow {
+                                |actual_len| ImportError::ElementArrayOverflow {
                                     which: "texture",
                                     index_asked: index,
                                     actual_len,
                                 },
                             )?;
                         let triangle_normal = is_no_vec_or_element_exists(&opt_normal, index)
-                            .map_err(|actual_len| Error::ElementArrayOverflow {
+                            .map_err(|actual_len| ImportError::ElementArrayOverflow {
                                 which: "normal",
                                 index_asked: index,
                                 actual_len,
@@ -219,7 +213,7 @@ fn process_node(
                             .copied()
                             .flatten();
                         let triangle_tangent = is_no_vec_or_element_exists(&opt_tangent, index)
-                            .map_err(|actual_len| Error::ElementArrayOverflow {
+                            .map_err(|actual_len| ImportError::ElementArrayOverflow {
                                 which: "tangent",
                                 index_asked: index,
                                 actual_len,
@@ -234,7 +228,7 @@ fn process_node(
                             .transform_by(&accum_transform))
                     }) //;
                 })
-                .collect::<Result<Vec<_>, Error>>();
+                .collect::<Result<Vec<_>, ImportError>>();
             let mesh_buffer = mesh_buffer?;
 
             let mat = current_mat
@@ -248,7 +242,7 @@ fn process_node(
 
             Ok(builder)
         })
-        .collect::<Result<Vec<_>, Error>>()?;
+        .collect::<Result<Vec<_>, ImportError>>()?;
 
     let children = node.children.borrow();
     let child_meshes = children
@@ -264,7 +258,7 @@ fn process_node(
                 load_tangent_space,
             )
         })
-        .collect::<Result<Vec<_>, Error>>()?
+        .collect::<Result<Vec<_>, ImportError>>()?
         .into_iter()
         .flatten();
 
@@ -272,6 +266,7 @@ fn process_node(
     Ok(curr_meshes)
 }
 
+#[derive(Debug)]
 pub enum ParseMaterialError {
     NewTexture {
         path: PathBuf,
@@ -281,6 +276,7 @@ pub enum ParseMaterialError {
         key: String,
     },
 }
+error_boilerplate!(ParseMaterialError);
 
 fn parse_material(
     material: &russimp::material::Material,

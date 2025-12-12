@@ -3,7 +3,7 @@ use engine::linear_algebra::Vector;
 use crate::state::State;
 
 impl State {
-    pub fn physics(&mut self, frame_time: f32) {
+    pub fn physics(&mut self, _frame_time: f32) {
         let time = self.time;
 
         let light_pos = Vector::new([

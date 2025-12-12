@@ -4,7 +4,6 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::{Draw, DrawOut};
 
 use super::Quad;
-use crate::modelling::quad::model::DrawError;
 
 #[derive(Debug)]
 pub struct Group<'a, const N: usize, const OUT: usize, O, D: FramebufferWithoutExtra<OUT>> {

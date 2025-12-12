@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::collections::btree_map::Values;
 use std::ffi::CString;
 use std::fmt::Debug;
 use std::sync::LazyLock;
@@ -11,9 +10,8 @@ use super::uniform::Uniform;
 use super::{CullFace, ShaderProgram, ShaderProgramContext};
 use crate::shader_program::program::GetUniformLocationError;
 use crate::shader_program::program::context::FaceCullingForcedByProgramError;
-use crate::texture::{self, Texture};
+use crate::texture::Texture;
 use crate::types::{self, UniformLocation};
-use crate::vertex::Vertex;
 use crate::{Model, gl_call};
 
 pub struct ActiveShaderProgram<'a, 'b, 'c, M: Model, O, T: Texture, const OUT: usize> {

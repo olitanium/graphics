@@ -8,7 +8,6 @@ use crate::modelling::TestLineVertex;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::line::Line;
-use crate::modelling::line::model::DrawError;
 use crate::opengl_shaders;
 
 pub struct Group<'a, U, const OUT: usize, F: FramebufferWithoutExtra<OUT>> {

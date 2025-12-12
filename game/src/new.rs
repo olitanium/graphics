@@ -169,7 +169,7 @@ impl State {
             Material::builder().emission(light_emission).build()
         };
 
-        let light = SimpleCubic::cube(1.0, Rc::new(light_material))
+        let _light = SimpleCubic::cube(1.0, Rc::new(light_material))
             .cull_face(CullFace::BackFace)
             .scale(0.2)
             .build();
@@ -187,14 +187,16 @@ impl State {
             Orientation::new_forward_up(UnitVector::Y, -UnitVector::Z),
             Vector::new([0.0, 0.5, 0.5]),
         );
-        aggregate_tail.push_model(
-            simpletail.clone(),
-            offset,
-            end_attachment_point,
-            AggregateModelIndex::ROOT_MODEL_INDEX,
-            1,
-            |_| (),
-        );
+        aggregate_tail
+            .push_model(
+                simpletail.clone(),
+                offset,
+                end_attachment_point,
+                AggregateModelIndex::ROOT_MODEL_INDEX,
+                1,
+                |_| (),
+            )
+            .unwrap();
 
         let grappling_hook = grappling_hook();
 

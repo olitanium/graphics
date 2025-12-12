@@ -1,6 +1,6 @@
 use std::cell::RefMut;
 use std::collections::HashSet;
-use std::fmt::{Debug, Pointer};
+use std::fmt::Debug;
 
 mod draw;
 mod global_state;

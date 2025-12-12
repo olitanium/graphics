@@ -2,13 +2,13 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use std::{array, mem};
 
+use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::linear_algebra::Vector;
 use graphics::shader_program::{ActiveShaderProgram, CullFace};
 use graphics::texture::{FlatTexture, Texture};
 use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
-use graphics::{Draw, Model};
 use utils::{RefOwned, error_boilerplate};
 
 use super::{Builder, QuadVertex};

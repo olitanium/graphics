@@ -4,7 +4,7 @@ use std::{convert, iter};
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::shader_program::CullFace;
-use graphics::{ActiveShaderProgram, Draw, Model};
+use graphics::{ActiveShaderProgram, Model};
 use utils::{error_boilerplate, partition};
 
 use crate::entity::EntityInner;

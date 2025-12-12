@@ -1,9 +1,7 @@
 use std::collections::HashSet;
-use std::error::Error;
 use std::rc::Rc;
-use std::task::Poll;
 
-use engine::entity::{AggregateEntity, AggregateModelIndex};
+use engine::entity::AggregateEntity;
 use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
@@ -12,18 +10,10 @@ use engine::modelling::cubic::geometry::SkeletalAnimation;
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{Camera, SkeletonBoneIndex, SkeletonCubic};
-use engine::modelling::{
-    Bloom,
-    Line,
-    Quad,
-    SHADOW_SHADER_MAX_LIGHTS,
-    SimpleCubic,
-    SkyBox,
-    TestLineVertex,
-};
+use engine::modelling::cubic::{Camera, SkeletonCubic};
+use engine::modelling::{Bloom, Line, Quad, SHADOW_SHADER_MAX_LIGHTS, SkyBox, TestLineVertex};
 use engine::types::TexDim;
-use engine::{ApiState, ColourRGBA, Event, PollResult, SimpleEntity, VecDraw};
+use engine::{ApiState, ColourRGBA, Event, PollResult, SimpleEntity};
 
 use crate::controls::ControlOutput;
 use crate::new::GrapplingHook;
@@ -82,7 +72,7 @@ impl ApiState for State {
         &'a mut self,
         events: Vec<Event<'a>>,
         // default_framebuffer: &'a DefaultFramebuffer,
-    ) -> PollResult<Self::Error> {
+    ) -> PollResult<'a, Self::Error> {
         let mut frame_time = 0.0;
         let mut keyboard = HashSet::new();
         let mut mouse_delta = (0.0, 0.0);

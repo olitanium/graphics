@@ -1,8 +1,7 @@
 use array_vec::ArrayVec;
 use graphics::Model;
-use graphics::shader_program::{ActiveShaderProgram, SetUniformError};
+use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::Texture;
-use utils::error_boilerplate;
 
 use super::super::shadow::ShadowListLights;
 use super::super::traits::ListLightCompatible;

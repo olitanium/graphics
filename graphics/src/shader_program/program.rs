@@ -6,8 +6,7 @@ use std::marker::PhantomData;
 
 use crate::texture::Texture;
 use crate::types::{ShaderProgramId, UniformLocation};
-use crate::vertex::Vertex;
-use crate::{Draw, Model, gl_call};
+use crate::{Model, gl_call};
 
 mod active_shader;
 mod utils;

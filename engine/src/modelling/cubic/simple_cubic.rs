@@ -6,12 +6,7 @@ use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Matrix;
-use graphics::shader_program::{
-    ActiveShaderProgram,
-    CullFace,
-    FaceCullingForcedByProgramError,
-    SetUniformError,
-};
+use graphics::shader_program::{ActiveShaderProgram, CullFace, SetUniformError};
 use russimp::scene::PostProcess;
 use utils::{error_boilerplate, partition};
 
@@ -19,8 +14,8 @@ use super::material::Material;
 use super::{Mesh, Skeleton, import};
 use crate::entity::EntityInner;
 use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
+use crate::modelling::cubic::mesh;
 use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
-use crate::modelling::cubic::{MeshDrawError, mesh};
 use crate::modelling::{SimpleVertex, SkeletonBb, test_models};
 
 mod group;
@@ -89,7 +84,7 @@ impl SimpleCubic {
         path: P,
         post_process: Vec<PostProcess>,
         load_tangent_space: bool,
-    ) -> Result<Builder, import::Error> {
+    ) -> Result<Builder, import::ImportError> {
         let import_output = import::import(path, post_process, load_tangent_space)?;
 
         let mut out = Self::builder();

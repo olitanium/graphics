@@ -4,7 +4,7 @@ mod spot_light;
 use graphics::shader_program::SetUniformError;
 pub use spot_light::ShadowSpotLight;
 mod list;
-pub use list::ShadowListLights;
+pub use list::{GenDepthError, ShadowListLights};
 mod point_light;
 pub use point_light::ShadowPointLight;
 use utils::error_boilerplate;

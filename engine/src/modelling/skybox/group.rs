@@ -7,7 +7,6 @@ use graphics::{Draw, DrawOut};
 use super::SkyBox;
 use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::skybox::model::DrawError;
 
 #[derive(Debug)]
 pub struct Group<'a, const OUT: usize, O, D: FramebufferWithDepth<OUT>> {

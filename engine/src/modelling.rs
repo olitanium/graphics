@@ -10,12 +10,12 @@ pub use cubic::{
     SkeletonBuilder,
 };
 mod line;
-pub use line::{Line, LineGroup, TestLineVertex};
+pub use line::{DrawError as LineDrawError, Line, LineGroup, TestLineVertex};
 
 mod quad;
-pub use quad::{Quad, QuadGroup, QuadVertex};
+pub use quad::{DrawError as QuadDrawError, Quad, QuadGroup, QuadVertex};
 mod skybox;
-pub use skybox::{SkyBox, SkyBoxGroup, SkyBoxVertex};
+pub use skybox::{DrawError as SkyBoxDrawError, SkyBox, SkyBoxGroup, SkyBoxVertex};
 mod bloom;
 pub use bloom::{Bloom, BloomGroup};
 mod simple_vertex;

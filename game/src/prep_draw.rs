@@ -13,7 +13,7 @@ impl State {
     pub fn draw<'a>(
         &'a mut self,
         default_framebuffer: &'a DefaultFramebuffer,
-    ) -> PollResult<StateError> {
+    ) -> PollResult<'a, StateError> {
         let time = self.time;
 
         let mut out = VecDraw::new();
