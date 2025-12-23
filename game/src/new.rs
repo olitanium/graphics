@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::num::NonZero;
 use std::rc::Rc;
 
@@ -7,7 +8,7 @@ use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::camera::ManualPose;
-use engine::modelling::cubic::geometry::{BoneAnimation, Orientation, Pose, SkeletalAnimation};
+use engine::modelling::cubic::geometry::{AggregateCalcAnim, BoneAnimation, Orientation, Pose, SkeletalAnimation};
 use engine::modelling::cubic::lighting::shadow::{
     ShadowListLights,
     ShadowPointLight,
@@ -15,7 +16,7 @@ use engine::modelling::cubic::lighting::shadow::{
 };
 use engine::modelling::cubic::lighting::simple::{ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{SkeletonBoneIndex, SkeletonCubic, camera};
+use engine::modelling::cubic::{SkeletonBoneIndex, SkinningCubic, camera};
 use engine::modelling::{Bloom, Bone, Line, Quad, SimpleCubic, Skeleton, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
@@ -77,19 +78,20 @@ impl State {
         // .collect();
 
         let (_, morgan) = make_model("morgan").unwrap();
-        let morgan = SimpleEntity::from_cubic(morgan, 20, Mass(1.0), |_| ());
+        let mut morgan = SimpleEntity::from_simple_cubic(morgan, 20, Mass(1.0), |_| ());
+        morgan.pose = Pose::new_from_translation(Vector::new([0.0, 0.0, 6.0]));
 
-        let origin_cube = SimpleEntity::from_cubic(
+
+        let origin_cube = SimpleEntity::from_simple_cubic(
             SimpleCubic::cube(1.0, Rc::new(Material::black())).build(),
             20,
             Mass(3.0),
             |_| (),
-        )
-        .unwrap();
+        );
 
         let bounding_box_level = 0;
 
-        const START_LOC: Vector<3> = Vector::new([-2.0, 0.0, -2.0]);
+        const START_LOC: Vector<3> = Vector::new([-2.0, 0.0, 7.0]);
 
         let camera = camera::builder()
             .pose(ManualPose::new_fixed_up_from_to(
@@ -176,7 +178,7 @@ impl State {
 
         let line = Line::new(vec![]);
 
-        let (simpletail, end_attachment_point, skeletal_animation) = SkeletonCubic::debug_tail();
+        let (simpletail, end_attachment_point, skeletal_animation) = SkinningCubic::debug_tail();
 
         // let simpletail =
         // SkinningEntity::from_skeletoncubic(simpletail, 2, Mass(1.0), |_|
@@ -187,7 +189,7 @@ impl State {
             Orientation::new_forward_up(UnitVector::Y, -UnitVector::Z),
             Vector::new([0.0, 0.5, 0.5]),
         );
-        aggregate_tail
+        let _ = aggregate_tail
             .push_model(
                 simpletail.clone(),
                 offset,
@@ -202,7 +204,7 @@ impl State {
 
         Ok(Self {
             toggle_b: false,
-            reset_time: 0.0,
+            reset_time: f32::NEG_INFINITY,
             time: 0.0,
             game_start: None,
             line,
@@ -214,7 +216,7 @@ impl State {
 
             skybox,
 
-            morgan,
+            morgan: Some(morgan),
             origin_cube,
             bounding_box_level,
             toggle_m: false,
@@ -351,7 +353,14 @@ pub struct GrapplingHook {
     pub chain: AggregateModelIndex,
     pub chain_end_bone: SkeletonBoneIndex,
     pub hook: AggregateModelIndex,
+    pub attachment: Option<AggregateModelIndex>,
     pub chain_animation: SkeletalAnimation,
+}
+
+impl GrapplingHook {
+    pub fn calculate_animation(&self, fix_anim: Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,time: f32) -> AggregateCalcAnim {
+        self.entity.calculate_animation(fix_anim, [(self.chain, (&self.chain_animation, time))].into()).unwrap()
+    }
 }
 
 fn grappling_hook() -> GrapplingHook {
@@ -481,6 +490,7 @@ fn grappling_hook() -> GrapplingHook {
         chain: chain_attachment_point,
         chain_end_bone: end_bone,
         hook: hook_attachment_point,
+        attachment: None,
         chain_animation: animation,
     }
 }

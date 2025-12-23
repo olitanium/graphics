@@ -50,7 +50,7 @@ pub struct Group<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> {
 }
 
 impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
-    pub fn new<NEVER, O: CameraPose>(
+    pub fn new<O: CameraPose>(
         output_framebuffer: &'a X,
         camera: &Camera<O>,
         hint: &O::Hint,

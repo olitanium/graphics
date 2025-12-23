@@ -2,7 +2,7 @@ use graphics::Model;
 use graphics::colour::{ColourRGB, ColourRGBA};
 use graphics::shader_program::{ActiveShaderProgram, SetUniformError};
 use graphics::texture::{FlatTexture, Texture};
-use utils::{builder, new};
+use utils::{builder, error_boilerplate, new};
 
 use crate::modelling::CubicVertex;
 
@@ -52,9 +52,11 @@ impl Material {
     }
 }
 
+#[derive(Debug)]
 pub enum RegisterToError<'a> {
     SetUniformError(SetUniformError<'a>),
 }
+error_boilerplate!(<'a> RegisterToError<'a>);
 
 impl Material {
     pub fn register_to<'a, 'b, const N: usize, T: Texture, M: Model, O>(

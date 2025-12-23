@@ -68,6 +68,7 @@ impl<U, T: TransformBy<U>> Transform<T> for U {
     }
 }
 
+#[derive(Debug)]
 pub struct NoTransform;
 
 impl<T: Copy> TransformBy<NoTransform> for T {

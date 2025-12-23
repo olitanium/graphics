@@ -7,8 +7,9 @@ pub use animation::{
     // AnimationError,
     BoneAnimation,
     CalculatedAnimation,
-    CalculatedAnimationBuilder,
+    AggregateCalcAnimBuilder,
     SkeletalAnimation,
+    AggregateCalcAnim,
 };
 pub use animation::{
     BuildFixingBoneError,

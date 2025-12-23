@@ -3,7 +3,7 @@ use std::sync::LazyLock;
 use graphics::shader_program::{CullFace, ShaderProgram};
 use graphics::texture::{CubeMap, FlatTexture};
 
-use crate::modelling::cubic::SkeletonCubic;
+use crate::modelling::cubic::SkinningCubic;
 use crate::modelling::cubic::lighting::shadow::ShadowListLights;
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::{Line, Quad, SimpleCubic, SkyBox, TestLineVertex};
@@ -117,14 +117,14 @@ make_included! {
 pub const LINE_SHADER_MAX_VERTICES: usize = 100;
 
 make_included! {
-    ShaderProgram<SkeletonCubic, ListLights<2>, 2, FlatTexture>,
+    ShaderProgram<SkinningCubic, ListLights<2>, 2, FlatTexture>,
     skeletal,
     "shaders/simple_skeleton_blending/simple_skeleton_blending.vert",
     "shaders/hdr_tangent/hdr_tangent.frag",
 }
 
 make_included! {
-    ShaderProgram<SkeletonCubic, ListLights<2>, 2, FlatTexture>,
+    ShaderProgram<SkinningCubic, ListLights<2>, 2, FlatTexture>,
     skeletal_quat,
     "shaders/simple_skeleton_blending_quat/simple_skeleton_blending_quat.vert",
     "shaders/hdr_tangent/hdr_tangent.frag",

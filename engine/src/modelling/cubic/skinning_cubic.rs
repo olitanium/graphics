@@ -14,19 +14,19 @@ use crate::modelling::cubic::geometry::{
     SkeletalAnimation,
 };
 use crate::modelling::cubic::{Mesh, MeshDrawError, SkeletonBoneIndex};
-use crate::modelling::{SkeletalVertex, Skeleton, SkeletonBb, test_models};
+use crate::modelling::{Collision, SkeletalVertex, Skeleton, SkeletonBb, test_models};
 
 mod group;
 pub use group::Group as SkeletonCubicGroup;
 
 #[derive(Debug, Clone, Default)]
-pub struct SkeletonCubic {
+pub struct SkinningCubic {
     meshes: Vec<Mesh<SkeletalVertex>>,
     pub skeleton: Skeleton,
     pub cull_face: CullFace,
 }
 
-impl SkeletonCubic {
+impl SkinningCubic {
     pub const fn debug_new(meshes: Vec<Mesh<SkeletalVertex>>, skeleton: Skeleton) -> Self {
         Self {
             meshes,
@@ -54,7 +54,7 @@ pub enum DrawError<'a> {
 }
 error_boilerplate!(<'a> DrawError<'a>);
 
-impl SkeletonCubic {
+impl SkinningCubic {
     pub(crate) fn draw<'b, 'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'b, '_, 'a, Self, L, D::Tex, OUT>,
@@ -89,7 +89,7 @@ impl SkeletonCubic {
     }
 }
 
-impl EntityInner for SkeletonCubic {
+impl EntityInner for SkinningCubic {
     type BoundingBox<T> = SkeletonBb<SkeletalVertex, T>;
     type DrawError<'a> = DrawError<'a>;
 
@@ -131,6 +131,6 @@ impl EntityInner for SkeletonCubic {
     }
 }
 
-impl Model for SkeletonCubic {
+impl Model for SkinningCubic {
     type Vertex = SkeletalVertex;
 }

@@ -1,8 +1,6 @@
 use std::marker::PhantomData;
-use std::mem;
 use std::path::Path;
 
-use gl::LinkProgram;
 use utils::{builder, error_boilerplate, new};
 
 use super::{CullFace, ShaderProgram};

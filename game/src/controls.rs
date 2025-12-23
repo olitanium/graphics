@@ -151,6 +151,7 @@ impl State {
                 }
                 't' => {
                     if let Some(morgan_model) = mem::take(&mut self.morgan) {
+                        self.grappling_hook.entity.pop(self.grappling_hook.hook);
                         let new_pos_index = self
                             .grappling_hook
                             .entity
@@ -167,7 +168,6 @@ impl State {
                             self.grappling_hook.hook, new_pos_index
                         );
 
-                        self.grappling_hook.entity.pop(self.grappling_hook.hook);
                         self.grappling_hook.hook = new_pos_index;
                     }
                 }

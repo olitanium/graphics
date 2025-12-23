@@ -4,7 +4,6 @@ use colour::{ColourRGB, ColourRGBA};
 use linear_algebra::{Matrix, UnitVector, Vector};
 
 use crate::gl_call;
-use crate::shader_program::program::GetUniformLocationError;
 use crate::shader_program::program::active_shader::{IsActiveShaderProgram, SetUniformError};
 use crate::types::UniformLocation;
 

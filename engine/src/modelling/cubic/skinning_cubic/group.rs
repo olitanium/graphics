@@ -14,18 +14,18 @@ use crate::modelling::cubic::geometry::{
     process_vec_noaggregate,
 };
 use crate::modelling::cubic::lighting::simple::ListLights;
-use crate::modelling::cubic::{Camera, SkeletonCubic};
+use crate::modelling::cubic::{Camera, SkinningCubic};
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
-    shader: &'a ShaderProgram<SkeletonCubic, ListLights<MAX>, OUT, D::Tex>,
+    shader: &'a ShaderProgram<SkinningCubic, ListLights<MAX>, OUT, D::Tex>,
     framebuffer: &'a D,
 
     camera_pos: Vector<3>,
     camera_look_at: Matrix<4, 4>,
 
     lights: &'a ListLights<MAX>,
-    opaque: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
+    opaque: Vec<(&'a SkinningCubic, CalculatedAnimation)>,
 
     uniforms: Vec<(String, &'a dyn Uniform)>,
 }
@@ -33,15 +33,15 @@ pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth
 impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = FlatTexture>>
     Group<'a, MAX, OUT, D>
 {
-    pub fn new<O: CameraPose, NEVER>(
-        shader: &'a ShaderProgram<SkeletonCubic, ListLights<MAX>, OUT, FlatTexture>,
+    pub fn new<O: CameraPose>(
+        shader: &'a ShaderProgram<SkinningCubic, ListLights<MAX>, OUT, FlatTexture>,
         framebuffer: &'a D,
 
         camera: &Camera<O>,
         hint: &O::Hint,
         lights: &'a ListLights<MAX>,
         opaque: Vec<(
-            &'a SkeletonCubic,
+            &'a SkinningCubic,
             Pose,
             Option<(&'a SkeletalAnimation, f32)>,
         )>,

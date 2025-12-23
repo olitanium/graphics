@@ -11,7 +11,7 @@ use graphics::{Draw, DrawOut};
 use crate::entity::{AggregateEntity, AggregateModelIndex, CalculateAnimationError, EntityInner};
 use crate::modelling::CubicVertex;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
+use crate::modelling::cubic::geometry::{AggregateCalcAnim, CalculatedAnimation, Pose, SkeletalAnimation};
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::cubic::{Camera, SkeletonBoneIndex};
 
@@ -32,8 +32,25 @@ pub struct Group<
     camera_look_at: Matrix<4, 4>,
 
     lights: &'a ListLights<MAX>,
-    opaque: Vec<(&'a AggregateEntity<T, M>, Vec<CalculatedAnimation>)>,
+    opaque: Vec<(&'a AggregateEntity<T, M>, AggregateCalcAnim)>,
     uniforms: Vec<(String, &'a dyn Uniform)>,
+}
+
+impl<
+    'a,
+    M: EntityInner,
+    T: Debug,
+    const MAX: usize,
+    const OUT: usize,
+    D: FramebufferWithDepth<OUT, Tex = FlatTexture>,
+> Debug for Group<'a, M, T, MAX, OUT, D>
+where
+    M::Vertex: CubicVertex,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct(stringify!(Group))
+        .finish_non_exhaustive()
+    }
 }
 
 impl<
@@ -56,25 +73,26 @@ where
         lights: &'a ListLights<MAX>,
         opaque: Vec<(
             &'a AggregateEntity<T, M>,
-            HashMap<AggregateModelIndex, (&'a SkeletalAnimation, f32)>, // time
-            Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,     // fix_anim
+            /*HashMap<AggregateModelIndex, (&'a SkeletalAnimation, f32)>, // time
+            Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,     // fix_anim*/
+            AggregateCalcAnim,
         )>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Result<Box<Self>, CalculateAnimationError> {
-        let opaque: Result<_, CalculateAnimationError> = opaque
+        /*let opaque: Result<_, CalculateAnimationError> = opaque
             .into_iter()
             .map(|(entity, animations, fix_anim)| {
-                Ok((entity, entity.calculate_animation(fix_anim, &animations)?))
+                Ok((entity, entity.calculate_animation(fix_anim, animations)?))
             })
-            .collect();
+            .collect();*/
         Ok(Box::new(Self {
             shader,
             framebuffer,
             camera_pos: camera.position(hint),
             camera_look_at: camera.look_at(hint),
             lights,
-            opaque: opaque?,
+            opaque,
             uniforms,
         }))
     }

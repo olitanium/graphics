@@ -34,6 +34,7 @@ pub use bounding_box::{
     SkeletonBb,
     SkeletonBbDrawError,
     SkeletonBbGroup,
+    Collision,
 };
 
 mod advanced_vertex;

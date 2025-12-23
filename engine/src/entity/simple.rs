@@ -1,9 +1,9 @@
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::vertex::Vertex;
 
-use crate::entity::Mass;
-use crate::modelling::cubic::geometry::Pose;
-use crate::modelling::{BoundingBox, SimpleCubic, SimpleVertex, Volume};
+use crate::entity::{CalculateAnimationError, Mass};
+use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SignaturesDoNotMatchError, SkeletalAnimation};
+use crate::modelling::{BoundingBox, Collision, SimpleCubic, SimpleVertex, Volume};
 
 #[derive(Debug)]
 pub struct SimpleEntity<T> {
@@ -27,21 +27,27 @@ impl<T> Default for SimpleEntity<T> {
 }
 
 impl<T> SimpleEntity<T> {
-    pub fn from_cubic<F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
+    pub fn from_simple_cubic<F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
         model: SimpleCubic,
         depth: usize,
         mass: Mass,
         init: F,
-    ) -> Option<Self> {
+    ) -> Self {
         let bounding_box = BoundingBox::from_cubic(&model, depth, init);
 
-        Some(Self {
+        Self {
             model,
             mass,
             bounding_box,
             ..Self::default()
-        })
+        }
     }
+
+    pub fn temp_as_simplecubic_and_anim(&self) -> (&SimpleCubic, CalculatedAnimation) {
+        (&self.model, CalculatedAnimation::new(self.pose, &self.model.skeleton, None).expect("No animation"))
+    }
+
+
 }
 
 impl<T> SimpleEntity<T> {
@@ -53,25 +59,28 @@ impl<T> SimpleEntity<T> {
         self.bounding_box.as_ref()
     }
 
-    pub fn detect_collision<F: Fn(&mut T), O: Fn(&mut T)>(
+
+    /*pub fn detect_collision<F: Fn(&mut T), O: Fn(&mut T)>(
         &self,
         self_alter_meta: F,
         other: &Self,
         other_alter_meta: O,
-    ) -> Option<Vec<(Vec<[SimpleVertex; 3]>, Vec<[SimpleVertex; 3]>)>> {
-        let vec = BoundingBox::detect_collision(
+    ) -> bool {
+        let Some(vec) = (try { BoundingBox::detect_collision(
             self.bounding_box()?,
             self.pose,
             self_alter_meta,
             other.bounding_box()?,
             other.pose,
             other_alter_meta,
-        );
+        )} ) else {return false};
 
-        (!vec.is_empty()).then_some(vec)
-    }
 
-    pub fn elastic_collision_no_rotation<F: Fn(&mut T), O: Fn(&mut T)>(
+        vec
+        //(!vec.is_empty()).then_some(vec)
+    }*/
+
+    /*pub fn elastic_collision_no_rotation<F: Fn(&mut T), O: Fn(&mut T)>(
         &mut self,
         self_alter_meta: F,
         other: &mut Self,
@@ -125,7 +134,7 @@ impl<T> SimpleEntity<T> {
         } else {
             false
         }
-    }
+    }*/
 
     pub fn update(&mut self, timestep: f32) {
         let delta_pose = Pose::new_from_translation(self.velocity.scale(timestep));
@@ -146,4 +155,17 @@ pub fn get_average_normal<I: IntoIterator<Item = [SimpleVertex; 3]>>(input: I) -
         })
         .sum::<Vector<3>>()
         .normalize()
+}
+
+
+impl<TThis> Collision for SimpleEntity<TThis> {
+    type FuncInputs = <BoundingBox<SimpleVertex, 3, TThis> as Collision>::FuncInputs; 
+    type Inner = <BoundingBox<SimpleVertex, 3, TThis> as Collision>::Inner; 
+    type Transform<'a> = <BoundingBox<SimpleVertex, 3, TThis> as Collision>::Transform<'a>;
+
+
+    fn collides<T: Collision, F: FnMut(Self::FuncInputs, &mut Self::Inner), O: FnMut(T::FuncInputs, &mut T::Inner)>(&self, transform: &Self::Transform<'_>, self_alter_meta: F, target: &T, target_transform: &T::Transform<'_>, target_alter_meta: O) -> bool {
+        let Some(bbox) = &self.bounding_box else {return false};
+        bbox.collides(transform, self_alter_meta, target, target_transform, target_alter_meta)
+    }
 }

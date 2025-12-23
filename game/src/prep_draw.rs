@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use engine::entity::AggregateGroup;
 use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::SkeletonBoneIndex;
-use engine::modelling::cubic::geometry::Pose;
-use engine::modelling::{BloomGroup, QuadGroup, SkyBoxGroup};
+use engine::modelling::cubic::geometry::{AggregateCalcAnim, Pose};
+use engine::modelling::{BloomGroup, QuadGroup, SimpleCubicGroup, SkyBoxGroup};
 use engine::{PollResult, VecDraw, opengl_shaders};
 
 use crate::state::{State, StateError};
@@ -13,6 +13,7 @@ impl State {
     pub fn draw<'a>(
         &'a mut self,
         default_framebuffer: &'a DefaultFramebuffer,
+        grapple_animation: AggregateCalcAnim,
     ) -> PollResult<'a, StateError> {
         let time = self.time;
 
@@ -36,24 +37,26 @@ impl State {
                 &self.ns_light_group,
                 vec![(
                     &self.grappling_hook.entity,
-                    HashMap::from([(
-                        self.grappling_hook.chain,
-                        (&self.grappling_hook.chain_animation, time - self.reset_time),
-                    )]),
-                    if self.toggle_b {
-                        Some((
-                            self.grappling_hook.hook,
-                            SkeletonBoneIndex::SKELETON_ROOT_BONE,
-                            Pose::IDENTITY,
-                        ))
-                    } else {
-                        None
-                    },
+                    grapple_animation,
                 )],
                 vec![],
             )
             .unwrap(),
         );
+
+        if let Some(morgan) = &self.morgan {
+            out.push(
+                SimpleCubicGroup::new(
+                    opengl_shaders::hdr(),
+                    &self.hdr_fb,
+                    &self.camera,
+                    &(),
+                    &self.ns_light_group,
+                    vec![morgan.temp_as_simplecubic_and_anim()],
+                    vec![]
+                ).unwrap()
+            )
+        }
 
         // out.push(SimpleCubicGroup::new(
         // opengl_shaders::hdr(),

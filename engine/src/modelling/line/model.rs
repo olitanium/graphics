@@ -9,6 +9,7 @@ use utils::error_boilerplate;
 
 use crate::opengl_shaders::LINE_SHADER_MAX_VERTICES;
 
+#[derive(Debug)]
 pub struct Line<U> {
     vertices: Vec<U>,
 }

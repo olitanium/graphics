@@ -10,7 +10,7 @@ use engine::modelling::cubic::geometry::SkeletalAnimation;
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{Camera, SkeletonCubic};
+use engine::modelling::cubic::{Camera, SkinningCubic};
 use engine::modelling::{Bloom, Line, Quad, SHADOW_SHADER_MAX_LIGHTS, SkyBox, TestLineVertex};
 use engine::types::TexDim;
 use engine::{ApiState, ColourRGBA, Event, PollResult, SimpleEntity};
@@ -41,8 +41,8 @@ pub struct State {
 
     pub morgan: Option<SimpleEntity<()>>,
     pub origin_cube: SimpleEntity<()>,
-    pub simpletail: SkeletonCubic,
-    pub aggregate_tail: AggregateEntity<(), SkeletonCubic>,
+    pub simpletail: SkinningCubic,
+    pub aggregate_tail: AggregateEntity<(), SkinningCubic>,
     pub skeletal_animation: SkeletalAnimation,
 
     // pub grappling_hook: AggregateEntity<(), SimpleCubic>,
@@ -129,13 +129,13 @@ impl ApiState for State {
 
         match self.controls(mouse_delta, keyboard, &mut string, frame_time, self.time) {
             ControlOutput::Close => return PollResult::Close,
-            ControlOutput::Data(()) => (),
             ControlOutput::Error(x) => return PollResult::Error(x),
+            ControlOutput::Data(()) => (),
         }
 
-        self.physics(frame_time);
+        let anim = self.physics(frame_time);
 
-        self.draw(default_fb.unwrap())
+        self.draw(default_fb.unwrap(), anim)
     }
 
     fn new(initial_size: (TexDim, TexDim)) -> Result<Self, Self::Error> {

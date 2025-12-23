@@ -12,6 +12,7 @@ use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::{BoundingBox, BoundingBoxElement, ExtendedVertex, Volume};
 use crate::transform::Transform;
 
+#[derive(Debug)]
 pub struct Group<
     'a,
     const OUT: usize,

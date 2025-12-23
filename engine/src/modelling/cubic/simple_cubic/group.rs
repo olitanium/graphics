@@ -34,18 +34,17 @@ pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth
 impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = FlatTexture>>
     Group<'a, MAX, OUT, D>
 {
-    pub fn new<O: CameraPose, NEVER>(
+    pub fn new<O: CameraPose>(
         shader: &'a ShaderProgram<SimpleCubic, ListLights<MAX>, OUT, FlatTexture>,
         framebuffer: &'a D,
 
         camera: &Camera<O>,
         hint: &O::Hint,
         lights: &'a ListLights<MAX>,
-        opaque: Vec<(&'a SimpleCubic, Pose, Option<(&'a SkeletalAnimation, f32)>)>,
+        opaque: Vec<(&'a SimpleCubic, CalculatedAnimation)>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Result<Box<Self>, SignaturesDoNotMatchError> {
-        let opaque = process_vec_noaggregate(opaque)?;
         Ok(Box::new(Self {
             shader,
             framebuffer,

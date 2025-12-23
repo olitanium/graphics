@@ -16,6 +16,7 @@ use crate::modelling::cubic::geometry::{
 };
 use crate::modelling::{BoundingBoxElement, CubicVertex, Skeleton, SkeletonBb};
 
+#[derive(Debug)]
 pub struct Group<
     'a,
     const OUT: usize,
@@ -36,7 +37,7 @@ pub struct Group<
 impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn(&T) -> ColourRGBA>
     Group<'a, 1, D, V, T, F>
 {
-    pub fn new<P: CameraPose, NEVER>(
+    pub fn new<P: CameraPose>(
         framebuffer: &'a D,
         bounding_box: &'a SkeletonBb<V, T>,
         skeleton: &'a Skeleton,
@@ -48,7 +49,7 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
         colour: F,
     ) -> Result<Box<Self>, SignaturesDoNotMatchError> {
         let look_at = camera.look_at(hint);
-        let calculated_animation = CalculatedAnimation::once(pose, skeleton, animation)?;
+        let calculated_animation = CalculatedAnimation::new(pose, skeleton, animation)?;
 
         Ok(Box::new(Self {
             framebuffer,

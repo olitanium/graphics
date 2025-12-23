@@ -9,8 +9,8 @@ use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
 pub struct CalculatedAnimation {
-    poses: Vec<Pose>,
-    signature: u64,
+    pub(crate) poses: Vec<Pose>,
+    pub(crate) signature: u64,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -22,28 +22,20 @@ impl CalcAnimUnitIndex {
     pub(crate) const ROOT_UNIT_INDEX: Self = Self { index: 0 };
 }
 
-#[derive(Debug)]
-pub struct CalculatedAnimationBuilder<'a> {
-    // Invariant: all animation units can only point to those before themselves.
-    // this is enforced by the `push` method
-    units: Vec<AnimationUnit<'a>>,
-}
-
 impl CalculatedAnimation {
-    pub fn once<'a>(
+    pub fn new<'a>(
         root_pose: Pose,
         root_skeleton: &'a Skeleton,
         root_animation: Option<(&'a SkeletalAnimation, f32)>,
     ) -> Result<Self, SignaturesDoNotMatchError> {
-        CalculatedAnimationBuilder::once(root_pose, root_skeleton, root_animation)
-    }
+        let unit = AnimationUnit::new(None, root_pose, root_skeleton, root_animation)?;
+        let root = unit.local_transform;
 
-    pub fn builder<'a>(
-        root_pose: Pose,
-        root_skeleton: &'a Skeleton,
-        root_animation: Option<(&'a SkeletalAnimation, f32)>,
-    ) -> Result<CalculatedAnimationBuilder<'a>, SignaturesDoNotMatchError> {
-        CalculatedAnimationBuilder::new(root_pose, root_skeleton, root_animation)
+        let (vec_pose, signature) = unit.calculate_animation(root);
+
+        let poses = PoseAndInverseBindPose::process_vec(vec_pose);
+
+        Ok(CalculatedAnimation { poses, signature })
     }
 
     pub fn poses(&self, skeleton: &Skeleton) -> Result<&[Pose], SignaturesDoNotMatchError> {
@@ -52,6 +44,10 @@ impl CalculatedAnimation {
         } else {
             Err(SignaturesDoNotMatchError)
         }
+    }
+
+    pub fn root(&self) -> Pose {
+        self.poses[0]
     }
 }
 
@@ -78,20 +74,20 @@ impl CalculatedAnimation {
 }
 
 #[derive(Debug, Clone, Copy)]
-struct Parent {
-    index: CalcAnimUnitIndex,
-    bone_attachment_point: SkeletonBoneIndex,
+pub(crate) struct Parent {
+    pub(crate) index: CalcAnimUnitIndex,
+    pub(crate) bone_attachment_point: SkeletonBoneIndex,
 }
 
 /// All Animation units can only refer to units before them in the heirarchy.
 /// This is enforced by the `push` method
 #[derive(Debug)]
-struct AnimationUnit<'a> {
-    parent: Option<Parent>,
-    local_transform: Pose,
+pub(crate) struct AnimationUnit<'a> {
+    pub(crate) parent: Option<Parent>,
+    pub(crate) local_transform: Pose,
     // invariant: Skeleton and Skeletal Animation have same signature
-    skeleton: &'a Skeleton,
-    animation: Option<(&'a SkeletalAnimation, f32)>,
+    pub(crate) skeleton: &'a Skeleton,
+    pub(crate) animation: Option<(&'a SkeletalAnimation, f32)>,
 }
 
 #[derive(Debug)]
@@ -99,7 +95,7 @@ pub struct SignaturesDoNotMatchError;
 error_boilerplate!(SignaturesDoNotMatchError);
 
 impl<'a> AnimationUnit<'a> {
-    fn new(
+    pub(crate) fn new(
         parent: Option<Parent>,
         root_pose: Pose,
         root_skeleton: &'a Skeleton,
@@ -118,7 +114,7 @@ impl<'a> AnimationUnit<'a> {
         }
     }
 
-    fn calculate_animation(self, root: Pose) -> (Vec<PoseAndInverseBindPose>, u64) {
+    pub(crate) fn calculate_animation(self, root: Pose) -> (Vec<PoseAndInverseBindPose>, u64) {
         let poses = if let Some((animation, time)) = self.animation {
             let mut poses = vec![PoseAndInverseBindPose {
                 pose: root,
@@ -164,13 +160,13 @@ impl<'a> AnimationUnit<'a> {
 }
 
 #[derive(Debug, Copy, Clone)]
-struct PoseAndInverseBindPose {
-    pose: Pose,
-    inverse_bind_pose: Pose,
+pub(crate) struct PoseAndInverseBindPose {
+    pub(crate) pose: Pose,
+    pub(crate) inverse_bind_pose: Pose,
 }
 
 impl PoseAndInverseBindPose {
-    fn process_vec(this: Vec<Self>) -> Vec<Pose> {
+    pub(crate) fn process_vec(this: Vec<Self>) -> Vec<Pose> {
         this.into_iter()
             .map(
                 |PoseAndInverseBindPose {
@@ -181,7 +177,7 @@ impl PoseAndInverseBindPose {
             .collect()
     }
 
-    fn process_vec_with_deviation(this: Vec<Self>, deviation: Pose) -> Vec<Pose> {
+    pub(crate) fn process_vec_with_deviation(this: Vec<Self>, deviation: Pose) -> Vec<Pose> {
         this.into_iter()
             .map(
                 |PoseAndInverseBindPose {
@@ -193,160 +189,6 @@ impl PoseAndInverseBindPose {
     }
 }
 
-impl<'a> CalculatedAnimationBuilder<'a> {
-    pub fn once(
-        root_pose: Pose,
-        root_skeleton: &'a Skeleton,
-        root_animation: Option<(&'a SkeletalAnimation, f32)>,
-    ) -> Result<CalculatedAnimation, SignaturesDoNotMatchError> {
-        let unit = AnimationUnit::new(None, root_pose, root_skeleton, root_animation)?;
-        let root = unit.local_transform;
-
-        let (vec_pose, signature) = unit.calculate_animation(root);
-
-        let poses = PoseAndInverseBindPose::process_vec(vec_pose);
-
-        Ok(CalculatedAnimation { poses, signature })
-    }
-
-    pub fn new(
-        root_pose: Pose,
-        root_skeleton: &'a Skeleton,
-        root_animation: Option<(&'a SkeletalAnimation, f32)>,
-    ) -> Result<Self, SignaturesDoNotMatchError> {
-        let unit = AnimationUnit::new(None, root_pose, root_skeleton, root_animation)?;
-        Ok(Self { units: vec![unit] })
-    }
-}
-
-#[derive(Debug)]
-pub enum PushAnimationError {
-    SignaturesDoNotMatch(SignaturesDoNotMatchError),
-    ParentUnitDoesNotExist,
-    BoneInParentDoesNotExist,
-}
-error_boilerplate!(PushAnimationError);
-
-impl<'a> CalculatedAnimationBuilder<'a> {
-    pub(crate) fn push(
-        &mut self,
-        parent_index: CalcAnimUnitIndex,
-        attachment_point: SkeletonBoneIndex,
-        local_transform: Pose,
-        skeleton: &'a Skeleton,
-        animation: Option<(&'a SkeletalAnimation, f32)>,
-    ) -> Result<CalcAnimUnitIndex, PushAnimationError> {
-        let output_index = self.units.len();
-
-        if let Some(parent_skeleton) = self.units.get(parent_index.index) {
-            if parent_skeleton.skeleton.get(attachment_point).is_bone() {
-                // Asserted that there is a valid parent and that parent has a bone to attach
-                // to.
-                // parent IS in the builder and skeleton DOES have relevant attachement point
-                // (bone)
-                let parent = Some(Parent {
-                    index: parent_index,
-                    bone_attachment_point: attachment_point,
-                });
-                let unit = AnimationUnit::new(parent, local_transform, skeleton, animation)
-                    .map_err(|error| PushAnimationError::SignaturesDoNotMatch(error))?;
-                self.units.push(unit);
-                Ok(CalcAnimUnitIndex {
-                    index: output_index,
-                })
-            } else {
-                Err(PushAnimationError::BoneInParentDoesNotExist)
-            }
-        } else {
-            Err(PushAnimationError::ParentUnitDoesNotExist)
-        }
-    }
-}
-
-impl<'a> CalculatedAnimationBuilder<'a> {
-    fn get_world_positions(self) -> Vec<(Vec<PoseAndInverseBindPose>, u64)> {
-        let mut output: Vec<(Vec<PoseAndInverseBindPose>, u64)> = Vec::new();
-
-        for unit in self.units {
-            let root = if let Some(parent) = unit.parent {
-                let parent_setup = output.get(parent.index.index).expect(
-                    "invariant, parent should exist earlier in the list than the descendent",
-                );
-                let attachment_pose = parent_setup
-                    .0
-                    .get(parent.bone_attachment_point.0)
-                    .expect("invariant, the existence of this is checked by the `push` method");
-                attachment_pose.pose.transform(&unit.local_transform)
-            } else {
-                unit.local_transform
-            };
-
-            let poses = unit.calculate_animation(root);
-
-            output.push(poses);
-        }
-
-        output
-    }
-}
-
-#[derive(Debug)]
-pub enum BuildFixingBoneError {
-    UnitDoesNotExist,
-    BoneDoesNotExist,
-}
-
-error_boilerplate!(BuildFixingBoneError);
-
-impl<'a> CalculatedAnimationBuilder<'a> {
-    pub(crate) fn build_fixing_bone(
-        self,
-        unit: CalcAnimUnitIndex,
-        bone: SkeletonBoneIndex,
-        pose: Pose,
-    ) -> Result<Vec<CalculatedAnimation>, BuildFixingBoneError> {
-        let world_positions = self.get_world_positions();
-
-        let poses_this_unit = &world_positions
-            .get(unit.index)
-            .ok_or(BuildFixingBoneError::UnitDoesNotExist)?
-            .0;
-
-        let fixed_pose = poses_this_unit
-            .get(bone.0)
-            .ok_or(BuildFixingBoneError::BoneDoesNotExist)?
-            .pose;
-
-        let deviation = pose.transform(&fixed_pose.inverse());
-
-        Ok(world_positions
-            .into_iter()
-            .map(|(vec, opt_signature)| {
-                let poses = PoseAndInverseBindPose::process_vec_with_deviation(vec, deviation);
-
-                CalculatedAnimation {
-                    poses,
-                    signature: opt_signature,
-                }
-            })
-            .collect())
-    }
-
-    pub fn build(self) -> Vec<CalculatedAnimation> {
-        let world_positions = self.get_world_positions();
-        world_positions
-            .into_iter()
-            .map(|(vec, opt_signature)| {
-                let poses = PoseAndInverseBindPose::process_vec(vec);
-
-                CalculatedAnimation {
-                    poses,
-                    signature: opt_signature,
-                }
-            })
-            .collect()
-    }
-}
 
 pub(crate) fn process_vec_noaggregate<'a, M: EntityInner>(
     input: Vec<(&'a M, Pose, Option<(&'a SkeletalAnimation, f32)>)>,
@@ -359,8 +201,15 @@ where
         .map(|(cubic, root, animation)| {
             Ok((
                 cubic,
-                CalculatedAnimation::once(root, cubic.skeleton(), animation)?,
+                CalculatedAnimation::new(root, cubic.skeleton(), animation)?,
             ))
         })
         .collect()
 }
+
+/*impl From<(&CalculatedAnimation, &Skeleton)> for Pose {
+    fn from(value: (&CalculatedAnimation, &Skeleton)) -> Self {
+        let (anim, skeleton) = value;
+        anim.get(SkeletonBoneIndex::SKELETON_ROOT_BONE, skeleton).expect("TODO: this is a bit yuck if skeleton isn't right")
+    }
+}*/

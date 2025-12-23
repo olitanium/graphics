@@ -25,5 +25,5 @@ pub use simple_cubic::{
     SimpleCubic,
 };
 
-mod skeleton_cubic;
-pub use skeleton_cubic::{SkeletonCubic, SkeletonCubicGroup};
+mod skinning_cubic;
+pub use skinning_cubic::{SkinningCubic, SkeletonCubicGroup};

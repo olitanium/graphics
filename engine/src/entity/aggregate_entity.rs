@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
+use std::iter::zip;
 use std::{iter, mem};
 
 use graphics::ActiveShaderProgram;
@@ -8,20 +9,14 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
 use utils::error_boilerplate;
 
-use crate::SimpleEntity;
+use crate::{SimpleEntity, transform};
 use crate::entity::{EntityInner, SkeletonEntity, SkinningEntity};
 use crate::modelling::cubic::geometry::{
-    BuildFixingBoneError,
-    CalcAnimUnitIndex,
-    CalculatedAnimation,
-    Pose,
-    PushAnimationError,
-    SignaturesDoNotMatchError,
-    SkeletalAnimation,
+    AggregateCalcAnim, BuildFixingBoneError, CalcAnimUnitIndex, CalculatedAnimation, Pose, PushAnimationError, SignaturesDoNotMatchError, SkeletalAnimation
 };
 use crate::modelling::cubic::lighting::simple::ListLights;
-use crate::modelling::cubic::{SkeletonBoneIndex, SkeletonCubic};
-use crate::modelling::{CubicVertex, SimpleCubic, SkeletonBb};
+use crate::modelling::cubic::{SkeletonBoneIndex, SkinningCubic};
+use crate::modelling::{Collision, CubicVertex, SimpleCubic, Skeleton, SkeletonBb};
 
 mod group;
 pub use group::Group as AggregateGroup;
@@ -29,13 +24,16 @@ pub use group::Group as AggregateGroup;
 mod error;
 pub use error::PushModelError;
 
+mod from_to;
+pub use from_to::FromToAggregateEntity;
+
 pub struct AggregateEntity<T, M: EntityInner>
 where
     M::Vertex: CubicVertex,
 {
     base_model: M,
     base_bounding_box: Option<M::BoundingBox<T>>,
-    base_pose: Pose,
+    pub base_pose: Pose,
     children: Vec<Option<AggregateUnit<T, M>>>,
 }
 
@@ -68,6 +66,7 @@ where
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[must_use = "AggregateModelIndex is a handle into the entity, it is used to set animations and as an attachment point for further units"]
 pub struct AggregateModelIndex(pub(crate) usize);
 
 impl AggregateModelIndex {
@@ -163,6 +162,10 @@ where
             .children
             .iter_mut()
             .enumerate()
+            // skip here ensures that the parent is always above the child.
+            // note that the `self.children` is offset by 1, so if the parent is ROOT (0)
+            // no children are skipped, if the parent is 1, only the first (the parent itself) is skipped, etc.
+            .skip(unit.parent_unit.0)
             .find(|(_, opt_unit)| opt_unit.is_none())
         {
             *child_dest = Some(unit);
@@ -220,14 +223,13 @@ where
     pub fn calculate_animation<'a>(
         &'a self,
         fix_anim: Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,
-        animations: &HashMap<AggregateModelIndex, (&'a SkeletalAnimation, f32)>,
-    ) -> Result<Vec<CalculatedAnimation>, CalculateAnimationError> {
+        mut animations: HashMap<AggregateModelIndex, (&'a SkeletalAnimation, f32)>,
+    ) -> Result<AggregateCalcAnim, CalculateAnimationError> {
         let indices = (1..).map(AggregateModelIndex);
         let first_animation = animations
-            .get(&AggregateModelIndex::ROOT_MODEL_INDEX)
-            .copied();
+            .remove(&AggregateModelIndex::ROOT_MODEL_INDEX);
 
-        let mut anim_builder = CalculatedAnimation::builder(
+        let mut anim_builder = AggregateCalcAnim::builder(
             self.base_pose,
             self.base_model.skeleton(),
             first_animation,
@@ -260,7 +262,7 @@ where
             let animation = animations.get(&index).copied();
             let parent_unit_index = parent_locations
                 .get(parent_model_unit)
-                .expect("parent comes before child in `self.children`");
+                .expect("parent comes before child in `self.children`, per the push_unit method");
             let destination = anim_builder
                 .push(
                     *parent_unit_index,
@@ -301,7 +303,55 @@ where
 
         Ok(anim)
     }
+
+    pub(crate) fn zip_calculated_animation_opt<'a, 'b>(&'a self, aggr: &'b AggregateCalcAnim) -> impl Iterator<Item = Option<(&'a M, Option<&'a M::BoundingBox<T>>, &'b CalculatedAnimation)>> {
+        let mut aggr_iter = aggr.vec.iter();
+        iter::once(Some((&self.base_model, self.base_bounding_box.as_ref(), aggr_iter.next().expect("CalcAnim must have been created from this entity")))).chain(
+            self.children.iter().map(move |child| child.as_ref().map(|aggr| (&aggr.model, aggr.bounding_box.as_ref(), aggr_iter.next().expect("CalcAnim must have been created from this entity"))))
+        )
+    }
+
+    pub(crate) fn zip_calculated_animation<'a, 'b>(&'a self, aggr: &'b AggregateCalcAnim) -> impl Iterator<Item = (&'a M, Option<&'a M::BoundingBox<T>>, &'b CalculatedAnimation)> {
+        self.zip_calculated_animation_opt(aggr).flatten()
+    }
+
+    pub(crate) fn zip_calculated_animation_get_index_opt<'a, 'b>(&'a self, aggr: &'b AggregateCalcAnim) -> impl Iterator<Item = Option<(AggregateModelIndex, &'a M, Option<&'a M::BoundingBox<T>>, &'b CalculatedAnimation)>> {
+        self.zip_calculated_animation_opt(aggr).enumerate().map(|(index, opt)| opt.map(|(x, y, z)| (AggregateModelIndex(index), x, y, z)))
+    }
+
+    pub(crate) fn zip_calculated_animation_get_index<'a, 'b>(&'a self, aggr: &'b AggregateCalcAnim) -> impl Iterator<Item = (AggregateModelIndex, &'a M, Option<&'a M::BoundingBox<T>>, &'b CalculatedAnimation)> {
+        self.zip_calculated_animation_get_index_opt(aggr).flatten()
+    }
 }
+
+/*impl<T, M: EntityInner> AggregateEntity<T, M> 
+where 
+    M::Vertex: CubicVertex,
+{
+    pub fn detect_collision<F, O>(
+        lhs: &Self,
+        lhs_calculated_animation: &AggregateCalcAnim,
+        lhs_alter_meta: F,
+
+        rhs: &AggregateEntity<>,
+        rhs_calculated_animation: &AggregateCalcAnim,
+        rhs_alter_meta: O,
+    ) -> bool
+    where
+        F: Fn(AggregateModelIndex, <M::BoundingBox<T> as BoundingBoxTrait>::FuncInputs, &mut <M::BoundingBox<T> as BoundingBoxTrait>::Inner),
+        O: Fn(AggregateModelIndex, SkeletonBoneIndex, &mut T),
+    {
+        for (lhs_index, _, lhs_bbox, lhs_anim) in lhs.zip_calculated_animation_get_index(lhs_calculated_animation) {
+            for (rhs_index, _, rhs_bbox, rhs_anim) in rhs.zip_calculated_animation_get_index(rhs_calculated_animation) {
+                let Some((lhs, rhs)) = lhs_bbox.zip(rhs_bbox) else {return false};
+                lhs.intersects_bounding_box(transform, self_alter_meta, target, target_transform, target_alter_meta)
+            }
+        }
+
+
+        todo!()
+    }
+}*/
 
 pub enum DrawError<'a, M: EntityInner + 'a>
 where
@@ -341,18 +391,11 @@ where
         &'a self,
         active_sp: &mut ActiveShaderProgram<'b, '_, 'a, M, ListLights<MAX>, F::Tex, OUT>,
         active_fb: &mut ActiveFramebuffer<'_, '_, OUT, F>,
-        calculated_animation: Vec<CalculatedAnimation>,
+        calculated_animation: AggregateCalcAnim,
     ) -> Result<(), DrawError<'b, M>> {
-        for (model, calc) in iter::once(&self.base_model)
-            .chain(
-                self.children
-                    .iter()
-                    .filter_map(|unit| unit.as_ref().map(|unit| &unit.model)),
-            )
-            .zip(calculated_animation)
-        {
+        for (model, _, calc) in self.zip_calculated_animation(&calculated_animation) {
             model
-                .draw(active_sp, active_fb, &calc)
+                .draw(active_sp, active_fb, calc)
                 .map_err(|err| DrawError::<M>::ModelDraw(err))?;
         }
 
@@ -419,7 +462,7 @@ impl<T> AggregateEntity<T, SimpleCubic> {
     }
 }
 
-impl<T> AggregateEntity<T, SkeletonCubic> {
+impl<T> AggregateEntity<T, SkinningCubic> {
     pub fn push_skinning_entity(
         &mut self,
         entity: SkinningEntity<T>,
@@ -445,5 +488,24 @@ impl<T> AggregateEntity<T, SkeletonCubic> {
         };
 
         Ok(self.push_aggregate_unit(unit))
+    }
+}
+
+impl<TThis, M: EntityInner> Collision for AggregateEntity<TThis, M>
+where
+    M::Vertex: CubicVertex,
+    for<'a> <M::BoundingBox<TThis> as Collision>::Transform<'a>: From<(&'a Skeleton, &'a CalculatedAnimation)>,
+{
+    type Transform<'a> = AggregateCalcAnim;
+    type Inner = <M::BoundingBox<TThis> as Collision>::Inner;
+    type FuncInputs = (AggregateModelIndex, <M::BoundingBox<TThis> as Collision>::FuncInputs);
+
+    fn collides<T: Collision, F: FnMut(Self::FuncInputs, &mut Self::Inner), O: FnMut(T::FuncInputs, &mut T::Inner)>(&self, transform: &Self::Transform<'_>, mut self_alter_meta: F, target: &T, target_transform: &T::Transform<'_>, mut target_alter_meta: O) -> bool {
+        self.zip_calculated_animation_get_index(transform).flat_map(|(x, y, opt_z, t)| opt_z.map(|z| (x, y, z, t))).any(|(index, model, bbox, animation)| {
+            let transform = (model.skeleton(), animation);
+            let transform = transform.into();
+
+            bbox.collides(&transform, |x, y| self_alter_meta((index, x), y), target, target_transform, &mut target_alter_meta)
+        })
     }
 }

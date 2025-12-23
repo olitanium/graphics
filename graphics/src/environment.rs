@@ -111,6 +111,7 @@ pub struct Environment<G: ApiState> {
     global_state: G,
     window: Window,
     old_frame: Option<f64>,
+    creation_time: f64,
     glfw: glfw::Glfw,
 }
 
@@ -157,10 +158,13 @@ impl<G: ApiState> Environment<G> {
         let global_state =
             G::new(window.get_framebuffer_size()).map_err(|err| NewError::StateInit(err))?;
 
+        let creation_time = glfw.get_time();
+
         Ok(Self {
             glfw,
             window,
             global_state,
+            creation_time,
             old_frame: None,
         })
     }
@@ -214,7 +218,7 @@ impl<G: ApiState> Environment<G> {
         let window = &mut self.window;
         let mut events = window.poll_events();
 
-        events.push(Event::ActualTime(curr_time));
+        events.push(Event::ActualTime(curr_time - self.creation_time));
         events.push(Event::FrameTime(frametime));
         if let Some(queries) = queries {
             events.push(Event::Query(queries));

@@ -14,6 +14,7 @@
 #![feature(bool_to_result)]
 #![deny(unused_must_use)]
 #![deny(clippy::missing_const_for_fn)]
+#![deny(missing_debug_implementations)]
 
 pub mod eng_state;
 pub mod entity;
@@ -27,5 +28,6 @@ pub use graphics::{types, *};
 pub use russimp::scene::PostProcess;
 mod transform;
 pub use transform::TransformBy;
+pub use transform::Transform;
 
 pub type VecDraw<'a> = Vec<Box<dyn Draw + 'a>>;

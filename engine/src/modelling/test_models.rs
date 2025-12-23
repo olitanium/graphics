@@ -10,7 +10,7 @@ use crate::TransformBy;
 use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::cubic::geometry::{BoneAnimation, Orientation, Pose, SkeletalAnimation};
 use crate::modelling::cubic::material::Material;
-use crate::modelling::cubic::{MeshBuilder, SkeletonBoneIndex, SkeletonCubic};
+use crate::modelling::cubic::{MeshBuilder, SkeletonBoneIndex, SkinningCubic};
 use crate::modelling::quad::QuadVertex;
 use crate::modelling::{Bone, ExtendedVertex, SimpleCubic, Skeleton};
 
@@ -281,7 +281,7 @@ pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletonBoneIndex, Skeleta
 
 pub fn tail_skeleton_cubic(
     max_len: usize,
-) -> (SkeletonCubic, SkeletonBoneIndex, SkeletalAnimation) {
+) -> (SkinningCubic, SkeletonBoneIndex, SkeletalAnimation) {
     // MESHES
     let triangles = tail_with_bone(max_len);
 
@@ -295,7 +295,7 @@ pub fn tail_skeleton_cubic(
     let (skeleton, end_bone, animation) = tail_animation(max_len);
 
     (
-        SkeletonCubic::debug_new(vec_mesh, skeleton),
+        SkinningCubic::debug_new(vec_mesh, skeleton),
         end_bone,
         animation,
     )

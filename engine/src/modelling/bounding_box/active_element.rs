@@ -3,7 +3,7 @@ use std::array;
 use graphics::linear_algebra::Vector;
 use graphics::vertex::Vertex;
 
-use crate::modelling::BoundingBox;
+use crate::modelling::{BoundingBox, BoundingBoxGroup};
 use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::bounding_box::BoundingBoxElement;
 use crate::transform::Transform;
@@ -40,10 +40,10 @@ where
         (Vector::new(lower_bounds), Vector::new(upper_bounds))
     }
 
-    pub fn overlaps_bounding_box_single<P: Transform<Vector<DIMS>>>(
+    pub fn overlaps_bounding_box_single<U, V2: ExtendedVertex<DIMS>, P: Transform<Vector<DIMS>>>(
         &self,
         self_transform: &P,
-        other: &Self,
+        other: &BoundingBoxElement<V2, DIMS, U>,
         other_transform: &P,
     ) -> bool {
         // let self_lower_bound = self_transform.transform(&self.lower_bound);
@@ -107,32 +107,27 @@ where
     pub fn overlaps_bounding_box_and_children<
         'a,
         'b,
+        V2: ExtendedVertex<DIMS>,
+        U,
         P: Transform<Vector<DIMS>>,
-        F: Fn(&mut T),
-        O: Fn(&mut T),
+        F: FnMut(&mut T),
+        O: FnMut(&mut U),
     >(
         this: &'a Self,
         this_boundingbox: &'a BoundingBox<V, DIMS, T>,
         this_transform: &P,
-        this_alter_meta: &F,
-        other: &'b Self,
-        other_boundingbox: &'b BoundingBox<V, DIMS, T>,
+        this_alter_meta: &mut F,
+        other: &'b BoundingBoxElement<V2, DIMS, U>,
+        other_boundingbox: &'b BoundingBox<V2, DIMS, U>,
         other_transform: &P,
-        other_alter_meta: &O,
-    ) -> impl Iterator<
-        Item = (
-            &'a BoundingBoxElement<V, DIMS, T>,
-            &'b BoundingBoxElement<V, DIMS, T>,
-        ),
-    >
+        other_alter_meta: &mut O,
+    ) -> bool
     where
         [(); Vector::<DIMS>::ELEMENT_COUNT]:,
     {
         let is_overlap = this.overlaps_bounding_box_single(this_transform, other, other_transform);
 
         if is_overlap {
-            this_alter_meta(&mut *this.meta.borrow_mut());
-            other_alter_meta(&mut *other.meta.borrow_mut());
             match (
                 this.get_children(this_boundingbox),
                 other.get_children(other_boundingbox),
@@ -143,7 +138,7 @@ where
                     (thisright, otherleft),
                     (thisright, otherright),
                 ]
-                .map(|(new_this, new_other)| {
+                .into_iter().any(|(new_this, new_other)| {
                     BoundingBoxElement::overlaps_bounding_box_and_children(
                         new_this,
                         this_boundingbox,
@@ -154,12 +149,10 @@ where
                         other_transform,
                         other_alter_meta,
                     )
-                })
-                .into_iter()
-                .flatten()
-                .collect(),
+                }),
                 (None, Some([otherleft, otherright])) => [(this, otherleft), (this, otherright)]
-                    .map(|(new_this, new_other)| {
+                    .into_iter()
+                    .any(|(new_this, new_other)| {
                         BoundingBoxElement::overlaps_bounding_box_and_children(
                             new_this,
                             this_boundingbox,
@@ -170,12 +163,10 @@ where
                             other_transform,
                             other_alter_meta,
                         )
-                    })
-                    .into_iter()
-                    .flatten()
-                    .collect(),
+                    }),
                 (Some([thisleft, thisright]), None) => [(thisleft, other), (thisright, other)]
-                    .map(|(new_this, new_other)| {
+                    .into_iter()
+                    .any(|(new_this, new_other)| {
                         BoundingBoxElement::overlaps_bounding_box_and_children(
                             new_this,
                             this_boundingbox,
@@ -186,18 +177,17 @@ where
                             other_transform,
                             other_alter_meta,
                         )
-                    })
-                    .into_iter()
-                    .flatten()
-                    .collect(),
+                    }),
                 (None, None) => {
-                    vec![(this, other)]
+            other_alter_meta(&mut *other.meta.borrow_mut());
+            this_alter_meta(&mut *this.meta.borrow_mut());
+            true
                 }
+
             }
         } else {
-            vec![]
+            false
         }
-        .into_iter()
     }
 
     pub fn get_children<'a>(

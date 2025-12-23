@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::ops::Bound;
 use std::sync::LazyLock;
 
 use graphics::colour::ColourRGBA;
@@ -18,12 +19,17 @@ mod active_element;
 mod group;
 pub use group::Group as BoundingBoxGroup;
 
-pub mod skeleton_bb;
+mod skeleton_bb;
 pub use skeleton_bb::{DrawError as SkeletonBbDrawError, SkeletonBb, SkeletonBbGroup};
+
+pub mod collision;
+pub use collision::Collision;
+
 
 use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::bounding_box::element::DrawRecurisveError;
-use crate::modelling::{SimpleCubic, SimpleVertex, Volume};
+use crate::modelling::cubic::geometry::Pose;
+use crate::modelling::{CubicVertex, SimpleCubic, SimpleVertex, Volume};
 use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
@@ -91,28 +97,29 @@ where
         self.get(0).encloses_point_and_children(self, point)
     }
 
-    pub fn detect_collision<F: Fn(&mut T), O: Fn(&mut T), P: Transform<Vector<DIMS>>>(
+    pub fn detect_collision<V2: ExtendedVertex<DIMS>, U, F: FnMut(&mut T), O: FnMut(&mut U), P: Transform<Vector<DIMS>>>(
         lhs: &Self,
         lhs_pose: P,
-        lhs_alter_meta: F,
-        rhs: &Self,
+        mut lhs_alter_meta: F,
+        rhs: &BoundingBox<V2, DIMS, U>,
         rhs_pose: P,
-        rhs_alter_meta: O,
-    ) -> Vec<(Vec<[V; 3]>, Vec<[V; 3]>)>
+        mut rhs_alter_meta: O,
+    ) -> bool
     where
         P: Transform<[V; 3]>,
+        P: Transform<[V2; 3]>,
     {
         BoundingBoxElement::overlaps_bounding_box_and_children(
             lhs.get(0),
             lhs,
             &lhs_pose,
-            &lhs_alter_meta,
+            &mut lhs_alter_meta,
             rhs.get(0),
             rhs,
             &rhs_pose,
-            &rhs_alter_meta,
+            &mut rhs_alter_meta,
         )
-        .map(|(lhs, rhs)| {
+        /*.map(|(lhs, rhs)| {
             (
                 lhs.get_triangles()
                     .iter()
@@ -126,7 +133,7 @@ where
                     .collect(),
             )
         })
-        .collect()
+        .collect()*/
     }
 }
 
@@ -180,6 +187,19 @@ impl<T> BoundingBox<SimpleVertex, 3, T> {
             .map(|(_, triangle)| triangle)
             .collect();
         Self::new_from_triangles(triangles, depth, init)
+    }
+}
+
+impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, 3, TThis> {
+    type Transform<'a> = Pose;
+    type FuncInputs = ();
+    type Inner = TThis;
+    fn collides_with_primitive<V: CubicVertex, U, F: FnMut(Self::FuncInputs, &mut Self::Inner), O: FnMut(&mut U)>(&self, transform: &Self::Transform<'_>, mut self_func: F, target: &BoundingBox<V, 3, U>, target_transform: &Pose, target_alter_meta: O) -> bool {
+        Self::detect_collision(self, *transform, |x| self_func((), x), target, *target_transform, target_alter_meta)
+    }
+
+    fn collides<T: Collision, F: FnMut(Self::FuncInputs, &mut Self::Inner), O: FnMut(T::FuncInputs, &mut T::Inner)>(&self, transform: &Self::Transform<'_>, mut self_alter_meta: F, target: &T, target_transform: &T::Transform<'_>, target_alter_meta: O) -> bool {
+        target.collides_with_primitive(target_transform, target_alter_meta, self, transform, |x| self_alter_meta((), x))
     }
 }
 

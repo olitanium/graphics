@@ -4,7 +4,6 @@ use utils::error_boilerplate;
 
 use super::{CullFace, ShaderProgram};
 use crate::texture::Texture;
-use crate::vertex::Vertex;
 use crate::{Model, gl_call};
 
 #[derive(Debug)]

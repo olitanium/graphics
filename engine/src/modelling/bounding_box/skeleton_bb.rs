@@ -6,10 +6,11 @@ use graphics::linear_algebra::Vector;
 use graphics::texture::FlatTexture;
 use graphics::vertex_array::VertexArray;
 
+use crate::modelling::bounding_box::BoundingBoxShaderProgram;
 use crate::modelling::bounding_box::element::DrawRecurisveError;
 use crate::modelling::cubic::SkeletonBoneIndex;
-use crate::modelling::cubic::geometry::{CalculatedAnimation, GetAnimationError};
-use crate::modelling::{BoundingBox, CubicVertex, Skeleton};
+use crate::modelling::cubic::geometry::{CalculatedAnimation, GetAnimationError, Pose};
+use crate::modelling::{BoundingBox, Collision, CubicVertex, Skeleton};
 
 mod group;
 pub use group::Group as SkeletonBbGroup;
@@ -53,25 +54,19 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
         rhs_calculated_animation: &CalculatedAnimation,
         rhs_skeleton: &Skeleton,
         rhs_alter_meta: O,
-    ) -> Vec<(Vec<[V; 3]>, Vec<[V; 3]>)>
+    ) -> bool
     where
-        F: Fn(&mut T),
-        O: Fn(&mut T),
+        F: Fn(SkeletonBoneIndex, &mut T),
+        O: Fn(SkeletonBoneIndex, &mut T),
     {
         let lhs_alter_meta = &lhs_alter_meta;
         let rhs_alter_meta = &rhs_alter_meta;
 
         const ERROR_MSG: &str = "CalulatedAnimation has been generated from this skeleton";
-        // let lhs_calculated_animation = lhs_calculated_animation
-        // .poses(lhs_skeleton)
-        // .expect(ERROR_MSG);
-        // let rhs_calculated_animation = rhs_calculated_animation
-        // .poses(rhs_skeleton)
-        // .expect(ERROR_MSG);
         lhs.per_bone
             .iter()
             .enumerate()
-            .flat_map(|(lhs_bone, lhs_bb)| {
+            .any(move |(lhs_bone, lhs_bb)| {
                 // HACK: making SkeletonBoneIndex outside the skeleton should be illegal
                 let lhs_bone = SkeletonBoneIndex(lhs_bone);
                 let lhs_pose = lhs_calculated_animation
@@ -80,7 +75,7 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
                 rhs.per_bone
                     .iter()
                     .enumerate()
-                    .flat_map(move |(rhs_bone, rhs_bb)| {
+                    .any(move |(rhs_bone, rhs_bb)| {
                         // HACK: making SkeletonBoneIndex outside the skeleton should be illegal
                         let rhs_bone = SkeletonBoneIndex(rhs_bone);
                         let rhs_pose = rhs_calculated_animation
@@ -90,14 +85,13 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
                         BoundingBox::detect_collision(
                             lhs_bb,
                             lhs_pose,
-                            lhs_alter_meta,
+                            |t| lhs_alter_meta(lhs_bone, t),
                             rhs_bb,
                             rhs_pose,
-                            rhs_alter_meta,
+                            |t| rhs_alter_meta(rhs_bone, t),
                         )
                     })
             })
-            .collect()
     }
 }
 
@@ -133,5 +127,20 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
         }
 
         Ok(())
+    }
+}
+
+impl<VThis: CubicVertex, TThis> Collision for SkeletonBb<VThis, TThis> {
+    type Inner = TThis;
+    type FuncInputs = SkeletonBoneIndex;
+    type Transform<'a> = (&'a Skeleton, &'a CalculatedAnimation);
+
+    fn collides<T: Collision, F: FnMut(Self::FuncInputs, &mut Self::Inner), O: FnMut(T::FuncInputs, &mut T::Inner)>(&self, transform: &Self::Transform<'_>, mut self_alter_meta: F, target: &T, target_transform: &T::Transform<'_>, mut target_alter_meta: O) -> bool {
+        self.per_bone.iter().enumerate().any(|(index, self_bounding_box)| {
+            let skeleton_index = SkeletonBoneIndex(index);
+            let Ok(this_transform) = transform.1.get(skeleton_index, transform.0) else {return false};
+
+            self_bounding_box.collides(&this_transform, |(), t| self_alter_meta(skeleton_index, t), target, target_transform, &mut target_alter_meta)
+        })
     }
 }

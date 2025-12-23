@@ -10,6 +10,7 @@ use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::line::Line;
 use crate::opengl_shaders;
 
+#[derive(Debug)]
 pub struct Group<'a, U, const OUT: usize, F: FramebufferWithoutExtra<OUT>> {
     destination: &'a F,
     line: &'a Line<U>,

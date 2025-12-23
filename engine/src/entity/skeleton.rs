@@ -4,7 +4,7 @@ use utils::partition;
 
 use crate::entity::Mass;
 use crate::modelling::cubic::geometry::Pose;
-use crate::modelling::{SimpleCubic, SimpleVertex, SkeletonBb, Volume};
+use crate::modelling::{Collision, SimpleCubic, SimpleVertex, SkeletonBb, Volume};
 
 #[derive(Debug)]
 pub struct SkeletonEntity<T> {
@@ -67,5 +67,17 @@ impl<T> SkeletonEntity<T> {
     pub fn update(&mut self, timestep: f32) {
         let delta_pose = Pose::new_from_translation(self.velocity.scale(timestep));
         self.pose.push_change(delta_pose);
+    }
+}
+
+impl<TThis> Collision for SkeletonEntity<TThis> {
+    type FuncInputs = <SkeletonBb<SimpleVertex, TThis> as Collision>::FuncInputs; 
+    type Inner = <SkeletonBb<SimpleVertex, TThis> as Collision>::Inner; 
+    type Transform<'a> = <SkeletonBb<SimpleVertex, TThis> as Collision>::Transform<'a>;
+
+
+    fn collides<T: Collision, F: FnMut(Self::FuncInputs, &mut Self::Inner), O: FnMut(T::FuncInputs, &mut T::Inner)>(&self, transform: &Self::Transform<'_>, self_alter_meta: F, target: &T, target_transform: &T::Transform<'_>, target_alter_meta: O) -> bool {
+        let Some(bbox) = &self.bounding_box else {return false};
+        bbox.collides(transform, self_alter_meta, target, target_transform, target_alter_meta)
     }
 }

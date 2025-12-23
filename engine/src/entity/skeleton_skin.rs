@@ -4,13 +4,13 @@ use graphics::linear_algebra::Vector;
 use utils::partition;
 
 use crate::entity::Mass;
-use crate::modelling::cubic::SkeletonCubic;
+use crate::modelling::cubic::SkinningCubic;
 use crate::modelling::cubic::geometry::Pose;
-use crate::modelling::{SkeletalVertex, SkeletonBb};
+use crate::modelling::{Collision, SkeletalVertex, SkeletonBb};
 
 #[derive(Debug, Clone)]
 pub struct SkinningEntity<T> {
-    pub model: SkeletonCubic,
+    pub model: SkinningCubic,
     pub pose: Pose,
     pub mass: Mass,
     pub(crate) bounding_box: Option<SkeletonBb<SkeletalVertex, T>>,
@@ -32,7 +32,7 @@ impl<T> Default for SkinningEntity<T> {
 
 impl<T> SkinningEntity<T> {
     pub fn from_skeletoncubic<F: FnMut(&[(Vector<3>, [SkeletalVertex; 3])]) -> T>(
-        model: SkeletonCubic,
+        model: SkinningCubic,
         depth: usize,
         mass: Mass,
         init: F,
@@ -49,7 +49,7 @@ impl<T> SkinningEntity<T> {
 }
 
 pub fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [SkeletalVertex; 3])]) -> T>(
-    cubic: &SkeletonCubic,
+    cubic: &SkinningCubic,
     depth: usize,
     init: F,
 ) -> Option<SkeletonBb<SkeletalVertex, T>> {
@@ -77,5 +77,17 @@ impl<T> SkinningEntity<T> {
     pub fn update(&mut self, timestep: f32) {
         let delta_pose = Pose::new_from_translation(self.velocity.scale(timestep));
         self.pose.push_change(delta_pose);
+    }
+}
+
+impl<TThis> Collision for SkinningEntity<TThis> {
+    type FuncInputs = <SkeletonBb<SkeletalVertex, TThis> as Collision>::FuncInputs; 
+    type Inner = <SkeletonBb<SkeletalVertex, TThis> as Collision>::Inner; 
+    type Transform<'a> = <SkeletonBb<SkeletalVertex, TThis> as Collision>::Transform<'a>;
+
+
+    fn collides<T: Collision, F: FnMut(Self::FuncInputs, &mut Self::Inner), O: FnMut(T::FuncInputs, &mut T::Inner)>(&self, transform: &Self::Transform<'_>, self_alter_meta: F, target: &T, target_transform: &T::Transform<'_>, target_alter_meta: O) -> bool {
+        let Some(bbox) = &self.bounding_box else {return false};
+        bbox.collides(transform, self_alter_meta, target, target_transform, target_alter_meta)
     }
 }

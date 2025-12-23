@@ -6,13 +6,13 @@ use graphics::linear_algebra::Vector;
 use graphics::{ActiveShaderProgram, Model};
 
 use crate::modelling::cubic::geometry::CalculatedAnimation;
-use crate::modelling::{CubicVertex, Skeleton};
+use crate::modelling::{Collision, CubicVertex, Skeleton};
 
 pub trait EntityInner: Sized + Model
 where
     Self::Vertex: CubicVertex,
 {
-    type BoundingBox<T>;
+    type BoundingBox<T>: Collision;
     type DrawError<'a>: Error
     where
         Self: 'a;
