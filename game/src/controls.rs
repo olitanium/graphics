@@ -3,6 +3,7 @@ use std::convert::Infallible;
 use std::mem;
 use std::ops::{FromResidual, Try};
 
+use engine::entity::SkeletonEntity;
 use engine::linear_algebra::Vector;
 use engine::modelling::TestLineVertex;
 use engine::modelling::cubic::geometry::Pose;
@@ -155,8 +156,8 @@ impl State {
                         let new_pos_index = self
                             .grappling_hook
                             .entity
-                            .push_simple_entity(
-                                morgan_model,
+                            .push(
+                                SkeletonEntity::from(morgan_model),
                                 Pose::new_from_translation(Vector::new([0.0, 0.0, 0.5])),
                                 self.grappling_hook.chain,
                                 self.grappling_hook.chain_end_bone,

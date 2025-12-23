@@ -4,10 +4,10 @@ pub use cubic::{
     ImportError,
     SHADOW_SHADER_MAX_LIGHTS,
     ShadowGroup,
-    SimpleCubic,
     SimpleCubicGroup,
     Skeleton,
     SkeletonBuilder,
+    SkeletonCubic,
 };
 mod line;
 pub use line::{DrawError as LineDrawError, Line, LineGroup, TestLineVertex};
@@ -31,10 +31,10 @@ pub(crate) use bounding_box::BoundingBoxElement;
 pub use bounding_box::{
     BoundingBox,
     BoundingBoxGroup,
+    Collision,
     SkeletonBb,
     SkeletonBbDrawError,
     SkeletonBbGroup,
-    Collision,
 };
 
 mod advanced_vertex;

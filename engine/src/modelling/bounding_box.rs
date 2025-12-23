@@ -1,5 +1,4 @@
 use std::fmt::Debug;
-use std::ops::Bound;
 use std::sync::LazyLock;
 
 use graphics::colour::ColourRGBA;
@@ -25,11 +24,10 @@ pub use skeleton_bb::{DrawError as SkeletonBbDrawError, SkeletonBb, SkeletonBbGr
 pub mod collision;
 pub use collision::Collision;
 
-
 use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::bounding_box::element::DrawRecurisveError;
 use crate::modelling::cubic::geometry::Pose;
-use crate::modelling::{CubicVertex, SimpleCubic, SimpleVertex, Volume};
+use crate::modelling::{CubicVertex, SimpleVertex, SkeletonCubic, Volume};
 use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
@@ -97,7 +95,13 @@ where
         self.get(0).encloses_point_and_children(self, point)
     }
 
-    pub fn detect_collision<V2: ExtendedVertex<DIMS>, U, F: FnMut(&mut T), O: FnMut(&mut U), P: Transform<Vector<DIMS>>>(
+    pub fn detect_collision<
+        V2: ExtendedVertex<DIMS>,
+        U,
+        F: FnMut(&mut T),
+        O: FnMut(&mut U),
+        P: Transform<Vector<DIMS>>,
+    >(
         lhs: &Self,
         lhs_pose: P,
         mut lhs_alter_meta: F,
@@ -119,21 +123,21 @@ where
             &rhs_pose,
             &mut rhs_alter_meta,
         )
-        /*.map(|(lhs, rhs)| {
-            (
-                lhs.get_triangles()
-                    .iter()
-                    .map(|triangle| lhs_pose.transform(triangle))
-                    //.copied()
-                    .collect(),
-                rhs.get_triangles()
-                    .iter()
-                    .map(|triangle| rhs_pose.transform(triangle))
-                    //.copied()
-                    .collect(),
-            )
-        })
-        .collect()*/
+        // .map(|(lhs, rhs)| {
+        // (
+        // lhs.get_triangles()
+        // .iter()
+        // .map(|triangle| lhs_pose.transform(triangle))
+        // .copied()
+        // .collect(),
+        // rhs.get_triangles()
+        // .iter()
+        // .map(|triangle| rhs_pose.transform(triangle))
+        // .copied()
+        // .collect(),
+        // )
+        // })
+        // .collect()
     }
 }
 
@@ -177,7 +181,7 @@ where
 
 impl<T> BoundingBox<SimpleVertex, 3, T> {
     pub fn from_cubic<F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
-        model: &SimpleCubic,
+        model: &SkeletonCubic,
         depth: usize,
         init: F,
     ) -> Option<Self> {
@@ -191,15 +195,48 @@ impl<T> BoundingBox<SimpleVertex, 3, T> {
 }
 
 impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, 3, TThis> {
-    type Transform<'a> = Pose;
     type FuncInputs = ();
     type Inner = TThis;
-    fn collides_with_primitive<V: CubicVertex, U, F: FnMut(Self::FuncInputs, &mut Self::Inner), O: FnMut(&mut U)>(&self, transform: &Self::Transform<'_>, mut self_func: F, target: &BoundingBox<V, 3, U>, target_transform: &Pose, target_alter_meta: O) -> bool {
-        Self::detect_collision(self, *transform, |x| self_func((), x), target, *target_transform, target_alter_meta)
+    type Transform<'a> = Pose;
+
+    fn collides_with_primitive<
+        V: CubicVertex,
+        U,
+        F: FnMut(Self::FuncInputs, &mut Self::Inner),
+        O: FnMut(&mut U),
+    >(
+        &self,
+        transform: &Self::Transform<'_>,
+        mut self_func: F,
+        target: &BoundingBox<V, 3, U>,
+        target_transform: &Pose,
+        target_alter_meta: O,
+    ) -> bool {
+        Self::detect_collision(
+            self,
+            *transform,
+            |x| self_func((), x),
+            target,
+            *target_transform,
+            target_alter_meta,
+        )
     }
 
-    fn collides<T: Collision, F: FnMut(Self::FuncInputs, &mut Self::Inner), O: FnMut(T::FuncInputs, &mut T::Inner)>(&self, transform: &Self::Transform<'_>, mut self_alter_meta: F, target: &T, target_transform: &T::Transform<'_>, target_alter_meta: O) -> bool {
-        target.collides_with_primitive(target_transform, target_alter_meta, self, transform, |x| self_alter_meta((), x))
+    fn collides<
+        T: Collision,
+        F: FnMut(Self::FuncInputs, &mut Self::Inner),
+        O: FnMut(T::FuncInputs, &mut T::Inner),
+    >(
+        &self,
+        transform: &Self::Transform<'_>,
+        mut self_alter_meta: F,
+        target: &T,
+        target_transform: &T::Transform<'_>,
+        target_alter_meta: O,
+    ) -> bool {
+        target.collides_with_primitive(target_transform, target_alter_meta, self, transform, |x| {
+            self_alter_meta((), x)
+        })
     }
 }
 

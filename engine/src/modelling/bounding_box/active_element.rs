@@ -3,7 +3,7 @@ use std::array;
 use graphics::linear_algebra::Vector;
 use graphics::vertex::Vertex;
 
-use crate::modelling::{BoundingBox, BoundingBoxGroup};
+use crate::modelling::BoundingBox;
 use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::bounding_box::BoundingBoxElement;
 use crate::transform::Transform;
@@ -138,7 +138,8 @@ where
                     (thisright, otherleft),
                     (thisright, otherright),
                 ]
-                .into_iter().any(|(new_this, new_other)| {
+                .into_iter()
+                .any(|(new_this, new_other)| {
                     BoundingBoxElement::overlaps_bounding_box_and_children(
                         new_this,
                         this_boundingbox,
@@ -179,11 +180,10 @@ where
                         )
                     }),
                 (None, None) => {
-            other_alter_meta(&mut *other.meta.borrow_mut());
-            this_alter_meta(&mut *this.meta.borrow_mut());
-            true
+                    other_alter_meta(&mut *other.meta.borrow_mut());
+                    this_alter_meta(&mut *this.meta.borrow_mut());
+                    true
                 }
-
             }
         } else {
             false

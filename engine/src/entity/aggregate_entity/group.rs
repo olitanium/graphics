@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::fmt::Debug;
 
 use graphics::framebuffer::FramebufferContext;
@@ -8,12 +7,12 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
 use graphics::{Draw, DrawOut};
 
-use crate::entity::{AggregateEntity, AggregateModelIndex, CalculateAnimationError, EntityInner};
+use crate::entity::{AggregateEntity, CalculateAnimationError, EntityInner};
 use crate::modelling::CubicVertex;
+use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::{AggregateCalcAnim, CalculatedAnimation, Pose, SkeletalAnimation};
+use crate::modelling::cubic::geometry::AggregateCalcAnim;
 use crate::modelling::cubic::lighting::simple::ListLights;
-use crate::modelling::cubic::{Camera, SkeletonBoneIndex};
 
 pub struct Group<
     'a,
@@ -48,8 +47,7 @@ where
     M::Vertex: CubicVertex,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct(stringify!(Group))
-        .finish_non_exhaustive()
+        f.debug_struct(stringify!(Group)).finish_non_exhaustive()
     }
 }
 
@@ -73,19 +71,19 @@ where
         lights: &'a ListLights<MAX>,
         opaque: Vec<(
             &'a AggregateEntity<T, M>,
-            /*HashMap<AggregateModelIndex, (&'a SkeletalAnimation, f32)>, // time
-            Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,     // fix_anim*/
+            // HashMap<AggregateModelIndex, (&'a SkeletalAnimation, f32)>, // time
+            // Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,     // fix_anim
             AggregateCalcAnim,
         )>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Result<Box<Self>, CalculateAnimationError> {
-        /*let opaque: Result<_, CalculateAnimationError> = opaque
-            .into_iter()
-            .map(|(entity, animations, fix_anim)| {
-                Ok((entity, entity.calculate_animation(fix_anim, animations)?))
-            })
-            .collect();*/
+        // let opaque: Result<_, CalculateAnimationError> = opaque
+        // .into_iter()
+        // .map(|(entity, animations, fix_anim)| {
+        // Ok((entity, entity.calculate_animation(fix_anim, animations)?))
+        // })
+        // .collect();
         Ok(Box::new(Self {
             shader,
             framebuffer,

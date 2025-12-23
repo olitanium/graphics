@@ -17,13 +17,26 @@ pub mod lighting;
 
 pub mod material;
 
-mod simple_cubic;
-pub use simple_cubic::{
+mod skeleton_cubic;
+pub use skeleton_cubic::{
     BoneAndMesh,
-    Builder as SimpleCubicBuilder,
-    Group as SimpleCubicGroup,
-    SimpleCubic,
+    Builder as SkeletonCubicBuilder,
+    DrawError as SkeletonCubicDrawError,
+    Group as SkeletonCubicGroup,
+    SkeletonCubic,
 };
 
 mod skinning_cubic;
-pub use skinning_cubic::{SkinningCubic, SkeletonCubicGroup};
+pub use skinning_cubic::{
+    DrawError as SkinningCubicDrawError,
+    Group as SkinningCubicGroup,
+    SkinningCubic,
+};
+
+mod simple_cubic;
+pub use simple_cubic::{
+    Builder as SimpleCubicBuilder,
+    DrawError as SimpleCubicDrawError,
+    Group as SimpleCubicGroup,
+    SimpleCubic,
+};

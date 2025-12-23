@@ -27,7 +27,6 @@ pub use graphics::framebuffer::Builder as FrameBufferBuilder;
 pub use graphics::{types, *};
 pub use russimp::scene::PostProcess;
 mod transform;
-pub use transform::TransformBy;
-pub use transform::Transform;
+pub use transform::{Transform, TransformBy};
 
 pub type VecDraw<'a> = Vec<Box<dyn Draw + 'a>>;

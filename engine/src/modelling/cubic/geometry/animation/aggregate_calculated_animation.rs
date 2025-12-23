@@ -1,6 +1,17 @@
 use utils::error_boilerplate;
 
-use crate::{entity::AggregateModelIndex, modelling::{Skeleton, cubic::{SkeletonBoneIndex, geometry::{CalcAnimUnitIndex, CalculatedAnimation, Pose, SignaturesDoNotMatchError, SkeletalAnimation, animation::{AnimationUnit, Parent, PoseAndInverseBindPose}}}}, transform::Transform};
+use crate::entity::AggregateModelIndex;
+use crate::modelling::Skeleton;
+use crate::modelling::cubic::SkeletonBoneIndex;
+use crate::modelling::cubic::geometry::animation::{AnimationUnit, Parent, PoseAndInverseBindPose};
+use crate::modelling::cubic::geometry::{
+    CalcAnimUnitIndex,
+    CalculatedAnimation,
+    Pose,
+    SignaturesDoNotMatchError,
+    SkeletalAnimation,
+};
+use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
 pub struct AggregateCalcAnim {
@@ -22,8 +33,9 @@ impl AggregateCalcAnim {
     ) -> Result<AggregateCalcAnimBuilder<'a>, SignaturesDoNotMatchError> {
         AggregateCalcAnimBuilder::new(root_pose, root_skeleton, root_animation)
     }
+
     pub fn get(&self, index: AggregateModelIndex) -> Option<&CalculatedAnimation> {
-        self.vec.get(index.0)//.map(|opt| opt.as_ref()).flatten()
+        self.vec.get(index.0) //.map(|opt| opt.as_ref()).flatten()
     }
 }
 
@@ -150,7 +162,7 @@ impl<'a> AggregateCalcAnimBuilder<'a> {
             })
             .collect();
 
-        Ok(AggregateCalcAnim {vec})
+        Ok(AggregateCalcAnim { vec })
     }
 
     pub fn build(self) -> AggregateCalcAnim {
@@ -169,4 +181,3 @@ impl<'a> AggregateCalcAnimBuilder<'a> {
         AggregateCalcAnim { vec }
     }
 }
-

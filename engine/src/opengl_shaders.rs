@@ -3,10 +3,10 @@ use std::sync::LazyLock;
 use graphics::shader_program::{CullFace, ShaderProgram};
 use graphics::texture::{CubeMap, FlatTexture};
 
-use crate::modelling::cubic::SkinningCubic;
 use crate::modelling::cubic::lighting::shadow::ShadowListLights;
 use crate::modelling::cubic::lighting::simple::ListLights;
-use crate::modelling::{Line, Quad, SimpleCubic, SkyBox, TestLineVertex};
+use crate::modelling::cubic::{SimpleCubic, SkinningCubic};
+use crate::modelling::{Line, Quad, SkeletonCubic, SkyBox, TestLineVertex};
 
 static ERROR_MESSAGE: &str = "Engine defined shader should exist and not have errors";
 
@@ -29,14 +29,28 @@ macro_rules! make_included {
 
 make_included! {
     ShaderProgram<SimpleCubic, ListLights<2>, 2, FlatTexture>,
-    hdr,
+    hdr_simple,
+    "shaders/hdr_tangent/hdr_tangent.vert",
+    "shaders/hdr_tangent/hdr_tangent.frag",
+}
+
+make_included! {
+    ShaderProgram<SkeletonCubic, ListLights<2>, 2, FlatTexture>,
+    hdr_skeleton,
     "shaders/hdr_tangent/hdr_tangent.vert",
     "shaders/hdr_tangent/hdr_tangent.frag",
 }
 
 make_included! {
     ShaderProgram<SimpleCubic, ListLights<2>, 1, FlatTexture>,
-    hdr_without_bright,
+    hdr_without_bright_simple,
+    "shaders/hdr_tangent/hdr_tangent.vert",
+    "shaders/hdr_tangent/hdr_tangent.frag",
+}
+
+make_included! {
+    ShaderProgram<SkeletonCubic, ListLights<2>, 1, FlatTexture>,
+    hdr_without_bright_skeleton,
     "shaders/hdr_tangent/hdr_tangent.vert",
     "shaders/hdr_tangent/hdr_tangent.frag",
 }
@@ -63,14 +77,14 @@ make_included! {
 }
 
 make_included! {
-    ShaderProgram<SimpleCubic, ShadowListLights<2>, 2, FlatTexture>,
+    ShaderProgram<SkeletonCubic, ShadowListLights<2>, 2, FlatTexture>,
     shadow,
     "shaders/hdr_tangent_shadow/hdr_tangent_shadow.vert",
     "shaders/hdr_tangent_shadow/hdr_tangent_shadow.frag",
 }
 
 make_included! {
-    ShaderProgram<SimpleCubic, (), 0, FlatTexture>,
+    ShaderProgram<SkeletonCubic, (), 0, FlatTexture>,
     far_light_depth,
     "shaders/depth_testing/farspot_light_depth/farspot_light_depth.vert",
     "shaders/depth_testing/farspot_light_depth/farspot_light_depth.frag",
@@ -99,7 +113,7 @@ make_included! {
 }
 
 make_included! {
-    ShaderProgram<SimpleCubic, (), 0, CubeMap>,
+    ShaderProgram<SkeletonCubic, (), 0, CubeMap>,
     point_depth,
     "shaders/depth_testing/point_light_depth/point_light_depth.vert",
     "shaders/depth_testing/point_light_depth/point_light_depth.frag",

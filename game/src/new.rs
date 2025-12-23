@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::num::NonZero;
 use std::rc::Rc;
 
@@ -8,7 +7,13 @@ use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::camera::ManualPose;
-use engine::modelling::cubic::geometry::{AggregateCalcAnim, BoneAnimation, Orientation, Pose, SkeletalAnimation};
+use engine::modelling::cubic::geometry::{
+    AggregateCalcAnim,
+    BoneAnimation,
+    Orientation,
+    Pose,
+    SkeletalAnimation,
+};
 use engine::modelling::cubic::lighting::shadow::{
     ShadowListLights,
     ShadowPointLight,
@@ -16,8 +21,8 @@ use engine::modelling::cubic::lighting::shadow::{
 };
 use engine::modelling::cubic::lighting::simple::{ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{SkeletonBoneIndex, SkinningCubic, camera};
-use engine::modelling::{Bloom, Bone, Line, Quad, SimpleCubic, Skeleton, SkyBox};
+use engine::modelling::cubic::{SimpleCubic, SkeletonBoneIndex, SkinningCubic, camera};
+use engine::modelling::{Bloom, Bone, Line, Quad, Skeleton, SkeletonCubic, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
@@ -77,10 +82,9 @@ impl State {
         // })
         // .collect();
 
-        let (_, morgan) = make_model("morgan").unwrap();
+        let morgan = make_model("morgan").unwrap();
         let mut morgan = SimpleEntity::from_simple_cubic(morgan, 20, Mass(1.0), |_| ());
         morgan.pose = Pose::new_from_translation(Vector::new([0.0, 0.0, 6.0]));
-
 
         let origin_cube = SimpleEntity::from_simple_cubic(
             SimpleCubic::cube(1.0, Rc::new(Material::black())).build(),
@@ -171,7 +175,7 @@ impl State {
             Material::builder().emission(light_emission).build()
         };
 
-        let _light = SimpleCubic::cube(1.0, Rc::new(light_material))
+        let _light = SkeletonCubic::cube(1.0, Rc::new(light_material))
             .cull_face(CullFace::BackFace)
             .scale(0.2)
             .build();
@@ -251,58 +255,47 @@ impl State {
     }
 }
 
-pub fn make_model(
-    which_model: &str,
-) -> Result<(Option<SkeletalAnimation>, SimpleCubic), StateError> {
+pub fn make_model(which_model: &str) -> Result<SimpleCubic, StateError> {
     use engine::PostProcess as P;
     let model = match which_model {
-        "morgan" => (
-            None,
-            SimpleCubic::import(
-                "assets/Teddy Statue/Teddy Statue.obj",
-                vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
-                true,
-            )
-            .unwrap()
-            .cull_face(CullFace::BackFace)
-            .scale(0.01)
-            .apply_transformation(Pose::new_from_translation(Vector::new([
-                0.0, -1.2773916, 0.42744067,
-            ])))
-            .build(),
-        ),
-        "backpack" => (
-            None,
-            SimpleCubic::import(
-                "assets/backpack/backpack.obj",
-                vec![
-                    P::Triangulate,
-                    P::FlipUVs,
-                    P::OptimizeGraph,
-                    P::OptimizeMeshes,
-                ],
-                false,
-            )
-            .unwrap()
-            .material(Rc::new(Material::white()))
-            .build(),
-        ),
-        "bigguy" => (
-            None,
-            SimpleCubic::import(
-                "assets/vamp.fbx",
-                vec![
-                    P::Triangulate,
-                    P::FlipUVs,
-                    P::OptimizeGraph,
-                    P::OptimizeMeshes,
-                ],
-                true,
-            )
-            .unwrap()
-            .scale(0.01)
-            .build(),
-        ),
+        "morgan" => SimpleCubic::import(
+            "assets/Teddy Statue/Teddy Statue.obj",
+            vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
+            true,
+        )
+        .unwrap()
+        .cull_face(CullFace::BackFace)
+        .scale(0.01)
+        .apply_transformation(Pose::new_from_translation(Vector::new([
+            0.0, -1.2773916, 0.42744067,
+        ])))
+        .build(),
+        "backpack" => SimpleCubic::import(
+            "assets/backpack/backpack.obj",
+            vec![
+                P::Triangulate,
+                P::FlipUVs,
+                P::OptimizeGraph,
+                P::OptimizeMeshes,
+            ],
+            false,
+        )
+        .unwrap()
+        .material(Rc::new(Material::white()))
+        .build(),
+        "bigguy" => SimpleCubic::import(
+            "assets/vamp.fbx",
+            vec![
+                P::Triangulate,
+                P::FlipUVs,
+                P::OptimizeGraph,
+                P::OptimizeMeshes,
+            ],
+            true,
+        )
+        .unwrap()
+        .scale(0.01)
+        .build(),
         // "oliver" => {
         // let material = Rc::new(
         // Material::builder()
@@ -342,13 +335,13 @@ pub fn make_model(
         // .build(),
         // )
         // }
-        _ => (None, SimpleCubic::empty()),
+        _ => SimpleCubic::empty(),
     };
     Ok(model)
 }
 
 pub struct GrapplingHook {
-    pub entity: AggregateEntity<(), SimpleCubic>,
+    pub entity: AggregateEntity<(), SkeletonCubic>,
     pub base: AggregateModelIndex,
     pub chain: AggregateModelIndex,
     pub chain_end_bone: SkeletonBoneIndex,
@@ -358,8 +351,17 @@ pub struct GrapplingHook {
 }
 
 impl GrapplingHook {
-    pub fn calculate_animation(&self, fix_anim: Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,time: f32) -> AggregateCalcAnim {
-        self.entity.calculate_animation(fix_anim, [(self.chain, (&self.chain_animation, time))].into()).unwrap()
+    pub fn calculate_animation(
+        &self,
+        fix_anim: Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,
+        time: f32,
+    ) -> AggregateCalcAnim {
+        self.entity
+            .calculate_animation(
+                fix_anim,
+                [(self.chain, (&self.chain_animation, time))].into(),
+            )
+            .unwrap()
     }
 }
 
@@ -369,13 +371,13 @@ fn grappling_hook() -> GrapplingHook {
     // Need hook
 
     const ORIGIN_BOX_SIZE: f32 = 1.0;
-    let origin_cube = SimpleCubic::cube(
+    let origin_cube = SkeletonCubic::cube(
         ORIGIN_BOX_SIZE,
         Rc::new(Material::from_colour(ColourRGBA::RED)),
     )
     .build();
 
-    let mut chain = SimpleCubic::builder();
+    let mut chain = SkeletonCubic::builder();
     let mut skeleton_builder = Skeleton::builder();
     let mut animation_builder = SkeletalAnimation::builder();
     let mut end_bone = SkeletonBoneIndex::SKELETON_ROOT_BONE;
@@ -456,7 +458,7 @@ fn grappling_hook() -> GrapplingHook {
 
     const HOOK_SIZE: f32 = 2.0;
     let hook =
-        SimpleCubic::cube(HOOK_SIZE, Rc::new(Material::from_colour(ColourRGBA::GREEN))).build();
+        SkeletonCubic::cube(HOOK_SIZE, Rc::new(Material::from_colour(ColourRGBA::GREEN))).build();
 
     let mut aggregate = AggregateEntity::new(origin_cube, 1, |_| ());
     let chain_attachment_point = aggregate

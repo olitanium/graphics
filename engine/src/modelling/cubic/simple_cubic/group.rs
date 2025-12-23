@@ -5,17 +5,10 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
 use graphics::{Draw, DrawOut};
 
-use crate::modelling::SimpleCubic;
-use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::{
-    CalculatedAnimation,
-    Pose,
-    SignaturesDoNotMatchError,
-    SkeletalAnimation,
-    process_vec_noaggregate,
-};
+use crate::modelling::cubic::geometry::{Pose, SignaturesDoNotMatchError};
 use crate::modelling::cubic::lighting::simple::ListLights;
+use crate::modelling::cubic::{Camera, SimpleCubic};
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
@@ -26,7 +19,7 @@ pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth
     camera_look_at: Matrix<4, 4>,
 
     lights: &'a ListLights<MAX>,
-    opaque: Vec<(&'a SimpleCubic, CalculatedAnimation)>,
+    opaque: Vec<(&'a SimpleCubic, Pose)>,
 
     uniforms: Vec<(String, &'a dyn Uniform)>,
 }
@@ -41,7 +34,7 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
         camera: &Camera<O>,
         hint: &O::Hint,
         lights: &'a ListLights<MAX>,
-        opaque: Vec<(&'a SimpleCubic, CalculatedAnimation)>,
+        opaque: Vec<(&'a SimpleCubic, Pose)>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Result<Box<Self>, SignaturesDoNotMatchError> {
@@ -82,13 +75,9 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
 
         active_shader.set_uniform_dyn(self.uniforms).unwrap();
 
-        for (model, calculated_animation) in self.opaque {
+        for (model, pose) in self.opaque {
             model
-                .draw(
-                    &mut active_shader,
-                    &mut active_framebuffer,
-                    &calculated_animation,
-                )
+                .draw(&mut active_shader, &mut active_framebuffer, pose)
                 .unwrap();
         }
         DrawOut::OK

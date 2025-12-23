@@ -6,10 +6,9 @@ use graphics::linear_algebra::Vector;
 use graphics::texture::FlatTexture;
 use graphics::vertex_array::VertexArray;
 
-use crate::modelling::bounding_box::BoundingBoxShaderProgram;
 use crate::modelling::bounding_box::element::DrawRecurisveError;
 use crate::modelling::cubic::SkeletonBoneIndex;
-use crate::modelling::cubic::geometry::{CalculatedAnimation, GetAnimationError, Pose};
+use crate::modelling::cubic::geometry::{CalculatedAnimation, GetAnimationError};
 use crate::modelling::{BoundingBox, Collision, CubicVertex, Skeleton};
 
 mod group;
@@ -131,16 +130,46 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
 }
 
 impl<VThis: CubicVertex, TThis> Collision for SkeletonBb<VThis, TThis> {
-    type Inner = TThis;
     type FuncInputs = SkeletonBoneIndex;
+    type Inner = TThis;
     type Transform<'a> = (&'a Skeleton, &'a CalculatedAnimation);
 
-    fn collides<T: Collision, F: FnMut(Self::FuncInputs, &mut Self::Inner), O: FnMut(T::FuncInputs, &mut T::Inner)>(&self, transform: &Self::Transform<'_>, mut self_alter_meta: F, target: &T, target_transform: &T::Transform<'_>, mut target_alter_meta: O) -> bool {
-        self.per_bone.iter().enumerate().any(|(index, self_bounding_box)| {
-            let skeleton_index = SkeletonBoneIndex(index);
-            let Ok(this_transform) = transform.1.get(skeleton_index, transform.0) else {return false};
+    fn collides<
+        T: Collision,
+        F: FnMut(Self::FuncInputs, &mut Self::Inner),
+        O: FnMut(T::FuncInputs, &mut T::Inner),
+    >(
+        &self,
+        transform: &Self::Transform<'_>,
+        mut self_alter_meta: F,
+        target: &T,
+        target_transform: &T::Transform<'_>,
+        mut target_alter_meta: O,
+    ) -> bool {
+        self.per_bone
+            .iter()
+            .enumerate()
+            .any(|(index, self_bounding_box)| {
+                let skeleton_index = SkeletonBoneIndex(index);
+                let Ok(this_transform) = transform.1.get(skeleton_index, transform.0) else {
+                    return false;
+                };
 
-            self_bounding_box.collides(&this_transform, |(), t| self_alter_meta(skeleton_index, t), target, target_transform, &mut target_alter_meta)
-        })
+                self_bounding_box.collides(
+                    &this_transform,
+                    |(), t| self_alter_meta(skeleton_index, t),
+                    target,
+                    target_transform,
+                    &mut target_alter_meta,
+                )
+            })
+    }
+}
+
+impl<V: CubicVertex, T> From<BoundingBox<V, 3, T>> for SkeletonBb<V, T> {
+    fn from(value: BoundingBox<V, 3, T>) -> Self {
+        Self {
+            per_bone: vec![value],
+        }
     }
 }

@@ -189,7 +189,6 @@ impl PoseAndInverseBindPose {
     }
 }
 
-
 pub(crate) fn process_vec_noaggregate<'a, M: EntityInner>(
     input: Vec<(&'a M, Pose, Option<(&'a SkeletalAnimation, f32)>)>,
 ) -> Result<Vec<(&'a M, CalculatedAnimation)>, SignaturesDoNotMatchError>
@@ -207,9 +206,9 @@ where
         .collect()
 }
 
-/*impl From<(&CalculatedAnimation, &Skeleton)> for Pose {
-    fn from(value: (&CalculatedAnimation, &Skeleton)) -> Self {
-        let (anim, skeleton) = value;
-        anim.get(SkeletonBoneIndex::SKELETON_ROOT_BONE, skeleton).expect("TODO: this is a bit yuck if skeleton isn't right")
-    }
-}*/
+// impl From<(&CalculatedAnimation, &Skeleton)> for Pose {
+// fn from(value: (&CalculatedAnimation, &Skeleton)) -> Self {
+// let (anim, skeleton) = value;
+// anim.get(SkeletonBoneIndex::SKELETON_ROOT_BONE, skeleton).expect("TODO: this
+// is a bit yuck if skeleton isn't right") }
+// }

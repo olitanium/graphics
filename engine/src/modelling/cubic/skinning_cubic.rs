@@ -14,10 +14,10 @@ use crate::modelling::cubic::geometry::{
     SkeletalAnimation,
 };
 use crate::modelling::cubic::{Mesh, MeshDrawError, SkeletonBoneIndex};
-use crate::modelling::{Collision, SkeletalVertex, Skeleton, SkeletonBb, test_models};
+use crate::modelling::{SkeletalVertex, Skeleton, SkeletonBb, test_models};
 
 mod group;
-pub use group::Group as SkeletonCubicGroup;
+pub use group::Group;
 
 #[derive(Debug, Clone, Default)]
 pub struct SkinningCubic {

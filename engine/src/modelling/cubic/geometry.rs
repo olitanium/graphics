@@ -4,12 +4,12 @@ mod orientation;
 mod pose;
 
 pub use animation::{
+    AggregateCalcAnim,
+    AggregateCalcAnimBuilder,
     // AnimationError,
     BoneAnimation,
     CalculatedAnimation,
-    AggregateCalcAnimBuilder,
     SkeletalAnimation,
-    AggregateCalcAnim,
 };
 pub use animation::{
     BuildFixingBoneError,

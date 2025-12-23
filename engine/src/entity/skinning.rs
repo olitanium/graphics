@@ -3,7 +3,7 @@ use std::{convert, iter};
 use graphics::linear_algebra::Vector;
 use utils::partition;
 
-use crate::entity::Mass;
+use crate::entity::{FromToAggregateEntity, Mass};
 use crate::modelling::cubic::SkinningCubic;
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{Collision, SkeletalVertex, SkeletonBb};
@@ -81,13 +81,50 @@ impl<T> SkinningEntity<T> {
 }
 
 impl<TThis> Collision for SkinningEntity<TThis> {
-    type FuncInputs = <SkeletonBb<SkeletalVertex, TThis> as Collision>::FuncInputs; 
-    type Inner = <SkeletonBb<SkeletalVertex, TThis> as Collision>::Inner; 
+    type FuncInputs = <SkeletonBb<SkeletalVertex, TThis> as Collision>::FuncInputs;
+    type Inner = <SkeletonBb<SkeletalVertex, TThis> as Collision>::Inner;
     type Transform<'a> = <SkeletonBb<SkeletalVertex, TThis> as Collision>::Transform<'a>;
 
+    fn collides<
+        T: Collision,
+        F: FnMut(Self::FuncInputs, &mut Self::Inner),
+        O: FnMut(T::FuncInputs, &mut T::Inner),
+    >(
+        &self,
+        transform: &Self::Transform<'_>,
+        self_alter_meta: F,
+        target: &T,
+        target_transform: &T::Transform<'_>,
+        target_alter_meta: O,
+    ) -> bool {
+        let Some(bbox) = &self.bounding_box else {
+            return false;
+        };
+        bbox.collides(
+            transform,
+            self_alter_meta,
+            target,
+            target_transform,
+            target_alter_meta,
+        )
+    }
+}
 
-    fn collides<T: Collision, F: FnMut(Self::FuncInputs, &mut Self::Inner), O: FnMut(T::FuncInputs, &mut T::Inner)>(&self, transform: &Self::Transform<'_>, self_alter_meta: F, target: &T, target_transform: &T::Transform<'_>, target_alter_meta: O) -> bool {
-        let Some(bbox) = &self.bounding_box else {return false};
-        bbox.collides(transform, self_alter_meta, target, target_transform, target_alter_meta)
+impl<T> FromToAggregateEntity<T> for SkinningEntity<T> {
+    type Model = SkinningCubic;
+
+    fn to_pair_model_bbox(
+        self,
+    ) -> (
+        Self::Model,
+        Option<<Self::Model as super::EntityInner>::BoundingBox<T>>,
+    ) {
+        let Self {
+            model,
+            bounding_box,
+            ..
+        } = self;
+
+        (model, bounding_box)
     }
 }

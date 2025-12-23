@@ -12,7 +12,7 @@ use crate::modelling::cubic::geometry::{BoneAnimation, Orientation, Pose, Skelet
 use crate::modelling::cubic::material::Material;
 use crate::modelling::cubic::{MeshBuilder, SkeletonBoneIndex, SkinningCubic};
 use crate::modelling::quad::QuadVertex;
-use crate::modelling::{Bone, ExtendedVertex, SimpleCubic, Skeleton};
+use crate::modelling::{Bone, ExtendedVertex, Skeleton, SkeletonCubic};
 
 pub fn cube_triangles(
     lower_bound: Vector<3>,
@@ -301,13 +301,13 @@ pub fn tail_skeleton_cubic(
     )
 }
 
-pub fn tail_simplecubic(max_len: usize) -> (SimpleCubic, SkeletonBoneIndex, SkeletalAnimation) {
+pub fn tail_simplecubic(max_len: usize) -> (SkeletonCubic, SkeletonBoneIndex, SkeletalAnimation) {
     let triangles = tail_with_bone(max_len);
 
     let mut mesh_builder = MeshBuilder::new().material(Rc::new(Material::white()));
     mesh_builder.extend_triangle(triangles);
 
-    let mut builder = SimpleCubic::builder();
+    let mut builder = SkeletonCubic::builder();
     builder.push_mesh(SkeletonBoneIndex::SKELETON_ROOT_BONE, mesh_builder);
     // SKELETON
     let (skeleton, end_bone_index, animation) = tail_animation(max_len);

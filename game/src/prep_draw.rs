@@ -1,9 +1,6 @@
-use std::collections::HashMap;
-
 use engine::entity::AggregateGroup;
 use engine::framebuffer::DefaultFramebuffer;
-use engine::modelling::cubic::SkeletonBoneIndex;
-use engine::modelling::cubic::geometry::{AggregateCalcAnim, Pose};
+use engine::modelling::cubic::geometry::AggregateCalcAnim;
 use engine::modelling::{BloomGroup, QuadGroup, SimpleCubicGroup, SkyBoxGroup};
 use engine::{PollResult, VecDraw, opengl_shaders};
 
@@ -15,7 +12,7 @@ impl State {
         default_framebuffer: &'a DefaultFramebuffer,
         grapple_animation: AggregateCalcAnim,
     ) -> PollResult<'a, StateError> {
-        let time = self.time;
+        let _time = self.time;
 
         let mut out = VecDraw::new();
 
@@ -30,15 +27,12 @@ impl State {
 
         out.push(
             AggregateGroup::new(
-                opengl_shaders::hdr(),
+                opengl_shaders::hdr_skeleton(),
                 &self.hdr_fb,
                 &self.camera,
                 &(),
                 &self.ns_light_group,
-                vec![(
-                    &self.grappling_hook.entity,
-                    grapple_animation,
-                )],
+                vec![(&self.grappling_hook.entity, grapple_animation)],
                 vec![],
             )
             .unwrap(),
@@ -47,14 +41,15 @@ impl State {
         if let Some(morgan) = &self.morgan {
             out.push(
                 SimpleCubicGroup::new(
-                    opengl_shaders::hdr(),
+                    opengl_shaders::hdr_simple(),
                     &self.hdr_fb,
                     &self.camera,
                     &(),
                     &self.ns_light_group,
                     vec![morgan.temp_as_simplecubic_and_anim()],
-                    vec![]
-                ).unwrap()
+                    vec![],
+                )
+                .unwrap(),
             )
         }
 

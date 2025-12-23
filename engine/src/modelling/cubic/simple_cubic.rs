@@ -5,18 +5,16 @@ use std::rc::Rc;
 use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
-use graphics::linear_algebra::Matrix;
 use graphics::shader_program::{ActiveShaderProgram, CullFace, SetUniformError};
 use russimp::scene::PostProcess;
-use utils::{error_boilerplate, partition};
+use utils::error_boilerplate;
 
 use super::material::Material;
 use super::{Mesh, Skeleton, import};
 use crate::entity::EntityInner;
-use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
+use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose};
 use crate::modelling::cubic::mesh;
-use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
-use crate::modelling::{SimpleVertex, SkeletonBb, test_models};
+use crate::modelling::{BoundingBox, SimpleVertex};
 
 mod group;
 pub use group::Group;
@@ -26,15 +24,8 @@ pub use builder::Builder;
 
 #[derive(Clone, Debug, Default)]
 pub struct SimpleCubic {
-    pub(crate) meshes: Vec<BoneAndMesh>,
+    pub(crate) meshes: Vec<Mesh<SimpleVertex>>,
     pub cull_face: CullFace,
-    pub skeleton: Skeleton,
-}
-
-#[derive(Debug, Clone)]
-pub struct BoneAndMesh {
-    pub(crate) bone: SkeletonBoneIndex,
-    pub(crate) mesh: Mesh<<SimpleCubic as Model>::Vertex>,
 }
 
 impl SimpleCubic {
@@ -48,35 +39,20 @@ impl SimpleCubic {
 
     pub fn cube(side_length: f32, material: Rc<Material>) -> Builder {
         let mut out = Self::builder();
-        out.push_cube(
-            Pose::IDENTITY,
-            material,
-            side_length,
-            SkeletonBoneIndex::SKELETON_ROOT_BONE,
-        );
+        out.push_cube(Pose::IDENTITY, material, side_length);
         out
-    }
-
-    pub fn tail(max_len: usize) -> (Self, SkeletalAnimation) {
-        let (a, _, b) = test_models::tail_simplecubic(max_len);
-        (a, b)
     }
 
     pub fn temp_set_all_material(&mut self, mat: Rc<Material>) {
         self.meshes
             .iter_mut()
-            .for_each(|BoneAndMesh { mesh, .. }| mesh.material = mat.clone());
+            .for_each(|mesh| mesh.material = mat.clone());
     }
 
-    pub fn triangles(&self) -> Vec<(SkeletonBoneIndex, [<SimpleCubic as Model>::Vertex; 3])> {
+    pub fn triangles(&self) -> Vec<[<SimpleCubic as Model>::Vertex; 3]> {
         self.meshes
             .iter()
-            .flat_map(|BoneAndMesh { bone, mesh }| {
-                mesh.triangles()
-                    .into_owned()
-                    .into_iter()
-                    .map(move |triangles| (*bone, triangles))
-            })
+            .flat_map(|mesh| mesh.triangles().into_owned())
             .collect()
     }
 
@@ -88,12 +64,7 @@ impl SimpleCubic {
         let import_output = import::import(path, post_process, load_tangent_space)?;
 
         let mut out = Self::builder();
-        out.extend_meshes(
-            import_output
-                .meshes
-                .into_iter()
-                .map(|builder| (SkeletonBoneIndex::SKELETON_ROOT_BONE, builder)),
-        );
+        out.extend_meshes(import_output.meshes.into_iter());
 
         Ok(out)
     }
@@ -111,20 +82,15 @@ impl SimpleCubic {
         &'c self,
         active_shader: &mut ActiveShaderProgram<'a, '_, 'c, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-        calculated_animation: &CalculatedAnimation,
+        pose: Pose,
     ) -> Result<(), DrawError<'a>> {
         // Ignore cull_face error
         _ = active_shader.cull_face(self.cull_face);
-        for BoneAndMesh { bone, mesh } in self.meshes.iter() {
-            active_shader
-                .set_uniform(
-                    "model",
-                    &calculated_animation
-                        .get(*bone, &self.skeleton)
-                        .map_or_else(|_| Matrix::identity(), Pose::as_transformation_matrix),
-                )
-                .map_err(|err| DrawError::SetUniform(err))?;
+        active_shader
+            .set_uniform("model", &pose.as_transformation_matrix())
+            .map_err(|err| DrawError::SetUniform(err))?;
 
+        for mesh in self.meshes.iter() {
             mesh.draw(active_shader, active_framebuffer)
                 .map_err(|err| DrawError::Mesh(err))?;
         }
@@ -134,7 +100,7 @@ impl SimpleCubic {
 }
 
 impl EntityInner for SimpleCubic {
-    type BoundingBox<T> = SkeletonBb<<SimpleCubic as Model>::Vertex, T>;
+    type BoundingBox<T> = BoundingBox<<SimpleCubic as Model>::Vertex, 3, T>;
     type DrawError<'a> = DrawError<'a>;
 
     fn make_bounding_box<
@@ -145,13 +111,12 @@ impl EntityInner for SimpleCubic {
         depth: usize,
         init: F,
     ) -> Option<Self::BoundingBox<T>> {
-        let per_mesh = partition(self.triangles(), |(bone, _)| vec![bone.0], |(_, tri)| tri);
-
-        SkeletonBb::from_vec_triangle(per_mesh, depth, init)
+        let triangles = self.triangles();
+        Self::BoundingBox::new_from_triangles(triangles, depth, init)
     }
 
     fn skeleton(&self) -> &Skeleton {
-        &self.skeleton
+        Skeleton::just_root()
     }
 
     fn draw<'a, 'b, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
@@ -160,7 +125,11 @@ impl EntityInner for SimpleCubic {
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         calculated_animation: &CalculatedAnimation,
     ) -> Result<(), Self::DrawError<'b>> {
-        self.draw(active_shader, active_framebuffer, calculated_animation)
+        self.draw(
+            active_shader,
+            active_framebuffer,
+            calculated_animation.root(),
+        )
     }
 }
 

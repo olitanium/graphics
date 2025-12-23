@@ -1,6 +1,7 @@
 mod bone;
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::num::NonZeroUsize;
+use std::sync::LazyLock;
 
 pub use bone::Bone;
 use bone::BoneBuilder;
@@ -66,6 +67,12 @@ impl Default for Skeleton {
 impl Skeleton {
     pub fn builder() -> SkeletonBuilder {
         SkeletonBuilder::new()
+    }
+
+    pub fn just_root() -> &'static Self {
+        static LAZY: LazyLock<Skeleton> = LazyLock::new(|| SkeletonBuilder::new().build());
+
+        &LAZY
     }
 
     pub(crate) fn get(&self, index: SkeletonBoneIndex) -> GetBone<'_> {

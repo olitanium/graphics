@@ -16,8 +16,8 @@ use super::{ShadowFarLight, ShadowPointLight, ShadowSpotLight};
 use crate::modelling::cubic::geometry::CalculatedAnimation;
 use crate::modelling::cubic::lighting::shadow::ShadowBindError;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
-use crate::modelling::cubic::simple_cubic;
-use crate::modelling::{SimpleCubic, VertexHasTangent};
+use crate::modelling::cubic::skeleton_cubic;
+use crate::modelling::{SkeletonCubic, VertexHasTangent};
 use crate::opengl_shaders;
 
 #[derive(Debug, Default)]
@@ -30,8 +30,8 @@ pub struct ShadowListLights<const MAX: usize> {
 #[derive(Debug)]
 pub enum GenDepthError<'a> {
     Model {
-        error: simple_cubic::DrawError<'static>,
-        model: &'a SimpleCubic,
+        error: skeleton_cubic::DrawError<'static>,
+        model: &'a SkeletonCubic,
     },
     SetUniform(SetUniformError<'static>),
 }
@@ -48,7 +48,7 @@ impl<const MAX: usize> ShadowListLights<MAX> {
         &self,
         sp_context: &mut ShaderProgramContext,
         fb_context: &mut FramebufferContext,
-        complete_models: &[(&'a SimpleCubic, CalculatedAnimation)],
+        complete_models: &[(&'a SkeletonCubic, CalculatedAnimation)],
         target_position: Vector<3>,
         uniforms: Vec<(String, &dyn Uniform)>,
     ) -> Result<(), GenDepthError<'a>> {

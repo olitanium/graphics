@@ -4,8 +4,8 @@ pub use skeleton::SkeletonEntity;
 mod simple;
 pub use simple::SimpleEntity;
 
-mod skeleton_skin;
-pub use skeleton_skin::SkinningEntity;
+mod skinning;
+pub use skinning::SkinningEntity;
 
 mod aggregate_entity;
 pub use aggregate_entity::{
@@ -13,10 +13,9 @@ pub use aggregate_entity::{
     AggregateGroup,
     AggregateModelIndex,
     CalculateAnimationError,
+    EntityInner,
+    FromToAggregateEntity,
 };
 
 mod mass;
 pub use mass::Mass;
-
-mod entity_inner;
-pub use entity_inner::EntityInner;
