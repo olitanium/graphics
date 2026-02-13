@@ -35,7 +35,7 @@ impl State {
                 &grappling_hook_calc_anim,
                 &morgan,
                 &morgan.pose,
-|(aggregate_id, _), _, _, _| {
+                |(aggregate_id, _), _, _, _| {
                     if Some(&aggregate_id) == self.grappling_hook.hook.as_ref() {
                         was_collision = true
                     }
@@ -44,7 +44,12 @@ impl State {
 
             if was_collision {
                 let hook_pose = grappling_hook_calc_anim
-                    .get(self.grappling_hook.hook.as_ref().expect("hopefull there is a hook"))
+                    .get(
+                        self.grappling_hook
+                            .hook
+                            .as_ref()
+                            .expect("hopefull there is a hook"),
+                    )
                     .unwrap()
                     .root();
                 let morgan_pose = morgan.pose;
@@ -56,7 +61,10 @@ impl State {
                     .push(
                         SkeletonEntity::from(morgan),
                         offset,
-                        self.grappling_hook.hook.as_ref().expect("hopefully there is hook"),
+                        self.grappling_hook
+                            .hook
+                            .as_ref()
+                            .expect("hopefully there is hook"),
                         &SkeletonBoneIndex::SKELETON_ROOT_BONE,
                     )
                     .unwrap();

@@ -152,7 +152,12 @@ impl State {
                 }
                 't' => {
                     if let Some(morgan_model) = mem::take(&mut self.morgan) {
-                        self.grappling_hook.entity.remove(self.grappling_hook.hook.take().expect("will be replaced later"));
+                        self.grappling_hook.entity.remove(
+                            self.grappling_hook
+                                .hook
+                                .take()
+                                .expect("will be replaced later"),
+                        );
                         let new_pos_index = self
                             .grappling_hook
                             .entity

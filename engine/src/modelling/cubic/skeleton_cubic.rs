@@ -37,7 +37,10 @@ pub struct BoneAndMesh {
 
 impl Clone for BoneAndMesh {
     fn clone(&self) -> Self {
-        Self { bone: self.bone.clone_inner(), mesh: self.mesh.clone() }
+        Self {
+            bone: self.bone.clone_inner(),
+            mesh: self.mesh.clone(),
+        }
     }
 }
 

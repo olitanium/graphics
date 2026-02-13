@@ -68,7 +68,7 @@ impl<'a> AggregateCalcAnimBuilder<'a> {
         animation: Option<(&'a SkeletalAnimation, f32)>,
     ) -> Result<CalcAnimUnitIndex, PushAnimationError> {
         let output_index = self.units.len();
-        
+
         if let Some(parent_skeleton) = self.units.get(parent_index.index) {
             if parent_skeleton.skeleton.get(attachment_point).is_bone() {
                 // Asserted that there is a valid parent and that parent has a bone to attach

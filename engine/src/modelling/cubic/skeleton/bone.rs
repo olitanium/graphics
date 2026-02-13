@@ -12,7 +12,10 @@ pub struct Bone {
 
 impl Clone for Bone {
     fn clone(&self) -> Self {
-        Self { parent: self.parent.clone_inner(), inverse_bind_pose: self.inverse_bind_pose }
+        Self {
+            parent: self.parent.clone_inner(),
+            inverse_bind_pose: self.inverse_bind_pose,
+        }
     }
 }
 

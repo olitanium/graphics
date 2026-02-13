@@ -216,31 +216,34 @@ where
         }
     }
 
-    /*fn split_off_inner<E: FromToAggregateEntity<T, Model = M>>(&mut self, index: AggregateModelIndex, animation: Option<AggregateCalcAnim>) -> Option<Self> {
-        if index == AggregateModelIndex::ROOT_MODEL_INDEX {
-            return None;
-        }
+    // fn split_off_inner<E: FromToAggregateEntity<T, Model = M>>(&mut self, index:
+    // AggregateModelIndex, animation: Option<AggregateCalcAnim>) -> Option<Self> {
+    // if index == AggregateModelIndex::ROOT_MODEL_INDEX {
+    // return None;
+    // }
+    //
+    // if let Some(Some(unit)) = self.children.get_mut(index.0 - 1).map(mem::take) {
+    // let offset = unit.offset;
+    // let base_pose = if let Some(animation) = animation {animation.get(index)}
+    // else {Pose::IDENTITY}; let aggregate_unit = Self {
+    // base_model: unit.model,
+    // base_bounding_box: unit.bounding_box,
+    // children: vec![],
+    // };
+    //
+    //
+    //
+    // model.push_model(add_model, offset, attachment_point, parent_unit,
+    // bounding_box_depth, bounding_box_init) }
+    //
+    // todo!()
+    //
+    // }
 
-        if let Some(Some(unit)) = self.children.get_mut(index.0 - 1).map(mem::take) {
-            let offset = unit.offset;
-            let base_pose = if let Some(animation) = animation {animation.get(index)} else {Pose::IDENTITY};
-            let aggregate_unit = Self {
-                base_model: unit.model,
-                base_bounding_box: unit.bounding_box,
-                children: vec![],
-            };
-
-
-
-            //model.push_model(add_model, offset, attachment_point, parent_unit, bounding_box_depth, bounding_box_init)
-        }
-
-        todo!()
-
-    }*/
-
-    // get the one to delete and check it's existence. take it from the vec and create an AggregateEntity and locate it's children.
-    // for each child, recursively, pop it, add it to the new AggrEnt and recursively do so with it's children
+    // get the one to delete and check it's existence. take it from the vec and
+    // create an AggregateEntity and locate it's children. for each child,
+    // recursively, pop it, add it to the new AggrEnt and recursively do so with
+    // it's children
 }
 
 #[derive(Debug)]
@@ -638,12 +641,9 @@ where
                 let transform = (model.skeleton(), animation);
                 let transform = transform.into();
 
-                bbox.collides(
-                    &transform,
-                    target,
-                    target_transform,
-                    |x, y, z, t| alter_meta((index.inner_clone(), x), y, z, t),
-                )
+                bbox.collides(&transform, target, target_transform, |x, y, z, t| {
+                    alter_meta((index.inner_clone(), x), y, z, t)
+                })
             })
     }
 }

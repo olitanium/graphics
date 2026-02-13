@@ -42,7 +42,11 @@ impl SkeletonBuilder {
 
     pub fn build(self) -> Skeleton {
         let mut hasher = DefaultHasher::new();
-        let signature: Vec<_> = self.bones.iter().map(|bone| bone.parent.clone_inner()).collect();
+        let signature: Vec<_> = self
+            .bones
+            .iter()
+            .map(|bone| bone.parent.clone_inner())
+            .collect();
         signature.hash(&mut hasher);
         let hash = hasher.finish();
         Skeleton {

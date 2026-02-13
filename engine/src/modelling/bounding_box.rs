@@ -207,13 +207,9 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, 3, TThis> {
         target_transform: &Pose,
         mut alter_meta: F,
     ) -> bool {
-        Self::detect_collision(
-            self,
-            *transform,
-            target,
-            *target_transform,
-            |x, y| alter_meta((), x, y),
-        )
+        Self::detect_collision(self, *transform, target, *target_transform, |x, y| {
+            alter_meta((), x, y)
+        })
     }
 
     fn collides<
@@ -226,9 +222,14 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, 3, TThis> {
         target_transform: &T::Transform<'_>,
         mut alter_meta: F,
     ) -> bool {
-        target.collides_with_primitive(target_transform, self, self_transform, |target_input, target_meta, self_meta| {
-            alter_meta((), self_meta, target_input, target_meta)
-        })
+        target.collides_with_primitive(
+            target_transform,
+            self,
+            self_transform,
+            |target_input, target_meta, self_meta| {
+                alter_meta((), self_meta, target_input, target_meta)
+            },
+        )
     }
 }
 

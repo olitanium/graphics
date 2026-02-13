@@ -22,7 +22,9 @@ pub trait Collision {
             self_transform,
             target,
             target_transform,
-            |self_inputs, self_inner, (), bbox_inner| alter_meta(self_inputs, self_inner, bbox_inner),
+            |self_inputs, self_inner, (), bbox_inner| {
+                alter_meta(self_inputs, self_inner, bbox_inner)
+            },
         )
     }
 

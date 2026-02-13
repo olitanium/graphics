@@ -78,8 +78,8 @@ impl<TThis> Collision for SkeletonEntity<TThis> {
     type Transform<'a> = <SkeletonBb<SimpleVertex, TThis> as Collision>::Transform<'a>;
 
     fn collides<
-             T: Collision,
-            F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta)
+        T: Collision,
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
         &self,
         transform: &Self::Transform<'_>,
@@ -90,12 +90,7 @@ impl<TThis> Collision for SkeletonEntity<TThis> {
         let Some(bbox) = &self.bounding_box else {
             return false;
         };
-        bbox.collides(
-            transform,
-            target,
-            target_transform,
-            alter_meta,
-        )
+        bbox.collides(transform, target, target_transform, alter_meta)
     }
 }
 
@@ -127,8 +122,18 @@ impl<T> FromToAggregateEntity<T> for SkeletonEntity<T> {
 
     #[allow(private_interfaces)]
     fn from_aggregate_unit(entity: AggregateUnit<T, Self::Model>, pose: Pose) -> Self {
-        let AggregateUnit {model, bounding_box, ..} = entity;
-        Self { model, pose, mass: Default::default(), bounding_box, velocity: Default::default() }
+        let AggregateUnit {
+            model,
+            bounding_box,
+            ..
+        } = entity;
+        Self {
+            model,
+            pose,
+            mass: Default::default(),
+            bounding_box,
+            velocity: Default::default(),
+        }
     }
 
     fn to_pair_model_bbox(

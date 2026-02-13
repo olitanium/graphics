@@ -499,3 +499,9 @@ impl<const N: usize> IntoIterator for UnitVector<N> {
         self.0.into_inner().into_iter()
     }
 }
+
+impl<const N: usize> Sum<UnitVector<N>> for Vector<N> {
+    fn sum<I: Iterator<Item = UnitVector<N>>>(iter: I) -> Self {
+        iter.map(|x| x.v()).sum()
+    }
+}
