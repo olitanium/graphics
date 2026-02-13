@@ -3,41 +3,37 @@ use crate::modelling::{BoundingBox, CubicVertex};
 
 pub trait Collision {
     type Transform<'a>;
-    type Inner;
+    type Meta;
     type FuncInputs;
 
+    #[doc(hidden)]
     fn collides_with_primitive<
         V: CubicVertex,
         T,
-        F: FnMut(Self::FuncInputs, &mut Self::Inner),
-        O: FnMut(&mut T),
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, &mut T),
     >(
         &self,
-        transform: &Self::Transform<'_>,
-        self_alter_meta: F,
+        self_transform: &Self::Transform<'_>,
         target: &BoundingBox<V, 3, T>,
         target_transform: &Pose,
-        mut target_alter_meta: O,
+        mut alter_meta: F,
     ) -> bool {
         self.collides(
-            transform,
-            self_alter_meta,
+            self_transform,
             target,
             target_transform,
-            |(), t| target_alter_meta(t),
+            |self_inputs, self_inner, (), bbox_inner| alter_meta(self_inputs, self_inner, bbox_inner),
         )
     }
 
     fn collides<
         T: Collision,
-        F: FnMut(Self::FuncInputs, &mut Self::Inner),
-        O: FnMut(T::FuncInputs, &mut T::Inner),
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
         &self,
         transform: &Self::Transform<'_>,
-        self_alter_meta: F,
         target: &T,
         target_transform: &T::Transform<'_>,
-        target_alter_meta: O,
+        alter_meta: F,
     ) -> bool;
 }

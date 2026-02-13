@@ -29,10 +29,16 @@ pub struct SkeletonCubic {
     pub skeleton: Skeleton,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct BoneAndMesh {
     pub(crate) bone: SkeletonBoneIndex,
     pub(crate) mesh: Mesh<SimpleVertex>,
+}
+
+impl Clone for BoneAndMesh {
+    fn clone(&self) -> Self {
+        Self { bone: self.bone.clone_inner(), mesh: self.mesh.clone() }
+    }
 }
 
 impl SkeletonCubic {
@@ -40,17 +46,17 @@ impl SkeletonCubic {
         Self::default()
     }
 
-    pub fn builder() -> Builder {
+    pub fn builder<'a>() -> Builder<'a> {
         Builder::new()
     }
 
-    pub fn cube(side_length: f32, material: Rc<Material>) -> Builder {
+    pub fn cube(side_length: f32, material: Rc<Material>) -> Builder<'static> {
         let mut out = Self::builder();
         out.push_cube(
             Pose::IDENTITY,
             material,
             side_length,
-            SkeletonBoneIndex::SKELETON_ROOT_BONE,
+            &SkeletonBoneIndex::SKELETON_ROOT_BONE,
         );
         out
     }
@@ -66,14 +72,14 @@ impl SkeletonCubic {
             .for_each(|BoneAndMesh { mesh, .. }| mesh.material = mat.clone());
     }
 
-    pub fn triangles(&self) -> Vec<(SkeletonBoneIndex, [SimpleVertex; 3])> {
+    pub fn triangles(&self) -> Vec<(&SkeletonBoneIndex, [SimpleVertex; 3])> {
         self.meshes
             .iter()
             .flat_map(|BoneAndMesh { bone, mesh }| {
                 mesh.triangles()
                     .into_owned()
                     .into_iter()
-                    .map(move |triangles| (*bone, triangles))
+                    .map(move |triangles| (bone, triangles))
             })
             .collect()
     }
@@ -118,7 +124,7 @@ impl SkeletonCubic {
                 .set_uniform(
                     "model",
                     &calculated_animation
-                        .get(*bone, &self.skeleton)
+                        .get(bone, &self.skeleton)
                         .map_or_else(|_| Matrix::identity(), Pose::as_transformation_matrix),
                 )
                 .map_err(|err| DrawError::SetUniform(err))?;

@@ -34,7 +34,7 @@ impl AggregateCalcAnim {
         AggregateCalcAnimBuilder::new(root_pose, root_skeleton, root_animation)
     }
 
-    pub fn get(&self, index: AggregateModelIndex) -> Option<&CalculatedAnimation> {
+    pub fn get<'a>(&'a self, index: &AggregateModelIndex) -> Option<&'a CalculatedAnimation> {
         self.vec.get(index.0) //.map(|opt| opt.as_ref()).flatten()
     }
 }
@@ -62,13 +62,13 @@ impl<'a> AggregateCalcAnimBuilder<'a> {
     pub(crate) fn push(
         &mut self,
         parent_index: CalcAnimUnitIndex,
-        attachment_point: SkeletonBoneIndex,
+        attachment_point: &SkeletonBoneIndex,
         local_transform: Pose,
         skeleton: &'a Skeleton,
         animation: Option<(&'a SkeletalAnimation, f32)>,
     ) -> Result<CalcAnimUnitIndex, PushAnimationError> {
         let output_index = self.units.len();
-
+        
         if let Some(parent_skeleton) = self.units.get(parent_index.index) {
             if parent_skeleton.skeleton.get(attachment_point).is_bone() {
                 // Asserted that there is a valid parent and that parent has a bone to attach
@@ -77,10 +77,11 @@ impl<'a> AggregateCalcAnimBuilder<'a> {
                 // (bone)
                 let parent = Some(Parent {
                     index: parent_index,
-                    bone_attachment_point: attachment_point,
+                    bone_attachment_point: attachment_point.clone_inner(),
                 });
                 let unit = AnimationUnit::new(parent, local_transform, skeleton, animation)
                     .map_err(|error| PushAnimationError::SignaturesDoNotMatch(error))?;
+
                 self.units.push(unit);
                 Ok(CalcAnimUnitIndex {
                     index: output_index,
@@ -99,7 +100,7 @@ impl<'a> AggregateCalcAnimBuilder<'a> {
         let mut output: Vec<(Vec<PoseAndInverseBindPose>, u64)> = Vec::new();
 
         for unit in self.units {
-            let root = if let Some(parent) = unit.parent {
+            let root = if let Some(parent) = &unit.parent {
                 let parent_setup = output.get(parent.index.index).expect(
                     "invariant, parent should exist earlier in the list than the descendent",
                 );

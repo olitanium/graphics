@@ -66,45 +66,16 @@ pub fn origin_unit_cube() -> impl Iterator<Item = [IncompleteVertex<3>; 3]> {
 }
 
 pub fn origin_cube(side_length: f32) -> impl Iterator<Item = [IncompleteVertex<3>; 3]> {
-    let upperbounds = Vector::new([side_length / 2.0; 3]);
-    let lowerbounds = Vector::new([-side_length / 2.0; 3]);
+    let upper_bound = Vector::new([side_length / 2.0; 3]);
+    let lower_bound = Vector::new([-side_length / 2.0; 3]);
 
-    cube_triangles(lowerbounds, upperbounds)
+    cube_triangles(lower_bound, upper_bound)
 }
 
 pub fn vertex_array_quad(
     lower_bound: Vector<2>,
     upper_bound: Vector<2>,
 ) -> VertexArray<QuadVertex> {
-    // let [lower_x, lower_y] = lower_bound.into_inner();
-    // let [upper_x, upper_y] = upper_bound.into_inner();
-    //
-    // let quad_vertices = [
-    // QuadVertex {
-    // position: Vector::new([lower_x, lower_y]),
-    // tex_coordinate: Vector::new([0.0, 0.0]),
-    // },
-    // QuadVertex {
-    // position: Vector::new([upper_x, lower_y]),
-    // tex_coordinate: Vector::new([1.0, 0.0]),
-    // },
-    // QuadVertex {
-    // position: Vector::new([upper_x, upper_y]),
-    // tex_coordinate: Vector::new([1.0, 1.0]),
-    // },
-    // QuadVertex {
-    // position: Vector::new([lower_x, upper_y]),
-    // tex_coordinate: Vector::new([0.0, 1.0]),
-    // },
-    // ];
-    //
-    // let element_array = [0, 1, 2, 0, 2, 3].map(ElementArrayElem::new);
-    //
-    // VertexArray::builder()
-    // .vertices(quad_vertices.to_vec())
-    // .element_array(element_array.to_vec())
-    // .build()
-
     let mut builder = VertexArray::builder();
     builder.extend_triangles(quad_triangles(lower_bound, upper_bound).map(|triangle| {
         ExtendedVertex::from_incomplete_triangle(triangle).expect(
@@ -266,10 +237,10 @@ pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletonBoneIndex, Skeleta
     let mut cube_pose = Pose::IDENTITY;
 
     for _ in 0..num_bones {
-        let bone = Bone::builder(current_bone).bind_pose_relative_to_parent(cube_push);
+        let bone = Bone::builder(&current_bone).bind_pose_relative_to_parent(cube_push);
 
         animation_1
-            .push_animation(animation1.clone(), current_bone)
+            .push_animation(animation1.clone(), &current_bone)
             .expect("parent bone always exists");
 
         cube_pose = cube_pose.transform_by(&cube_push);
@@ -308,7 +279,7 @@ pub fn tail_simplecubic(max_len: usize) -> (SkeletonCubic, SkeletonBoneIndex, Sk
     mesh_builder.extend_triangle(triangles);
 
     let mut builder = SkeletonCubic::builder();
-    builder.push_mesh(SkeletonBoneIndex::SKELETON_ROOT_BONE, mesh_builder);
+    builder.push_mesh(&SkeletonBoneIndex::SKELETON_ROOT_BONE, mesh_builder);
     // SKELETON
     let (skeleton, end_bone_index, animation) = tail_animation(max_len);
     // let animation = SkeletalAnimation::new();

@@ -6,16 +6,16 @@ use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::cubic::skeleton::{GetBone, SkeletonBoneIndex};
 use crate::transform::Transform;
 
-#[derive(Debug, Clone)]
-pub struct Builder {
-    parent: SkeletonBoneIndex,
+#[derive(Debug)]
+pub struct Builder<'a> {
+    parent: &'a SkeletonBoneIndex,
     inverse_bind_pose_relative_to_parent: Option<Pose>,
 }
 
-impl Builder {
+impl<'a> Builder<'a> {
     builder!(inverse_bind_pose_relative_to_parent: Option<Pose>);
 
-    pub fn new(parent: SkeletonBoneIndex) -> Self {
+    pub fn new(parent: &'a SkeletonBoneIndex) -> Self {
         Self {
             parent,
             inverse_bind_pose_relative_to_parent: Default::default(),
@@ -32,7 +32,7 @@ impl Builder {
     pub(crate) fn build(self, skeleton: &SkeletonBuilder) -> Option<Bone> {
         let inverse_bind_pose = match (
             self.inverse_bind_pose_relative_to_parent,
-            skeleton.get(self.parent),
+            skeleton.get(&self.parent),
         ) {
             (None, GetBone::Bone { bone: parent, .. }) => parent.inverse_bind_pose(),
             (None, GetBone::RootBone) => Pose::default(),
@@ -44,7 +44,7 @@ impl Builder {
         };
 
         Some(Bone {
-            parent: self.parent,
+            parent: self.parent.clone_inner(),
             inverse_bind_pose,
         })
     }

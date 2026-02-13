@@ -3,6 +3,7 @@ use std::{convert, iter};
 use graphics::linear_algebra::Vector;
 use utils::partition;
 
+use crate::entity::aggregate_entity::AggregateUnit;
 use crate::entity::{FromToAggregateEntity, Mass};
 use crate::modelling::cubic::SkinningCubic;
 use crate::modelling::cubic::geometry::Pose;
@@ -82,36 +83,39 @@ impl<T> SkinningEntity<T> {
 
 impl<TThis> Collision for SkinningEntity<TThis> {
     type FuncInputs = <SkeletonBb<SkeletalVertex, TThis> as Collision>::FuncInputs;
-    type Inner = <SkeletonBb<SkeletalVertex, TThis> as Collision>::Inner;
+    type Meta = <SkeletonBb<SkeletalVertex, TThis> as Collision>::Meta;
     type Transform<'a> = <SkeletonBb<SkeletalVertex, TThis> as Collision>::Transform<'a>;
 
     fn collides<
-        T: Collision,
-        F: FnMut(Self::FuncInputs, &mut Self::Inner),
-        O: FnMut(T::FuncInputs, &mut T::Inner),
+            T: Collision,
+            F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
         &self,
         transform: &Self::Transform<'_>,
-        self_alter_meta: F,
         target: &T,
         target_transform: &T::Transform<'_>,
-        target_alter_meta: O,
+        alter_meta: F,
     ) -> bool {
         let Some(bbox) = &self.bounding_box else {
             return false;
         };
         bbox.collides(
             transform,
-            self_alter_meta,
             target,
             target_transform,
-            target_alter_meta,
+            alter_meta,
         )
     }
 }
 
 impl<T> FromToAggregateEntity<T> for SkinningEntity<T> {
     type Model = SkinningCubic;
+
+    #[allow(private_interfaces)]
+    fn from_aggregate_unit(entity: AggregateUnit<T, Self::Model>, pose: Pose) -> Self {
+        let AggregateUnit {model, bounding_box, ..} = entity;
+        Self { model, pose, mass: Default::default(), bounding_box, velocity: Default::default() }
+    }
 
     fn to_pair_model_bbox(
         self,

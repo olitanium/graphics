@@ -62,7 +62,7 @@ error_boilerplate!(GetAnimationError);
 impl CalculatedAnimation {
     pub fn get(
         &self,
-        index: SkeletonBoneIndex,
+        index: &SkeletonBoneIndex,
         skeleton: &Skeleton,
     ) -> Result<Pose, GetAnimationError> {
         self.poses(skeleton)
@@ -73,7 +73,7 @@ impl CalculatedAnimation {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub(crate) struct Parent {
     pub(crate) index: CalcAnimUnitIndex,
     pub(crate) bone_attachment_point: SkeletonBoneIndex,

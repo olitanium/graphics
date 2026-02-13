@@ -1,6 +1,7 @@
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::vertex::Vertex;
 
+use crate::entity::aggregate_entity::AggregateUnit;
 use crate::entity::{EntityInner, FromToAggregateEntity, Mass};
 use crate::modelling::cubic::SimpleCubic;
 use crate::modelling::cubic::geometry::Pose;
@@ -160,36 +161,39 @@ pub fn get_average_normal<I: IntoIterator<Item = [SimpleVertex; 3]>>(input: I) -
 
 impl<TThis> Collision for SimpleEntity<TThis> {
     type FuncInputs = <BoundingBox<SimpleVertex, 3, TThis> as Collision>::FuncInputs;
-    type Inner = <BoundingBox<SimpleVertex, 3, TThis> as Collision>::Inner;
+    type Meta = <BoundingBox<SimpleVertex, 3, TThis> as Collision>::Meta;
     type Transform<'a> = <BoundingBox<SimpleVertex, 3, TThis> as Collision>::Transform<'a>;
 
     fn collides<
-        T: Collision,
-        F: FnMut(Self::FuncInputs, &mut Self::Inner),
-        O: FnMut(T::FuncInputs, &mut T::Inner),
-    >(
-        &self,
-        transform: &Self::Transform<'_>,
-        self_alter_meta: F,
-        target: &T,
-        target_transform: &T::Transform<'_>,
-        target_alter_meta: O,
-    ) -> bool {
-        let Some(bbox) = &self.bounding_box else {
+            T: Collision,
+            F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
+        >(
+            &self,
+            transform: &Self::Transform<'_>,
+            target: &T,
+            target_transform: &T::Transform<'_>,
+            alter_meta: F,
+        ) -> bool {
+         let Some(bbox) = &self.bounding_box else {
             return false;
         };
         bbox.collides(
             transform,
-            self_alter_meta,
             target,
             target_transform,
-            target_alter_meta,
-        )
+            alter_meta,
+        )       
     }
 }
 
 impl<T> FromToAggregateEntity<T> for SimpleEntity<T> {
     type Model = SimpleCubic;
+
+    #[allow(private_interfaces)]
+    fn from_aggregate_unit(entity: AggregateUnit<T, Self::Model>, pose: Pose) -> Self {
+        let AggregateUnit {model, bounding_box, ..} = entity;
+        Self { model, pose, mass: Default::default(), bounding_box, velocity: Default::default() }
+    }
 
     fn to_pair_model_bbox(
         self,

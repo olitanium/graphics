@@ -152,15 +152,15 @@ impl State {
                 }
                 't' => {
                     if let Some(morgan_model) = mem::take(&mut self.morgan) {
-                        self.grappling_hook.entity.pop(self.grappling_hook.hook);
+                        self.grappling_hook.entity.remove(self.grappling_hook.hook.take().expect("will be replaced later"));
                         let new_pos_index = self
                             .grappling_hook
                             .entity
                             .push(
                                 SkeletonEntity::from(morgan_model),
                                 Pose::new_from_translation(Vector::new([0.0, 0.0, 0.5])),
-                                self.grappling_hook.chain,
-                                self.grappling_hook.chain_end_bone,
+                                &self.grappling_hook.chain,
+                                &self.grappling_hook.chain_end_bone,
                             )
                             .unwrap();
 
@@ -169,7 +169,7 @@ impl State {
                             self.grappling_hook.hook, new_pos_index
                         );
 
-                        self.grappling_hook.hook = new_pos_index;
+                        self.grappling_hook.hook = Some(new_pos_index);
                     }
                 }
 

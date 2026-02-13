@@ -33,19 +33,18 @@ impl State {
             let mut was_collision = false;
             self.grappling_hook.entity.collides(
                 &grappling_hook_calc_anim,
-                |(aggregate_id, _), _| {
-                    if aggregate_id == self.grappling_hook.hook {
+                &morgan,
+                &morgan.pose,
+|(aggregate_id, _), _, _, _| {
+                    if Some(&aggregate_id) == self.grappling_hook.hook.as_ref() {
                         was_collision = true
                     }
                 },
-                &morgan,
-                &morgan.pose,
-                |_, _| (),
             );
 
             if was_collision {
                 let hook_pose = grappling_hook_calc_anim
-                    .get(self.grappling_hook.hook)
+                    .get(self.grappling_hook.hook.as_ref().expect("hopefull there is a hook"))
                     .unwrap()
                     .root();
                 let morgan_pose = morgan.pose;
@@ -57,8 +56,8 @@ impl State {
                     .push(
                         SkeletonEntity::from(morgan),
                         offset,
-                        self.grappling_hook.hook,
-                        SkeletonBoneIndex::SKELETON_ROOT_BONE,
+                        self.grappling_hook.hook.as_ref().expect("hopefully there is hook"),
+                        &SkeletonBoneIndex::SKELETON_ROOT_BONE,
                     )
                     .unwrap();
                 self.grappling_hook.attachment = Some(dest);

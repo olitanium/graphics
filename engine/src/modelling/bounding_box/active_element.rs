@@ -110,17 +110,15 @@ where
         V2: ExtendedVertex<DIMS>,
         U,
         P: Transform<Vector<DIMS>>,
-        F: FnMut(&mut T),
-        O: FnMut(&mut U),
+        F: FnMut(&mut T, &mut U),
     >(
         this: &'a Self,
         this_boundingbox: &'a BoundingBox<V, DIMS, T>,
         this_transform: &P,
-        this_alter_meta: &mut F,
         other: &'b BoundingBoxElement<V2, DIMS, U>,
         other_boundingbox: &'b BoundingBox<V2, DIMS, U>,
         other_transform: &P,
-        other_alter_meta: &mut O,
+        alter_meta: &mut F,
     ) -> bool
     where
         [(); Vector::<DIMS>::ELEMENT_COUNT]:,
@@ -144,11 +142,10 @@ where
                         new_this,
                         this_boundingbox,
                         this_transform,
-                        this_alter_meta,
                         new_other,
                         other_boundingbox,
                         other_transform,
-                        other_alter_meta,
+                        alter_meta,
                     )
                 }),
                 (None, Some([otherleft, otherright])) => [(this, otherleft), (this, otherright)]
@@ -158,11 +155,10 @@ where
                             new_this,
                             this_boundingbox,
                             this_transform,
-                            this_alter_meta,
                             new_other,
                             other_boundingbox,
                             other_transform,
-                            other_alter_meta,
+                            alter_meta,
                         )
                     }),
                 (Some([thisleft, thisright]), None) => [(thisleft, other), (thisright, other)]
@@ -172,16 +168,14 @@ where
                             new_this,
                             this_boundingbox,
                             this_transform,
-                            this_alter_meta,
                             new_other,
                             other_boundingbox,
                             other_transform,
-                            other_alter_meta,
+                            alter_meta,
                         )
                     }),
                 (None, None) => {
-                    other_alter_meta(&mut *other.meta.borrow_mut());
-                    this_alter_meta(&mut *this.meta.borrow_mut());
+                    alter_meta(&mut *this.meta.borrow_mut(), &mut *other.meta.borrow_mut());
                     true
                 }
             }

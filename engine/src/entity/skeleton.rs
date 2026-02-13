@@ -3,6 +3,7 @@ use graphics::vertex::Vertex;
 use utils::partition;
 
 use crate::SimpleEntity;
+use crate::entity::aggregate_entity::AggregateUnit;
 use crate::entity::{FromToAggregateEntity, Mass};
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{Collision, SimpleVertex, SkeletonBb, SkeletonCubic, Volume};
@@ -73,30 +74,27 @@ impl<T> SkeletonEntity<T> {
 
 impl<TThis> Collision for SkeletonEntity<TThis> {
     type FuncInputs = <SkeletonBb<SimpleVertex, TThis> as Collision>::FuncInputs;
-    type Inner = <SkeletonBb<SimpleVertex, TThis> as Collision>::Inner;
+    type Meta = <SkeletonBb<SimpleVertex, TThis> as Collision>::Meta;
     type Transform<'a> = <SkeletonBb<SimpleVertex, TThis> as Collision>::Transform<'a>;
 
     fn collides<
-        T: Collision,
-        F: FnMut(Self::FuncInputs, &mut Self::Inner),
-        O: FnMut(T::FuncInputs, &mut T::Inner),
+             T: Collision,
+            F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta)
     >(
         &self,
         transform: &Self::Transform<'_>,
-        self_alter_meta: F,
         target: &T,
         target_transform: &T::Transform<'_>,
-        target_alter_meta: O,
+        alter_meta: F,
     ) -> bool {
         let Some(bbox) = &self.bounding_box else {
             return false;
         };
         bbox.collides(
             transform,
-            self_alter_meta,
             target,
             target_transform,
-            target_alter_meta,
+            alter_meta,
         )
     }
 }
@@ -126,6 +124,12 @@ impl<T> From<SimpleEntity<T>> for SkeletonEntity<T> {
 
 impl<T> FromToAggregateEntity<T> for SkeletonEntity<T> {
     type Model = SkeletonCubic;
+
+    #[allow(private_interfaces)]
+    fn from_aggregate_unit(entity: AggregateUnit<T, Self::Model>, pose: Pose) -> Self {
+        let AggregateUnit {model, bounding_box, ..} = entity;
+        Self { model, pose, mass: Default::default(), bounding_box, velocity: Default::default() }
+    }
 
     fn to_pair_model_bbox(
         self,

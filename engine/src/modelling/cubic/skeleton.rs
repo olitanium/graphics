@@ -28,7 +28,7 @@ impl SkeletonBuilder {
         Some(SkeletonBoneIndex(self.bones.len()))
     }
 
-    pub(crate) fn get(&self, index: SkeletonBoneIndex) -> GetBone<'_> {
+    pub(crate) fn get<'a>(&'a self, index: &SkeletonBoneIndex) -> GetBone<'a> {
         if index.0 != 0 {
             match self.bones.get(index.0 - 1) {
                 Some(bone) => GetBone::Bone { bone },
@@ -42,7 +42,7 @@ impl SkeletonBuilder {
 
     pub fn build(self) -> Skeleton {
         let mut hasher = DefaultHasher::new();
-        let signature: Vec<_> = self.bones.iter().map(|bone| bone.parent).collect();
+        let signature: Vec<_> = self.bones.iter().map(|bone| bone.parent.clone_inner()).collect();
         signature.hash(&mut hasher);
         let hash = hasher.finish();
         Skeleton {
@@ -75,7 +75,7 @@ impl Skeleton {
         &LAZY
     }
 
-    pub(crate) fn get(&self, index: SkeletonBoneIndex) -> GetBone<'_> {
+    pub(crate) fn get<'a>(&'a self, index: &SkeletonBoneIndex) -> GetBone<'a> {
         if index.0 != 0 {
             match self.bones.get(index.0 - 1) {
                 Some(bone) => GetBone::Bone { bone },
@@ -122,9 +122,13 @@ impl<'a> GetBone<'a> {
     }
 }
 
-#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+#[derive(Debug, Hash, Eq, PartialEq)]
 pub struct SkeletonBoneIndex(pub(crate) usize);
 
 impl SkeletonBoneIndex {
     pub const SKELETON_ROOT_BONE: Self = Self(0);
+
+    pub(crate) fn clone_inner(&self) -> Self {
+        Self(self.0)
+    }
 }

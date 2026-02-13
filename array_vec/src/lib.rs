@@ -1,8 +1,8 @@
-#![feature(maybe_uninit_slice)]
 #![feature(maybe_uninit_array_assume_init)]
 #![feature(const_convert)]
 #![feature(const_trait_impl)]
 #![feature(maybe_uninit_uninit_array_transpose)]
+#![feature(maybe_uninit_slice)]
 
 use std::fmt::Debug;
 use std::mem::{self, ManuallyDrop, MaybeUninit};

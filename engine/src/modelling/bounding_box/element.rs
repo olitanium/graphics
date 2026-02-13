@@ -156,7 +156,7 @@ where
 }
 
 #[derive(Debug)]
-pub enum DrawRecurisveError<'a> {
+pub enum DrawRecursiveError<'a> {
     SetUniform(SetUniformError<'a>),
     VertexArrayDraw(VertexArrayDrawError<'a>),
 }
@@ -188,7 +188,7 @@ where
         >,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         colour: &F,
-    ) -> Result<(), DrawRecurisveError<'a>> {
+    ) -> Result<(), DrawRecursiveError<'a>> {
         if let Some([lhs, rhs]) = self.get_children(bounding_box)
             && level != 0
         {
@@ -221,14 +221,14 @@ where
 
             active_shader
                 .set_uniform("colour", &chosen_colour)
-                .map_err(|err| DrawRecurisveError::SetUniform(err))?;
+                .map_err(|err| DrawRecursiveError::SetUniform(err))?;
             active_shader
                 .set_uniform("model", &Matrix::<4, 4>::identity())
-                .map_err(|err| DrawRecurisveError::SetUniform(err))?;
+                .map_err(|err| DrawRecursiveError::SetUniform(err))?;
 
             vertex_array
                 .draw(active_shader, active_framebuffer)
-                .map_err(|err| DrawRecurisveError::VertexArrayDraw(err))?;
+                .map_err(|err| DrawRecursiveError::VertexArrayDraw(err))?;
 
             Ok(())
         }

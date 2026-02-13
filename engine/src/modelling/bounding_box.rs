@@ -25,7 +25,7 @@ pub mod collision;
 pub use collision::Collision;
 
 use crate::modelling::advanced_vertex::ExtendedVertex;
-use crate::modelling::bounding_box::element::DrawRecurisveError;
+use crate::modelling::bounding_box::element::DrawRecursiveError;
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{CubicVertex, SimpleVertex, SkeletonCubic, Volume};
 use crate::transform::Transform;
@@ -98,16 +98,14 @@ where
     pub fn detect_collision<
         V2: ExtendedVertex<DIMS>,
         U,
-        F: FnMut(&mut T),
-        O: FnMut(&mut U),
+        F: FnMut(&mut T, &mut U),
         P: Transform<Vector<DIMS>>,
     >(
         lhs: &Self,
         lhs_pose: P,
-        mut lhs_alter_meta: F,
         rhs: &BoundingBox<V2, DIMS, U>,
         rhs_pose: P,
-        mut rhs_alter_meta: O,
+        mut alter_meta: F,
     ) -> bool
     where
         P: Transform<[V; 3]>,
@@ -117,11 +115,10 @@ where
             lhs.get(0),
             lhs,
             &lhs_pose,
-            &mut lhs_alter_meta,
             rhs.get(0),
             rhs,
             &rhs_pose,
-            &mut rhs_alter_meta,
+            &mut alter_meta,
         )
         // .map(|(lhs, rhs)| {
         // (
@@ -167,7 +164,7 @@ where
         >,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
         colour: F,
-    ) -> Result<(), DrawRecurisveError<'a>> {
+    ) -> Result<(), DrawRecursiveError<'a>> {
         self.get(0).draw_recursive(
             self,
             &pose,
@@ -196,46 +193,41 @@ impl<T> BoundingBox<SimpleVertex, 3, T> {
 
 impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, 3, TThis> {
     type FuncInputs = ();
-    type Inner = TThis;
+    type Meta = TThis;
     type Transform<'a> = Pose;
 
     fn collides_with_primitive<
         V: CubicVertex,
         U,
-        F: FnMut(Self::FuncInputs, &mut Self::Inner),
-        O: FnMut(&mut U),
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, &mut U),
     >(
         &self,
         transform: &Self::Transform<'_>,
-        mut self_func: F,
         target: &BoundingBox<V, 3, U>,
         target_transform: &Pose,
-        target_alter_meta: O,
+        mut alter_meta: F,
     ) -> bool {
         Self::detect_collision(
             self,
             *transform,
-            |x| self_func((), x),
             target,
             *target_transform,
-            target_alter_meta,
+            |x, y| alter_meta((), x, y),
         )
     }
 
     fn collides<
         T: Collision,
-        F: FnMut(Self::FuncInputs, &mut Self::Inner),
-        O: FnMut(T::FuncInputs, &mut T::Inner),
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
         &self,
-        transform: &Self::Transform<'_>,
-        mut self_alter_meta: F,
+        self_transform: &Self::Transform<'_>,
         target: &T,
         target_transform: &T::Transform<'_>,
-        target_alter_meta: O,
+        mut alter_meta: F,
     ) -> bool {
-        target.collides_with_primitive(target_transform, target_alter_meta, self, transform, |x| {
-            self_alter_meta((), x)
+        target.collides_with_primitive(target_transform, self, self_transform, |target_input, target_meta, self_meta| {
+            alter_meta((), self_meta, target_input, target_meta)
         })
     }
 }

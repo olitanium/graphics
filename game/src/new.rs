@@ -197,8 +197,8 @@ impl State {
             .push_model(
                 simpletail.clone(),
                 offset,
-                end_attachment_point,
-                AggregateModelIndex::ROOT_MODEL_INDEX,
+                &end_attachment_point,
+                &AggregateModelIndex::ROOT_MODEL_INDEX,
                 1,
                 |_| (),
             )
@@ -342,10 +342,9 @@ pub fn make_model(which_model: &str) -> Result<SimpleCubic, StateError> {
 
 pub struct GrapplingHook {
     pub entity: AggregateEntity<(), SkeletonCubic>,
-    pub base: AggregateModelIndex,
     pub chain: AggregateModelIndex,
     pub chain_end_bone: SkeletonBoneIndex,
-    pub hook: AggregateModelIndex,
+    pub hook: Option<AggregateModelIndex>,
     pub attachment: Option<AggregateModelIndex>,
     pub chain_animation: SkeletalAnimation,
 }
@@ -353,15 +352,15 @@ pub struct GrapplingHook {
 impl GrapplingHook {
     pub fn calculate_animation(
         &self,
-        fix_anim: Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,
+        fix_anim: Option<(&AggregateModelIndex, SkeletonBoneIndex, Pose)>,
         time: f32,
     ) -> AggregateCalcAnim {
         self.entity
             .calculate_animation(
                 fix_anim,
-                [(self.chain, (&self.chain_animation, time))].into(),
+                [(&self.chain, (&self.chain_animation, time))].into(),
             )
-            .unwrap()
+            .expect("chain_animation is well defined for the chain element")
     }
 }
 
@@ -380,8 +379,7 @@ fn grappling_hook() -> GrapplingHook {
     let mut chain = SkeletonCubic::builder();
     let mut skeleton_builder = Skeleton::builder();
     let mut animation_builder = SkeletalAnimation::builder();
-    let mut end_bone = SkeletonBoneIndex::SKELETON_ROOT_BONE;
-    let mut bones_back_to_front = Vec::new();
+    let mut bones_back_to_front = vec![SkeletonBoneIndex::SKELETON_ROOT_BONE];
     // No chain link is bound to the root bone, so that the root of the origin cube
     // and the
     let white_material = Rc::new(Material::white());
@@ -390,8 +388,35 @@ fn grappling_hook() -> GrapplingHook {
     const SEC_PER_UNIT: f32 = 0.05;
     const CHAIN_LINK_SIZE: f32 = 0.5;
     const LEN: usize = 20;
-    for index in 1..=LEN {
-        // Create Animation, using end_bone as the current bone
+    
+    for _ in 1..LEN {
+        // Create new bone to correspond to the created animation
+        let new_bone = Bone::builder(bones_back_to_front.last().expect("filled")).bind_pose_relative_to_parent(Pose::IDENTITY);
+
+        let end_bone = skeleton_builder
+        .push_bone(new_bone)
+        .expect("new_bone parent exists");
+
+        bones_back_to_front.push(end_bone);
+//create skeleton, and save to a vector
+    }
+
+    for bone in &bones_back_to_front {
+        // add cube to each bone
+        chain.push_cube(
+            Pose::IDENTITY,
+            white_material.clone(),
+            CHAIN_LINK_SIZE,
+            &bone,
+        )
+    }
+
+    // array_windows is a way to ensure that the last index is skipped
+    for (mut index, [parent, _animation_owner /* this bone here is the one who is actually owning the animation */]) in bones_back_to_front.array_windows().enumerate() {
+        index += 1;
+        // create a corresponding animation
+        
+        // Create Animation, using bone as the current bone
         let mut bone_animation = BoneAnimation::new();
         // do not move for LEN-`index` timesteps
         bone_animation
@@ -412,25 +437,12 @@ fn grappling_hook() -> GrapplingHook {
             .expect(EXPECT_MESSAGE);
 
         animation_builder
-            .push_animation(bone_animation, end_bone)
+            .push_animation(bone_animation, parent)
             .expect("end bone exists");
-
-        // Create new bone to correspond to the created animation
-        let new_bone = Bone::builder(end_bone).bind_pose_relative_to_parent(Pose::IDENTITY);
-
-        end_bone = skeleton_builder
-            .push_bone(new_bone)
-            .expect("new_bone parent exists");
-        bones_back_to_front.push(end_bone);
-        // attach a cube to this bone
-        chain.push_cube(
-            Pose::IDENTITY,
-            white_material.clone(),
-            CHAIN_LINK_SIZE,
-            end_bone,
-        );
     }
 
+    let end_of_chain = bones_back_to_front.last().expect("at least going to be the ROOT_BONE");
+     
     let mut bone_animation = BoneAnimation::new();
     bone_animation
         .push_final_non_repeat(Pose::new_from_translation(Vector::new([
@@ -441,12 +453,14 @@ fn grappling_hook() -> GrapplingHook {
         .expect(EXPECT_MESSAGE);
 
     animation_builder
-        .push_animation(bone_animation, end_bone)
+        .push_animation(bone_animation, &end_of_chain)
         .expect("end bone exists");
-    let new_bone = Bone::builder(end_bone).bind_pose_relative_to_parent(
+
+    let new_bone = Bone::builder(&end_of_chain).bind_pose_relative_to_parent(
         Pose::new_from_translation(Vector::new([0.0, 0.0, CHAIN_LINK_SIZE * 0.5])),
     );
-    end_bone = skeleton_builder
+    
+    let hook_attachment_bone = skeleton_builder
         .push_bone(new_bone)
         .expect("new_bone parent exists");
 
@@ -469,8 +483,8 @@ fn grappling_hook() -> GrapplingHook {
                 0.0,
                 0.5 * (ORIGIN_BOX_SIZE - CHAIN_LINK_SIZE),
             ])),
-            SkeletonBoneIndex::SKELETON_ROOT_BONE,
-            AggregateModelIndex::ROOT_MODEL_INDEX,
+            &SkeletonBoneIndex::SKELETON_ROOT_BONE,
+            &AggregateModelIndex::ROOT_MODEL_INDEX,
             0,
             |_| (),
         )
@@ -479,8 +493,8 @@ fn grappling_hook() -> GrapplingHook {
         .push_model(
             hook,
             Pose::new_from_translation(Vector::new([0.0, 0.0, 0.5 * (HOOK_SIZE)])),
-            end_bone,
-            chain_attachment_point,
+            &hook_attachment_bone,
+            &chain_attachment_point,
             1,
             |_| (),
         )
@@ -488,10 +502,9 @@ fn grappling_hook() -> GrapplingHook {
 
     GrapplingHook {
         entity: aggregate,
-        base: AggregateModelIndex::ROOT_MODEL_INDEX,
         chain: chain_attachment_point,
-        chain_end_bone: end_bone,
-        hook: hook_attachment_point,
+        chain_end_bone: hook_attachment_bone,
+        hook: Some(hook_attachment_point),
         attachment: None,
         chain_animation: animation,
     }

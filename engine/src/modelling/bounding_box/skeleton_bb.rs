@@ -6,7 +6,7 @@ use graphics::linear_algebra::Vector;
 use graphics::texture::FlatTexture;
 use graphics::vertex_array::VertexArray;
 
-use crate::modelling::bounding_box::element::DrawRecurisveError;
+use crate::modelling::bounding_box::element::DrawRecursiveError;
 use crate::modelling::cubic::SkeletonBoneIndex;
 use crate::modelling::cubic::geometry::{CalculatedAnimation, GetAnimationError};
 use crate::modelling::{BoundingBox, Collision, CubicVertex, Skeleton};
@@ -42,7 +42,7 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
     }
 }
 
-impl<V: CubicVertex, T> SkeletonBb<V, T> {
+/*impl<V: CubicVertex, T> SkeletonBb<V, T> {
     pub fn detect_collision<F, O>(
         lhs: &Self,
         lhs_calculated_animation: &CalculatedAnimation,
@@ -55,8 +55,8 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
         rhs_alter_meta: O,
     ) -> bool
     where
-        F: Fn(SkeletonBoneIndex, &mut T),
-        O: Fn(SkeletonBoneIndex, &mut T),
+        F: Fn(&SkeletonBoneIndex, &mut T),
+        O: Fn(&SkeletonBoneIndex, &mut T),
     {
         let lhs_alter_meta = &lhs_alter_meta;
         let rhs_alter_meta = &rhs_alter_meta;
@@ -67,7 +67,7 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
             .enumerate()
             .any(move |(lhs_bone, lhs_bb)| {
                 // HACK: making SkeletonBoneIndex outside the skeleton should be illegal
-                let lhs_bone = SkeletonBoneIndex(lhs_bone);
+                let lhs_bone = &SkeletonBoneIndex(lhs_bone);
                 let lhs_pose = lhs_calculated_animation
                     .get(lhs_bone, lhs_skeleton)
                     .expect(ERROR_MSG);
@@ -76,7 +76,7 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
                     .enumerate()
                     .any(move |(rhs_bone, rhs_bb)| {
                         // HACK: making SkeletonBoneIndex outside the skeleton should be illegal
-                        let rhs_bone = SkeletonBoneIndex(rhs_bone);
+                        let rhs_bone = &SkeletonBoneIndex(rhs_bone);
                         let rhs_pose = rhs_calculated_animation
                             .get(rhs_bone, rhs_skeleton)
                             .expect(ERROR_MSG);
@@ -92,11 +92,11 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
                     })
             })
     }
-}
+}*/
 
 #[derive(Debug)]
 pub enum DrawError<'a> {
-    DrawRecursive(DrawRecurisveError<'a>),
+    DrawRecursive(DrawRecursiveError<'a>),
     GetAnimation(GetAnimationError),
 }
 
@@ -115,8 +115,7 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
         colour: F,
     ) -> Result<(), DrawError<'a>> {
         for (bone, bbox) in self.per_bone.iter().enumerate() {
-            // HACK do I want to store the index for "completeness"?
-            let bone = SkeletonBoneIndex(bone);
+            let bone = &SkeletonBoneIndex(bone);
 
             let pose = calculated_animation
                 .get(bone, skeleton)
@@ -131,38 +130,35 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
 
 impl<VThis: CubicVertex, TThis> Collision for SkeletonBb<VThis, TThis> {
     type FuncInputs = SkeletonBoneIndex;
-    type Inner = TThis;
+    type Meta = TThis;
     type Transform<'a> = (&'a Skeleton, &'a CalculatedAnimation);
 
     fn collides<
-        T: Collision,
-        F: FnMut(Self::FuncInputs, &mut Self::Inner),
-        O: FnMut(T::FuncInputs, &mut T::Inner),
-    >(
-        &self,
-        transform: &Self::Transform<'_>,
-        mut self_alter_meta: F,
-        target: &T,
-        target_transform: &T::Transform<'_>,
-        mut target_alter_meta: O,
-    ) -> bool {
-        self.per_bone
+            T: Collision,
+            F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
+        >(
+            &self,
+            transform: &Self::Transform<'_>,
+            target: &T,
+            target_transform: &T::Transform<'_>,
+            mut alter_meta: F,
+        ) -> bool {
+         self.per_bone
             .iter()
             .enumerate()
             .any(|(index, self_bounding_box)| {
                 let skeleton_index = SkeletonBoneIndex(index);
-                let Ok(this_transform) = transform.1.get(skeleton_index, transform.0) else {
+                let Ok(this_transform) = transform.1.get(&skeleton_index, transform.0) else {
                     return false;
                 };
 
                 self_bounding_box.collides(
                     &this_transform,
-                    |(), t| self_alter_meta(skeleton_index, t),
                     target,
                     target_transform,
-                    &mut target_alter_meta,
+                    |(), self_meta, target_inputs, target_meta| alter_meta(skeleton_index.clone_inner(), self_meta, target_inputs, target_meta)
                 )
-            })
+            })       
     }
 }
 

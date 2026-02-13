@@ -30,11 +30,11 @@ impl SkeletalAnimationBuilder {
     pub fn push_animation(
         &mut self,
         animation: BoneAnimation,
-        parent_bone: SkeletonBoneIndex,
+        parent_bone: &SkeletonBoneIndex,
     ) -> Result<(), BoneAnimation> {
         if parent_bone.0 <= self.bones.len() {
             // The parent bone is part of the animation.
-            self.signature.push(parent_bone);
+            self.signature.push(parent_bone.clone_inner());
             self.bones.push(animation);
 
             Ok(())

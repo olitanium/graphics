@@ -45,10 +45,6 @@ pub struct State {
     pub aggregate_tail: AggregateEntity<(), SkinningCubic>,
     pub skeletal_animation: SkeletalAnimation,
 
-    // pub grappling_hook: AggregateEntity<(), SimpleCubic>,
-    // pub grapple_chain_anim: SkeletalAnimation,
-    // pub join_pos: (AggregateModelIndex, SkeletonBoneIndex),
-    // pub hook_pos: AggregateModelIndex,
     pub grappling_hook: GrapplingHook,
 
     pub bounding_box_level: usize,
