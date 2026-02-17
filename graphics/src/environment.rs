@@ -23,6 +23,7 @@ use crate::gl_call;
 use crate::shader_program::ShaderProgramContext;
 use crate::types::{Query, TexDim};
 
+#[non_exhaustive]
 pub enum NewError<G: ApiState> {
     GlfwInit(glfw::InitError),
     GlfwWindow(GlfwError),

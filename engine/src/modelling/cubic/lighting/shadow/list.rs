@@ -28,6 +28,7 @@ pub struct ShadowListLights<const MAX: usize> {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum GenDepthError<'a> {
     Model {
         error: skeleton_cubic::DrawError<'static>,

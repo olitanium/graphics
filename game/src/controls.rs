@@ -9,6 +9,7 @@ use engine::modelling::TestLineVertex;
 use engine::modelling::cubic::geometry::Pose;
 use engine::{ColourRGB, Key, PollResult};
 
+use crate::morgan::Morgan;
 use crate::state::{State, StateError};
 
 pub enum ControlOutput<T> {
@@ -67,7 +68,7 @@ impl State {
         keyboard: HashSet<Key>,
         string: &mut String,
         frame_time: f32,
-        time: f32,
+        _time: f32,
     ) -> ControlOutput<()> {
         if keyboard.contains(&Key::Escape) {
             return ControlOutput::Close;
@@ -141,7 +142,8 @@ impl State {
                 'b' | 'B' => self.toggle_b = !self.toggle_b,
                 'm' | 'M' => {
                     self.toggle_m = !self.toggle_m;
-                    self.reset_time = time;
+                    self.grappling_hook.start();
+                    // self.reset_time = time;
                 }
                 'g' | 'G' => self.toggle_g = !self.toggle_g,
                 'o' => {
@@ -151,7 +153,10 @@ impl State {
                     self.bounding_box_level = self.bounding_box_level.wrapping_sub(1);
                 }
                 't' => {
-                    if let Some(morgan_model) = mem::take(&mut self.morgan) {
+                    if let Some(Morgan {
+                        inner: morgan_model,
+                    }) = mem::take(&mut self.morgan)
+                    {
                         self.grappling_hook.entity.remove(
                             self.grappling_hook
                                 .hook

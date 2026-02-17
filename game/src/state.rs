@@ -16,7 +16,8 @@ use engine::types::TexDim;
 use engine::{ApiState, ColourRGBA, Event, PollResult, SimpleEntity};
 
 use crate::controls::ControlOutput;
-use crate::new::GrapplingHook;
+use crate::grappling_hook::GrapplingHook;
+use crate::morgan::Morgan;
 
 pub struct State {
     pub reset_time: f32,
@@ -39,7 +40,7 @@ pub struct State {
     pub light_group: ShadowListLights<SHADOW_SHADER_MAX_LIGHTS>,
     pub ns_light_group: ListLights<SHADOW_SHADER_MAX_LIGHTS>,
 
-    pub morgan: Option<SimpleEntity<()>>,
+    pub morgan: Option<Morgan>,
     pub origin_cube: SimpleEntity<()>,
     pub simpletail: SkinningCubic,
     pub aggregate_tail: AggregateEntity<(), SkinningCubic>,

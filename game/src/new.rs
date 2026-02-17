@@ -7,13 +7,7 @@ use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::camera::ManualPose;
-use engine::modelling::cubic::geometry::{
-    AggregateCalcAnim,
-    BoneAnimation,
-    Orientation,
-    Pose,
-    SkeletalAnimation,
-};
+use engine::modelling::cubic::geometry::{Orientation, Pose};
 use engine::modelling::cubic::lighting::shadow::{
     ShadowListLights,
     ShadowPointLight,
@@ -21,13 +15,15 @@ use engine::modelling::cubic::lighting::shadow::{
 };
 use engine::modelling::cubic::lighting::simple::{ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{SimpleCubic, SkeletonBoneIndex, SkinningCubic, camera};
-use engine::modelling::{Bloom, Bone, Line, Quad, Skeleton, SkeletonCubic, SkyBox};
+use engine::modelling::cubic::{SimpleCubic, SkinningCubic, camera};
+use engine::modelling::{Bloom, Line, Quad, SkeletonCubic, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
-use engine::{ColourRGB, ColourRGBA, SimpleEntity};
+use engine::{ColourRGB, SimpleEntity};
 
+use crate::grappling_hook::GrapplingHook;
+use crate::morgan::Morgan;
 use crate::state::{State, StateError};
 
 impl State {
@@ -85,6 +81,8 @@ impl State {
         let morgan = make_model("morgan").unwrap();
         let mut morgan = SimpleEntity::from_simple_cubic(morgan, 20, Mass(1.0), |_| ());
         morgan.pose = Pose::new_from_translation(Vector::new([0.0, 0.0, 6.0]));
+
+        let morgan = Morgan { inner: morgan };
 
         let origin_cube = SimpleEntity::from_simple_cubic(
             SimpleCubic::cube(1.0, Rc::new(Material::black())).build(),
@@ -338,188 +336,4 @@ pub fn make_model(which_model: &str) -> Result<SimpleCubic, StateError> {
         _ => SimpleCubic::empty(),
     };
     Ok(model)
-}
-
-pub struct GrapplingHook {
-    pub entity: AggregateEntity<(), SkeletonCubic>,
-    pub chain: AggregateModelIndex,
-    pub chain_end_bone: SkeletonBoneIndex,
-    pub hook: Option<AggregateModelIndex>,
-    pub attachment: Option<AggregateModelIndex>,
-    pub chain_animation: SkeletalAnimation,
-}
-
-impl GrapplingHook {
-    pub fn calculate_animation(
-        &self,
-        fix_anim: Option<(&AggregateModelIndex, SkeletonBoneIndex, Pose)>,
-        time: f32,
-    ) -> AggregateCalcAnim {
-        self.entity
-            .calculate_animation(
-                fix_anim,
-                [(&self.chain, (&self.chain_animation, time))].into(),
-            )
-            .expect("chain_animation is well defined for the chain element")
-    }
-}
-
-impl GrapplingHook {
-    fn new() -> Self {
-        // Need origin cube
-        // Need chain
-        // Need hook
-
-        const ORIGIN_BOX_SIZE: f32 = 1.0;
-        let origin_cube = SkeletonCubic::cube(
-            ORIGIN_BOX_SIZE,
-            Rc::new(Material::from_colour(ColourRGBA::RED)),
-        )
-        .build();
-
-        let mut chain = SkeletonCubic::builder();
-        let mut skeleton_builder = Skeleton::builder();
-        let mut animation_builder = SkeletalAnimation::builder();
-        let mut bones_back_to_front = vec![SkeletonBoneIndex::SKELETON_ROOT_BONE];
-        // No chain link is bound to the root bone, so that the root of the origin cube
-        // and the
-        let white_material = Rc::new(Material::white());
-
-        const EXPECT_MESSAGE: &str = "have not yet finished the animation";
-        const SEC_PER_UNIT: f32 = 0.05;
-        const CHAIN_LINK_SIZE: f32 = 0.5;
-        const LEN: usize = 20;
-
-        for _ in 1..LEN {
-            // Create new bone to correspond to the created animation
-            let new_bone = Bone::builder(bones_back_to_front.last().expect("filled"))
-                .bind_pose_relative_to_parent(Pose::IDENTITY);
-
-            let end_bone = skeleton_builder
-                .push_bone(new_bone)
-                .expect("new_bone parent exists");
-
-            bones_back_to_front.push(end_bone);
-            // create skeleton, and save to a vector
-        }
-
-        for bone in &bones_back_to_front {
-            // add cube to each bone
-            chain.push_cube(
-                Pose::IDENTITY,
-                white_material.clone(),
-                CHAIN_LINK_SIZE,
-                &bone,
-            )
-        }
-
-        // array_windows is a way to ensure that the last index is skipped
-        for (
-            mut index,
-            [
-                parent,
-                _animation_owner, /* this bone here is the one who is actually owning the
-                                   * animation */
-            ],
-        ) in bones_back_to_front.array_windows().enumerate()
-        {
-            index += 1;
-            // create a corresponding animation
-
-            // Create Animation, using bone as the current bone
-            let mut bone_animation = BoneAnimation::new();
-            // do not move for LEN-`index` timesteps
-            bone_animation
-                .push(Pose::IDENTITY, (LEN - index) as f32 * SEC_PER_UNIT)
-                .expect(EXPECT_MESSAGE);
-            // then move one distance in one timesteps
-            bone_animation
-                .push(Pose::IDENTITY, 1.0 * SEC_PER_UNIT)
-                .expect(EXPECT_MESSAGE);
-            bone_animation
-                .push(
-                    Pose::new_from_translation(Vector::new([0.0, 0.0, CHAIN_LINK_SIZE])),
-                    (LEN + index) as f32 * SEC_PER_UNIT,
-                )
-                .expect(EXPECT_MESSAGE);
-            bone_animation
-                .push_final_non_repeat(Pose::IDENTITY)
-                .expect(EXPECT_MESSAGE);
-
-            animation_builder
-                .push_animation(bone_animation, parent)
-                .expect("end bone exists");
-        }
-
-        let end_of_chain = bones_back_to_front
-            .last()
-            .expect("at least going to be the ROOT_BONE");
-
-        let mut bone_animation = BoneAnimation::new();
-        bone_animation
-            .push_final_non_repeat(Pose::new_from_translation(Vector::new([
-                0.0,
-                0.0,
-                CHAIN_LINK_SIZE * 0.5,
-            ])))
-            .expect(EXPECT_MESSAGE);
-
-        animation_builder
-            .push_animation(bone_animation, &end_of_chain)
-            .expect("end bone exists");
-
-        let new_bone = Bone::builder(&end_of_chain).bind_pose_relative_to_parent(
-            Pose::new_from_translation(Vector::new([0.0, 0.0, CHAIN_LINK_SIZE * 0.5])),
-        );
-
-        let hook_attachment_bone = skeleton_builder
-            .push_bone(new_bone)
-            .expect("new_bone parent exists");
-
-        let skeleton = skeleton_builder.build();
-        let animation = animation_builder.build();
-        let chain = chain.skeleton(skeleton).build();
-
-        // `end_bone` now has the bone which I should attach the hook to (plus offset)
-
-        const HOOK_SIZE: f32 = 2.0;
-        let hook =
-            SkeletonCubic::cube(HOOK_SIZE, Rc::new(Material::from_colour(ColourRGBA::GREEN)))
-                .build();
-
-        let mut aggregate = AggregateEntity::new(origin_cube, 1, |_| ());
-        let chain_attachment_point = aggregate
-            .push_model(
-                chain,
-                Pose::new_from_translation(Vector::new([
-                    0.0,
-                    0.0,
-                    0.5 * (ORIGIN_BOX_SIZE - CHAIN_LINK_SIZE),
-                ])),
-                &SkeletonBoneIndex::SKELETON_ROOT_BONE,
-                &AggregateModelIndex::ROOT_MODEL_INDEX,
-                0,
-                |_| (),
-            )
-            .expect("Root model at ROOT_MODEL_INDEX");
-        let hook_attachment_point = aggregate
-            .push_model(
-                hook,
-                Pose::new_from_translation(Vector::new([0.0, 0.0, 0.5 * (HOOK_SIZE)])),
-                &hook_attachment_bone,
-                &chain_attachment_point,
-                1,
-                |_| (),
-            )
-            .expect("chain attachment at given index");
-
-        Self {
-            entity: aggregate,
-            chain: chain_attachment_point,
-            chain_end_bone: hook_attachment_bone,
-            hook: Some(hook_attachment_point),
-            attachment: None,
-            chain_animation: animation,
-        }
-    }
 }

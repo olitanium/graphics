@@ -46,7 +46,7 @@ impl State {
                     &self.camera,
                     &(),
                     &self.ns_light_group,
-                    vec![morgan.temp_as_simplecubic_and_anim()],
+                    vec![morgan.inner.temp_as_simplecubic_and_anim()],
                     vec![],
                 )
                 .unwrap(),

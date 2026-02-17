@@ -32,6 +32,7 @@ impl<V: CubicVertex> Mesh<V> {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum DrawError<'a> {
     VertexArrayDraw(VertexArrayDrawError<'a>),
 }

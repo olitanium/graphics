@@ -48,6 +48,7 @@ impl SkinningCubic {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum DrawError<'a> {
     SignaturesDoNotMatch(SignaturesDoNotMatchError),
     Mesh(MeshDrawError<'a>),

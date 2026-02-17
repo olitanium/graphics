@@ -12,6 +12,7 @@ use utils::error_boilerplate;
 use crate::modelling::cubic::lighting::simple::SimpleBindError;
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum ShadowBindError<'a> {
     BindSimpleLight(SimpleBindError<'a>),
     SetUniform(SetUniformError<'a>),

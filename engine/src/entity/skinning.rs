@@ -91,11 +91,14 @@ impl<TThis> Collision for SkinningEntity<TThis> {
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
         &self,
-        transform: &Self::Transform<'_>,
+        transform: Self::Transform<'_>,
         target: &T,
-        target_transform: &T::Transform<'_>,
+        target_transform: T::Transform<'_>,
         alter_meta: F,
-    ) -> bool {
+    ) -> bool
+    where
+        for<'a> T::Transform<'a>: Clone,
+    {
         let Some(bbox) = &self.bounding_box else {
             return false;
         };

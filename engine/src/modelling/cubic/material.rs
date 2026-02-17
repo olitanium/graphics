@@ -53,6 +53,7 @@ impl Material {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum RegisterToError<'a> {
     SetUniformError(SetUniformError<'a>),
 }

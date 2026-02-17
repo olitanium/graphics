@@ -27,6 +27,7 @@ impl SkyBox {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum DrawError<'a> {
     FaceCulling(FaceCullingForcedByProgramError),
     VertexArrayDraw(VertexArrayDrawError<'a>),

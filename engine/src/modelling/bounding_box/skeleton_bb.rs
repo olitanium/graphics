@@ -138,11 +138,14 @@ impl<VThis: CubicVertex, TThis> Collision for SkeletonBb<VThis, TThis> {
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
         &self,
-        transform: &Self::Transform<'_>,
+        transform: Self::Transform<'_>,
         target: &T,
-        target_transform: &T::Transform<'_>,
+        target_transform: T::Transform<'_>,
         mut alter_meta: F,
-    ) -> bool {
+    ) -> bool
+    where
+        for<'a> T::Transform<'a>: Clone,
+    {
         self.per_bone
             .iter()
             .enumerate()
@@ -153,9 +156,9 @@ impl<VThis: CubicVertex, TThis> Collision for SkeletonBb<VThis, TThis> {
                 };
 
                 self_bounding_box.collides(
-                    &this_transform,
+                    this_transform,
                     target,
-                    target_transform,
+                    target_transform.clone(),
                     |(), self_meta, target_inputs, target_meta| {
                         alter_meta(
                             skeleton_index.clone_inner(),

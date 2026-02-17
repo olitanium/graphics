@@ -137,6 +137,7 @@ where
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum VertexArrayDrawError<'a> {
     BindTextures(BindTexturesError<'a>),
     Validate(ValidateError),

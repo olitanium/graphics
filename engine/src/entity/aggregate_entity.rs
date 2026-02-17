@@ -247,6 +247,7 @@ where
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum CalculateAnimationError<'a> {
     BadAnimationInput {
         error: SignaturesDoNotMatchError,
@@ -263,7 +264,7 @@ where
 {
     pub fn calculate_animation<'a>(
         &'a self,
-        fix_anim: Option<(&'a AggregateModelIndex, SkeletonBoneIndex, Pose)>,
+        fix_anim: Option<(&'a AggregateModelIndex, &'a SkeletonBoneIndex, Pose)>,
         mut animations: HashMap<&'a AggregateModelIndex, (&'a SkeletalAnimation, f32)>,
     ) -> Result<AggregateCalcAnim, CalculateAnimationError<'a>> {
         let indices = (1..).map(AggregateModelIndex);
@@ -416,38 +417,6 @@ where
     }
 }
 
-// impl<T, M: EntityInner> AggregateEntity<T, M>
-// where
-// M::Vertex: CubicVertex,
-// {
-// pub fn detect_collision<F, O>(
-// lhs: &Self,
-// lhs_calculated_animation: &AggregateCalcAnim,
-// lhs_alter_meta: F,
-//
-// rhs: &AggregateEntity<>,
-// rhs_calculated_animation: &AggregateCalcAnim,
-// rhs_alter_meta: O,
-// ) -> bool
-// where
-// F: Fn(AggregateModelIndex, <M::BoundingBox<T> as
-// BoundingBoxTrait>::FuncInputs, &mut <M::BoundingBox<T> as
-// BoundingBoxTrait>::Inner), O: Fn(AggregateModelIndex, SkeletonBoneIndex, &mut
-// T), {
-// for (lhs_index, _, lhs_bbox, lhs_anim) in
-// lhs.zip_calculated_animation_get_index(lhs_calculated_animation) {
-// for (rhs_index, _, rhs_bbox, rhs_anim) in
-// rhs.zip_calculated_animation_get_index(rhs_calculated_animation) {
-// let Some((lhs, rhs)) = lhs_bbox.zip(rhs_bbox) else {return false};
-// lhs.intersects_bounding_box(transform, self_alter_meta, target,
-// target_transform, target_alter_meta) }
-// }
-//
-//
-// todo!()
-// }
-// }
-
 pub enum DrawError<'a, M: EntityInner + 'a>
 where
     M::Vertex: CubicVertex,
@@ -525,93 +494,6 @@ where
     }
 }
 
-// impl<T> AggregateEntity<T, SkeletonCubic> {
-// pub fn push_skeleton_entity(
-// &mut self,
-// entity: SkeletonEntity<T>,
-// offset: Pose,
-// parent_unit: AggregateModelIndex,
-// skeketon_attachment: SkeletonBoneIndex,
-// ) -> Result<AggregateModelIndex, PushModelError> {
-// self.check_parent_and_bone(skeketon_attachment, parent_unit)?;
-//
-// let SkeletonEntity {
-// model,
-// bounding_box,
-// ..
-// } = entity;
-//
-// let unit = AggregateUnit {
-// model,
-// bounding_box,
-// skeleton_attachment_point: skeketon_attachment,
-// offset,
-// parent_unit,
-// children: Vec::new(),
-// };
-//
-// Ok(self.push_aggregate_unit(unit))
-// }
-// }
-//
-// impl<T> AggregateEntity<T, SimpleCubic> {
-// pub fn push_simple_entity(
-// &mut self,
-// entity: SimpleEntity<T>,
-// offset: Pose,
-// parent_unit: AggregateModelIndex,
-// skeleton_attachment: SkeletonBoneIndex,
-// ) -> Result<AggregateModelIndex, PushModelError> {
-// self.check_parent_and_bone(skeleton_attachment, parent_unit)?;
-//
-// let SimpleEntity {
-// model,
-// bounding_box,
-// ..
-// } = entity;
-//
-// let unit = AggregateUnit {
-// model,
-// bounding_box,
-// skeleton_attachment_point: skeleton_attachment,
-// offset,
-// parent_unit,
-// children: Vec::new(),
-// };
-//
-// Ok(self.push_aggregate_unit(unit))
-// }
-// }
-//
-// impl<T> AggregateEntity<T, SkinningCubic> {
-// pub fn push_skinning_entity(
-// &mut self,
-// entity: SkinningEntity<T>,
-// offset: Pose,
-// parent_unit: AggregateModelIndex,
-// skeleton_attachment: SkeletonBoneIndex,
-// ) -> Result<AggregateModelIndex, PushModelError> {
-// self.check_parent_and_bone(skeleton_attachment, parent_unit)?;
-//
-// let SkinningEntity {
-// model,
-// bounding_box,
-// ..
-// } = entity;
-//
-// let unit = AggregateUnit {
-// model,
-// bounding_box,
-// skeleton_attachment_point: skeleton_attachment,
-// offset,
-// parent_unit,
-// children: Vec::new(),
-// };
-//
-// Ok(self.push_aggregate_unit(unit))
-// }
-// }
-
 impl<SelfMeta, M: EntityInner> Collision for AggregateEntity<SelfMeta, M>
 where
     M::Vertex: CubicVertex,
@@ -623,25 +505,28 @@ where
         <M::BoundingBox<SelfMeta> as Collision>::FuncInputs,
     );
     type Meta = <M::BoundingBox<SelfMeta> as Collision>::Meta;
-    type Transform<'a> = AggregateCalcAnim;
+    type Transform<'a> = &'a AggregateCalcAnim;
 
     fn collides<
         Other: Collision,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, Other::FuncInputs, &mut Other::Meta),
     >(
         &self,
-        transform: &Self::Transform<'_>,
+        transform: Self::Transform<'_>,
         target: &Other,
-        target_transform: &Other::Transform<'_>,
+        target_transform: Other::Transform<'_>,
         mut alter_meta: F,
-    ) -> bool {
+    ) -> bool
+    where
+        for<'a> Other::Transform<'a>: Clone,
+    {
         self.zip_calculated_animation_get_index(transform)
             .flat_map(|(x, y, opt_z, t)| opt_z.map(|z| (x, y, z, t)))
             .any(|(index, model, bbox, animation)| {
                 let transform = (model.skeleton(), animation);
                 let transform = transform.into();
 
-                bbox.collides(&transform, target, target_transform, |x, y, z, t| {
+                bbox.collides(transform, target, target_transform.clone(), |x, y, z, t| {
                     alter_meta((index.inner_clone(), x), y, z, t)
                 })
             })

@@ -107,6 +107,7 @@ impl SkeletonCubic {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum DrawError<'a> {
     Mesh(mesh::DrawError<'a>),
     SetUniform(SetUniformError<'a>),

@@ -1,0 +1,319 @@
+use std::rc::Rc;
+
+use engine::ColourRGBA;
+use engine::entity::{AggregateEntity, AggregateModelIndex, EntityInner};
+use engine::linear_algebra::Vector;
+use engine::modelling::cubic::SkeletonBoneIndex;
+use engine::modelling::cubic::geometry::{
+    AggregateCalcAnim,
+    BoneAnimation,
+    Pose,
+    SkeletalAnimation,
+};
+use engine::modelling::cubic::material::Material;
+use engine::modelling::{Bone, Collision, Skeleton, SkeletonCubic};
+
+use crate::properties::Properties;
+
+pub struct GrapplingHook {
+    pub entity: AggregateEntity<(), SkeletonCubic>,
+    pub chain: AggregateModelIndex,
+    pub chain_end_bone: SkeletonBoneIndex,
+    pub hook: Option<AggregateModelIndex>,
+    pub chain_animation: SkeletalAnimation,
+    hook_state: HookState,
+}
+
+enum HookState {
+    Still,
+    Extending {
+        length: f32,
+        velocity: f32,
+    },
+    CarryingPlayer {
+        length: f32,
+        velocity: f32,
+        fixed_pose: Pose,
+    },
+    GrabbedObject {
+        attachment: AggregateModelIndex,
+        velocity: f32,
+    },
+}
+
+impl GrapplingHook {
+    pub fn new() -> Self {
+        // Need origin cube
+        // Need chain
+        // Need hook
+
+        const ORIGIN_BOX_SIZE: f32 = 1.0;
+        let origin_cube = SkeletonCubic::cube(
+            ORIGIN_BOX_SIZE,
+            Rc::new(Material::from_colour(ColourRGBA::RED)),
+        )
+        .build();
+
+        let mut chain = SkeletonCubic::builder();
+        let mut skeleton_builder = Skeleton::builder();
+        let mut animation_builder = SkeletalAnimation::builder();
+        let mut bones_back_to_front = vec![SkeletonBoneIndex::SKELETON_ROOT_BONE];
+        // No chain link is bound to the root bone, so that the root of the origin cube
+        // and the
+        let white_material = Rc::new(Material::white());
+
+        const EXPECT_MESSAGE: &str = "have not yet finished the animation";
+        const SEC_PER_UNIT: f32 = 1.0;
+        const CHAIN_LINK_SIZE: f32 = 0.5;
+        const LEN: usize = 20;
+
+        for _ in 1..LEN {
+            // Create new bone to correspond to the created animation
+            let new_bone = Bone::builder(bones_back_to_front.last().expect("filled"))
+                .bind_pose_relative_to_parent(Pose::IDENTITY);
+
+            let end_bone = skeleton_builder
+                .push_bone(new_bone)
+                .expect("new_bone parent exists");
+
+            bones_back_to_front.push(end_bone);
+            // create skeleton, and save to a vector
+        }
+
+        for bone in &bones_back_to_front {
+            // add cube to each bone
+            chain.push_cube(
+                Pose::IDENTITY,
+                white_material.clone(),
+                CHAIN_LINK_SIZE,
+                &bone,
+            )
+        }
+
+        // array_windows is a way to ensure that the last index is skipped
+        for (
+            mut index,
+            [
+                parent,
+                _animation_owner, /* this bone here is the one who is actually owning the
+                                   * animation */
+            ],
+        ) in bones_back_to_front.array_windows().enumerate()
+        {
+            index += 1; // effectively enumerating the second element, the animation owner, of the Window
+
+            // Create Animation, using bone as the current bone
+            let mut bone_animation = BoneAnimation::new();
+            // do not move for LEN-`index` timesteps
+            bone_animation
+                .push(Pose::IDENTITY, (LEN - index) as f32 * SEC_PER_UNIT)
+                .expect(EXPECT_MESSAGE);
+            // then move one distance in one timesteps
+            bone_animation
+                .push(Pose::IDENTITY, 1.0 * SEC_PER_UNIT)
+                .expect(EXPECT_MESSAGE);
+            bone_animation
+                .push(
+                    Pose::new_from_translation(Vector::new([0.0, 0.0, CHAIN_LINK_SIZE])),
+                    (LEN + index) as f32 * SEC_PER_UNIT,
+                )
+                .expect(EXPECT_MESSAGE);
+            bone_animation
+                .push_final_non_repeat(Pose::IDENTITY)
+                .expect(EXPECT_MESSAGE);
+
+            animation_builder
+                .push_animation(bone_animation, parent)
+                .expect("end bone exists");
+        }
+
+        let end_of_chain = bones_back_to_front
+            .last()
+            .expect("at least going to be the ROOT_BONE");
+
+        let mut bone_animation = BoneAnimation::new();
+        bone_animation
+            .push_final_non_repeat(Pose::new_from_translation(Vector::new([
+                0.0,
+                0.0,
+                CHAIN_LINK_SIZE * 0.5,
+            ])))
+            .expect(EXPECT_MESSAGE);
+
+        animation_builder
+            .push_animation(bone_animation, &end_of_chain)
+            .expect("end bone exists");
+
+        let new_bone = Bone::builder(&end_of_chain).bind_pose_relative_to_parent(
+            Pose::new_from_translation(Vector::new([0.0, 0.0, CHAIN_LINK_SIZE * 0.5])),
+        );
+
+        let hook_attachment_bone = skeleton_builder
+            .push_bone(new_bone)
+            .expect("new_bone parent exists");
+
+        let skeleton = skeleton_builder.build();
+        let animation = animation_builder.build();
+        let chain = chain.skeleton(skeleton).build();
+
+        // `end_bone` now has the bone which I should attach the hook to (plus offset)
+
+        const HOOK_SIZE: f32 = 2.0;
+        let hook =
+            SkeletonCubic::cube(HOOK_SIZE, Rc::new(Material::from_colour(ColourRGBA::GREEN)))
+                .build();
+
+        let mut aggregate = AggregateEntity::new(origin_cube, 1, |_| ());
+        let chain_attachment_point = aggregate
+            .push_model(
+                chain,
+                Pose::new_from_translation(Vector::new([
+                    0.0,
+                    0.0,
+                    0.5 * (ORIGIN_BOX_SIZE - CHAIN_LINK_SIZE),
+                ])),
+                &SkeletonBoneIndex::SKELETON_ROOT_BONE,
+                &AggregateModelIndex::ROOT_MODEL_INDEX,
+                0,
+                |_| (),
+            )
+            .expect("Root model at ROOT_MODEL_INDEX");
+        let hook_attachment_point = aggregate
+            .push_model(
+                hook,
+                Pose::new_from_translation(Vector::new([0.0, 0.0, 0.5 * (HOOK_SIZE)])),
+                &hook_attachment_bone,
+                &chain_attachment_point,
+                1,
+                |_| (),
+            )
+            .expect("chain attachment at given index");
+
+        Self {
+            entity: aggregate,
+            chain: chain_attachment_point,
+            chain_end_bone: hook_attachment_bone,
+            hook: Some(hook_attachment_point),
+            chain_animation: animation,
+            hook_state: HookState::Still,
+        }
+    }
+}
+
+impl GrapplingHook {
+    pub fn update<B: Collision + Properties>(
+        &mut self,
+        timestep: f32,
+        target: Option<(&B, B::Transform<'_>)>,
+    ) -> AggregateCalcAnim
+    where
+        for<'a> B::Transform<'a>: Clone,
+    {
+        match &mut self.hook_state {
+            HookState::Still => self
+                .entity
+                .calculate_animation(None, [(&self.chain, (&self.chain_animation, 0.0))].into())
+                .expect("chain_animation is well defined for the chain element"),
+            HookState::Extending { length, velocity } => {
+                *length += *velocity * timestep;
+
+                if *length < 0.0 {
+                    self.hook_state = HookState::Still;
+                    return self.update(0.0, target);
+                }
+
+                let transform = self
+                    .entity
+                    .calculate_animation(
+                        None,
+                        [(&self.chain, (&self.chain_animation, *length))].into(),
+                    )
+                    .expect("chain_animation is well defined for the chain element");
+
+                if let Some((target, target_transform)) = target {
+                    let mut collided = false;
+                    self.entity.collides(
+                        &transform,
+                        target,
+                        target_transform,
+                        |(ref self_aggr, _), _, _, _| {
+                            if Some(self_aggr) == self.hook.as_ref() {
+                                collided = true;
+                            }
+                        },
+                    );
+
+                    if collided {
+                        if target.is_hookpoint() {
+                            // TODO: this is carrying player, make holding item
+
+                            let chain_end_position = transform
+                                .get(self.hook.as_ref().expect("cannot hook without a hook!"))
+                                .expect("hook still exists")
+                                .root();
+                            // this one needs to be fixed for ever.
+
+                            let new_state = HookState::CarryingPlayer {
+                                length: *length,
+                                velocity: 1.0,
+                                fixed_pose: chain_end_position,
+                            };
+                            self.hook_state = new_state;
+                        } else if target.is_carryable() {
+                        } else {
+                            // Bounce off illegal target
+                            *velocity = -*velocity;
+                        }
+                    }
+                }
+
+                transform
+            }
+            &mut HookState::CarryingPlayer {
+                velocity,
+                ref mut length,
+                fixed_pose,
+            } => {
+                *length -= velocity * timestep;
+                let length_copy = *length;
+
+                if *length < 0.0 {
+                    *length = 0.0;
+                    self.hook_state = HookState::Still;
+                }
+
+                let transform = self
+                    .entity
+                    .calculate_animation(
+                        Some((
+                            self.hook
+                                .as_ref()
+                                .expect("cannot carry a player without a hook"),
+                            &SkeletonBoneIndex::SKELETON_ROOT_BONE,
+                            fixed_pose,
+                        )),
+                        [(&self.chain, (&self.chain_animation, length_copy))].into(),
+                    )
+                    .expect("chain_animation is well defined for the chain element");
+
+                if let HookState::Still = self.hook_state {
+                    self.entity.base_pose = transform.root().root()
+                }
+
+                transform
+            }
+            HookState::GrabbedObject { .. } => {
+                todo!()
+            }
+        }
+    }
+}
+
+impl GrapplingHook {
+    pub fn start(&mut self) {
+        self.hook_state = HookState::Extending {
+            length: 0.0,
+            velocity: 1.0,
+        };
+    }
+}

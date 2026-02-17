@@ -54,6 +54,7 @@ impl<const N: usize> Quad<N> {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum DrawError<'a> {
     VertexArrayDraw(VertexArrayDrawError<'a>),
 }

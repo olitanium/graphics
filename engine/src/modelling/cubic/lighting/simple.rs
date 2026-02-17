@@ -10,6 +10,7 @@ pub use point_light::PointLight;
 use utils::error_boilerplate;
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum SimpleBindError<'a> {
     SetUniform(SetUniformError<'a>),
 }

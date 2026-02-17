@@ -13,6 +13,7 @@ pub struct Shader {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum NewShaderError {
     Io(io::Error),
     NewFromSlice(NewFromSliceError),
@@ -31,6 +32,7 @@ impl Shader {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum NewFromSliceError {
     SourceTooLong,
     CompileError,

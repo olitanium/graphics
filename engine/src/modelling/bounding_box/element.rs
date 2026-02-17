@@ -15,10 +15,7 @@ use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
 use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
-pub struct BoundingBoxElement<V: ExtendedVertex<DIMS>, const DIMS: usize, T>
-where
-    Vector<DIMS>: ExtendedVertex<DIMS>,
-{
+pub struct BoundingBoxElement<V: ExtendedVertex<DIMS>, const DIMS: usize, T> {
     pub(crate) meta: RefCell<T>,
 
     pub(crate) lower_bound: Vector<DIMS>,
@@ -31,9 +28,6 @@ where
 
 impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T: Default> Default
     for BoundingBoxElement<V, DIMS, T>
-where
-    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
-    Vector<DIMS>: ExtendedVertex<DIMS>,
 {
     fn default() -> Self {
         Self {
@@ -67,11 +61,7 @@ fn make_lower_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
     make_bound(vectors, f32::min)
 }
 
-impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T>
-where
-    Vector<DIMS>: ExtendedVertex<DIMS>, // Volume<DIMS>,
-    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
-{
+impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T> {
     pub fn new_from_many_inner<F: FnMut(&[(Vector<DIMS>, [V; 3])]) -> T>(
         so_far: &mut Vec<Self>,
         triangles: &mut [(Vector<DIMS>, [V; 3])],

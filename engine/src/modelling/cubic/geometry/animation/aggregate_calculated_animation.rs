@@ -37,9 +37,14 @@ impl AggregateCalcAnim {
     pub fn get<'a>(&'a self, index: &AggregateModelIndex) -> Option<&'a CalculatedAnimation> {
         self.vec.get(index.0) //.map(|opt| opt.as_ref()).flatten()
     }
+
+    pub fn root(&self) -> &CalculatedAnimation {
+        self.vec.first().expect("always as root pose")
+    }
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum PushAnimationError {
     SignaturesDoNotMatch(SignaturesDoNotMatchError),
     ParentUnitDoesNotExist,
@@ -123,6 +128,7 @@ impl<'a> AggregateCalcAnimBuilder<'a> {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum BuildFixingBoneError {
     UnitDoesNotExist,
     BoneDoesNotExist,
@@ -134,7 +140,7 @@ impl<'a> AggregateCalcAnimBuilder<'a> {
     pub(crate) fn build_fixing_bone(
         self,
         unit: CalcAnimUnitIndex,
-        bone: SkeletonBoneIndex,
+        bone: &SkeletonBoneIndex,
         pose: Pose,
     ) -> Result<AggregateCalcAnim, BuildFixingBoneError> {
         let world_positions = self.get_world_positions();

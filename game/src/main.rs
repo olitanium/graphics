@@ -9,9 +9,12 @@
 use engine::Environment;
 
 mod controls;
+mod grappling_hook;
+mod morgan;
 mod new;
 mod physics;
 mod prep_draw;
+mod properties;
 mod state;
 
 fn main() {

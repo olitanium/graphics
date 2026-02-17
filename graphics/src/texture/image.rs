@@ -18,6 +18,7 @@ pub enum ImageType {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum NewImageError {
     Io(std::io::Error),
     Parse(image::error::ImageError),

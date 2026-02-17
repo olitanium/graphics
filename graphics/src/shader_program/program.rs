@@ -76,6 +76,7 @@ impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum GetUniformLocationError<'a> {
     NameNul(NulError),
     NotFound {

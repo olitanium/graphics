@@ -29,6 +29,7 @@ impl<U: Uniform> Line<U> {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum DrawError<'a> {
     SetUniform(SetUniformError<'a>),
     VertexArrayDraw(VertexArrayDrawError<'a>),

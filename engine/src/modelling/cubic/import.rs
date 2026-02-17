@@ -20,6 +20,7 @@ use crate::modelling::cubic::mesh::MeshBuilder;
 use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
+#[non_exhaustive]
 pub enum ImportError {
     FileInsteadOfDir {
         path: PathBuf,
@@ -267,6 +268,7 @@ fn process_node(
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum ParseMaterialError {
     NewTexture {
         path: PathBuf,

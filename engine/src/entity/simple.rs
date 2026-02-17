@@ -153,7 +153,6 @@ pub fn get_average_normal<I: IntoIterator<Item = [SimpleVertex; 3]>>(input: I) -
                 .map(|vertex| vertex.normal.v())
                 .sum::<Vector<3>>()
                 .normalize()
-                .v()
         })
         .sum::<Vector<3>>()
         .normalize()
@@ -169,11 +168,14 @@ impl<TThis> Collision for SimpleEntity<TThis> {
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
         &self,
-        transform: &Self::Transform<'_>,
+        transform: Self::Transform<'_>,
         target: &T,
-        target_transform: &T::Transform<'_>,
+        target_transform: T::Transform<'_>,
         alter_meta: F,
-    ) -> bool {
+    ) -> bool
+    where
+        for<'a> T::Transform<'a>: Clone,
+    {
         let Some(bbox) = &self.bounding_box else {
             return false;
         };

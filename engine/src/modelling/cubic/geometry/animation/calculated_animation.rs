@@ -52,6 +52,7 @@ impl CalculatedAnimation {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum GetAnimationError {
     SignaturesDoNotMatch(SignaturesDoNotMatchError),
     BoneDoesNotExist,

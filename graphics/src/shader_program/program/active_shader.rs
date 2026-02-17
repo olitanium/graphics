@@ -102,6 +102,7 @@ impl<'c, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum SetUniformError<'a> {
     GetLocation(GetUniformLocationError<'a>),
 }
@@ -135,6 +136,7 @@ impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, 
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum BindTexturesError<'a> {
     BindTooHigh { maximum: usize },
     SetUniform(SetUniformError<'a>),

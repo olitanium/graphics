@@ -32,9 +32,9 @@ use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
 pub struct BoundingBox<V: ExtendedVertex<DIMS>, const DIMS: usize, T>
-where
-    Vector<DIMS>: ExtendedVertex<DIMS>,
-    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+// where
+// Vector<DIMS>: ExtendedVertex<DIMS>,
+//[(); Vector::<DIMS>::ELEMENT_COUNT]:,
 {
     inner: Vec<BoundingBoxElement<V, DIMS, T>>,
 }
@@ -202,12 +202,12 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, 3, TThis> {
         F: FnMut(Self::FuncInputs, &mut Self::Meta, &mut U),
     >(
         &self,
-        transform: &Self::Transform<'_>,
+        transform: Self::Transform<'_>,
         target: &BoundingBox<V, 3, U>,
-        target_transform: &Pose,
+        target_transform: Pose,
         mut alter_meta: F,
     ) -> bool {
-        Self::detect_collision(self, *transform, target, *target_transform, |x, y| {
+        Self::detect_collision(self, transform, target, target_transform, |x, y| {
             alter_meta((), x, y)
         })
     }
@@ -217,9 +217,9 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, 3, TThis> {
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
         &self,
-        self_transform: &Self::Transform<'_>,
+        self_transform: Self::Transform<'_>,
         target: &T,
-        target_transform: &T::Transform<'_>,
+        target_transform: T::Transform<'_>,
         mut alter_meta: F,
     ) -> bool {
         target.collides_with_primitive(

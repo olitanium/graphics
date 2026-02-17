@@ -13,9 +13,9 @@ pub trait Collision {
         F: FnMut(Self::FuncInputs, &mut Self::Meta, &mut T),
     >(
         &self,
-        self_transform: &Self::Transform<'_>,
+        self_transform: Self::Transform<'_>,
         target: &BoundingBox<V, 3, T>,
-        target_transform: &Pose,
+        target_transform: Pose,
         mut alter_meta: F,
     ) -> bool {
         self.collides(
@@ -33,9 +33,11 @@ pub trait Collision {
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
         &self,
-        transform: &Self::Transform<'_>,
+        transform: Self::Transform<'_>,
         target: &T,
-        target_transform: &T::Transform<'_>,
+        target_transform: T::Transform<'_>,
         alter_meta: F,
-    ) -> bool;
+    ) -> bool
+    where
+        for<'a> T::Transform<'a>: Clone;
 }

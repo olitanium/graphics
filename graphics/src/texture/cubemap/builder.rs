@@ -56,6 +56,7 @@ impl TexBuilder for Builder<MissingData> {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum LoadImageError {
     Io(std::io::Error),
     Parse(image::ImageError),

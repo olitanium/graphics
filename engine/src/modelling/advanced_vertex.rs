@@ -1,6 +1,6 @@
 mod incomplete;
 use graphics::linear_algebra::{UnitVector, Vector};
-use graphics::vertex::Vertex;
+use graphics::vertex::{NoVertex, Vertex};
 pub use incomplete::IncompleteVertex;
 
 mod impls;
@@ -24,5 +24,15 @@ pub trait VertexHasTangent: CubicVertex {
 impl<V: CubicVertex> TransformBy<Pose> for [V; 3] {
     fn transform_by(&self, operator: &Pose) -> Self {
         self.map(|vertex| vertex.transform_by(operator))
+    }
+}
+
+impl ExtendedVertex<0> for NoVertex {
+    fn position(&self) -> Vector<0> {
+        Vector::ZERO
+    }
+
+    fn from_incomplete_triangle(_: [IncompleteVertex<0>; 3]) -> Option<[Self; 3]> {
+        Some([Self; 3])
     }
 }
