@@ -2,10 +2,10 @@ use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::vertex::Vertex;
 
 use crate::entity::aggregate_entity::AggregateUnit;
-use crate::entity::{EntityInner, FromToAggregateEntity, Mass};
+use crate::entity::{EntityInner, Mass, ToAggregateEntity};
 use crate::modelling::cubic::SimpleCubic;
 use crate::modelling::cubic::geometry::Pose;
-use crate::modelling::{BoundingBox, Collision, SimpleVertex, Volume};
+use crate::modelling::{BoundingBox, Collision, SimpleVertex, SkeletonCubic, Volume};
 
 #[derive(Debug)]
 pub struct SimpleEntity<T> {
@@ -183,30 +183,12 @@ impl<TThis> Collision for SimpleEntity<TThis> {
     }
 }
 
-impl<T> FromToAggregateEntity<T> for SimpleEntity<T> {
-    type Model = SimpleCubic;
-
-    #[allow(private_interfaces)]
-    fn from_aggregate_unit(entity: AggregateUnit<T, Self::Model>, pose: Pose) -> Self {
-        let AggregateUnit {
-            model,
-            bounding_box,
-            ..
-        } = entity;
-        Self {
-            model,
-            pose,
-            mass: Default::default(),
-            bounding_box,
-            velocity: Default::default(),
-        }
-    }
-
+impl<T> ToAggregateEntity<T, SimpleCubic> for SimpleEntity<T> {
     fn to_pair_model_bbox(
         self,
     ) -> (
-        Self::Model,
-        Option<<Self::Model as EntityInner>::BoundingBox<T>>,
+        SimpleCubic,
+        Option<<SimpleCubic as EntityInner>::BoundingBox<T>>,
     ) {
         let Self {
             model,
@@ -214,5 +196,21 @@ impl<T> FromToAggregateEntity<T> for SimpleEntity<T> {
             ..
         } = self;
         (model, bounding_box)
+    }
+}
+
+impl<T> ToAggregateEntity<T, SkeletonCubic> for SimpleEntity<T> {
+    fn to_pair_model_bbox(
+        self,
+    ) -> (
+        SkeletonCubic,
+        Option<<SkeletonCubic as EntityInner>::BoundingBox<T>>,
+    ) {
+        let Self {
+            model,
+            bounding_box,
+            ..
+        } = self;
+        (model.into(), bounding_box.map(Into::into))
     }
 }

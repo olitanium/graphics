@@ -1,7 +1,6 @@
 use std::rc::Rc;
 
-use engine::ColourRGBA;
-use engine::entity::{AggregateEntity, AggregateModelIndex, EntityInner};
+use engine::entity::{AggregateEntity, AggregateModelIndex, EntityInner, ToAggregateEntity};
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::SkeletonBoneIndex;
 use engine::modelling::cubic::geometry::{
@@ -11,8 +10,10 @@ use engine::modelling::cubic::geometry::{
     SkeletalAnimation,
 };
 use engine::modelling::cubic::material::Material;
-use engine::modelling::{Bone, Collision, Skeleton, SkeletonCubic};
+use engine::modelling::{Bone, Collision, Skeleton, SkeletonCubic, TempModelTransform};
+use engine::{ColourRGBA, Transform};
 
+use crate::grappling_hook;
 use crate::properties::Properties;
 
 pub struct GrapplingHook {
@@ -24,6 +25,7 @@ pub struct GrapplingHook {
     hook_state: HookState,
 }
 
+#[derive(Debug)]
 enum HookState {
     Still,
     Extending {
@@ -36,6 +38,7 @@ enum HookState {
         fixed_pose: Pose,
     },
     GrabbedObject {
+        length: f32,
         attachment: AggregateModelIndex,
         velocity: f32,
     },
@@ -106,7 +109,7 @@ impl GrapplingHook {
             let mut bone_animation = BoneAnimation::new();
             // do not move for LEN-`index` timesteps
             bone_animation
-                .push(Pose::IDENTITY, (LEN - index) as f32 * SEC_PER_UNIT)
+                .push(Pose::IDENTITY, (LEN - index - 1) as f32 * SEC_PER_UNIT)
                 .expect(EXPECT_MESSAGE);
             // then move one distance in one timesteps
             bone_animation
@@ -200,15 +203,30 @@ impl GrapplingHook {
     }
 }
 
+pub struct UpdateInput<
+    'a,
+    A: Collision + 'a,
+    B: Collision + ToAggregateEntity<(), SkeletonCubic> + 'a,
+    C: Collision + 'a,
+    I: IntoIterator<Item = &'a A>,
+    J: IntoIterator<Item = &'a mut Option<B>>,
+    K: IntoIterator<Item = &'a C>,
+> {
+    pub grapple_points: I,
+    pub carryable_objects: J,
+    pub other_entities: K,
+}
+
 impl GrapplingHook {
-    pub fn update<B: Collision + Properties>(
+    pub fn update<B: Collision + Properties + ToAggregateEntity<(), SkeletonCubic>>(
         &mut self,
         timestep: f32,
-        target: Option<(&B, B::Transform<'_>)>,
+        target: &mut Option<(B, B::Transform<'_>)>,
     ) -> AggregateCalcAnim
     where
         for<'a> B::Transform<'a>: Clone,
     {
+        eprintln!("{:?}", self.hook_state);
         match &mut self.hook_state {
             HookState::Still => self
                 .entity
@@ -222,7 +240,7 @@ impl GrapplingHook {
                     return self.update(0.0, target);
                 }
 
-                let transform = self
+                let mut self_transform = self
                     .entity
                     .calculate_animation(
                         None,
@@ -230,12 +248,15 @@ impl GrapplingHook {
                     )
                     .expect("chain_animation is well defined for the chain element");
 
-                if let Some((target, target_transform)) = target {
+                let mut opt_grapple_target = None;
+
+                if let Some((ref_target, target_transform)) = target.as_ref() {
                     let mut collided = false;
+
                     self.entity.collides(
-                        &transform,
-                        target,
-                        target_transform,
+                        &self_transform,
+                        ref_target,
+                        target_transform.clone(),
                         |(ref self_aggr, _), _, _, _| {
                             if Some(self_aggr) == self.hook.as_ref() {
                                 collided = true;
@@ -244,30 +265,74 @@ impl GrapplingHook {
                     );
 
                     if collided {
-                        if target.is_hookpoint() {
-                            // TODO: this is carrying player, make holding item
-
-                            let chain_end_position = transform
-                                .get(self.hook.as_ref().expect("cannot hook without a hook!"))
-                                .expect("hook still exists")
-                                .root();
-                            // this one needs to be fixed for ever.
-
-                            let new_state = HookState::CarryingPlayer {
-                                length: *length,
-                                velocity: 1.0,
-                                fixed_pose: chain_end_position,
-                            };
-                            self.hook_state = new_state;
-                        } else if target.is_carryable() {
-                        } else {
-                            // Bounce off illegal target
-                            *velocity = -*velocity;
-                        }
+                        opt_grapple_target = target.take();
                     }
                 }
 
-                transform
+                match opt_grapple_target {
+                    None => {}
+                    Some((grapple_target, target_transform)) if grapple_target.is_hookpoint() => {
+                        let hook_pos = self_transform
+                            .get(self.hook.as_ref().expect("cannot hook without a hook!"))
+                            .expect("hook still exists")
+                            .root();
+                        // this one needs to be fixed for ever.
+
+                        let new_state = HookState::CarryingPlayer {
+                            length: *length,
+                            velocity: 1.0,
+                            fixed_pose: hook_pos,
+                        };
+                        self.hook_state = new_state;
+
+                        // give back the item, because ownership isn't needed
+                        *target = Some((grapple_target, target_transform));
+                    }
+                    Some((grapple_target, target_transform)) if grapple_target.is_carryable() => {
+                        let hook_pos = self_transform
+                            .get(self.hook.as_ref().expect("cannot hook without a hook!"))
+                            .expect("hook still exists")
+                            .root();
+
+                        let target_pose = target_transform.get_root_pose();
+
+                        let offset = target_pose.transform(&hook_pos.inverse());
+
+                        let destination = self
+                            .entity
+                            .push(
+                                grapple_target,
+                                offset,
+                                self.hook.as_ref().expect("cannot hook without a hook!"),
+                                &SkeletonBoneIndex::SKELETON_ROOT_BONE,
+                            )
+                            .expect("hook exists");
+                        let length = *length;
+                        self.hook_state = HookState::GrabbedObject {
+                            length,
+                            attachment: destination,
+                            velocity: 1.0,
+                        };
+
+                        self_transform = self
+                            .entity
+                            .calculate_animation(
+                                None,
+                                [(&self.chain, (&self.chain_animation, length))].into(),
+                            )
+                            .expect("animation after grabbing");
+
+                        // take the object permanently
+                        *target = None;
+                    }
+                    x @ Some(_) => {
+                        // Bounce off illegal target
+                        *velocity = -*velocity;
+                        *target = x;
+                    }
+                }
+
+                self_transform
             }
             &mut HookState::CarryingPlayer {
                 velocity,
@@ -275,11 +340,10 @@ impl GrapplingHook {
                 fixed_pose,
             } => {
                 *length -= velocity * timestep;
-                let length_copy = *length;
+                let mut copy_length = *length;
 
-                if *length < 0.0 {
-                    *length = 0.0;
-                    self.hook_state = HookState::Still;
+                if copy_length < 0.0 {
+                    copy_length = 0.0;
                 }
 
                 let transform = self
@@ -292,18 +356,33 @@ impl GrapplingHook {
                             &SkeletonBoneIndex::SKELETON_ROOT_BONE,
                             fixed_pose,
                         )),
-                        [(&self.chain, (&self.chain_animation, length_copy))].into(),
+                        [(&self.chain, (&self.chain_animation, copy_length))].into(),
                     )
                     .expect("chain_animation is well defined for the chain element");
 
-                if let HookState::Still = self.hook_state {
+                if copy_length == 0.0 {
+                    self.hook_state = HookState::Still;
                     self.entity.base_pose = transform.root().root()
                 }
 
                 transform
             }
-            HookState::GrabbedObject { .. } => {
-                todo!()
+            HookState::GrabbedObject {
+                length, velocity, ..
+            } => {
+                *length -= *velocity * timestep;
+
+                let length = *length;
+                if length < 0.0 {
+                    self.hook_state = HookState::Still;
+                }
+
+                self.entity
+                    .calculate_animation(
+                        None,
+                        [(&self.chain, (&self.chain_animation, length))].into(),
+                    )
+                    .expect("animation after grabbing")
             }
         }
     }
@@ -311,9 +390,11 @@ impl GrapplingHook {
 
 impl GrapplingHook {
     pub fn start(&mut self) {
-        self.hook_state = HookState::Extending {
-            length: 0.0,
-            velocity: 1.0,
+        if matches!(self.hook_state, HookState::Still) {
+            self.hook_state = HookState::Extending {
+                length: 0.0,
+                velocity: 2.0,
+            }
         };
     }
 }

@@ -20,7 +20,7 @@ use crate::modelling::cubic::geometry::{
     SkeletalAnimation,
 };
 use crate::modelling::cubic::lighting::simple::ListLights;
-use crate::modelling::{Collision, CubicVertex, Skeleton};
+use crate::modelling::{Collision, CubicVertex, Skeleton, TempModelTransform};
 
 mod group;
 pub use group::Group as AggregateGroup;
@@ -29,7 +29,7 @@ mod error;
 pub use error::PushModelError;
 
 mod from_to;
-pub use from_to::FromToAggregateEntity;
+pub use from_to::ToAggregateEntity;
 
 mod entity_inner;
 pub use entity_inner::EntityInner;
@@ -471,7 +471,7 @@ impl<T, M: EntityInner> AggregateEntity<T, M>
 where
     <M as Model>::Vertex: CubicVertex,
 {
-    pub fn push<E: FromToAggregateEntity<T, Model = M>>(
+    pub fn push<E: ToAggregateEntity<T, M>>(
         &mut self,
         entity: E,
         offset: Pose,
@@ -530,5 +530,11 @@ where
                     alter_meta((index.inner_clone(), x), y, z, t)
                 })
             })
+    }
+}
+
+impl<'a> TempModelTransform for &'a AggregateCalcAnim {
+    fn get_root_pose(&self) -> Pose {
+        self.root().root()
     }
 }

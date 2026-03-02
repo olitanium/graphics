@@ -1,5 +1,7 @@
 use engine::SimpleEntity;
-use engine::modelling::Collision;
+use engine::entity::ToAggregateEntity;
+use engine::modelling::cubic::SimpleCubic;
+use engine::modelling::{Collision, SkeletonCubic};
 
 use crate::properties::Properties;
 
@@ -32,10 +34,32 @@ impl Collision for Morgan {
 
 impl Properties for Morgan {
     fn is_hookpoint(&self) -> bool {
-        false
+        true
     }
 
     fn is_carryable(&self) -> bool {
-        true
+        false
+    }
+}
+
+impl ToAggregateEntity<(), SimpleCubic> for Morgan {
+    fn to_pair_model_bbox(
+        self,
+    ) -> (
+        SimpleCubic,
+        Option<<SimpleCubic as engine::entity::EntityInner>::BoundingBox<()>>,
+    ) {
+        self.inner.to_pair_model_bbox()
+    }
+}
+
+impl ToAggregateEntity<(), SkeletonCubic> for Morgan {
+    fn to_pair_model_bbox(
+        self,
+    ) -> (
+        SkeletonCubic,
+        Option<<SkeletonCubic as engine::entity::EntityInner>::BoundingBox<()>>,
+    ) {
+        self.inner.to_pair_model_bbox()
     }
 }

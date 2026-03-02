@@ -4,7 +4,7 @@ use utils::partition;
 
 use crate::SimpleEntity;
 use crate::entity::aggregate_entity::AggregateUnit;
-use crate::entity::{FromToAggregateEntity, Mass};
+use crate::entity::{Mass, ToAggregateEntity};
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{Collision, SimpleVertex, SkeletonBb, SkeletonCubic, Volume};
 
@@ -120,30 +120,12 @@ impl<T> From<SimpleEntity<T>> for SkeletonEntity<T> {
     }
 }
 
-impl<T> FromToAggregateEntity<T> for SkeletonEntity<T> {
-    type Model = SkeletonCubic;
-
-    #[allow(private_interfaces)]
-    fn from_aggregate_unit(entity: AggregateUnit<T, Self::Model>, pose: Pose) -> Self {
-        let AggregateUnit {
-            model,
-            bounding_box,
-            ..
-        } = entity;
-        Self {
-            model,
-            pose,
-            mass: Default::default(),
-            bounding_box,
-            velocity: Default::default(),
-        }
-    }
-
+impl<T> ToAggregateEntity<T, SkeletonCubic> for SkeletonEntity<T> {
     fn to_pair_model_bbox(
         self,
     ) -> (
-        Self::Model,
-        Option<<Self::Model as super::EntityInner>::BoundingBox<T>>,
+        SkeletonCubic,
+        Option<<SkeletonCubic as super::EntityInner>::BoundingBox<T>>,
     ) {
         let Self {
             model,

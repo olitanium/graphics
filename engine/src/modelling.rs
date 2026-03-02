@@ -35,6 +35,7 @@ pub use bounding_box::{
     SkeletonBb,
     SkeletonBbDrawError,
     SkeletonBbGroup,
+    TempModelTransform,
 };
 
 mod advanced_vertex;

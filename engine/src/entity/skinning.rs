@@ -4,7 +4,7 @@ use graphics::linear_algebra::Vector;
 use utils::partition;
 
 use crate::entity::aggregate_entity::AggregateUnit;
-use crate::entity::{FromToAggregateEntity, Mass};
+use crate::entity::{EntityInner, Mass, ToAggregateEntity};
 use crate::modelling::cubic::SkinningCubic;
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{Collision, SkeletalVertex, SkeletonBb};
@@ -106,30 +106,12 @@ impl<TThis> Collision for SkinningEntity<TThis> {
     }
 }
 
-impl<T> FromToAggregateEntity<T> for SkinningEntity<T> {
-    type Model = SkinningCubic;
-
-    #[allow(private_interfaces)]
-    fn from_aggregate_unit(entity: AggregateUnit<T, Self::Model>, pose: Pose) -> Self {
-        let AggregateUnit {
-            model,
-            bounding_box,
-            ..
-        } = entity;
-        Self {
-            model,
-            pose,
-            mass: Default::default(),
-            bounding_box,
-            velocity: Default::default(),
-        }
-    }
-
+impl<T> ToAggregateEntity<T, SkinningCubic> for SkinningEntity<T> {
     fn to_pair_model_bbox(
         self,
     ) -> (
-        Self::Model,
-        Option<<Self::Model as super::EntityInner>::BoundingBox<T>>,
+        SkinningCubic,
+        Option<<SkinningCubic as EntityInner>::BoundingBox<T>>,
     ) {
         let Self {
             model,

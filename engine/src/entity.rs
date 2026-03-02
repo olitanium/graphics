@@ -14,7 +14,7 @@ pub use aggregate_entity::{
     AggregateModelIndex,
     CalculateAnimationError,
     EntityInner,
-    FromToAggregateEntity,
+    ToAggregateEntity,
 };
 
 mod mass;

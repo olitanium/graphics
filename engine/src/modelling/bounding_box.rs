@@ -25,6 +25,7 @@ pub mod collision;
 pub use collision::Collision;
 
 use crate::modelling::advanced_vertex::ExtendedVertex;
+pub use crate::modelling::bounding_box::collision::TempModelTransform;
 use crate::modelling::bounding_box::element::DrawRecursiveError;
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{CubicVertex, SimpleVertex, SkeletonCubic, Volume};
@@ -255,6 +256,12 @@ impl<V: ExtendedVertex<3>, T> BoundingBoxShaderProgram<3> for BoundingBoxElement
             });
 
         &SHADER_PROGRAM
+    }
+}
+
+impl TempModelTransform for Pose {
+    fn get_root_pose(&self) -> Pose {
+        *self
     }
 }
 
