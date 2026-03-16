@@ -203,28 +203,34 @@ impl GrapplingHook {
     }
 }
 
-pub struct UpdateInput<
-    'a,
+#[derive(Debug)]
+pub struct UpdateInput<'a, A, B, C>
+where
     A: Collision + 'a,
     B: Collision + ToAggregateEntity<(), SkeletonCubic> + 'a,
     C: Collision + 'a,
-    I: IntoIterator<Item = &'a A>,
-    J: IntoIterator<Item = &'a mut Option<B>>,
-    K: IntoIterator<Item = &'a C>,
-> {
-    pub grapple_points: I,
-    pub carryable_objects: J,
-    pub other_entities: K,
+    for<'b> A::Transform<'b>: Clone,
+    for<'b> B::Transform<'b>: Clone,
+    for<'b> C::Transform<'b>: Clone,
+{
+    pub grapple_points: Vec<(&'a A, A::Transform<'a>)>,
+    pub carryable_objects: Vec<Option<(B, B::Transform<'a>)>>,
+    pub other_entities: Vec<(&'a C, C::Transform<'a>)>,
 }
 
 impl GrapplingHook {
-    pub fn update<B: Collision + Properties + ToAggregateEntity<(), SkeletonCubic>>(
+    pub fn update<'a, A, B, C>(
         &mut self,
         timestep: f32,
-        target: &mut Option<(B, B::Transform<'_>)>,
+        target: &mut UpdateInput<'a, A, B, C>,
     ) -> AggregateCalcAnim
     where
-        for<'a> B::Transform<'a>: Clone,
+        A: Collision + 'a,
+        B: Collision + ToAggregateEntity<(), SkeletonCubic> + 'a,
+        C: Collision + 'a,
+        for<'b> A::Transform<'b>: Clone,
+        for<'b> B::Transform<'b>: Clone,
+        for<'b> C::Transform<'b>: Clone,
     {
         eprintln!("{:?}", self.hook_state);
         match &mut self.hook_state {
@@ -248,15 +254,13 @@ impl GrapplingHook {
                     )
                     .expect("chain_animation is well defined for the chain element");
 
-                let mut opt_grapple_target = None;
-
-                if let Some((ref_target, target_transform)) = target.as_ref() {
+                for (grapple_targets, grapple_transform) in target.grapple_points.iter().cloned() {
                     let mut collided = false;
 
                     self.entity.collides(
                         &self_transform,
-                        ref_target,
-                        target_transform.clone(),
+                        grapple_targets,
+                        grapple_transform.clone(),
                         |(ref self_aggr, _), _, _, _| {
                             if Some(self_aggr) == self.hook.as_ref() {
                                 collided = true;
@@ -265,13 +269,6 @@ impl GrapplingHook {
                     );
 
                     if collided {
-                        opt_grapple_target = target.take();
-                    }
-                }
-
-                match opt_grapple_target {
-                    None => {}
-                    Some((grapple_target, target_transform)) if grapple_target.is_hookpoint() => {
                         let hook_pos = self_transform
                             .get(self.hook.as_ref().expect("cannot hook without a hook!"))
                             .expect("hook still exists")
@@ -285,50 +282,85 @@ impl GrapplingHook {
                         };
                         self.hook_state = new_state;
 
-                        // give back the item, because ownership isn't needed
-                        *target = Some((grapple_target, target_transform));
+                        return self_transform;
                     }
-                    Some((grapple_target, target_transform)) if grapple_target.is_carryable() => {
-                        let hook_pos = self_transform
-                            .get(self.hook.as_ref().expect("cannot hook without a hook!"))
-                            .expect("hook still exists")
-                            .root();
+                }
 
-                        let target_pose = target_transform.get_root_pose();
+                for opt_carry in target.carryable_objects.iter_mut() {
+                    if let Some((ref_target, target_transform)) = opt_carry.as_ref() {
+                        let mut collided = false;
 
-                        let offset = target_pose.transform(&hook_pos.inverse());
+                        self.entity.collides(
+                            &self_transform,
+                            ref_target,
+                            target_transform.clone(),
+                            |(ref self_aggr, _), _, _, _| {
+                                if Some(self_aggr) == self.hook.as_ref() {
+                                    collided = true;
+                                }
+                            },
+                        );
 
-                        let destination = self
-                            .entity
-                            .push(
-                                grapple_target,
-                                offset,
-                                self.hook.as_ref().expect("cannot hook without a hook!"),
-                                &SkeletonBoneIndex::SKELETON_ROOT_BONE,
-                            )
-                            .expect("hook exists");
-                        let length = *length;
-                        self.hook_state = HookState::GrabbedObject {
-                            length,
-                            attachment: destination,
-                            velocity: 1.0,
-                        };
+                        if collided {
+                            let (grapple_target, target_transform) =
+                                opt_carry.take().expect("Asserted Some above");
 
-                        self_transform = self
-                            .entity
-                            .calculate_animation(
-                                None,
-                                [(&self.chain, (&self.chain_animation, length))].into(),
-                            )
-                            .expect("animation after grabbing");
+                            let hook_pos = self_transform
+                                .get(self.hook.as_ref().expect("cannot hook without a hook!"))
+                                .expect("hook still exists")
+                                .root();
 
-                        // take the object permanently
-                        *target = None;
+                            let target_pose = target_transform.get_root_pose();
+
+                            let offset = target_pose.transform(&hook_pos.inverse());
+
+                            let destination = self
+                                .entity
+                                .push(
+                                    grapple_target,
+                                    offset,
+                                    self.hook.as_ref().expect("cannot hook without a hook!"),
+                                    &SkeletonBoneIndex::SKELETON_ROOT_BONE,
+                                )
+                                .expect("hook exists");
+                            let length = *length;
+
+                            self.hook_state = HookState::GrabbedObject {
+                                length,
+                                attachment: destination,
+                                velocity: 1.0,
+                            };
+
+                            self_transform = self
+                                .entity
+                                .calculate_animation(
+                                    None,
+                                    [(&self.chain, (&self.chain_animation, length))].into(),
+                                )
+                                .expect("animation after grabbing");
+
+                            return self_transform;
+                        }
                     }
-                    x @ Some(_) => {
-                        // Bounce off illegal target
+                }
+
+                for (other, other_tranform) in target.other_entities.iter().cloned() {
+                    let mut collided = false;
+
+                    self.entity.collides(
+                        &self_transform,
+                        other,
+                        other_tranform.clone(),
+                        |(ref self_aggr, _), _, _, _| {
+                            if Some(self_aggr) == self.hook.as_ref() {
+                                collided = true;
+                            }
+                        },
+                    );
+
+                    if collided {
                         *velocity = -*velocity;
-                        *target = x;
+                        return self_transform;
                     }
                 }
 
@@ -340,10 +372,9 @@ impl GrapplingHook {
                 fixed_pose,
             } => {
                 *length -= velocity * timestep;
-                let mut copy_length = *length;
 
-                if copy_length < 0.0 {
-                    copy_length = 0.0;
+                if *length < 0.0 {
+                    *length = 0.0;
                 }
 
                 let transform = self
@@ -356,11 +387,11 @@ impl GrapplingHook {
                             &SkeletonBoneIndex::SKELETON_ROOT_BONE,
                             fixed_pose,
                         )),
-                        [(&self.chain, (&self.chain_animation, copy_length))].into(),
+                        [(&self.chain, (&self.chain_animation, *length))].into(),
                     )
                     .expect("chain_animation is well defined for the chain element");
 
-                if copy_length == 0.0 {
+                if *length == 0.0 {
                     self.hook_state = HookState::Still;
                     self.entity.base_pose = transform.root().root()
                 }
@@ -372,17 +403,19 @@ impl GrapplingHook {
             } => {
                 *length -= *velocity * timestep;
 
-                let length = *length;
-                if length < 0.0 {
+                if *length < 0.0 {
                     self.hook_state = HookState::Still;
+                    // FIXME
+                    // LOSES ACCESS TO THE ITEM POINTER
+                    self.update(0.0, target)
+                } else {
+                    self.entity
+                        .calculate_animation(
+                            None,
+                            [(&self.chain, (&self.chain_animation, *length))].into(),
+                        )
+                        .expect("animation after grabbing")
                 }
-
-                self.entity
-                    .calculate_animation(
-                        None,
-                        [(&self.chain, (&self.chain_animation, length))].into(),
-                    )
-                    .expect("animation after grabbing")
             }
         }
     }

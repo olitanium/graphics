@@ -1,6 +1,7 @@
 use std::cell::RefMut;
 use std::collections::HashSet;
 use std::fmt::Debug;
+use std::task::Poll;
 
 mod draw;
 mod global_state;
@@ -20,6 +21,7 @@ pub use crate::environment::draw::PollResult;
 use crate::environment::window::GlfwError;
 use crate::framebuffer::{DefaultFramebuffer, FramebufferContext};
 use crate::gl_call;
+use crate::linear_algebra::Vector;
 use crate::shader_program::ShaderProgramContext;
 use crate::types::{Query, TexDim};
 
@@ -97,12 +99,14 @@ pub enum Event<'a> {
     FrameTime(f64),
     ActualTime(f64),
     WindowResize((TexDim, TexDim)),
-    TextBuffer(RefMut<'a, String>),
-    Keyboard(HashSet<Key>),
+    Keyboard {
+        keys: HashSet<Key>,
+        buffer: RefMut<'a, String>,
+    },
     Mouse {
         buttons: HashSet<Button>,
-        position: (f64, f64),
-        delta: (f64, f64),
+        position: Vector<2>,
+        delta: Vector<2>,
     },
     Query(Vec<(usize, Query)>),
 }
@@ -179,35 +183,41 @@ impl<G: ApiState> Environment<G> {
         let mut framebuffer_register =
             FramebufferContext::new().expect("First invocation means only one register");
 
-        let mut frame_iter = self.iter();
-
-        let mut query_outputs = None;
-
         loop {
-            let result = frame_iter.next(query_outputs.take());
-            match result {
-                PollResult::Close => return Ok(()),
-                PollResult::Error(err) => return Err(err),
-                PollResult::Draw(to_draw) => {
-                    framebuffer_register.clear();
-                    // Begin rendering code
-                    for drawable in to_draw {
-                        let draw_out =
-                            drawable.draw(&mut framebuffer_register, &mut shader_program_marker);
-                        match draw_out {
-                            DrawOut::Draw => query_outputs = None,
-                            DrawOut::QueryOutput {
-                                name, query_object, ..
-                            } => query_outputs
-                                .get_or_insert_default()
-                                .push((name, query_object)),
-                            DrawOut::MultiQueryOutput { values, .. } => {
-                                query_outputs.get_or_insert_default().extend(values)
+            let mut frame_iter = self.iter();
+
+            let mut query_outputs = None;
+
+            loop {
+                let result = frame_iter.next(query_outputs.take());
+                match result {
+                    PollResult::Close => return Ok(()),
+                    PollResult::Error(err) => return Err(err),
+                    PollResult::Draw(to_draw) => {
+                        framebuffer_register.clear();
+                        // Begin rendering code
+                        for drawable in to_draw {
+                            let draw_out = drawable
+                                .draw(&mut framebuffer_register, &mut shader_program_marker);
+                            match draw_out {
+                                DrawOut::Draw => query_outputs = None,
+                                DrawOut::QueryOutput {
+                                    name, query_object, ..
+                                } => query_outputs
+                                    .get_or_insert_default()
+                                    .push((name, query_object)),
+                                DrawOut::MultiQueryOutput { values, .. } => {
+                                    query_outputs.get_or_insert_default().extend(values)
+                                }
                             }
                         }
                     }
+                    PollResult::Restart => break,
                 }
             }
+
+            let framebuffer_size = self.window.get_framebuffer_size();
+            self.global_state = G::new(framebuffer_size)?
         }
     }
 

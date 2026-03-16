@@ -16,6 +16,7 @@ pub enum ControlOutput<T> {
     Data(T),
     Error(StateError),
     Close,
+    Restart,
 }
 
 impl<T> Try for ControlOutput<T> {
@@ -27,6 +28,7 @@ impl<T> Try for ControlOutput<T> {
             Self::Data(x) => std::ops::ControlFlow::Continue(x),
             Self::Close => std::ops::ControlFlow::Break(ControlOutput::Close),
             Self::Error(e) => std::ops::ControlFlow::Break(ControlOutput::Error(e)),
+            Self::Restart => std::ops::ControlFlow::Break(ControlOutput::Restart),
         }
     }
 
@@ -40,6 +42,7 @@ impl<T> FromResidual for ControlOutput<T> {
         match residual {
             ControlOutput::Close => Self::Close,
             ControlOutput::Error(e) => Self::Error(e),
+            ControlOutput::Restart => Self::Restart,
         }
     }
 }
@@ -57,6 +60,7 @@ impl FromResidual<ControlOutput<!>> for PollResult<'_, StateError> {
         match residual {
             ControlOutput::Close => PollResult::Close,
             ControlOutput::Error(err) => PollResult::Error(err),
+            ControlOutput::Restart => PollResult::Restart,
         }
     }
 }
@@ -64,12 +68,15 @@ impl FromResidual<ControlOutput<!>> for PollResult<'_, StateError> {
 impl State {
     pub fn controls(
         &mut self,
-        mouse_delta: (f32, f32),
+        mouse_delta: Vector<2>,
         keyboard: HashSet<Key>,
         string: &mut String,
         frame_time: f32,
         _time: f32,
     ) -> ControlOutput<()> {
+        if keyboard.contains(&Key::LeftControl) && keyboard.contains(&Key::Num0) {
+            return ControlOutput::Restart;
+        }
         if keyboard.contains(&Key::Escape) {
             return ControlOutput::Close;
         }
@@ -189,8 +196,8 @@ impl State {
 
         self.camera
             .pose
-            .look_left(-mouse_delta.0 * self.sensitivity);
-        self.camera.pose.look_up(mouse_delta.1 * self.sensitivity);
+            .look_left(-mouse_delta[0] * self.sensitivity);
+        self.camera.pose.look_up(mouse_delta[1] * self.sensitivity);
 
         ControlOutput::Data(())
     }

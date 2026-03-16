@@ -45,22 +45,26 @@ impl Window {
     }
 
     pub(crate) fn poll_events(&mut self) -> Vec<Event<'_>> {
-        let mut event_buffer = vec![
-            Event::Keyboard(self.keyboard.get_depressed_keys()),
-            Event::Mouse {
-                buttons: self.mouse.get_buttons_depressed(),
-                position: self.mouse.get_position(),
-                delta: self.mouse.get_delta(),
-            },
-        ];
+        let mut event_buffer = Vec::new();
+
+        let mouse = Event::Mouse {
+            buttons: self.mouse.get_buttons_depressed(),
+            position: self.mouse.get_position(),
+            delta: self.mouse.get_delta(),
+        };
+        event_buffer.push(mouse);
 
         if self.window_resized() {
             event_buffer.push(Event::WindowResize(self.get_framebuffer_size()));
         }
 
-        let typing_buffer = self.keyboard.get_buffer();
+        let keyboard = Event::Keyboard {
+            keys: self.keyboard.get_depressed_keys(),
+            buffer: self.keyboard.get_buffer(),
+        };
+        event_buffer.push(keyboard);
+
         event_buffer.push(Event::WindowBuffer(&self.default_framebuffer));
-        event_buffer.push(Event::TextBuffer(typing_buffer));
 
         event_buffer
     }

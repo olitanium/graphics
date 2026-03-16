@@ -7,7 +7,7 @@ pub trait Collision {
     type FuncInputs;
 
     #[doc(hidden)]
-    fn collides_with_primitive<
+    fn collides_with_cubic_primitive<
         V: CubicVertex,
         T,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, &mut T),

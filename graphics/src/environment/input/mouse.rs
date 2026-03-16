@@ -4,6 +4,7 @@ use std::rc::Rc;
 
 use glfw::PWindow;
 pub use glfw::{CursorMode, MouseButton as Button};
+use linear_algebra::Vector;
 
 use super::Action;
 
@@ -21,11 +22,11 @@ pub enum MouseState {
     #[default]
     FirstMouse,
     Moved {
-        current_location: (f64, f64),
-        delta: (f64, f64),
+        current_location: Vector<2>,
+        delta: Vector<2>,
     },
     Stationary {
-        current_location: (f64, f64),
+        current_location: Vector<2>,
     },
 }
 
@@ -44,25 +45,26 @@ impl Mouse {
         let state_ptr = out.0.clone();
 
         window.set_cursor_pos_callback(move |_, x, y| {
-            let y = -y;
+            let y = -y as f32;
+            let x = x as f32;
 
             let new = match state_ptr.state.get() {
                 MouseState::FirstMouse => MouseState::Stationary {
-                    current_location: (x, y),
+                    current_location: Vector::new([x, y]),
                 },
                 MouseState::Stationary { current_location } => MouseState::Moved {
-                    current_location: (x, y),
-                    delta: (x - current_location.0, y - current_location.1),
+                    current_location: Vector::new([x, y]),
+                    delta: Vector::new([x - current_location[0], y - current_location[1]]),
                 },
                 MouseState::Moved {
                     current_location,
                     delta,
                 } => MouseState::Moved {
-                    current_location: (x, y),
-                    delta: (
-                        x - current_location.0 + delta.0,
-                        y - current_location.1 + delta.1,
-                    ),
+                    current_location: Vector::new([x, y]),
+                    delta: Vector::new([
+                        x - current_location[0] + delta[0],
+                        y - current_location[1] + delta[1],
+                    ]),
                 },
             };
 
@@ -88,10 +90,10 @@ impl Mouse {
         out
     }
 
-    pub(crate) fn get_delta(&self) -> (f64, f64) {
+    pub(crate) fn get_delta(&self) -> Vector<2> {
         let out = match self.0.state.get() {
             MouseState::Moved { delta, .. } => delta,
-            _ => (0.0, 0.0),
+            _ => Vector::new([0.0, 0.0]),
         };
 
         if let MouseState::Moved {
@@ -106,9 +108,9 @@ impl Mouse {
         out
     }
 
-    pub(crate) fn get_position(&self) -> (f64, f64) {
+    pub(crate) fn get_position(&self) -> Vector<2> {
         match self.0.state.get() {
-            MouseState::FirstMouse => (0.0, 0.0),
+            MouseState::FirstMouse => Vector::new([0.0, 0.0]),
             MouseState::Stationary { current_location } => current_location,
             MouseState::Moved {
                 current_location, ..

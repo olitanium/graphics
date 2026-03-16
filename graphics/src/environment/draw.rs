@@ -9,11 +9,13 @@ pub enum PollResult<'a, E> {
     Draw(Vec<Box<dyn Draw + 'a>>),
     Error(E),
     Close,
+    Restart,
 }
 
 pub enum PollResultResidual<E> {
     Close,
     Err(E),
+    Restart,
 }
 
 impl<E> FromResidual<Result<Infallible, E>> for PollResult<'_, E> {
@@ -40,6 +42,7 @@ impl<'a, E> Try for PollResult<'a, E> {
             Self::Error(err) => ControlFlow::Break(PollResultResidual::Err(err)),
             Self::Close => ControlFlow::Break(PollResultResidual::Close),
             Self::Draw(draw) => ControlFlow::Continue(draw),
+            Self::Restart => ControlFlow::Break(PollResultResidual::Restart),
         }
     }
 
@@ -53,6 +56,7 @@ impl<E> FromResidual<PollResultResidual<E>> for PollResult<'_, E> {
         match residual {
             PollResultResidual::Err(err) => Self::Error(err),
             PollResultResidual::Close => Self::Close,
+            PollResultResidual::Restart => Self::Restart,
         }
     }
 }

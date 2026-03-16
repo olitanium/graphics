@@ -5,6 +5,7 @@ use engine::entity::AggregateEntity;
 use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
+use engine::linear_algebra::Vector;
 use engine::modelling::cubic::camera::Projection;
 use engine::modelling::cubic::geometry::SkeletalAnimation;
 use engine::modelling::cubic::lighting::shadow::ShadowListLights;
@@ -72,7 +73,7 @@ impl ApiState for State {
     ) -> PollResult<'a, Self::Error> {
         let mut frame_time = 0.0;
         let mut keyboard = HashSet::new();
-        let mut mouse_delta = (0.0, 0.0);
+        let mut mouse_delta = Vector::default();
         let mut local_string = None;
         let mut default_fb = None;
         let mut actual_time = 0.0;
@@ -91,14 +92,12 @@ impl ApiState for State {
                         far: 100.0,
                     };
                 }
-                Event::Keyboard(kb) => keyboard = kb,
-                Event::TextBuffer(string) => local_string = Some(string),
-                Event::Mouse {
-                    buttons: _,
-                    position: _,
-                    delta,
-                } => {
-                    mouse_delta = (delta.0 as f32, delta.1 as f32);
+                Event::Keyboard { keys, buffer } => {
+                    keyboard = keys;
+                    local_string = Some(buffer);
+                }
+                Event::Mouse { delta, .. } => {
+                    mouse_delta = delta;
                 }
                 Event::Query(queries) => match queries.as_slice() {
                     [(0, query)] if query.get_answer() => {
@@ -124,11 +123,7 @@ impl ApiState for State {
 
         // eprintln!("fps: {}", 1.0 / frame_time);
 
-        match self.controls(mouse_delta, keyboard, &mut string, frame_time, self.time) {
-            ControlOutput::Close => return PollResult::Close,
-            ControlOutput::Error(x) => return PollResult::Error(x),
-            ControlOutput::Data(()) => (),
-        }
+        self.controls(mouse_delta, keyboard, &mut string, frame_time, self.time)?;
 
         let anim = self.physics(frame_time);
 
