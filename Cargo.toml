@@ -11,5 +11,6 @@ members = [
     "linear_algebra",
     "multi_zip",
     "infinite_window",
-    "localrc", 
+    "localrc",
+    "fixed_point", "bezier"
 ]

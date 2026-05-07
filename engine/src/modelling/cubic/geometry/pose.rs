@@ -150,7 +150,7 @@ mod test {
         let new_pose = second_pose.transform(&first_pose);
 
         let composite_matrix =
-            first_pose.as_transformation_matrix() * second_pose.as_transformation_matrix();
+            second_pose.as_transformation_matrix() * first_pose.as_transformation_matrix();
         let other_matrix = new_pose.as_transformation_matrix();
 
         assert_eq!(composite_matrix, other_matrix);

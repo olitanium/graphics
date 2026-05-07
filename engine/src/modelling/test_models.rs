@@ -2,7 +2,7 @@ use std::iter;
 use std::rc::Rc;
 use std::sync::LazyLock;
 
-use array_vec::ArrayVec;
+use array_vec::{ArrayVec, arrvec};
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::vertex_array::VertexArray;
 
@@ -186,8 +186,7 @@ pub fn tail_with_bone(max_len: usize) -> impl Iterator<Item = [IncompleteVertex<
             .map(|triangle| {
                 triangle.map(|index| {
                     let BoneVertexTexture{ bone, position, texture} = vertices_in_order[index];
-                    let mut weights = ArrayVec::new();
-                    weights.push((bone, 1.0));
+                    let weights = arrvec![(bone, 1.0)];
                     IncompleteVertex::new(position).weights(weights).texture(texture)
                 })
             });

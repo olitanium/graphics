@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use engine::entity::{AggregateEntity, AggregateModelIndex, EntityInner, ToAggregateEntity};
+use engine::entity::{AggregateEntity, AggregateModelIndex,  ToAggregateEntity};
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::SkeletonBoneIndex;
 use engine::modelling::cubic::geometry::{
@@ -13,15 +13,13 @@ use engine::modelling::cubic::material::Material;
 use engine::modelling::{Bone, Collision, Skeleton, SkeletonCubic, TempModelTransform};
 use engine::{ColourRGBA, Transform};
 
-use crate::grappling_hook;
-use crate::properties::Properties;
-
 pub struct GrapplingHook {
     pub entity: AggregateEntity<(), SkeletonCubic>,
     pub chain: AggregateModelIndex,
     pub chain_end_bone: SkeletonBoneIndex,
     pub hook: Option<AggregateModelIndex>,
     pub chain_animation: SkeletalAnimation,
+    len: f32,
     hook_state: HookState,
 }
 
@@ -45,7 +43,7 @@ enum HookState {
 }
 
 impl GrapplingHook {
-    pub fn new() -> Self {
+    pub fn new(len: usize) -> Self {
         // Need origin cube
         // Need chain
         // Need hook
@@ -60,30 +58,30 @@ impl GrapplingHook {
         let mut chain = SkeletonCubic::builder();
         let mut skeleton_builder = Skeleton::builder();
         let mut animation_builder = SkeletalAnimation::builder();
-        let mut bones_back_to_front = vec![SkeletonBoneIndex::SKELETON_ROOT_BONE];
+        let mut bones_root_to_tip = vec![SkeletonBoneIndex::SKELETON_ROOT_BONE];
         // No chain link is bound to the root bone, so that the root of the origin cube
         // and the
         let white_material = Rc::new(Material::white());
 
         const EXPECT_MESSAGE: &str = "have not yet finished the animation";
-        const SEC_PER_UNIT: f32 = 1.0;
         const CHAIN_LINK_SIZE: f32 = 0.5;
-        const LEN: usize = 20;
+        const SEC_PER_UNIT: f32 = CHAIN_LINK_SIZE;
 
-        for _ in 1..LEN {
+        for _ in 1..len + 1 {
+            // bone 0 is the root so we need one more than LEN
             // Create new bone to correspond to the created animation
-            let new_bone = Bone::builder(bones_back_to_front.last().expect("filled"))
+            let new_bone = Bone::builder(bones_root_to_tip.last().expect("filled"))
                 .bind_pose_relative_to_parent(Pose::IDENTITY);
 
             let end_bone = skeleton_builder
                 .push_bone(new_bone)
                 .expect("new_bone parent exists");
 
-            bones_back_to_front.push(end_bone);
+            bones_root_to_tip.push(end_bone);
             // create skeleton, and save to a vector
         }
 
-        for bone in &bones_back_to_front {
+        for bone in &bones_root_to_tip {
             // add cube to each bone
             chain.push_cube(
                 Pose::IDENTITY,
@@ -101,36 +99,44 @@ impl GrapplingHook {
                 _animation_owner, /* this bone here is the one who is actually owning the
                                    * animation */
             ],
-        ) in bones_back_to_front.array_windows().enumerate()
+        ) in bones_root_to_tip.array_windows().enumerate()
         {
             index += 1; // effectively enumerating the second element, the animation owner, of the Window
+            // this is because the root node is never animated.
+            // index == 1 means first box
 
             // Create Animation, using bone as the current bone
             let mut bone_animation = BoneAnimation::new();
-            // do not move for LEN-`index` timesteps
+            // do not move for `LEN-index` timesteps
             bone_animation
-                .push(Pose::IDENTITY, (LEN - index - 1) as f32 * SEC_PER_UNIT)
+                .push(Pose::IDENTITY, (len - index) as f32 * SEC_PER_UNIT)
                 .expect(EXPECT_MESSAGE);
             // then move one distance in one timesteps
             bone_animation
-                .push(Pose::IDENTITY, 1.0 * SEC_PER_UNIT)
+                .push(Pose::IDENTITY, SEC_PER_UNIT)
                 .expect(EXPECT_MESSAGE);
             bone_animation
+                .push_final_non_repeat(
+                    Pose::new_from_translation(Vector::new([0.0, 0.0, CHAIN_LINK_SIZE])),
+                    //(2 * (index - 1)) as f32 * SEC_PER_UNIT,
+                )
+                .expect(EXPECT_MESSAGE);
+            /*bone_animation
                 .push(
                     Pose::new_from_translation(Vector::new([0.0, 0.0, CHAIN_LINK_SIZE])),
-                    (LEN + index) as f32 * SEC_PER_UNIT,
+                    SEC_PER_UNIT,
                 )
                 .expect(EXPECT_MESSAGE);
             bone_animation
                 .push_final_non_repeat(Pose::IDENTITY)
-                .expect(EXPECT_MESSAGE);
+                .expect(EXPECT_MESSAGE);*/
 
             animation_builder
                 .push_animation(bone_animation, parent)
                 .expect("end bone exists");
         }
 
-        let end_of_chain = bones_back_to_front
+        let end_of_chain = bones_root_to_tip
             .last()
             .expect("at least going to be the ROOT_BONE");
 
@@ -199,6 +205,7 @@ impl GrapplingHook {
             hook: Some(hook_attachment_point),
             chain_animation: animation,
             hook_state: HookState::Still,
+            len: len as f32 * CHAIN_LINK_SIZE,
         }
     }
 }
@@ -209,14 +216,34 @@ where
     A: Collision + 'a,
     B: Collision + ToAggregateEntity<(), SkeletonCubic> + 'a,
     C: Collision + 'a,
-    for<'b> A::Transform<'b>: Clone,
-    for<'b> B::Transform<'b>: Clone,
-    for<'b> C::Transform<'b>: Clone,
+    A::Transform<'a>: Clone,
+    B::Transform<'a>: Clone,
+    C::Transform<'a>: Clone,
 {
     pub grapple_points: Vec<(&'a A, A::Transform<'a>)>,
     pub carryable_objects: Vec<Option<(B, B::Transform<'a>)>>,
     pub other_entities: Vec<(&'a C, C::Transform<'a>)>,
 }
+
+impl<'a, A, B, C> Default for UpdateInput<'a, A, B, C>
+where
+    A: Collision + 'a,
+    B: Collision + ToAggregateEntity<(), SkeletonCubic> + 'a,
+    C: Collision + 'a,
+    for<'b> A::Transform<'b>: Clone,
+    for<'b> B::Transform<'b>: Clone,
+    for<'b> C::Transform<'b>: Clone,
+{
+    fn default() -> Self {
+        Self {
+            grapple_points: vec![],
+            carryable_objects: vec![],
+            other_entities: vec![],
+        }
+    }
+}
+
+const VELOCITY: f32 = 1.0;
 
 impl GrapplingHook {
     pub fn update<'a, A, B, C>(
@@ -243,6 +270,12 @@ impl GrapplingHook {
 
                 if *length < 0.0 {
                     self.hook_state = HookState::Still;
+                    return self.update(0.0, target);
+                }
+
+                if *length > self.len {
+                    *velocity =  -*velocity;
+                    *length = self.len;
                     return self.update(0.0, target);
                 }
 
@@ -277,7 +310,7 @@ impl GrapplingHook {
 
                         let new_state = HookState::CarryingPlayer {
                             length: *length,
-                            velocity: 1.0,
+                            velocity: VELOCITY,
                             fixed_pose: hook_pos,
                         };
                         self.hook_state = new_state;
@@ -328,7 +361,7 @@ impl GrapplingHook {
                             self.hook_state = HookState::GrabbedObject {
                                 length,
                                 attachment: destination,
-                                velocity: 1.0,
+                                velocity: VELOCITY,
                             };
 
                             self_transform = self
@@ -426,7 +459,7 @@ impl GrapplingHook {
         if matches!(self.hook_state, HookState::Still) {
             self.hook_state = HookState::Extending {
                 length: 0.0,
-                velocity: 2.0,
+                velocity: VELOCITY,
             }
         };
     }

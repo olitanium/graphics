@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{BoundingBox, CubicVertex};
 
@@ -44,4 +46,26 @@ pub trait Collision {
 
 pub trait TempModelTransform {
     fn get_root_pose(&self) -> Pose;
+}
+
+impl<T: Collision, B: Deref<Target = T>> Collision for B {
+    type FuncInputs = T::FuncInputs;
+    type Meta = T::Meta;
+    type Transform<'a> = T::Transform<'a>;
+
+    fn collides<
+        T2: Collision,
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, T2::FuncInputs, &mut T2::Meta),
+    >(
+        &self,
+        transform: Self::Transform<'_>,
+        target: &T2,
+        target_transform: T2::Transform<'_>,
+        alter_meta: F,
+    ) -> bool
+    where
+        for<'a> T2::Transform<'a>: Clone,
+    {
+        T::collides(self, transform, target, target_transform, alter_meta)
+    }
 }

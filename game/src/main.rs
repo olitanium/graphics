@@ -14,7 +14,6 @@ mod morgan;
 mod new;
 mod physics;
 mod prep_draw;
-mod properties;
 mod state;
 
 fn main() {

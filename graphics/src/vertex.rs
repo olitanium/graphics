@@ -1,6 +1,6 @@
 use std::mem;
 
-use linear_algebra::Vector;
+use linear_algebra::{UnitVector, Vector};
 
 use crate::types::VertexAttrType;
 
@@ -31,26 +31,59 @@ impl Vertex for NoVertex {
     }
 }
 
-impl Vertex for Vector<2> {
-    const ELEMENT_COUNT: usize = 1;
+macro_rules! vector {
+    ($num:literal) => {
+        impl Vertex for [i32; $num] {
+            const ELEMENT_COUNT: usize = 1;
 
-    fn offsets() -> [usize; Self::ELEMENT_COUNT] {
-        [0]
-    }
+            fn offsets() -> [usize; Self::ELEMENT_COUNT] {
+                [0]
+            }
 
-    fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
-        [(VertexAttrType::f32, 2)]
-    }
+            fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
+                [(VertexAttrType::i32, $num)]
+            }
+        }
+
+        impl Vertex for [f32; $num] {
+            const ELEMENT_COUNT: usize = 1;
+
+            fn offsets() -> [usize; Self::ELEMENT_COUNT] {
+                [0]
+            }
+
+            fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
+                [(VertexAttrType::f32, $num)]
+            }
+        }
+
+        impl Vertex for Vector<$num> {
+            const ELEMENT_COUNT: usize = 1;
+
+            fn offsets() -> [usize; Self::ELEMENT_COUNT] {
+                <[f32; $num]>::offsets()
+            }
+
+            fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
+                <[f32; $num]>::types_of()
+            }
+        }
+
+        impl Vertex for UnitVector<$num> {
+            const ELEMENT_COUNT: usize = Vector::<$num>::ELEMENT_COUNT;
+
+            fn offsets() -> [usize; Self::ELEMENT_COUNT] {
+                Vector::<$num>::offsets()
+            }
+
+            fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
+                Vector::<$num>::types_of()
+            }
+        }
+    };
 }
 
-impl Vertex for Vector<3> {
-    const ELEMENT_COUNT: usize = 1;
-
-    fn offsets() -> [usize; Self::ELEMENT_COUNT] {
-        [0]
-    }
-
-    fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
-        [(VertexAttrType::f32, 3)]
-    }
-}
+vector!(1);
+vector!(2);
+vector!(3);
+vector!(4);

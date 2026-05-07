@@ -93,7 +93,7 @@ impl State {
 
         let bounding_box_level = 0;
 
-        const START_LOC: Vector<3> = Vector::new([-2.0, 0.0, 7.0]);
+        const START_LOC: Vector<3> = Vector::new([-3.0, 0.0, 0.0]);
 
         let camera = camera::builder()
             .pose(ManualPose::new_fixed_up_from_to(
@@ -202,7 +202,7 @@ impl State {
             )
             .unwrap();
 
-        let grappling_hook = GrapplingHook::new();
+        let grappling_hook = GrapplingHook::new(3);
 
         Ok(Self {
             toggle_b: false,
@@ -235,6 +235,7 @@ impl State {
 
             hdr_fb,
             toggle_g: false,
+            toggle_h: false,
             bloom,
 
             light_group: ShadowListLights {

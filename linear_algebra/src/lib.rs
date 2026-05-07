@@ -15,4 +15,4 @@ mod vector;
 mod test;
 
 pub use matrix::Matrix;
-pub use vector::{UnitVector, Vector};
+pub use vector::{CompactUnitVector, UnitVector, Vector};

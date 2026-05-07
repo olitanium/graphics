@@ -6,7 +6,7 @@
 
 use std::fmt::Debug;
 use std::mem::{self, ManuallyDrop, MaybeUninit};
-use std::ops::{Deref, DerefMut};
+use std::ops::{Deref, DerefMut, Index};
 use std::ptr;
 mod iterators;
 mod test;
@@ -34,6 +34,13 @@ impl<T, const N: usize> ArrayVec<T, N> {
 
     pub fn capacity(&self) -> usize {
         N
+    }
+
+    pub fn from_array(array: [T; N]) -> Self {
+        Self {
+            len: N,
+            array: ManuallyDrop::new(MaybeUninit::new(array).transpose()),
+        }
     }
 
     pub const fn push_within_capacity(&mut self, elem: T) -> Result<(), T> {
@@ -186,7 +193,8 @@ impl<T, const N: usize> Drop for ArrayVec<T, N> {
         unsafe {
             ptr::drop_in_place(self.as_mut_slice());
         }
-        // safe alternative: while self.pop().is_some() {}
+        // safe alternative:
+        // while self.pop().is_some() {}
     }
 }
 
@@ -203,5 +211,16 @@ impl<T: Debug, const N: usize> Debug for ArrayVec<T, N> {
             .field("len", &self.len())
             .field("values", &self.as_slice())
             .finish()
+    }
+}
+
+impl<T, const N: usize, I> Index<I> for ArrayVec<T, N>
+where
+    [T]: Index<I>,
+{
+    type Output = <[T] as Index<I>>::Output;
+
+    fn index(&self, index: I) -> &Self::Output {
+        self.as_slice().index(index)
     }
 }

@@ -4,7 +4,7 @@ macro_rules! arrvec {
         ArrayVec::const_collect([$($elem,)*])
     };
 
-    ($len:literal; $($elem: expr),* $(,)?) => {
+    ($($elem: expr),* $(,)? ; $len:literal ) => {
         {
             let array: ArrayVec<_, $len> = arrvec![$($elem,)*];
             array

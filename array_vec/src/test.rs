@@ -88,6 +88,6 @@ fn init_macro() {
     // compile fail
     // const ARRAY: ArrayVec<u32, 1> = arrvec![1, 2];
 
-    let array: ArrayVec<u32, _> = arrvec![5; 1,2,3,];
+    let array: ArrayVec<u32, _> = arrvec![1,2,3, ; 5];
     assert_eq!(array.capacity(), 5);
 }

@@ -1,0 +1,10 @@
+[package]
+name = "bezier"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+linear_algebra = {path = "../linear_algebra"}
+array_vec = {path = "../array_vec"}
+utils = {path = "../utils"}

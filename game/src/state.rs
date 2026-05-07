@@ -16,7 +16,6 @@ use engine::modelling::{Bloom, Line, Quad, SHADOW_SHADER_MAX_LIGHTS, SkyBox, Tes
 use engine::types::TexDim;
 use engine::{ApiState, ColourRGBA, Event, PollResult, SimpleEntity};
 
-use crate::controls::ControlOutput;
 use crate::grappling_hook::GrapplingHook;
 use crate::morgan::Morgan;
 
@@ -31,6 +30,7 @@ pub struct State {
 
     pub toggle_g: bool,
     pub toggle_b: bool,
+    pub toggle_h: bool,
 
     pub speed: [f32; 3],
 

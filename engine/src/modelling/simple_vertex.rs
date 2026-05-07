@@ -11,7 +11,6 @@ use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{CubicVertex, VertexHasTangent};
 use crate::transform::Transform;
 
-#[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct SimpleVertex {
     // 0
@@ -37,8 +36,10 @@ impl Vertex for SimpleVertex {
     }
 
     fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
-        use VertexAttrType as V;
-        [(V::f32, 3), (V::f32, 2), (V::f32, 3), (V::f32, 3)]
+        let [vec3] = Vector::<3>::types_of();
+        let [vec2] = Vector::<2>::types_of();
+        let [unitvec] = UnitVector::<3>::types_of();
+        [vec3, vec2, unitvec, unitvec]
     }
 }
 

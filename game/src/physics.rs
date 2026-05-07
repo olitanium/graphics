@@ -25,6 +25,8 @@ impl State {
             light.light.position = self.camera.position(&());
         }
 
+        self.morgan = None;
+
         let mut update_input: UpdateInput<'_, Morgan, Morgan, Morgan> = if self.toggle_b {
             let morgan = self.morgan.take();
 

@@ -119,6 +119,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9d297deb1925b89f2ccc13d7635fa0714f12c87adce1c75356b39ca9b7178567"
 
 [[package]]
+name = "bezier"
+version = "0.1.0"
+dependencies = [
+ "array_vec",
+ "linear_algebra",
+ "utils",
+]
+
+[[package]]
 name = "bindgen"
 version = "0.63.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -472,6 +481,10 @@ dependencies = [
  "libredox",
  "windows-sys 0.59.0",
 ]
+
+[[package]]
+name = "fixed_point"
+version = "0.1.0"
 
 [[package]]
 name = "flate2"
@@ -1104,6 +1117,7 @@ dependencies = [
 name = "linear_algebra"
 version = "0.1.0"
 dependencies = [
+ "fixed_point",
  "multi_zip",
 ]
 

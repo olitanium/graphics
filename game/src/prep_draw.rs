@@ -14,6 +14,8 @@ impl State {
     ) -> PollResult<'a, StateError> {
         let _time = self.time;
 
+        eprintln!("position: {:?}", self.camera.centre(&()));
+
         let mut out = VecDraw::new();
 
         out.push(SkyBoxGroup::new(

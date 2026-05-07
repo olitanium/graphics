@@ -153,6 +153,7 @@ impl State {
                     // self.reset_time = time;
                 }
                 'g' | 'G' => self.toggle_g = !self.toggle_g,
+                'h' | 'H' => self.toggle_h = !self.toggle_h,
                 'o' => {
                     self.bounding_box_level = self.bounding_box_level.wrapping_add(1);
                 }

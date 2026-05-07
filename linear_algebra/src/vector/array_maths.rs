@@ -33,6 +33,11 @@ elem_wise!(Add::add, +);
 elem_wise!(Sub::sub, -);
 elem_wise!(Mul::mul, *);
 
+pub const fn eq<const N: usize>(v1: [f32; N], v2: [f32; N]) -> bool {
+    let diff = sub(v1, v2);
+    is_zero(diff)
+}
+
 #[inline]
 pub const fn dot<const N: usize>(v1: [f32; N], v2: [f32; N]) -> f32 {
     sum(mul(v1, v2))
@@ -40,5 +45,6 @@ pub const fn dot<const N: usize>(v1: [f32; N], v2: [f32; N]) -> f32 {
 
 #[inline]
 pub const fn is_zero<const N: usize>(v1: [f32; N]) -> bool {
-    !(1.0 / dot(v1, v1)).is_finite()
+    const PRECISION_PER_DIMENSION: f32 = 0.001;
+    dot(v1, v1) < const { PRECISION_PER_DIMENSION * N as f32 }
 }

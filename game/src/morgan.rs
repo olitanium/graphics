@@ -3,8 +3,6 @@ use engine::entity::ToAggregateEntity;
 use engine::modelling::cubic::SimpleCubic;
 use engine::modelling::{Collision, SkeletonCubic};
 
-use crate::properties::Properties;
-
 pub struct Morgan {
     pub inner: SimpleEntity<()>,
 }
@@ -29,16 +27,6 @@ impl Collision for Morgan {
     {
         self.inner
             .collides(transform, target, target_transform, alter_meta)
-    }
-}
-
-impl Properties for Morgan {
-    fn is_hookpoint(&self) -> bool {
-        true
-    }
-
-    fn is_carryable(&self) -> bool {
-        false
     }
 }
 

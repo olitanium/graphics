@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 multi_zip = {path = "../multi_zip"}
+fixed_point = {path = "../fixed_point"}
