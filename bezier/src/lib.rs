@@ -8,6 +8,7 @@ use std::fmt::{Debug, Display};
 
 use array_vec::ArrayVec;
 use linear_algebra::Vector;
+use utils::error_boilerplate;
 
 #[derive(Debug, Clone, Copy)]
 pub struct BezierSegment<const DIMS: usize, const N: usize>([Vector<DIMS>; N]);
@@ -17,46 +18,40 @@ pub struct BezierCurve<const DIMS: usize, const N: usize> {
     segments: Vec<BezierSegment<DIMS, N>>,
 }
 
-fn bezier_solve<const DIMS: usize, const N: usize>(
-    vecs: &[Vector<DIMS>; N],
-    t: f32,
-) -> Vector<DIMS> {
-    fn iteration<const DIMS: usize, const N: usize>(
-        slice: &[Vector<DIMS>],
-        t: f32,
-    ) -> ArrayVec<Vector<DIMS>, N> {
-        slice
-            .array_windows()
-            .map(|[vec1, vec2]| *vec1 * (1.0 - t) + *vec2 * t)
-            .collect()
-    }
-
-    if N == 0 {
-        Vector::ZERO
-    } else {
-        let mut out: ArrayVec<Vector<DIMS>, N> = iteration(vecs, t);
-        while out.len() > 1 {
-            out = iteration(&out, t);
-        }
-        out[0]
-    }
-}
-
 impl<const DIMS: usize, const N: usize> BezierSegment<DIMS, N> {
     pub fn new(control: [Vector<DIMS>; N]) -> Self {
         Self(control)
     }
+}
 
-    pub fn get(&self, t: f32) -> Vector<DIMS> {
-        bezier_solve::<_, N>(&self.0, t)
+#[derive(Debug, Clone, Copy)]
+#[non_exhaustive]
+pub enum GetError {
+    ZeroDimension,
+}
+
+error_boilerplate!(GetError);
+
+impl<const DIMS: usize, const N: usize> BezierSegment<DIMS, N> {
+    // returns None if N == 0
+    pub fn get(&self, t: f32) -> Result<Vector<DIMS>, GetError> {
+        let mut out: ArrayVec<Vector<DIMS>, N> = ArrayVec::from_array(self.0);
+        while out.len() > 1 {
+            out = out
+                .array_windows()
+                .map(|[vec1, vec2]| *vec1 * (1.0 - t) + *vec2 * t)
+                .collect()
+        }
+
+        out.get(0).copied().ok_or(GetError::ZeroDimension)
     }
 
-    pub fn end(&self) -> Vector<DIMS> {
-        self.0.last().copied().unwrap_or_default()
+    pub fn end(&self) -> Result<Vector<DIMS>, GetError> {
+        self.0.last().copied().ok_or(GetError::ZeroDimension)
     }
 
-    pub fn start(&self) -> Vector<DIMS> {
-        self.0.first().copied().unwrap_or_default()
+    pub fn start(&self) -> Result<Vector<DIMS>, GetError> {
+        self.0.first().copied().ok_or(GetError::ZeroDimension)
     }
 }
 
@@ -67,10 +62,12 @@ impl<const DIMS: usize, const N: usize> BezierCurve<DIMS, N> {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub struct PushError<const DIMS: usize> {
-    pub last_point: Vector<DIMS>,
+#[non_exhaustive]
+pub enum PushError<const DIMS: usize> {
+    IncompatibleStartAndFinishPoints { end_of_previous: Vector<DIMS> },
+    ZeroDimension,
 }
-
+// Error boilerplate
 impl<const DIMS: usize> Display for PushError<DIMS> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         Debug::fmt(self, f)
@@ -87,20 +84,44 @@ impl<const DIMS: usize> From<!> for PushError<DIMS> {
 
 impl<const DIMS: usize, const N: usize> BezierCurve<DIMS, N> {
     pub fn push(&mut self, segment: BezierSegment<DIMS, N>) -> Result<(), PushError<DIMS>> {
-        if let Some(last_point) = self.peek()
-            && segment.start() != last_point
-        {
-            Err(PushError { last_point })
-        } else {
-            Ok(self.segments.push(segment))
+        match (segment.start(), self.peek()) {
+            (Err(GetError::ZeroDimension), _) => Err(PushError::ZeroDimension),
+            (_, Err(PeekError::ZeroDimension)) => Err(PushError::ZeroDimension),
+            (Ok(start), Ok(peek)) if start != peek => {
+                Err(PushError::IncompatibleStartAndFinishPoints {
+                    end_of_previous: peek,
+                })
+            }
+            (Ok(_), Ok(_)) | (Ok(_), Err(PeekError::NoSegment)) => {
+                self.segments.push(segment);
+                Ok(())
+            }
         }
     }
+}
 
-    pub fn peek(&self) -> Option<Vector<DIMS>> {
-        self.segments.last().map(|arr| arr.end())
+#[derive(Debug, Clone, Copy)]
+pub enum PeekError {
+    NoSegment,
+    ZeroDimension,
+}
+
+error_boilerplate!(PeekError);
+
+impl<const DIMS: usize, const N: usize> BezierCurve<DIMS, N> {
+    pub fn peek(&self) -> Result<Vector<DIMS>, PeekError> {
+        let Some(segment) = self.segments.last() else {
+            return Err(PeekError::NoSegment);
+        };
+        let Ok(end) = segment.end() else {
+            return Err(PeekError::ZeroDimension);
+        };
+        Ok(end)
     }
+}
 
-    pub fn get(&self, t: f32) -> Vector<DIMS> {
+impl<const DIMS: usize, const N: usize> BezierCurve<DIMS, N> {
+    pub fn get(&self, t: f32) -> Result<Vector<DIMS>, GetError> {
         let number_of = self.segments.len();
 
         let t_new = t * number_of as f32;
@@ -108,7 +129,7 @@ impl<const DIMS: usize, const N: usize> BezierCurve<DIMS, N> {
         self.get_unnormalized(t_new)
     }
 
-    pub fn get_unnormalized(&self, t: f32) -> Vector<DIMS> {
+    pub fn get_unnormalized(&self, t: f32) -> Result<Vector<DIMS>, GetError> {
         let upper = self.segments.len();
 
         let (choice, part) = match t {
@@ -136,8 +157,7 @@ mod tests {
 
     #[test]
     fn test_empty() {
-        let no_values: Vector<1> = BezierSegment::new([]).get(0.5);
-        assert_eq!(no_values, Vector::ZERO)
+        BezierSegment::<3, _>::new([]).get(0.5).unwrap_err();
     }
 
     #[test]
@@ -147,7 +167,7 @@ mod tests {
         let bezier = BezierSegment::new(points);
 
         for val in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] {
-            let out = bezier.get(val);
+            let out = bezier.get(val).unwrap();
             let expected = Vector::new([val, val]);
             assert_eq!(out, expected, "at val {val}");
         }
@@ -155,8 +175,8 @@ mod tests {
 
     #[test]
     fn test_chain() {
-        let start = Vector::new([0.0, 0.0]);
-        let finish = Vector::new([0.0, 0.0]);
+        let start = Vector::new([1.0, 0.0]);
+        let finish = Vector::new([0.0, 1.0]);
 
         let segment_one = BezierSegment::new([start, finish]);
         let segment_two = BezierSegment::new([finish, start]);
@@ -165,12 +185,12 @@ mod tests {
         bezier.push(segment_one).unwrap();
         bezier.push(segment_two).unwrap();
 
-        assert_eq!(bezier.get(0.0), start);
-        assert_eq!(bezier.get(0.5), finish);
-        assert_eq!(bezier.get(1.0), start);
+        assert_eq!(bezier.get(0.0).unwrap(), start);
+        assert_eq!(bezier.get(0.5).unwrap(), finish);
+        assert_eq!(bezier.get(1.0).unwrap(), start);
 
-        assert_eq!(bezier.get_unnormalized(0.0), start);
-        assert_eq!(bezier.get_unnormalized(1.0), finish);
-        assert_eq!(bezier.get_unnormalized(2.0), start);
+        assert_eq!(bezier.get_unnormalized(0.0).unwrap(), start);
+        assert_eq!(bezier.get_unnormalized(1.0).unwrap(), finish);
+        assert_eq!(bezier.get_unnormalized(2.0).unwrap(), start);
     }
 }

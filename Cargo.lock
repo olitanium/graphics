@@ -396,6 +396,7 @@ name = "engine"
 version = "0.1.0"
 dependencies = [
  "array_vec",
+ "bezier",
  "dual_number",
  "graphics",
  "infinite_window",

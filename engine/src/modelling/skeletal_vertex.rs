@@ -35,13 +35,17 @@ impl Vertex for SkeletalVertex {
     }
 
     fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
+        let [vec2] = Vector::<2>::types_of();
+        let [vec3] = Vector::<3>::types_of();
+        let [uvec3] = UnitVector::<3>::types_of();
+        let [f32x4] = <[f32; 4]>::types_of();
         [
-            (VertexAttrType::f32, 3),
-            (VertexAttrType::f32, 2),
-            (VertexAttrType::f32, 3),
-            (VertexAttrType::f32, 3),
-            (VertexAttrType::f32, 4),
-            (VertexAttrType::f32, 4),
+            vec3,
+            vec2,
+            uvec3,
+            uvec3,
+            f32x4,
+            f32x4,
         ]
     }
 }

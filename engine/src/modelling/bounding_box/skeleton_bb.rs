@@ -1,10 +1,11 @@
-use graphics::ActiveShaderProgram;
+use graphics::{ActiveShaderProgram, Draw};
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
 use graphics::texture::FlatTexture;
 use graphics::vertex_array::VertexArray;
+use utils::error_boilerplate;
 
 use crate::modelling::bounding_box::collision::TempModelTransform;
 use crate::modelling::bounding_box::element::DrawRecursiveError;
@@ -100,6 +101,8 @@ pub enum DrawError<'a> {
     DrawRecursive(DrawRecursiveError<'a>),
     GetAnimation(GetAnimationError),
 }
+
+error_boilerplate!(<'a> DrawError<'a>);
 
 impl<V: CubicVertex, T> SkeletonBb<V, T> {
     pub(crate) fn draw<

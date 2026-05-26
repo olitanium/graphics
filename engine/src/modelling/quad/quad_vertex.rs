@@ -24,7 +24,8 @@ impl Vertex for QuadVertex {
     }
 
     fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
-        [Vector::<2>::types_of()[0], Vector::<2>::types_of()[0]]
+        let [vec2] = Vector::<2>::types_of();
+        [vec2, vec2]
     }
 }
 

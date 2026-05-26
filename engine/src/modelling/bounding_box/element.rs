@@ -9,7 +9,8 @@ use graphics::linear_algebra::{Matrix, Vector};
 use graphics::shader_program::SetUniformError;
 use graphics::vertex::Vertex;
 use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
-use graphics::{ActiveShaderProgram, Model};
+use graphics::{ActiveShaderProgram, Draw, Model};
+use utils::error_boilerplate;
 
 use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
 use crate::transform::Transform;
@@ -146,10 +147,13 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum DrawRecursiveError<'a> {
     SetUniform(SetUniformError<'a>),
     VertexArrayDraw(VertexArrayDrawError<'a>),
 }
+
+error_boilerplate!(<'a> DrawRecursiveError<'a>);
 
 impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T>
 where

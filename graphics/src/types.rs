@@ -120,15 +120,27 @@ impl Debug for GLError {
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]
 pub enum VertexAttrType {
-    f32,
-    i32,
+    #[doc(hidden)] GLfloat,
+    #[doc(hidden)] GLint,
 }
 
 impl VertexAttrType {
     pub(crate) fn get_enum(self) -> gl::types::GLenum {
         match self {
-            Self::f32 => gl::FLOAT,
-            Self::i32 => gl::INT,
+            Self::GLfloat => gl::FLOAT,
+            Self::GLint => gl::INT,
         }
     }
+}
+
+pub trait VertexAttr: Copy {
+    const ATTR: VertexAttrType;
+}
+
+impl VertexAttr for gl::types::GLfloat {
+    const ATTR: VertexAttrType = VertexAttrType::GLfloat;
+}
+
+impl VertexAttr for gl::types::GLint {
+    const ATTR: VertexAttrType = VertexAttrType::GLint;
 }

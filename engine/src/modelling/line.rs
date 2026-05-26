@@ -5,3 +5,5 @@ pub use model::{DrawError, Line};
 
 mod test_vertex;
 pub use test_vertex::TestLineVertex;
+
+mod from_bezier;

@@ -2,7 +2,7 @@ use std::mem;
 
 use linear_algebra::{UnitVector, Vector};
 
-use crate::types::VertexAttrType;
+use crate::types::{VertexAttr, VertexAttrType};
 
 pub trait Vertex: Copy {
     const ELEMENT_COUNT: usize;
@@ -31,6 +31,18 @@ impl Vertex for NoVertex {
     }
 }
 
+impl<T: VertexAttr> Vertex for T {
+    const ELEMENT_COUNT: usize = 1;
+
+    fn offsets() -> [usize; Self::ELEMENT_COUNT] {
+        [0; Self::ELEMENT_COUNT]
+    }
+
+    fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
+        [(T::ATTR, 1); Self::ELEMENT_COUNT]
+    }
+}
+
 macro_rules! vector {
     ($num:literal) => {
         impl Vertex for [i32; $num] {
@@ -41,7 +53,7 @@ macro_rules! vector {
             }
 
             fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
-                [(VertexAttrType::i32, $num)]
+                [(i32::ATTR, $num)]
             }
         }
 
@@ -53,7 +65,7 @@ macro_rules! vector {
             }
 
             fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
-                [(VertexAttrType::f32, $num)]
+                [(f32::ATTR, $num)]
             }
         }
 
@@ -83,7 +95,6 @@ macro_rules! vector {
     };
 }
 
-vector!(1);
 vector!(2);
 vector!(3);
 vector!(4);

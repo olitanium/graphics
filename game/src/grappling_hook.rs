@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use engine::entity::{AggregateEntity, AggregateModelIndex,  ToAggregateEntity};
+use engine::entity::{AggregateEntity, AggregateModelIndex, ToAggregateEntity};
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::SkeletonBoneIndex;
 use engine::modelling::cubic::geometry::{
@@ -121,15 +121,15 @@ impl GrapplingHook {
                     //(2 * (index - 1)) as f32 * SEC_PER_UNIT,
                 )
                 .expect(EXPECT_MESSAGE);
-            /*bone_animation
-                .push(
-                    Pose::new_from_translation(Vector::new([0.0, 0.0, CHAIN_LINK_SIZE])),
-                    SEC_PER_UNIT,
-                )
-                .expect(EXPECT_MESSAGE);
-            bone_animation
-                .push_final_non_repeat(Pose::IDENTITY)
-                .expect(EXPECT_MESSAGE);*/
+            // bone_animation
+            // .push(
+            // Pose::new_from_translation(Vector::new([0.0, 0.0, CHAIN_LINK_SIZE])),
+            // SEC_PER_UNIT,
+            // )
+            // .expect(EXPECT_MESSAGE);
+            // bone_animation
+            // .push_final_non_repeat(Pose::IDENTITY)
+            // .expect(EXPECT_MESSAGE);
 
             animation_builder
                 .push_animation(bone_animation, parent)
@@ -274,7 +274,7 @@ impl GrapplingHook {
                 }
 
                 if *length > self.len {
-                    *velocity =  -*velocity;
+                    *velocity = -*velocity;
                     *length = self.len;
                     return self.update(0.0, target);
                 }
