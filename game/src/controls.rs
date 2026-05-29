@@ -1,16 +1,11 @@
 use std::collections::HashSet;
 use std::convert::Infallible;
-use std::mem;
 use std::ops::{FromResidual, Try};
 use std::time::Duration;
 
-use engine::entity::SkeletonEntity;
 use engine::linear_algebra::Vector;
-use engine::modelling::TestLineVertex;
-use engine::modelling::cubic::geometry::Pose;
-use engine::{ColourRGB, Key, PollResult};
+use engine::{Key, PollResult};
 
-use crate::morgan::Sun;
 use crate::state::{State, StateError};
 
 pub enum ControlOutput<T> {

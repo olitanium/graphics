@@ -3,8 +3,7 @@ use std::time::Duration;
 
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic;
-use engine::modelling::cubic::geometry::Pose;
-use engine::{Key, TransformBy};
+use engine::Key;
 
 pub struct GameCamera {
     pub move_lock: bool,
@@ -17,7 +16,7 @@ impl GameCamera {
     pub fn controls(
         &mut self,
         keyboard: HashSet<Key>,
-        typing_string: &mut String,
+        _typing_string: &mut String,
         mouse_delta: Vector<2>,
         frame_time: Duration,
     ) {

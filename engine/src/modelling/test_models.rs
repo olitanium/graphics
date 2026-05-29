@@ -2,7 +2,7 @@ use std::iter;
 use std::rc::Rc;
 use std::sync::LazyLock;
 
-use array_vec::{ArrayVec, arrvec};
+use array_vec::arrvec;
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::vertex_array::VertexArray;
 

@@ -1,7 +1,6 @@
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::vertex::Vertex;
 
-use crate::entity::aggregate_entity::AggregateUnit;
 use crate::entity::{EntityInner, Mass, ToAggregateEntity};
 use crate::modelling::cubic::SimpleCubic;
 use crate::modelling::cubic::geometry::Pose;

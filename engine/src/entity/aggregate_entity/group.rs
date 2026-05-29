@@ -78,12 +78,6 @@ where
 
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Result<Box<Self>, CalculateAnimationError<'a>> {
-        // let opaque: Result<_, CalculateAnimationError> = opaque
-        // .into_iter()
-        // .map(|(entity, animations, fix_anim)| {
-        // Ok((entity, entity.calculate_animation(fix_anim, animations)?))
-        // })
-        // .collect();
         Ok(Box::new(Self {
             shader,
             framebuffer,

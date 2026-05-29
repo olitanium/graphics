@@ -1,4 +1,3 @@
-use std::vec;
 
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::attachments::WithDepth;

@@ -2,29 +2,21 @@ use std::collections::HashSet;
 use std::rc::Rc;
 use std::time::Duration;
 
-use engine::entity::{AggregateEntity, SkeletonEntity};
+use engine::entity::SkeletonEntity;
 use engine::framebuffer::Framebuffer;
-use engine::framebuffer::attachments::{CubeWithDepth, WithDepth};
+use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::camera::Projection;
-use engine::modelling::cubic::geometry::SkeletalAnimation;
-use engine::modelling::cubic::lighting::shadow::{ShadowListLights, ShadowPointLight};
-use engine::modelling::cubic::lighting::simple::ListLights;
+use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{Camera, SkinningCubic};
 use engine::modelling::{
     Bloom,
-    Line,
     Quad,
-    SHADOW_SHADER_MAX_LIGHTS,
-    SkeletalVertex,
     SkyBox,
-    TestLineVertex,
 };
-use engine::texture::CubeMap;
 use engine::types::TexDim;
-use engine::{ApiState, ColourRGBA, Event, PollResult, SimpleEntity};
+use engine::{ApiState, ColourRGBA, Event, PollResult};
 
 use crate::camera::GameCamera;
 use crate::morgan::Sun;

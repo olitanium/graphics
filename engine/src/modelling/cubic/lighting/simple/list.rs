@@ -3,7 +3,6 @@ use graphics::Model;
 use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::Texture;
 
-use super::super::shadow::ShadowListLights;
 use super::super::traits::ListLightCompatible;
 use super::{FarLight, PointLight, SpotLight};
 use crate::modelling::CubicVertex;

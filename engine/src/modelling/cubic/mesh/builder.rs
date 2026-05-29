@@ -1,13 +1,11 @@
 use std::rc::Rc;
 
 use graphics::vertex_array::VertexArray;
-use russimp::scene::PostProcess::TransformUVCoords;
 use utils::{builder, new};
 
 use crate::TransformBy;
 use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::cubic::Mesh;
-use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::cubic::material::Material;
 use crate::modelling::cubic::simple_cubic::TransformType;
 use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex};

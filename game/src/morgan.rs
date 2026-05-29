@@ -1,5 +1,5 @@
-use engine::entity::{SkeletonEntity, ToAggregateEntity};
-use engine::modelling::cubic::lighting::shadow::{ShadowListLights, ShadowPointLight};
+use engine::entity::SkeletonEntity;
+use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
 
 pub struct Sun {
     pub inner: SkeletonEntity<()>,

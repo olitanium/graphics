@@ -12,11 +12,8 @@ use super::lighting::shadow::ShadowListLights;
 use crate::modelling::SkeletonCubic;
 use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::geometry::{
-    self,
     CalculatedAnimation,
-    Pose,
     SignaturesDoNotMatchError,
-    SkeletalAnimation,
 };
 use crate::opengl_shaders;
 

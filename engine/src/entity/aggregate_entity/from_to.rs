@@ -1,7 +1,5 @@
 use crate::entity::EntityInner;
-use crate::entity::aggregate_entity::AggregateUnit;
 use crate::modelling::CubicVertex;
-use crate::modelling::cubic::geometry::Pose;
 
 pub trait ToAggregateEntity<T, M: EntityInner>
 where

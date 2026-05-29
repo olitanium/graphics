@@ -36,7 +36,7 @@ impl Bloom {
     pub fn new_from_framebuffer<X: Attachment<Tex = FlatTexture>>(
         buffer: &Framebuffer<3, X>,
     ) -> Self {
-        let [all, light, dark] = buffer.get_all_colour();
+        let [all, light, _dark] = buffer.get_all_colour();
         Self::new(all, light)
     }
 

@@ -1,7 +1,6 @@
 use bezier::BezierCurve;
 use graphics::linear_algebra::Vector;
 use graphics::shader_program::Uniform;
-use graphics::vertex::Vertex;
 
 use crate::modelling::Line;
 
@@ -10,10 +9,10 @@ where
     Vector<DIMS>: Uniform,
 {
     fn from_bezier<const N: usize>(
-        curve: BezierCurve<DIMS, N>,
-        lower_bound: f32,
-        upper_bound: f32,
-        delta: f32,
+        _curve: BezierCurve<DIMS, N>,
+        _lower_bound: f32,
+        _upper_bound: f32,
+        _delta: f32,
     ) -> Self {
         // TODO: create array between lb and ub and get the bezier curve from it.
         todo!();

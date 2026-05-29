@@ -1,7 +1,6 @@
 use array_vec::ArrayVec;
 use graphics::Model;
 use graphics::framebuffer::FramebufferContext;
-use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::linear_algebra::Vector;
 use graphics::shader_program::{
     ActiveShaderProgram,
@@ -18,7 +17,6 @@ use crate::modelling::cubic::lighting::shadow::ShadowBindError;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
 use crate::modelling::cubic::skeleton_cubic;
 use crate::modelling::{SkeletonCubic, VertexHasTangent};
-use crate::opengl_shaders;
 
 #[derive(Debug, Default)]
 pub struct ShadowListLights<'a, const MAX: usize> {

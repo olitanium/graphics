@@ -3,7 +3,6 @@ use std::{convert, iter};
 use graphics::linear_algebra::Vector;
 use utils::partition;
 
-use crate::entity::aggregate_entity::AggregateUnit;
 use crate::entity::{EntityInner, Mass, ToAggregateEntity};
 use crate::modelling::cubic::SkinningCubic;
 use crate::modelling::cubic::geometry::Pose;

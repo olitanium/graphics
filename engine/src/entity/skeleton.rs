@@ -3,7 +3,6 @@ use graphics::vertex::Vertex;
 use utils::partition;
 
 use crate::SimpleEntity;
-use crate::entity::aggregate_entity::AggregateUnit;
 use crate::entity::{Mass, ToAggregateEntity};
 use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose};
 use crate::modelling::{Collision, SimpleVertex, SkeletonBb, SkeletonCubic, Volume};
