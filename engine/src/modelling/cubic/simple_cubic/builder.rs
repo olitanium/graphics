@@ -10,31 +10,25 @@ use crate::modelling::cubic::material::Material;
 use crate::modelling::cubic::mesh::MeshBuilder;
 use crate::modelling::test_models;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Builder {
     mesh_builders: Vec<MeshBuilder>,
-    transform: Option<Pose>,
+    transforms: Vec<TransformType>,
+    // transform: Option<Pose>,
     cull_face: CullFace,
-    scale: f32,
+    // scale: f32,
 }
 
-impl Default for Builder {
-    fn default() -> Self {
-        Self {
-            mesh_builders: Default::default(),
-            cull_face: Default::default(),
-            transform: None,
-            scale: 1.0,
-        }
-    }
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum TransformType {
+    ByPose(Pose),
+    Scale(f32),
 }
 
 impl Builder {
     new!();
 
     builder!(cull_face: CullFace);
-
-    builder!(scale: f32);
 
     pub fn push_mesh(&mut self, mesh: MeshBuilder) {
         self.mesh_builders.push(mesh);
@@ -59,24 +53,31 @@ impl Builder {
         self
     }
 
-    pub const fn apply_transformation(mut self, transform: Pose) -> Self {
-        self.transform = Some(transform);
+    pub fn apply_transformation(mut self, transform: Pose) -> Self {
+        self.transforms.push(TransformType::ByPose(transform));
         self
     }
 
-    pub fn apply_inverse_transform(mut self, transform: Pose) -> Self {
-        self.transform = Some(transform.inverse());
+    pub fn apply_inverse_transform(self, transform: Pose) -> Self {
+        self.apply_transformation(transform.inverse())
+    }
+
+    pub fn scale(mut self, factor: f32) -> Self {
+        self.transforms.push(TransformType::Scale(factor));
         self
     }
 
     pub fn build(self) -> SimpleCubic {
+        let transforms = self.transforms.into();
+
         let meshes = self
             .mesh_builders
             .into_iter()
-            .map(|builder| {
+            .map(move |builder| {
                 builder
-                    .scale(self.scale)
-                    .opt_transform(self.transform)
+                    .transforms(Rc::clone(&transforms))
+                    //.opt_transform(self.transform)
+                    //.scale(self.scale)
                     .build()
             })
             .collect::<Vec<_>>();

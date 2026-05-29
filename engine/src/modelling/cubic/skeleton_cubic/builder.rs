@@ -9,28 +9,16 @@ use crate::modelling::cubic::BoneAndMesh;
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::cubic::material::Material;
 use crate::modelling::cubic::mesh::MeshBuilder;
+use crate::modelling::cubic::simple_cubic::TransformType;
 use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
 use crate::modelling::test_models;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Default)]
 pub struct Builder<'a> {
     mesh_builders: Vec<(&'a SkeletonBoneIndex, MeshBuilder)>,
-    transform: Option<Pose>,
     cull_face: CullFace,
     skeleton: Option<Skeleton>,
-    scale: f32,
-}
-
-impl<'a> Default for Builder<'a> {
-    fn default() -> Self {
-        Self {
-            mesh_builders: Default::default(),
-            cull_face: Default::default(),
-            transform: None,
-            skeleton: Default::default(),
-            scale: 1.0,
-        }
-    }
+    transforms: Vec<TransformType>,
 }
 
 impl<'a> Builder<'a> {
@@ -39,8 +27,6 @@ impl<'a> Builder<'a> {
     builder!(cull_face: CullFace);
 
     builder!(skeleton: Option<Skeleton>);
-
-    builder!(scale: f32);
 
     pub fn push_mesh(&mut self, bone: &'a SkeletonBoneIndex, mesh: MeshBuilder) {
         self.mesh_builders.push((bone, mesh));
@@ -74,26 +60,24 @@ impl<'a> Builder<'a> {
         self
     }
 
-    pub const fn apply_transformation(mut self, transform: Pose) -> Self {
-        self.transform = Some(transform);
+    pub fn apply_transformation(mut self, transform: Pose) -> Self {
+        self.transforms.push(TransformType::ByPose(transform));
         self
     }
 
-    pub fn apply_inverse_transform(mut self, transform: Pose) -> Self {
-        self.transform = Some(transform.inverse());
-        self
+    pub fn apply_inverse_transform(self, transform: Pose) -> Self {
+        self.apply_transformation(transform.inverse())
     }
 
     pub fn build(self) -> SkeletonCubic {
+        let transforms = self.transforms.into();
+
         let meshes = self
             .mesh_builders
             .into_iter()
             .map(|(bone, builder)| BoneAndMesh {
                 bone: bone.clone_inner(),
-                mesh: builder
-                    .scale(self.scale)
-                    .opt_transform(self.transform)
-                    .build(),
+                mesh: builder.transforms(Rc::clone(&transforms)).build(),
             })
             .collect::<Vec<_>>();
 

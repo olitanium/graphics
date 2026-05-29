@@ -8,7 +8,6 @@ pub use program::{
     FaceCullingForcedByProgramError,
     GetUniformLocationError,
     IsActiveShaderProgram,
-    NameNotFoundError,
     SetUniformError,
     ShaderProgram,
     ShaderProgramContext,

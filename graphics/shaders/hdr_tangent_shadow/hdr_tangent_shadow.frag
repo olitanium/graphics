@@ -3,7 +3,8 @@
 in vec2 texture_coord;
 
 layout (location = 0) out vec4 frag_colour;
-layout (location = 1) out vec4 bright_colour;
+layout (location = 1) out vec4 residual_colour;
+layout (location = 2) out vec4 bright_colour;
 
 #define MAX_LIGHTS 2
 
@@ -138,9 +139,11 @@ void main() {
     //}
 
     frag_colour = colour;
-    if (dot(colour.rgb, vec3(0.2126, 0.7152, 0.0722)) > 1.0) {
+    if (dot(colour.rgb, vec3(0.2126, 0.7152, 0.0722)) > 10.0) {
         bright_colour = vec4(colour.rgb, 1.0);
+        residual_colour = vec4(0.0, 0.0, 0.0, 1.0);
     } else {
+        residual_colour = vec4(colour.rgb, 1.0);
         bright_colour = vec4(0.0, 0.0, 0.0, 1.0);
     }
 }

@@ -23,11 +23,11 @@ use crate::opengl_shaders;
 pub const SHADOW_SHADER_MAX_LIGHTS: usize = 2;
 
 #[derive(Debug)]
-pub struct Group<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> {
+pub struct Group<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> {
     look_at: Matrix<4, 4>,
     position: Vector<3>,
 
-    list_light: &'a ShadowListLights<2>,
+    list_light: ShadowListLights<'a, 2>,
 
     output_framebuffer: &'a X,
 
@@ -49,22 +49,14 @@ pub struct Group<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> {
     uniforms: Vec<(String, &'a dyn Uniform)>,
 }
 
-impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
+impl<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> Group<'a, X> {
     pub fn new<O: CameraPose>(
         output_framebuffer: &'a X,
         camera: &Camera<O>,
         hint: &O::Hint,
-        list_light: &'a ShadowListLights<2>,
-        opaque: Vec<(
-            &'a SkeletonCubic,
-            Pose,
-            Option<(&'a SkeletalAnimation, f32)>, // animation
-        )>,
-        transparent: Vec<(
-            &'a SkeletonCubic,
-            Pose,
-            Option<(&'a SkeletalAnimation, f32)>, // animation
-        )>,
+        list_light: ShadowListLights<'a, 2>,
+        opaque: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
+        transparent: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
         uniforms: Vec<(String, &'a dyn Uniform)>,
     ) -> Result<Box<Self>, SignaturesDoNotMatchError> {
         Ok(Box::new(Self {
@@ -73,14 +65,14 @@ impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Group<'a, X> {
 
             list_light,
             output_framebuffer,
-            opaque: geometry::process_vec_noaggregate(opaque)?,
-            transparent: geometry::process_vec_noaggregate(transparent)?,
+            opaque,
+            transparent,
             uniforms,
         }))
     }
 }
 
-impl<'a, X: FramebufferWithDepth<2, Tex = FlatTexture>> Draw for Group<'a, X> {
+impl<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> Draw for Group<'a, X> {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,

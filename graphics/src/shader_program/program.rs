@@ -25,7 +25,7 @@ mod builder;
 pub use builder::Builder;
 use builder::{MissingFragmentShader, MissingVertexShader};
 mod uniform;
-pub use uniform::{NameNotFoundError, Uniform};
+pub use uniform::Uniform;
 
 mod cull_face;
 use ::utils::error_boilerplate;
@@ -36,7 +36,7 @@ pub struct ShaderProgram<M: Model, O, const OUT: usize, T: Texture> {
     concat_all_text: String,
     uniform_locations: RefCell<HashMap<CString, i32>>,
     force_cull_face: Option<CullFace>,
-    _phantom_model: PhantomData<fn(M, O, T)>,
+    _phantom_model: PhantomData<fn(M, T) -> O>,
 }
 
 impl<M: Model, O, const OUT: usize, T: Texture> Debug for ShaderProgram<M, O, OUT, T> {
@@ -65,12 +65,7 @@ impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
         &'a self,
         marker: &'b mut ShaderProgramContext,
     ) -> ActiveShaderProgram<'a, 'b, 'c, M, O, T, OUT> {
-        gl_call! {
-            gl::UseProgram(self.id.as_primitive());
-        }
-
-        marker.force_cull_face(self.force_cull_face);
-
+        marker.use_program(self);
         ActiveShaderProgram::new(self, marker)
     }
 }

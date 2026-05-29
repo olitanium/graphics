@@ -4,10 +4,12 @@ use utils::error_boilerplate;
 
 use super::{CullFace, ShaderProgram};
 use crate::texture::Texture;
+use crate::types::ShaderProgramId;
 use crate::{Model, gl_call};
 
 #[derive(Debug)]
 pub struct ShaderProgramContext {
+    current_program: Option<ShaderProgramId::Primitive>,
     current_cull_face: CullFace,
     current_drawing_skybox: bool,
 
@@ -23,6 +25,7 @@ impl ShaderProgramContext {
         } else {
             *is_init = true;
             Some(ShaderProgramContext {
+                current_program: None,
                 forced_cull_face: None,
                 current_cull_face: CullFace::DoNotCull,
                 current_drawing_skybox: false,
@@ -34,8 +37,18 @@ impl ShaderProgramContext {
         &mut self,
         program: &ShaderProgram<M, O, OUT, T>,
     ) {
-        gl_call! {
-            gl::UseProgram(program.id().as_primitive());
+        if let Some(curr_program_id) = self.current_program
+            && curr_program_id == program.id().as_primitive()
+        {
+            // intentionally blank, do nothing if this is already the same
+            // program
+        } else {
+            gl_call! {
+                gl::UseProgram(program.id().as_primitive());
+            }
+
+            self.force_cull_face(program.force_cull_face);
+            self.current_program = Some(program.id().as_primitive())
         }
     }
 
@@ -71,8 +84,9 @@ impl ShaderProgramContext {
 }
 
 #[derive(Debug)]
-pub struct FaceCullingForcedByProgramError {
-    pub forced: CullFace,
+#[non_exhaustive]
+pub enum FaceCullingForcedByProgramError {
+    Forced(CullFace),
 }
 error_boilerplate!(FaceCullingForcedByProgramError);
 
@@ -87,7 +101,7 @@ impl ShaderProgramContext {
 
                 Ok(())
             }
-            Some(forced) => Err(FaceCullingForcedByProgramError { forced }),
+            Some(forced) => Err(FaceCullingForcedByProgramError::Forced(forced)),
         }
     }
 }

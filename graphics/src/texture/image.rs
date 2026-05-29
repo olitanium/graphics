@@ -104,8 +104,7 @@ impl Image {
         };
 
         let slice = match &self.data {
-            ImageType::Linear(x) => x.as_slice(),
-            ImageType::Srgba(x) => x.as_slice(),
+            ImageType::Linear(x) | ImageType::Srgba(x) => x.as_slice(),
         };
 
         TexInternalFormat {

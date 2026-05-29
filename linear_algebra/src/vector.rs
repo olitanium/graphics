@@ -32,11 +32,25 @@ impl<const N: usize> PartialEq for Vector<N> {
 
 impl<const N: usize> Vector<N> {
     pub const X: Self = Self::x();
+    pub const Y: Self = Self::y();
+    pub const Z: Self = Self::z();
     pub const ZERO: Self = Self::new([0.0; N]);
 
     const fn x() -> Self {
         let mut vec = Self::ZERO;
         vec.inner_mut()[0] = 1.0;
+        vec
+    }
+
+    const fn y() -> Self {
+        let mut vec = Self::ZERO;
+        vec.inner_mut()[1] = 1.0;
+        vec
+    }
+
+    const fn z() -> Self {
+        let mut vec = Self::ZERO;
+        vec.inner_mut()[2] = 1.0;
         vec
     }
 

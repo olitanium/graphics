@@ -1,70 +1,22 @@
-use engine::linear_algebra::Vector;
-use engine::modelling::Collision;
-use engine::modelling::cubic::geometry::AggregateCalcAnim;
+use std::time::Duration;
 
-use crate::grappling_hook::UpdateInput;
-use crate::morgan::Morgan;
+use engine::linear_algebra::{UnitVector, Vector};
+use engine::modelling::Collision;
+use engine::modelling::cubic::geometry::{AggregateCalcAnim, Orientation, Pose};
+
+use crate::morgan::Sun;
 use crate::state::State;
 
 impl State {
-    pub fn physics(&mut self, frame_time: f32) -> AggregateCalcAnim {
-        let time = self.time;
+    pub fn physics(&mut self, _frame_time: Duration, elapsed: Duration) {
+        let float_time = elapsed.as_secs_f32();
+        let new_sun_pos = Vector::new([-float_time.cos().sin(), 1.0, -float_time.cos().cos()]);
 
-        let light_pos = Vector::new([
-            5.0 * (time / 10.0).sin(),
-            5.0 * (time / 10.0).sin(),
-            5.0 * (time / 10.0).cos(),
-        ]);
-
-        if let Some(light) = self.light_group.point.get_mut(0) {
-            light.light.position = light_pos;
-        }
-
-        if let Some(light) = self.light_group.spot.get_mut(0) {
-            light.light.direction = self.camera.direction(&());
-            light.light.position = self.camera.position(&());
-        }
-
-        self.morgan = None;
-
-        let mut update_input: UpdateInput<'_, Morgan, Morgan, Morgan> = if self.toggle_b {
-            let morgan = self.morgan.take();
-
-            let opt_morgan = morgan.map(|morg| {
-                let pose = morg.inner.pose;
-                (morg, pose)
-            });
-            UpdateInput {
-                grapple_points: vec![],
-                carryable_objects: vec![opt_morgan],
-                other_entities: vec![],
-            }
-        } else {
-            let grapple_points = if let Some(morg) = self.morgan.as_ref() {
-                let pose = morg.inner.pose;
-                vec![(morg, pose)]
-            } else {
-                vec![]
-            };
-
-            UpdateInput {
-                grapple_points,
-                carryable_objects: vec![],
-                other_entities: vec![],
-            }
-        };
-
-        let grappling_hook_calc_anim = self.grappling_hook.update(frame_time, &mut update_input);
-
-        if self.toggle_b && self.morgan.is_none() {
-            self.morgan = update_input
-                .carryable_objects
-                .pop()
-                .flatten()
-                .map(|(morgan, _)| morgan)
-                .take();
-        }
-
-        grappling_hook_calc_anim
+        self.sun.inner.pose = Pose::new_from_orientation_translation(
+            Orientation::new_from_to(new_sun_pos, self.player.pose.translation(), UnitVector::Y),
+            new_sun_pos,
+        );
+        self.sun.light.set_position(new_sun_pos);
+        self.sun_duplicate_light.set_position(new_sun_pos);
     }
 }

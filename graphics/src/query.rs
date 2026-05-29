@@ -2,13 +2,13 @@ use crate::framebuffer::FramebufferContext;
 use crate::types::Query;
 use crate::{Draw, DrawOut, ShaderProgramContext, gl_call};
 
-pub struct HasDrawnQuery<D: Draw> {
+pub struct HasDrawnQuery<D: Draw + ?Sized> {
     name: usize,
     query: Query,
     target: Box<D>,
 }
 
-impl<D: Draw> HasDrawnQuery<D> {
+impl<D: Draw + ?Sized> HasDrawnQuery<D> {
     pub fn new(name: usize, target: Box<D>) -> Box<Self> {
         let query = {
             let mut value = 0;
@@ -23,7 +23,7 @@ impl<D: Draw> HasDrawnQuery<D> {
     }
 }
 
-impl<D: Draw> Draw for HasDrawnQuery<D> {
+impl<D: Draw + ?Sized> Draw for HasDrawnQuery<D> {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,

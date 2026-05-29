@@ -21,6 +21,7 @@ pub use group::Group;
 
 mod builder;
 pub use builder::Builder;
+pub(crate) use builder::TransformType;
 
 #[derive(Clone, Debug, Default)]
 pub struct SimpleCubic {

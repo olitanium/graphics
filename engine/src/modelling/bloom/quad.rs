@@ -4,6 +4,7 @@ use std::rc::Rc;
 pub use graphics::framebuffer::Builder;
 use graphics::framebuffer::Framebuffer;
 use graphics::framebuffer::attachments::WithoutExtra;
+use graphics::framebuffer::traits::Attachment;
 use graphics::texture::{FlatTexture, Texture};
 use graphics::types::TexDim;
 
@@ -30,6 +31,13 @@ impl Bloom {
             to_blur,
             framebuffer_x,
         }
+    }
+
+    pub fn new_from_framebuffer<X: Attachment<Tex = FlatTexture>>(
+        buffer: &Framebuffer<3, X>,
+    ) -> Self {
+        let [all, light, dark] = buffer.get_all_colour();
+        Self::new(all, light)
     }
 
     pub fn resize(&mut self, size: (TexDim, TexDim)) {

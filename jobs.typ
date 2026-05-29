@@ -12,6 +12,7 @@
 - Light uniform location cacheing without strings
 - BoneAnimation don't store poses, store ScLERPS
 - Camera ManualPose use Pose
+- Camera ManualPose split into two structs
 - ~ShaderProgram generics Vertex, Model and `Extra`~
   - Shadow Lights can then be generic over model type
 - Import

@@ -10,15 +10,15 @@ use crate::modelling::CubicVertex;
 use crate::modelling::cubic::lighting::simple::SimpleBindError;
 
 #[derive(Clone, Debug, Default)]
-pub struct ListLights<const MAX: usize> {
-    pub point: ArrayVec<PointLight, MAX>,
-    pub far: ArrayVec<FarLight, MAX>,
-    pub spot: ArrayVec<SpotLight, MAX>,
+pub struct ListLights<'a, const MAX: usize> {
+    pub point: ArrayVec<&'a PointLight, MAX>,
+    pub far: ArrayVec<&'a FarLight, MAX>,
+    pub spot: ArrayVec<&'a SpotLight, MAX>,
 }
 
-impl<const MAX: usize> ListLights<MAX> {
-    pub(crate) fn bind<'a, 'b, const N: usize, L: ListLightCompatible<MAX>, T: Texture, M: Model>(
-        &'b self,
+impl<'b, const MAX: usize> ListLights<'b, MAX> {
+    pub(crate) fn bind<'a, const N: usize, L: ListLightCompatible<MAX>, T: Texture, M: Model>(
+        &self,
         shader_program: &mut ActiveShaderProgram<'a, '_, '_, M, L, T, N>,
     ) -> Result<(), SimpleBindError<'a>>
     where
@@ -40,11 +40,5 @@ impl<const MAX: usize> ListLights<MAX> {
         }
 
         Ok(())
-    }
-}
-
-impl<const MAX: usize> From<ShadowListLights<MAX>> for ListLights<MAX> {
-    fn from(_: ShadowListLights<MAX>) -> Self {
-        unimplemented!()
     }
 }

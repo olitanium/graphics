@@ -1,19 +1,23 @@
-use graphics::Model;
+use std::vec;
+
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::attachments::WithDepth;
-use graphics::framebuffer::{Builder, Framebuffer};
+use graphics::framebuffer::traits::FramebufferWithoutExtra;
+use graphics::framebuffer::{Builder, Framebuffer, FramebufferContext};
 use graphics::linear_algebra::{Matrix, UnitVector, Vector};
-use graphics::shader_program::ActiveShaderProgram;
+use graphics::shader_program::{ActiveShaderProgram, Uniform};
 use graphics::texture::{FlatTexture, Magnification, Texture, WrapType};
 use graphics::types::TexDim;
+use graphics::{Model, ShaderProgramContext};
 
-use crate::modelling::VertexHasTangent;
 use crate::modelling::cubic::camera;
 use crate::modelling::cubic::camera::Camera;
-use crate::modelling::cubic::geometry::{Orientation, Pose};
-use crate::modelling::cubic::lighting::shadow::ShadowBindError;
+use crate::modelling::cubic::geometry::{CalculatedAnimation, Orientation, Pose};
+use crate::modelling::cubic::lighting::shadow::{GenDepthError, ShadowBindError};
 use crate::modelling::cubic::lighting::simple::FarLight;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
+use crate::modelling::{SkeletonCubic, VertexHasTangent};
+use crate::opengl_shaders;
 
 #[derive(Debug)]
 pub struct ShadowFarLight {
@@ -40,15 +44,17 @@ impl ShadowFarLight {
     }
 
     pub(crate) fn camera(&self, target: Vector<3>) -> Camera<Pose> {
+        const NEAR_PLANE: f32 = 0.1;
         const FAR_PLANE: f32 = 20.0;
+        const LIGHT_PLANE_WIDTH: f32 = 10.0;
 
         let vector_from_target = self.light.direction.v().scale(FAR_PLANE / 2.0);
 
-        let global_up = if vector_from_target[0].abs() < 0.01 && vector_from_target[2].abs() < 0.01
-        {
-            UnitVector::new_unchecked([1.0, 0.0, 0.0])
+        let [x, _, z] = vector_from_target.into_inner();
+        let global_up = if x.abs() < 0.01 && z.abs() < 0.01 {
+            UnitVector::X
         } else {
-            UnitVector::new_unchecked([0.0, 1.0, 0.0])
+            UnitVector::Y
         };
 
         camera::builder()
@@ -56,7 +62,7 @@ impl ShadowFarLight {
                 Orientation::new_forward_up(self.light.direction, global_up),
                 target - vector_from_target,
             ))
-            .orthographic(10.0, 10.0, 0.1, FAR_PLANE)
+            .orthographic(LIGHT_PLANE_WIDTH, LIGHT_PLANE_WIDTH, NEAR_PLANE, FAR_PLANE)
             .build()
     }
 
@@ -116,5 +122,39 @@ impl ShadowFarLight {
 
     pub(crate) fn projtimesview(&self, target: Vector<3>) -> Matrix<4, 4> {
         self.camera(target).look_at(&())
+    }
+
+    pub fn gen_depth<'a>(
+        &self,
+        sp_context: &mut ShaderProgramContext,
+        fb_context: &mut FramebufferContext,
+        opaque_models: &[(&'a SkeletonCubic, CalculatedAnimation)],
+        uniforms: Vec<(String, &dyn Uniform)>,
+        target: Vector<3>,
+    ) -> Result<(), GenDepthError<'a>> {
+        let mut active_depth_only_shader =
+            opengl_shaders::farspot_light_depth().use_program(sp_context);
+        active_depth_only_shader.set_uniform_dyn(uniforms.clone())?;
+
+        // Draw the scene from the lights perspective, saving to the light's internal
+        // framebuffer
+        active_depth_only_shader
+            .set_uniform("projtimesview".to_string(), &self.projtimesview(target))?;
+
+        let mut active_light_framebuffer = self.framebuffer.bind(fb_context);
+
+        for (model, calculated_animation) in opaque_models {
+            model
+                .draw(
+                    &mut active_depth_only_shader,
+                    &mut active_light_framebuffer,
+                    calculated_animation,
+                )
+                .map_err(|error| GenDepthError::Model { error, model })?;
+        }
+
+        drop(active_depth_only_shader);
+
+        Ok(())
     }
 }

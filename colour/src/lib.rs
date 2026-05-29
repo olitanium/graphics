@@ -46,6 +46,17 @@ impl ColourRGBA {
     pub const fn as_ref(&self) -> &[f32; 4] {
         &self.0
     }
+
+    pub fn map_colour<F: FnMut(f32) -> f32>(self, op: F) -> Self {
+        let [r, g, b, a] = self.as_array();
+        let [nr, ng, nb] = [r, g, b].map(op);
+        Self::new([nr, ng, nb, a])
+    }
+
+    pub fn to_rgb(self) -> ColourRGB {
+        let [r, g, b, _] = self.as_array();
+        ColourRGB::new([r, g, b])
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

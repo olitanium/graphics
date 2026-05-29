@@ -1,10 +1,11 @@
 use std::num::NonZero;
 use std::rc::Rc;
+use std::time::Duration;
 
 use engine::array_vec::{ArrayVec, arrvec};
-use engine::entity::{AggregateEntity, AggregateModelIndex, Mass};
-use engine::framebuffer::Builder;
+use engine::entity::{AggregateEntity, AggregateModelIndex, Mass, SkeletonEntity};
 use engine::framebuffer::traits::FramebufferInternals;
+use engine::framebuffer::{self, Builder};
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::camera::ManualPose;
 use engine::modelling::cubic::geometry::{Orientation, Pose};
@@ -20,20 +21,15 @@ use engine::modelling::{Bloom, Line, Quad, SkeletonCubic, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
-use engine::{ColourRGB, SimpleEntity};
+use engine::{ColourRGB, ColourRGBA, SimpleEntity, Transform};
 
-use crate::grappling_hook::GrapplingHook;
-use crate::morgan::Morgan;
+use crate::camera::GameCamera;
+use crate::morgan::Sun;
 use crate::state::{State, StateError};
 
 impl State {
-    pub fn new_internal(size: (TexDim, TexDim)) -> Result<Self, StateError> {
-        let speed = [1.0, 1.0, 1.0];
+    pub fn new_internal(screen_dims: (TexDim, TexDim)) -> Result<Self, StateError> {
         let exposure = 1.0;
-
-        let screen_dims = size;
-
-        let sensitivity = 0.001;
 
         let hdr_fb = Builder::new_flat().depth().size(screen_dims).build();
 
@@ -48,52 +44,47 @@ impl State {
                     "assets/skybox/back.jpg",
                 )
                 .unwrap()
+                //.grayscale(0.0)
                 .build(),
         );
 
-        // let cube_positions = [
-        // [0.0, 0.0, 0.0],
-        // [2.0, 0.0, 0.0],
-        // [-2.0, 0.0, 0.0],
-        // [0.0, 2.0, 0.0],
-        // [0.0, -2.0, 0.0],
-        // [0.0, 0.0, 2.0],
-        // [0.0, 0.0, -2.0],
-        // ];
-        //
-        // let containers = cube_positions
-        // .into_iter()
-        // .map(|arr| {
-        // let material = Rc::new(
-        // Material::builder()
-        // .diffuse(FlatTexture::monochrome(ColourRGBA::new_from_arr_alpha(
-        // arr, 1.0,
-        // )))
-        // .build(),
-        // );
-        //
-        // SimpleCubic::cube(0.1, material)
-        // .cull_face(CullFace::BackFace)
-        // .build()
-        // })
-        // .collect();
-
-        let morgan = make_model("morgan").unwrap();
-        let mut morgan = SimpleEntity::from_simple_cubic(morgan, 20, Mass(1.0), |_| ());
-        morgan.pose = Pose::new_from_translation(Vector::new([0.0, 0.0, 6.0]));
-
-        let morgan = Morgan { inner: morgan };
-
+        const ORIGIN_CUBE_SIDE_LENGTH: f32 = 1.0;
         let origin_cube = SimpleEntity::from_simple_cubic(
-            SimpleCubic::cube(1.0, Rc::new(Material::black())).build(),
-            20,
-            Mass(3.0),
+            SimpleCubic::cube(ORIGIN_CUBE_SIDE_LENGTH, Rc::new(Material::white()))
+                .apply_transformation(Pose::new_from_orientation_translation(
+                    Orientation::new_forward_up((Vector::X + Vector::Z).normalize(), UnitVector::Y),
+                    Vector::new([0.0, -ORIGIN_CUBE_SIDE_LENGTH * 0.5, 0.0]),
+                ))
+                .build(),
+            0,
+            Mass(f32::INFINITY),
             |_| (),
         );
 
-        let bounding_box_level = 0;
+        const SMALL_CUBE_SIDE_LENGTH: f32 = 0.3;
+        let small_cube = SimpleEntity::from_simple_cubic(
+            SimpleCubic::cube(SMALL_CUBE_SIDE_LENGTH, Rc::new(Material::white()))
+                .apply_transformation(Pose::new_from_translation(Vector::new([
+                    0.0,
+                    SMALL_CUBE_SIDE_LENGTH * 0.5,
+                    0.0,
+                ])))
+                .build(),
+            0,
+            Mass(f32::INFINITY),
+            |_| (),
+        );
 
-        const START_LOC: Vector<3> = Vector::new([-3.0, 0.0, 0.0]);
+        const PLAYER_SIZE: f32 = 0.1;
+        let mut player = SimpleEntity::from_simple_cubic(
+            SimpleCubic::cube(PLAYER_SIZE, Rc::new(Material::white())).build(),
+            0,
+            Mass(f32::INFINITY),
+            |_| (),
+        );
+        player.pose = Pose::new_from_translation(Vector::new([0.25, PLAYER_SIZE * 0.5, 0.25]));
+
+        const START_LOC: Vector<3> = Vector::new([0.0, 0.5, 1.0]);
 
         let camera = camera::builder()
             .pose(ManualPose::new_fixed_up_from_to(
@@ -103,153 +94,76 @@ impl State {
             ))
             .perspective(90.0, hdr_fb.aspect_ratio(), 0.01, 100.0)
             .build();
+        let sensitivity = 0.01;
 
-        let light_colour = ColourRGB::new([1.0, 1.0, 1.0].map(|x| x * 1.0));
-        let light_attenuation_array = [1.0, 0.0, 0.0];
-        let point_light = ShadowPointLight::new(
-            PointLight {
-                position: Vector::default(),
-                attenuation: light_attenuation_array,
-                ambient: light_colour.map(|x| x * 0.1),
-                diffuse: light_colour.map(|x| x * 0.5),
-                specular: light_colour,
-            },
-            TexDim::from(NonZero::new(1000).unwrap()),
-        );
+        let game_camera = GameCamera {
+            move_lock: false,
+            camera,
+            sensitivity,
+            speed: 0.3,
+        };
 
-        let ns_point_light = PointLight {
+        let mut morgan = make_model("morgan").unwrap();
+        let morgan_colour = ColourRGBA::new([1.0, 1.0, 1.0, 1.0]);
+        morgan.temp_set_all_material(Rc::new(
+            Material::builder()
+                .emission(FlatTexture::monochrome(morgan_colour))
+                .build(),
+        ));
+        let sun = SimpleEntity::from_simple_cubic(morgan, 20, Mass(1.0), |_| ());
+
+        let light_attenuation_array = [0.0, 0.0, 1.0];
+
+        let inner_point_light = PointLight {
             position: Vector::default(),
             attenuation: light_attenuation_array,
-            ambient: light_colour.map(|x| x * 0.1),
-            diffuse: light_colour.map(|x| x * 0.5),
-            specular: light_colour,
+            ambient: morgan_colour.to_rgb().map(|x| x * 0.1),
+            diffuse: morgan_colour.to_rgb().map(|x| x * 0.5),
+            specular: morgan_colour.to_rgb(),
         };
 
-        // let sun_colour = ColourRGB::new([1.0, 1.0, 1.0]);
-        // let far_light = ShadowFarLight::new(
-        // FarLight {
-        // direction: Vector::new([0.0, -0.99, 0.001]).normalize(),
-        // ambient: sun_colour.map(|x| x * 0.1),
-        // diffuse: sun_colour.map(|x| x * 0.5),
-        // specular: sun_colour.map(|x| x * 1.0),
-        // },
-        // (1000.into(), 1000.into()),
-        // );
-        //
-        // let sun2_colour = ColourRGB::new([1.0, 1.0, 1.0]);
-        // let far_light2 = ShadowFarLight::new(
-        // FarLight {
-        // direction: Vector::new([1.0, 0.0, 0.0]).normalize(),
-        // ambient: sun2_colour.map(|x| x * 0.0),
-        // diffuse: sun2_colour.map(|x| x * 0.5),
-        // specular: sun2_colour.map(|x| x * 1.0),
-        // },
-        // (1000.into(), 1000.into()),
-        // );
-        //
-        let spotlight_colour = ColourRGB::new([1.0; 3]);
-        let spotlight = ShadowSpotLight::new(
-            SpotLight {
-                position: camera.centre(&()),
-                direction: camera.direction(&()),
-                attenuation: [1.0, 0.09, 0.032],
-                ambient: spotlight_colour.map(|x| x * 0.0),
-                diffuse: spotlight_colour,
-                specular: spotlight_colour,
-                cos_cut_off: 20f32.to_radians().cos(),
-                cos_outer_cut_off: 25f32.to_radians().cos(),
-            },
-            const { TexDim::from(NonZero::new(1000).unwrap()) },
+        let point_light = ShadowPointLight::new(
+            inner_point_light.clone(),
+            TexDim::from_non_zero(const { NonZero::new(1000).unwrap() }),
         );
 
-        let [dark_tex, light_tex] = hdr_fb.get_all_colour();
-        let bloom = Bloom::new(dark_tex, light_tex);
+        let sun_duplicate_light = ShadowPointLight::new(
+            inner_point_light,
+            TexDim::from_non_zero(const { NonZero::new(1000).unwrap() }),
+        );
 
-        let quad_to_draw = Quad::screen([hdr_fb.get_colour(0).unwrap()]); //.downcast();
-
-        let light_material = {
-            let light_emission = FlatTexture::monochrome(light_colour.to_rgba_with(1.0));
-
-            Material::builder().emission(light_emission).build()
+        let sun = Sun {
+            inner: sun.into(),
+            light: point_light,
         };
 
-        let _light = SkeletonCubic::cube(1.0, Rc::new(light_material))
-            .cull_face(CullFace::BackFace)
-            .scale(0.2)
-            .build();
+        let bloom = Bloom::new_from_framebuffer(&hdr_fb);
 
-        let line = Line::new(vec![]);
-
-        let (simpletail, end_attachment_point, skeletal_animation) = SkinningCubic::debug_tail();
-
-        // let simpletail =
-        // SkinningEntity::from_skeletoncubic(simpletail, 2, Mass(1.0), |_|
-        // ()).unwrap();
-
-        let mut aggregate_tail = AggregateEntity::new(simpletail.clone(), 1, |_| ());
-        let offset = Pose::new_from_orientation_translation(
-            Orientation::new_forward_up(UnitVector::Y, -UnitVector::Z),
-            Vector::new([0.0, 0.5, 0.5]),
-        );
-        let _ = aggregate_tail
-            .push_model(
-                simpletail.clone(),
-                offset,
-                &end_attachment_point,
-                &AggregateModelIndex::ROOT_MODEL_INDEX,
-                1,
-                |_| (),
-            )
-            .unwrap();
-
-        let grappling_hook = GrapplingHook::new(3);
+        let [original_colour, ..] = hdr_fb.get_all_colour();
+        let quad_to_draw = Quad::screen([original_colour]);
 
         Ok(Self {
-            toggle_b: false,
-            reset_time: f32::NEG_INFINITY,
-            time: 0.0,
-            game_start: None,
-            line,
-            angle: 0.0,
-            camera,
+            toggle_b: true,
+
+            game_camera,
             exposure,
-            sensitivity,
-            speed,
 
             skybox,
 
-            morgan: Some(morgan),
-            origin_cube,
-            bounding_box_level,
-            toggle_m: false,
+            sun,
+            sun_duplicate_light,
+            origin_cube: origin_cube.into(),
+            small_cube: small_cube.into(),
+            player: player.into(),
 
-            // grapple_chain_anim,
-            // grappling_hook,
-            // join_pos,
-            // hook_pos,
-            grappling_hook,
-
-            aggregate_tail,
-            simpletail,
-            skeletal_animation,
+            toggle_m: true,
 
             hdr_fb,
-            toggle_g: false,
-            toggle_h: false,
-            bloom,
+            toggle_g: true,
+            toggle_h: true,
+            bloom_from_hdrfb: bloom,
 
-            light_group: ShadowListLights {
-                point: arrvec![point_light],
-                spot: arrvec![spotlight],
-                ..ShadowListLights::default()
-            },
-
-            ns_light_group: ListLights {
-                point: arrvec![ns_point_light],
-                ..ListLights::default()
-            },
-
-            quad_to_draw,
+            quad_from_hdrfb: quad_to_draw,
         })
     }
 }
@@ -264,10 +178,8 @@ pub fn make_model(which_model: &str) -> Result<SimpleCubic, StateError> {
         )
         .unwrap()
         .cull_face(CullFace::BackFace)
-        .scale(0.01)
-        .apply_transformation(Pose::new_from_translation(Vector::new([
-            0.0, -1.2773916, 0.42744067,
-        ])))
+        .apply_transformation(Pose::new_from_translation(Vector::new([0.0, -133.0, 43.0])))
+        .scale(0.006)
         .build(),
         "backpack" => SimpleCubic::import(
             "assets/backpack/backpack.obj",

@@ -1,17 +1,19 @@
-use graphics::Model;
 use graphics::framebuffer::attachments::CubeWithDepth;
-use graphics::framebuffer::{Builder, Framebuffer};
+use graphics::framebuffer::traits::FramebufferWithoutExtra;
+use graphics::framebuffer::{Builder, Framebuffer, FramebufferContext};
 use graphics::linear_algebra::{Matrix, UnitVector, Vector};
-use graphics::shader_program::ActiveShaderProgram;
+use graphics::shader_program::{ActiveShaderProgram, Uniform};
 use graphics::texture::{CubeMap, Texture};
 use graphics::types::TexDim;
+use graphics::{Draw, DrawOut, Model, ShaderProgramContext};
 
-use crate::modelling::VertexHasTangent;
 use crate::modelling::cubic::camera;
-use crate::modelling::cubic::geometry::{Orientation, Pose};
+use crate::modelling::cubic::geometry::{CalculatedAnimation, Orientation, Pose};
 use crate::modelling::cubic::lighting::ShadowLightCompatible;
-use crate::modelling::cubic::lighting::shadow::ShadowBindError;
+use crate::modelling::cubic::lighting::shadow::{GenDepthError, ShadowBindError, ShadowSpotLight};
 use crate::modelling::cubic::lighting::simple::PointLight;
+use crate::modelling::{SkeletonCubic, VertexHasTangent};
+use crate::opengl_shaders;
 
 #[derive(Debug)]
 pub struct ShadowPointLight {
@@ -127,5 +129,74 @@ impl ShadowPointLight {
             format!("{name}[{index}].depth"),
             CubeMap::dyn_blank(),
         )));
+    }
+
+    pub fn gen_depth<'a>(
+        &self,
+        sp_context: &mut ShaderProgramContext,
+        fb_context: &mut FramebufferContext,
+        opaque_models: &[(&'a SkeletonCubic, CalculatedAnimation)],
+        uniforms: Vec<(String, &dyn Uniform)>,
+    ) -> Result<(), GenDepthError<'a>> {
+        let mut active_depth_only_shader_point =
+            opengl_shaders::point_depth().use_program(sp_context);
+        active_depth_only_shader_point.set_uniform_dyn(uniforms)?;
+
+        for (index, matrix) in self.get_look_at_matrices().into_iter().enumerate() {
+            active_depth_only_shader_point.set_uniform(format!("matrix[{index}]"), &matrix)?;
+        }
+        active_depth_only_shader_point.set_uniform("light_position", &self.light.position)?;
+        active_depth_only_shader_point.set_uniform("far_plane", &self.far_plane())?;
+
+        let mut active_light_framebuffer = self.framebuffer.bind(fb_context);
+
+        for (model, calculated_animation) in opaque_models {
+            model
+                .draw(
+                    &mut active_depth_only_shader_point,
+                    &mut active_light_framebuffer,
+                    calculated_animation,
+                )
+                .map_err(|error| GenDepthError::Model { error, model })?;
+        }
+
+        drop(active_depth_only_shader_point);
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct PointLightIlluminatesGroup<'a> {
+    light: &'a ShadowPointLight,
+    opaque: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
+}
+
+impl<'a> PointLightIlluminatesGroup<'a> {
+    pub fn new(
+        light: &'a ShadowPointLight,
+        opaque: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
+    ) -> Self {
+        Self { light, opaque }
+    }
+
+    pub fn new_dyn(
+        light: &'a ShadowPointLight,
+        opaque: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
+    ) -> Box<dyn Draw + 'a> {
+        Box::new(Self::new(light, opaque))
+    }
+}
+
+impl<'a> Draw for PointLightIlluminatesGroup<'a> {
+    fn draw(
+        self: Box<Self>,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
+    ) -> DrawOut {
+        self.light
+            .gen_depth(sp_context, fb_context, &self.opaque, vec![])
+            .unwrap();
+
+        DrawOut::OK
     }
 }

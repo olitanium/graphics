@@ -97,9 +97,9 @@ where
 pub trait FramebufferWithoutExtra<const OUT: usize>: FramebufferInternals {
     fn bind<'a, 'b>(
         &'a self,
-        register: &'b mut FramebufferContext,
+        fb_context: &'b mut FramebufferContext,
     ) -> ActiveFramebuffer<'a, 'b, OUT, Self> {
-        register.register(self)
+        fb_context.register(self)
     }
 }
 

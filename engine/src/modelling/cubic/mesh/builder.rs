@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
 use graphics::vertex_array::VertexArray;
+use russimp::scene::PostProcess::TransformUVCoords;
 use utils::{builder, new};
 
 use crate::TransformBy;
@@ -8,24 +9,22 @@ use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::cubic::Mesh;
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::cubic::material::Material;
+use crate::modelling::cubic::simple_cubic::TransformType;
 use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex};
 
 #[derive(Debug, Clone, Default)]
 pub struct Builder {
     pub triangles: Vec<[IncompleteVertex<3>; 3]>,
     pub material: Rc<Material>,
-    pub scale: Option<f32>,
-    transform: Option<Pose>,
+    transforms: Rc<[TransformType]>,
 }
 
 impl Builder {
     new!();
 
-    builder!(scale: Option<f32>);
-
     builder!(material: Rc<Material>);
 
-    builder!(transform, opt_transform: Option<Pose>);
+    builder!(transforms: Rc<[TransformType]>);
 
     pub fn push_triangle(&mut self, triangle: [IncompleteVertex<3>; 3]) {
         self.triangles.push(triangle);
@@ -64,16 +63,20 @@ impl Builder {
     where
         [(); V::ELEMENT_COUNT]:,
     {
-        if let Some(scale) = self.scale {
-            for triangle in &mut self.triangles {
-                for vertex in triangle {
-                    vertex.position *= scale;
+        for transform in self.transforms.iter() {
+            match transform {
+                TransformType::ByPose(pose) => {
+                    for triangle in &mut self.triangles {
+                        *triangle = triangle.transform_by(pose);
+                    }
                 }
-            }
-        }
-        if let Some(transform) = self.transform {
-            for triangle in &mut self.triangles {
-                *triangle = triangle.transform_by(&transform);
+                TransformType::Scale(factor) => {
+                    for triangle in &mut self.triangles {
+                        for vertex in triangle {
+                            vertex.position *= *factor;
+                        }
+                    }
+                }
             }
         }
 

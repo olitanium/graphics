@@ -24,13 +24,13 @@ pub struct Group<
 > where
     M::Vertex: CubicVertex,
 {
-    shader: &'a ShaderProgram<M, ListLights<MAX>, OUT, D::Tex>,
+    shader: &'a ShaderProgram<M, ListLights<'a, MAX>, OUT, D::Tex>,
     framebuffer: &'a D,
 
     camera_pos: Vector<3>,
     camera_look_at: Matrix<4, 4>,
 
-    lights: &'a ListLights<MAX>,
+    lights: ListLights<'a, MAX>,
     opaque: Vec<(&'a AggregateEntity<T, M>, AggregateCalcAnim)>,
     uniforms: Vec<(String, &'a dyn Uniform)>,
 }
@@ -63,12 +63,12 @@ where
     M::Vertex: CubicVertex,
 {
     pub fn new<O: CameraPose>(
-        shader: &'a ShaderProgram<M, ListLights<MAX>, OUT, FlatTexture>,
+        shader: &'a ShaderProgram<M, ListLights<'a, MAX>, OUT, FlatTexture>,
         framebuffer: &'a D,
 
         camera: &Camera<O>,
         hint: &O::Hint,
-        lights: &'a ListLights<MAX>,
+        lights: ListLights<'a, MAX>,
         opaque: Vec<(
             &'a AggregateEntity<T, M>,
             // HashMap<AggregateModelIndex, (&'a SkeletalAnimation, f32)>, // time

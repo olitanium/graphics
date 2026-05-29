@@ -13,13 +13,13 @@ use crate::modelling::cubic::lighting::simple::ListLights;
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
-    shader: &'a ShaderProgram<SkeletonCubic, ListLights<MAX>, OUT, D::Tex>,
+    shader: &'a ShaderProgram<SkeletonCubic, ListLights<'a, MAX>, OUT, D::Tex>,
     framebuffer: &'a D,
 
     camera_pos: Vector<3>,
     camera_look_at: Matrix<4, 4>,
 
-    lights: &'a ListLights<MAX>,
+    lights: ListLights<'a, MAX>,
     opaque: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
 
     uniforms: Vec<(String, &'a dyn Uniform)>,
@@ -29,12 +29,12 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
     Group<'a, MAX, OUT, D>
 {
     pub fn new<O: CameraPose>(
-        shader: &'a ShaderProgram<SkeletonCubic, ListLights<MAX>, OUT, FlatTexture>,
+        shader: &'a ShaderProgram<SkeletonCubic, ListLights<'a, MAX>, OUT, FlatTexture>,
         framebuffer: &'a D,
 
         camera: &Camera<O>,
         hint: &O::Hint,
-        lights: &'a ListLights<MAX>,
+        lights: ListLights<'a, MAX>,
         opaque: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,

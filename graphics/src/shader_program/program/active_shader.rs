@@ -70,8 +70,9 @@ impl<'c, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 
 }
 
 #[derive(Debug)]
-pub struct ValidateError {
-    pub message: CString,
+#[non_exhaustive]
+pub enum ValidateError {
+    Message(CString),
 }
 error_boilerplate!(ValidateError);
 
@@ -96,7 +97,7 @@ impl<'c, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 
                 CString::from_vec_with_nul(error_message.into_iter().map(|x| x as u8).collect())
                     .unwrap_or_else(|_| c"no useful message".into());
 
-            Err(ValidateError { message })
+            Err(ValidateError::Message(message))
         }
     }
 }

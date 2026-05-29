@@ -6,7 +6,7 @@
 
 use std::fmt::Debug;
 use std::mem::{self, ManuallyDrop, MaybeUninit};
-use std::ops::{Deref, DerefMut, Index};
+use std::ops::{Deref, DerefMut, Index, IndexMut};
 use std::ptr;
 mod iterators;
 mod test;
@@ -222,5 +222,14 @@ where
 
     fn index(&self, index: I) -> &Self::Output {
         self.as_slice().index(index)
+    }
+}
+
+impl<T, const N: usize, I> IndexMut<I> for ArrayVec<T, N>
+where
+    [T]: IndexMut<I>,
+{
+    fn index_mut(&mut self, index: I) -> &mut Self::Output {
+        self.as_mut_slice().index_mut(index)
     }
 }

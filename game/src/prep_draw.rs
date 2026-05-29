@@ -1,8 +1,14 @@
+use engine::Event::Query;
+use engine::array_vec::arrvec;
 use engine::entity::AggregateGroup;
 use engine::framebuffer::DefaultFramebuffer;
-use engine::modelling::cubic::geometry::AggregateCalcAnim;
-use engine::modelling::{BloomGroup, QuadGroup, SimpleCubicGroup, SkyBoxGroup};
-use engine::{PollResult, VecDraw, opengl_shaders};
+use engine::modelling::cubic::geometry::{AggregateCalcAnim, CalculatedAnimation};
+use engine::modelling::cubic::lighting::shadow::{PointLightIlluminatesGroup, ShadowListLights};
+use engine::modelling::cubic::lighting::simple::ListLights;
+use engine::modelling::cubic::{Camera, SkeletonCubicGroup};
+use engine::modelling::{BloomGroup, QuadGroup, ShadowGroup, SimpleCubicGroup, SkyBoxGroup};
+use engine::query::HasDrawnQuery;
+use engine::{PollResult, ShaderProgram, VecDraw, opengl_shaders, shader_program};
 
 use crate::state::{State, StateError};
 
@@ -10,78 +16,86 @@ impl State {
     pub fn draw<'a>(
         &'a mut self,
         default_framebuffer: &'a DefaultFramebuffer,
-        grapple_animation: AggregateCalcAnim,
     ) -> PollResult<'a, StateError> {
-        let _time = self.time;
-
-        eprintln!("position: {:?}", self.camera.centre(&()));
-
         let mut out = VecDraw::new();
 
-        out.push(SkyBoxGroup::new(
-            engine::opengl_shaders::skybox_hdr(),
-            &self.hdr_fb,
-            &self.skybox,
-            &self.camera,
-            &(),
-            vec![],
-        ));
+        let mut x = if self.toggle_b {
+            vec![
+                self.origin_cube.get_pair_model_bind_pose(),
+                self.player.get_pair_model_bind_pose(),
+            ]
+        } else {
+            vec![]
+        };
+
+        if self.toggle_m {
+            x.push(self.small_cube.get_pair_model_bind_pose());
+        }
+
+        let sun = vec![self.sun.inner.get_pair_model_bind_pose()];
 
         out.push(
-            AggregateGroup::new(
-                opengl_shaders::hdr_skeleton(),
+            ShadowGroup::new(
                 &self.hdr_fb,
-                &self.camera,
+                &self.game_camera.camera,
                 &(),
-                &self.ns_light_group,
-                vec![(&self.grappling_hook.entity, grapple_animation)],
+                ShadowListLights {
+                    point: arrvec![&self.sun.light,],
+                    ..Default::default()
+                },
+                x,
+                sun,
                 vec![],
             )
             .unwrap(),
         );
 
-        if let Some(morgan) = &self.morgan {
-            out.push(
-                SimpleCubicGroup::new(
-                    opengl_shaders::hdr_simple(),
-                    &self.hdr_fb,
-                    &self.camera,
-                    &(),
-                    &self.ns_light_group,
-                    vec![morgan.inner.temp_as_simplecubic_and_anim()],
-                    vec![],
-                )
-                .unwrap(),
-            )
+        // out.push(
+        // SkeletonCubicGroup::new(
+        // opengl_shaders::hdr_skeleton(),
+        // &self.hdr_fb,
+        // &self.game_camera.camera,
+        // &(),
+        // ListLights {
+        // point: arrvec![&self.sun.light.light],
+        // ..Default::default()
+        // },
+        // vec![],
+        // vec![],
+        // )
+        // .unwrap(),
+        // );
+        let mut opaque = vec![self.origin_cube.get_pair_model_bind_pose()];
+        if self.toggle_m {
+            opaque.push(self.small_cube.get_pair_model_bind_pose());
         }
+        let illuminates = PointLightIlluminatesGroup::new_dyn(&self.sun_duplicate_light, opaque);
 
-        // out.push(SimpleCubicGroup::new(
-        // opengl_shaders::hdr(),
-        // &self.hdr_fb,
-        // &self.camera,
-        // &(),
-        // &self.ns_light_group,
-        // vec![(&self.morgan.model, self.morgan.pose, None)],
-        // Vec::new(),
-        // )?);
-        //
-        // out.push(SimpleCubicGroup::new(
-        // opengl_shaders::hdr(),
-        // &self.hdr_fb,
-        // &self.camera,
-        // &(),
-        // &self.ns_light_group,
-        // vec![(&self.origin_cube.model, Pose::IDENTITY, None)],
-        // Vec::new(),
-        // )?);
+        out.push(illuminates);
 
-        if self.toggle_g {
-            out.push(BloomGroup::new(default_framebuffer, &self.bloom));
+        let player_illuminates = PointLightIlluminatesGroup::new_dyn(
+            &self.sun_duplicate_light,
+            vec![self.player.get_pair_model_bind_pose()],
+        );
+
+        out.push(HasDrawnQuery::new(0, player_illuminates));
+
+        out.push(SkyBoxGroup::new(
+            engine::opengl_shaders::skybox_hdr(),
+            &self.hdr_fb,
+            &self.skybox,
+            &self.game_camera.camera,
+            &(),
+            vec![],
+        ));
+
+        if !self.toggle_g {
+            out.push(BloomGroup::new(default_framebuffer, &self.bloom_from_hdrfb));
         } else {
             out.push(QuadGroup::new(
                 engine::opengl_shaders::exposure(),
                 default_framebuffer,
-                vec![&self.quad_to_draw],
+                vec![&self.quad_from_hdrfb],
                 vec![(String::from("exposure"), &self.exposure)],
             ));
         }

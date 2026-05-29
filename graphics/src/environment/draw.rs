@@ -65,7 +65,7 @@ pub trait Draw {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
-        shader_marker: &mut ShaderProgramContext,
+        sp_context: &mut ShaderProgramContext,
     ) -> DrawOut;
 }
 

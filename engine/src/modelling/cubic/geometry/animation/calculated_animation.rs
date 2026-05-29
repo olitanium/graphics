@@ -35,7 +35,14 @@ impl CalculatedAnimation {
 
         let poses = PoseAndInverseBindPose::process_vec(vec_pose);
 
-        Ok(CalculatedAnimation { poses, signature })
+        Ok(Self { poses, signature })
+    }
+
+    pub fn bind_pose<M: EntityInner>(model: &M, root: Pose) -> Self
+    where
+        M::Vertex: CubicVertex,
+    {
+        Self::new(root, model.skeleton(), None).expect("no animation")
     }
 
     pub fn poses(&self, skeleton: &Skeleton) -> Result<&[Pose], SignaturesDoNotMatchError> {

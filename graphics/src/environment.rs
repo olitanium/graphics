@@ -2,6 +2,7 @@ use std::cell::RefMut;
 use std::collections::HashSet;
 use std::fmt::Debug;
 use std::task::Poll;
+use std::time::{Duration, Instant};
 
 mod draw;
 mod global_state;
@@ -96,8 +97,8 @@ extern "system" fn debug_callback(
 #[non_exhaustive]
 pub enum Event<'a> {
     WindowBuffer(&'a DefaultFramebuffer),
-    FrameTime(f64),
-    ActualTime(f64),
+    FrameTime(Duration),
+    ElapsedTime(Duration),
     WindowResize((TexDim, TexDim)),
     Keyboard {
         keys: HashSet<Key>,
@@ -115,8 +116,8 @@ pub enum Event<'a> {
 pub struct Environment<G: ApiState> {
     global_state: G,
     window: Window,
-    old_frame: Option<f64>,
-    creation_time: f64,
+    old_frame: Option<Instant>,
+    creation_time: Instant,
     glfw: glfw::Glfw,
 }
 
@@ -150,7 +151,7 @@ impl<G: ApiState> Environment<G> {
 
         glfw.set_swap_interval(glfw::SwapInterval::None);
 
-        // we need a GL context, above before we can load OpenGL functions
+        // we need a GL context, created above before we can load OpenGL functions
         gl::load_with(|s| glfw.get_proc_address_raw(s));
 
         let version_ptr = gl_call! { gl::GetString(gl::VERSION) };
@@ -163,7 +164,7 @@ impl<G: ApiState> Environment<G> {
         let global_state =
             G::new(window.get_framebuffer_size()).map_err(|err| NewError::StateInit(err))?;
 
-        let creation_time = glfw.get_time();
+        let creation_time = Instant::now();
 
         Ok(Self {
             glfw,
@@ -200,7 +201,7 @@ impl<G: ApiState> Environment<G> {
                             let draw_out = drawable
                                 .draw(&mut framebuffer_register, &mut shader_program_marker);
                             match draw_out {
-                                DrawOut::Draw => query_outputs = None,
+                                DrawOut::Draw => {}
                                 DrawOut::QueryOutput {
                                     name, query_object, ..
                                 } => query_outputs
@@ -222,14 +223,14 @@ impl<G: ApiState> Environment<G> {
     }
 
     fn poll(&mut self, queries: Option<Vec<(usize, Query)>>) -> PollResult<'_, G::Error> {
-        let curr_time = self.glfw.get_time();
+        let curr_time = Instant::now();
         let frametime = curr_time - *self.old_frame.get_or_insert(curr_time);
         self.old_frame = Some(curr_time);
 
         let window = &mut self.window;
         let mut events = window.poll_events();
 
-        events.push(Event::ActualTime(curr_time - self.creation_time));
+        events.push(Event::ElapsedTime(curr_time - self.creation_time));
         events.push(Event::FrameTime(frametime));
         if let Some(queries) = queries {
             events.push(Event::Query(queries));

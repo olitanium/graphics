@@ -7,8 +7,6 @@ use crate::gl_call;
 use crate::shader_program::program::active_shader::{IsActiveShaderProgram, SetUniformError};
 use crate::types::UniformLocation;
 
-pub struct NameNotFoundError;
-
 pub trait Uniform: Debug {
     fn set_uniform<'a>(
         &self,

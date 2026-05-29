@@ -72,7 +72,7 @@ macro_rules! nz_opaque {
 nz_opaque!(TexDim: GLsizei, Clone, Copy);
 
 impl TexDim {
-    pub const fn from(value: NonZeroUsize) -> Self {
+    pub const fn from_non_zero(value: NonZeroUsize) -> Self {
         Self(NonZero::new(value.get() as _).unwrap())
     }
 }
@@ -120,8 +120,10 @@ impl Debug for GLError {
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy)]
 pub enum VertexAttrType {
-    #[doc(hidden)] GLfloat,
-    #[doc(hidden)] GLint,
+    #[doc(hidden)]
+    GLfloat,
+    #[doc(hidden)]
+    GLint,
 }
 
 impl VertexAttrType {

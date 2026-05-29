@@ -10,5 +10,6 @@ void main() {
     // Regular
     vec3 hdr_colour = texture(in_texture0, texture_coord).rgb;
     frag_colour = vec4(vec3(1.0) - exp(-hdr_colour * exposure), 1.0);
+    //frag_colour = vec4(hdr_colour, 1.0);
 }
 

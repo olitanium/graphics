@@ -28,35 +28,35 @@ macro_rules! make_included {
 }
 
 make_included! {
-    ShaderProgram<SimpleCubic, ListLights<2>, 2, FlatTexture>,
+    ShaderProgram<SimpleCubic, ListLights<'static, 2>, 3, FlatTexture>,
     hdr_simple,
     "shaders/hdr_tangent/hdr_tangent.vert",
     "shaders/hdr_tangent/hdr_tangent.frag",
 }
 
 make_included! {
-    ShaderProgram<SkeletonCubic, ListLights<2>, 2, FlatTexture>,
+    ShaderProgram<SkeletonCubic, ListLights<'static, 2>, 3, FlatTexture>,
     hdr_skeleton,
     "shaders/hdr_tangent/hdr_tangent.vert",
     "shaders/hdr_tangent/hdr_tangent.frag",
 }
 
 make_included! {
-    ShaderProgram<SimpleCubic, ListLights<2>, 1, FlatTexture>,
+    ShaderProgram<SimpleCubic, ListLights<'static, 2>, 1, FlatTexture>,
     hdr_without_bright_simple,
     "shaders/hdr_tangent/hdr_tangent.vert",
     "shaders/hdr_tangent/hdr_tangent.frag",
 }
 
 make_included! {
-    ShaderProgram<SkeletonCubic, ListLights<2>, 1, FlatTexture>,
+    ShaderProgram<SkeletonCubic, ListLights<'static, 2>, 1, FlatTexture>,
     hdr_without_bright_skeleton,
     "shaders/hdr_tangent/hdr_tangent.vert",
     "shaders/hdr_tangent/hdr_tangent.frag",
 }
 
 make_included! {
-    ShaderProgram<SkyBox, (), 2, FlatTexture>,
+    ShaderProgram<SkyBox, (), 3, FlatTexture>,
     skybox_hdr,
     "shaders/skycube/skycube.vert",
     "shaders/skycube/skycube.frag",
@@ -77,7 +77,7 @@ make_included! {
 }
 
 make_included! {
-    ShaderProgram<SkeletonCubic, ShadowListLights<2>, 2, FlatTexture>,
+    ShaderProgram<SkeletonCubic, ShadowListLights<'static, 2>, 3, FlatTexture>,
     shadow,
     "shaders/hdr_tangent_shadow/hdr_tangent_shadow.vert",
     "shaders/hdr_tangent_shadow/hdr_tangent_shadow.frag",
@@ -85,7 +85,7 @@ make_included! {
 
 make_included! {
     ShaderProgram<SkeletonCubic, (), 0, FlatTexture>,
-    far_light_depth,
+    farspot_light_depth,
     "shaders/depth_testing/farspot_light_depth/farspot_light_depth.vert",
     "shaders/depth_testing/farspot_light_depth/farspot_light_depth.frag",
     cull_face: CullFace::FrontFace,
@@ -131,14 +131,14 @@ make_included! {
 pub const LINE_SHADER_MAX_VERTICES: usize = 100;
 
 make_included! {
-    ShaderProgram<SkinningCubic, ListLights<2>, 2, FlatTexture>,
+    ShaderProgram<SkinningCubic, ListLights<'static, 2>, 3, FlatTexture>,
     skeletal,
     "shaders/simple_skeleton_blending/simple_skeleton_blending.vert",
     "shaders/hdr_tangent/hdr_tangent.frag",
 }
 
 make_included! {
-    ShaderProgram<SkinningCubic, ListLights<2>, 2, FlatTexture>,
+    ShaderProgram<SkinningCubic, ListLights<'static, 2>, 3, FlatTexture>,
     skeletal_quat,
     "shaders/simple_skeleton_blending_quat/simple_skeleton_blending_quat.vert",
     "shaders/hdr_tangent/hdr_tangent.frag",

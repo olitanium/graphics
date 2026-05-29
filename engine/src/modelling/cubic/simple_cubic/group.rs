@@ -12,13 +12,13 @@ use crate::modelling::cubic::{Camera, SimpleCubic};
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
-    shader: &'a ShaderProgram<SimpleCubic, ListLights<MAX>, OUT, D::Tex>,
+    shader: &'a ShaderProgram<SimpleCubic, ListLights<'a, MAX>, OUT, D::Tex>,
     framebuffer: &'a D,
 
     camera_pos: Vector<3>,
     camera_look_at: Matrix<4, 4>,
 
-    lights: &'a ListLights<MAX>,
+    lights: ListLights<'a, MAX>,
     opaque: Vec<(&'a SimpleCubic, Pose)>,
 
     uniforms: Vec<(String, &'a dyn Uniform)>,
@@ -28,17 +28,17 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
     Group<'a, MAX, OUT, D>
 {
     pub fn new<O: CameraPose>(
-        shader: &'a ShaderProgram<SimpleCubic, ListLights<MAX>, OUT, FlatTexture>,
+        shader: &'a ShaderProgram<SimpleCubic, ListLights<'a, MAX>, OUT, FlatTexture>,
         framebuffer: &'a D,
 
         camera: &Camera<O>,
         hint: &O::Hint,
-        lights: &'a ListLights<MAX>,
+        lights: ListLights<'a, MAX>,
         opaque: Vec<(&'a SimpleCubic, Pose)>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,
-    ) -> Result<Box<Self>, SignaturesDoNotMatchError> {
-        Ok(Box::new(Self {
+    ) -> Box<Self> {
+        Box::new(Self {
             shader,
             framebuffer,
             camera_pos: camera.position(hint),
@@ -46,7 +46,7 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
             lights,
             opaque,
             uniforms,
-        }))
+        })
     }
 }
 

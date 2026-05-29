@@ -5,7 +5,7 @@ use utils::partition;
 use crate::SimpleEntity;
 use crate::entity::aggregate_entity::AggregateUnit;
 use crate::entity::{Mass, ToAggregateEntity};
-use crate::modelling::cubic::geometry::Pose;
+use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose};
 use crate::modelling::{Collision, SimpleVertex, SkeletonBb, SkeletonCubic, Volume};
 
 #[derive(Debug)]
@@ -69,6 +69,11 @@ impl<T> SkeletonEntity<T> {
     pub fn update(&mut self, timestep: f32) {
         let delta_pose = Pose::new_from_translation(self.velocity.scale(timestep));
         self.pose.push_change(delta_pose);
+    }
+
+    pub fn get_pair_model_bind_pose(&self) -> (&SkeletonCubic, CalculatedAnimation) {
+        let animation = CalculatedAnimation::bind_pose(&self.model, self.pose);
+        (&self.model, animation)
     }
 }
 

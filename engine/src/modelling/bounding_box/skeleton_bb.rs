@@ -1,10 +1,10 @@
-use graphics::{ActiveShaderProgram, Draw};
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
 use graphics::texture::FlatTexture;
 use graphics::vertex_array::VertexArray;
+use graphics::{ActiveShaderProgram, Draw};
 use utils::error_boilerplate;
 
 use crate::modelling::bounding_box::collision::TempModelTransform;
