@@ -1,14 +1,23 @@
 use std::array;
-use std::iter::Sum;
-use std::ops::Index;
+use std::marker::Destruct;
+use std::ops::{Index, Neg};
 
 use crate::Vector;
 
 #[repr(transparent)]
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct UnitVector<const N: usize>(pub(crate) Vector<N>);
+#[derive(Clone, Copy, Debug)]
+pub struct UnitVector<const N: usize, T = f32>(pub(crate) Vector<N, T>);
 
-impl<const N: usize> UnitVector<N> {
+impl<const N: usize, T> PartialEq for UnitVector<N, T>
+where
+    Vector<N, T>: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0
+    }
+}
+
+impl<const N: usize> UnitVector<N, f32> {
     const fn const_default() -> Self {
         let mut out = [0.0; N];
         if let Some(x) = out.get_mut(0) {
@@ -18,35 +27,42 @@ impl<const N: usize> UnitVector<N> {
     }
 }
 
-impl<const N: usize> Default for UnitVector<N> {
+impl<const N: usize> const Default for UnitVector<N, f32> {
     fn default() -> Self {
         const { Self::const_default() }
     }
 }
 
-impl UnitVector<3> {
+impl UnitVector<3, f32> {
     pub const X: Self = Self::new_unchecked([1.0, 0.0, 0.0]);
     pub const Y: Self = Self::new_unchecked([0.0, 1.0, 0.0]);
     pub const Z: Self = Self::new_unchecked([0.0, 0.0, 1.0]);
 }
 
-impl<const N: usize> UnitVector<N> {
+impl<const N: usize, T> UnitVector<N, T> {
     #[inline(always)]
-    pub const fn v(self) -> Vector<N> {
-        self.0
+    pub const fn v(self) -> Vector<N, T>
+    where
+        Self: [const] Destruct,
+    {
+        let Self(out) = self;
+        out
     }
 
     #[inline(always)]
-    pub fn v_ref(&self) -> &Vector<N> {
+    pub fn v_ref(&self) -> &Vector<N, T> {
         &self.0
     }
 
-    pub const fn new_unchecked(input: [f32; N]) -> Self {
+    pub const fn new_unchecked(input: [T; N]) -> Self {
         Self(Vector(input))
     }
 }
 
-impl<const N: usize> core::ops::Neg for UnitVector<N> {
+impl<const N: usize, T> core::ops::Neg for UnitVector<N, T>
+where
+    Vector<N, T>: Neg<Output = Vector<N, T>>,
+{
     type Output = Self;
 
     fn neg(mut self) -> Self::Output {
@@ -56,46 +72,49 @@ impl<const N: usize> core::ops::Neg for UnitVector<N> {
     }
 }
 
-impl<const N: usize> From<UnitVector<N>> for Vector<N> {
+impl<const N: usize, T> From<UnitVector<N, T>> for Vector<N, T> {
     #[inline]
-    fn from(value: UnitVector<N>) -> Self {
+    fn from(value: UnitVector<N, T>) -> Self {
         value.v()
     }
 }
 
-impl<const N: usize> From<UnitVector<N>> for [f32; N] {
+impl<const N: usize, T> From<UnitVector<N, T>> for [T; N] {
     #[inline]
-    fn from(value: UnitVector<N>) -> Self {
+    fn from(value: UnitVector<N, T>) -> Self {
         value.v().into()
     }
 }
 
-impl<const N: usize> AsRef<Vector<N>> for UnitVector<N> {
+impl<const N: usize, T> AsRef<Vector<N, T>> for UnitVector<N, T> {
     #[inline]
-    fn as_ref(&self) -> &Vector<N> {
+    fn as_ref(&self) -> &Vector<N, T> {
         &self.0
     }
 }
 
-impl<const N: usize> AsRef<[f32]> for UnitVector<N> {
+impl<const N: usize, T> AsRef<[T]> for UnitVector<N, T> {
     #[inline]
-    fn as_ref(&self) -> &[f32] {
+    fn as_ref(&self) -> &[T] {
         self.0.inner()
     }
 }
 
-impl<const N: usize> Index<usize> for UnitVector<N> {
-    type Output = f32;
+impl<const N: usize, T, I> Index<I> for UnitVector<N, T>
+where
+    [T]: Index<I>,
+{
+    type Output = <[T] as Index<I>>::Output;
 
     #[inline]
-    fn index(&self, index: usize) -> &Self::Output {
+    fn index(&self, index: I) -> &Self::Output {
         self.0.inner().index(index)
     }
 }
 
-impl<const N: usize> IntoIterator for UnitVector<N> {
+impl<const N: usize, T> IntoIterator for UnitVector<N, T> {
     type IntoIter = array::IntoIter<Self::Item, N>;
-    type Item = f32;
+    type Item = T;
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
@@ -103,8 +122,8 @@ impl<const N: usize> IntoIterator for UnitVector<N> {
     }
 }
 
-impl<const N: usize> Sum<UnitVector<N>> for Vector<N> {
-    fn sum<I: Iterator<Item = UnitVector<N>>>(iter: I) -> Self {
-        iter.map(|x| x.v()).sum()
-    }
-}
+// impl<const N: usize, T> Sum<UnitVector<N>> for Vector<N> {
+// fn sum<I: Iterator<Item = UnitVector<N>>>(iter: I) -> Self {
+// iter.map(|x| x.v()).sum()
+// }
+// }

@@ -10,16 +10,13 @@ use engine::linear_algebra::Vector;
 use engine::modelling::cubic::camera::Projection;
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
 use engine::modelling::cubic::material::Material;
-use engine::modelling::{
-    Bloom,
-    Quad,
-    SkyBox,
-};
+use engine::modelling::{Bloom, Quad, SkyBox};
 use engine::types::TexDim;
 use engine::{ApiState, ColourRGBA, Event, PollResult};
 
 use crate::camera::GameCamera;
 use crate::morgan::Sun;
+use crate::player::Player;
 
 pub struct State {
     pub game_camera: GameCamera,
@@ -35,7 +32,7 @@ pub struct State {
     pub sun_duplicate_light: ShadowPointLight,
     pub origin_cube: SkeletonEntity<()>,
     pub small_cube: SkeletonEntity<()>,
-    pub player: SkeletonEntity<()>,
+    pub player: Player,
 
     pub skybox: SkyBox,
 
@@ -93,16 +90,6 @@ impl ApiState for State {
 
         let mut string = local_string.unwrap();
 
-        if can_see_player {
-            self.player
-                .model
-                .temp_set_all_material(Rc::new(Material::from_colour(ColourRGBA::RED)));
-        } else {
-            self.player
-                .model
-                .temp_set_all_material(Rc::new(Material::from_colour(ColourRGBA::GREEN)));
-        }
-
         self.controls(
             mouse_delta,
             keyboard,
@@ -110,6 +97,8 @@ impl ApiState for State {
             frame_time,
             game_duration,
         )?;
+
+        self.player.can_see(can_see_player);
 
         self.physics(frame_time, game_duration);
 

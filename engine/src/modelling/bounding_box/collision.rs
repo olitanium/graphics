@@ -4,7 +4,7 @@ use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{BoundingBox, CubicVertex};
 
 pub trait Collision {
-    type Transform<'a>: TempModelTransform;
+    type Transform<'a>;
     type Meta;
     type FuncInputs;
 
@@ -44,9 +44,9 @@ pub trait Collision {
         for<'a> T::Transform<'a>: Clone;
 }
 
-pub trait TempModelTransform {
-    fn get_root_pose(&self) -> Pose;
-}
+// pub trait TempModelTransform {
+// fn get_root_pose(&self) -> Pose;
+// }
 
 impl<T: Collision, B: Deref<Target = T>> Collision for B {
     type FuncInputs = T::FuncInputs;

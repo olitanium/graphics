@@ -152,6 +152,7 @@ pub fn get_average_normal<I: IntoIterator<Item = [SimpleVertex; 3]>>(input: I) -
                 .map(|vertex| vertex.normal.v())
                 .sum::<Vector<3>>()
                 .normalize()
+                .v()
         })
         .sum::<Vector<3>>()
         .normalize()

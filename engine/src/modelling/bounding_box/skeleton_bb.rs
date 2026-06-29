@@ -1,13 +1,13 @@
+use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
 use graphics::texture::FlatTexture;
 use graphics::vertex_array::VertexArray;
-use graphics::{ActiveShaderProgram, Draw};
 use utils::error_boilerplate;
 
-use crate::modelling::bounding_box::collision::TempModelTransform;
+// use crate::modelling::bounding_box::collision::TempModelTransform;
 use crate::modelling::bounding_box::element::DrawRecursiveError;
 use crate::modelling::cubic::SkeletonBoneIndex;
 use crate::modelling::cubic::geometry::{CalculatedAnimation, GetAnimationError};
@@ -184,8 +184,8 @@ impl<V: CubicVertex, T> From<BoundingBox<V, 3, T>> for SkeletonBb<V, T> {
     }
 }
 
-impl<'a> TempModelTransform for (&'a Skeleton, &'a CalculatedAnimation) {
-    fn get_root_pose(&self) -> crate::modelling::cubic::geometry::Pose {
-        self.1.root()
-    }
-}
+// impl<'a> TempModelTransform for (&'a Skeleton, &'a CalculatedAnimation) {
+// fn get_root_pose(&self) -> crate::modelling::cubic::geometry::Pose {
+// self.1.root()
+// }
+// }

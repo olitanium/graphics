@@ -1,6 +1,7 @@
-use std::array;
 use std::cell::RefCell;
+use std::marker::PhantomData;
 use std::num::NonZeroUsize;
+use std::{array, vec};
 
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
@@ -9,7 +10,7 @@ use graphics::linear_algebra::{Matrix, Vector};
 use graphics::shader_program::SetUniformError;
 use graphics::vertex::Vertex;
 use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
-use graphics::{ActiveShaderProgram, Draw, Model};
+use graphics::{ActiveShaderProgram, Model};
 use utils::error_boilerplate;
 
 use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
@@ -22,23 +23,11 @@ pub struct BoundingBoxElement<V: ExtendedVertex<DIMS>, const DIMS: usize, T> {
     pub(crate) lower_bound: Vector<DIMS>,
     pub(crate) upper_bound: Vector<DIMS>,
 
-    pub(crate) triangles: Vec<[V; 3]>,
+    pub(crate) triangles: PhantomData<Vec<[V; 3]>>,
+    pub(crate) start_index: usize,
+    pub(crate) len: usize,
 
     pub(crate) children: Option<[NonZeroUsize; 2]>,
-}
-
-impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T: Default> Default
-    for BoundingBoxElement<V, DIMS, T>
-{
-    fn default() -> Self {
-        Self {
-            lower_bound: -Vector::X,
-            upper_bound: Vector::X,
-            meta: Default::default(),
-            triangles: Default::default(),
-            children: Default::default(),
-        }
-    }
 }
 
 fn make_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
@@ -66,12 +55,11 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
     pub fn new_from_many_inner<F: FnMut(&[(Vector<DIMS>, [V; 3])]) -> T>(
         so_far: &mut Vec<Self>,
         triangles: &mut [(Vector<DIMS>, [V; 3])],
+        start_index: usize,
         depth: usize,
         init: &mut F,
     ) -> Option<usize> {
         let vectors: Vec<_> = triangles.iter_mut().flat_map(|&mut (_, arr)| arr).collect();
-
-        let vec_triangles = triangles.iter_mut().map(|&mut (_, arr)| arr).collect();
 
         let upper_bounds = make_upper_bound(&vectors)?;
         let lower_bounds = make_lower_bound(&vectors)?;
@@ -80,7 +68,9 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
 
         so_far.push(Self {
             meta: RefCell::new(init(triangles)),
-            triangles: vec_triangles,
+            triangles: PhantomData,
+            start_index,
+            len: triangles.len(),
             lower_bound: lower_bounds,
             upper_bound: upper_bounds,
             children: None,
@@ -102,15 +92,15 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
 
                 // sort on the dimension given by max_index
                 triangles.sort_unstable_by(|(lhs, _), (rhs, _)| {
-                    f32::partial_cmp(&lhs[max_index], &rhs[max_index])
-                        .expect("no NAN in input vectors permitted")
+                    f32::total_cmp(&lhs[max_index], &rhs[max_index])
                 });
 
                 const CHILDREN: usize = 2;
                 const CHILDRENPLUS1: usize = CHILDREN + 1;
 
                 let number_of_partitions: [_; CHILDRENPLUS1] =
-                    array::from_fn(|index| (index) as f32 / CHILDREN as f32);
+                    //array::from_fn(|index| (index) as f32 / CHILDREN as f32);
+                    [0.0, 0.5, 1.0]; // at the beginning, mid point and end.
                 let points = number_of_partitions.map(|mult| {
                     mult * upper_bounds[max_index] + (1.0 - mult) * lower_bounds[max_index]
                 });
@@ -129,8 +119,13 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
                     .then(|| {
                         partitions.try_map(|(lower_bound_partition, partition)| {
                             let bb_triangle = &mut triangles[lower_bound_partition..partition];
-                            let out =
-                                Self::new_from_many_inner(so_far, bb_triangle, depth - 1, init);
+                            let out = Self::new_from_many_inner(
+                                so_far,
+                                bb_triangle,
+                                lower_bound_partition + start_index,
+                                depth - 1,
+                                init,
+                            );
                             out.and_then(NonZeroUsize::new)
                         })
                     })
@@ -141,8 +136,14 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
         Some(destination_index)
     }
 
-    pub fn get_triangles(&self) -> &[[V; 3]] {
-        &self.triangles
+    pub fn get_triangles<'a>(
+        &self,
+        all_triangles: &'a [(Vector<DIMS>, [V; 3])],
+    ) -> &'a [(Vector<DIMS>, [V; 3])]
+    where
+        V: PartialEq,
+    {
+        &all_triangles[self.start_index..(self.start_index + self.len)]
     }
 }
 

@@ -25,7 +25,7 @@ pub mod collision;
 pub use collision::Collision;
 
 use crate::modelling::advanced_vertex::ExtendedVertex;
-pub use crate::modelling::bounding_box::collision::TempModelTransform;
+// pub use crate::modelling::bounding_box::collision::TempModelTransform;
 use crate::modelling::bounding_box::element::DrawRecursiveError;
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{CubicVertex, SimpleVertex, SkeletonCubic, Volume};
@@ -33,10 +33,11 @@ use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
 pub struct BoundingBox<V: ExtendedVertex<DIMS>, const DIMS: usize, T>
-// where
-// Vector<DIMS>: ExtendedVertex<DIMS>,
-//[(); Vector::<DIMS>::ELEMENT_COUNT]:,
+where
+    Vector<DIMS>: ExtendedVertex<DIMS>,
+    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
 {
+    triangles: Vec<(Vector<DIMS>, [V; 3])>,
     inner: Vec<BoundingBoxElement<V, DIMS, T>>,
 }
 
@@ -85,11 +86,15 @@ where
         BoundingBoxElement::new_from_many_inner(
             &mut accumulator,
             &mut triangles_with_mid,
+            0,
             depth,
             &mut init,
         )?;
 
-        Some(BoundingBox { inner: accumulator })
+        Some(BoundingBox {
+            triangles: triangles_with_mid,
+            inner: accumulator,
+        })
     }
 
     pub fn encloses_point(&self, point: Vector<DIMS>) -> bool {
@@ -259,13 +264,29 @@ impl<V: ExtendedVertex<3>, T> BoundingBoxShaderProgram<3> for BoundingBoxElement
     }
 }
 
-impl TempModelTransform for Pose {
-    fn get_root_pose(&self) -> Pose {
-        *self
-    }
-}
+// impl TempModelTransform for Pose {
+// fn get_root_pose(&self) -> Pose {
+// self
+// }
+// }
 
 mod test {
+    use graphics::linear_algebra::Vector;
+
+    use crate::modelling::{BoundingBoxElement, ExtendedVertex};
+
+    fn default<const DIMS: usize, V: ExtendedVertex<DIMS>, T: Default>()
+    -> BoundingBoxElement<V, DIMS, T> {
+        BoundingBoxElement {
+            lower_bound: -Vector::X,
+            upper_bound: Vector::X,
+            start_index: 0,
+            len: 0,
+            meta: Default::default(),
+            triangles: Default::default(),
+            children: Default::default(),
+        }
+    }
     #[test]
     fn test_point_in_square() {
         use crate::linear_algebra::Vector;
@@ -310,13 +331,13 @@ mod test {
         let bounding_box = BoundingBoxElement::<Vector<2>, _, ()> {
             upper_bound: Vector::new([1.0, 1.0]),
             lower_bound: Vector::new([-1.0, -1.0]),
-            ..Default::default()
+            ..default()
         };
 
         let other_box = BoundingBoxElement::<Vector<2>, _, ()> {
             upper_bound: Vector::new([2.0, 0.5]),
             lower_bound: Vector::new([-2.0, -0.5]),
-            ..Default::default()
+            ..default()
         };
 
         assert!(bounding_box.overlaps_bounding_box_single(&NoTransform, &other_box, &NoTransform));

@@ -3,7 +3,8 @@ mod array_maths;
 use core::array;
 use core::ops::{Index, IndexMut};
 use std::iter::Sum;
-use std::ops::{Add, AddAssign, Mul, MulAssign, SubAssign};
+use std::marker::Destruct;
+use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use std::slice::SliceIndex;
 
 use super::matrix::Matrix;
@@ -15,22 +16,31 @@ mod compact_unit;
 pub use compact_unit::CompactUnitVector;
 
 #[repr(transparent)]
-#[derive(Clone, Copy, Debug)]
-pub struct Vector<const N: usize>(pub(crate) [f32; N]);
+#[derive(Copy, Debug)]
+pub struct Vector<const N: usize, T = f32>(pub(crate) [T; N]);
 
-impl<const N: usize> const Default for Vector<N> {
+impl<const N: usize, T> const Clone for Vector<N, T>
+where
+    [T; N]: [const] Clone,
+{
+    fn clone(&self) -> Self {
+        Self::new(self.0.clone())
+    }
+}
+
+impl<const N: usize> const Default for Vector<N, f32> {
     fn default() -> Self {
         Self::ZERO
     }
 }
 
-impl<const N: usize> PartialEq for Vector<N> {
+impl<const N: usize> const PartialEq for Vector<N, f32> {
     fn eq(&self, other: &Self) -> bool {
         array_maths::eq(self.into_inner(), other.into_inner())
     }
 }
 
-impl<const N: usize> Vector<N> {
+impl<const N: usize> Vector<N, f32> {
     pub const X: Self = Self::x();
     pub const Y: Self = Self::y();
     pub const Z: Self = Self::z();
@@ -54,63 +64,20 @@ impl<const N: usize> Vector<N> {
         vec
     }
 
-    #[must_use]
-    #[inline]
-    pub const fn new(input: [f32; N]) -> Self {
-        Self(input)
-    }
-
     /// # Safety
     ///
     /// The vector must be have a magnitude of 1.0, or this may break future
     /// optimisations
     #[must_use]
     #[inline]
-    pub const unsafe fn new_normal_unchecked(input: [f32; N]) -> UnitVector<N> {
+    pub const unsafe fn new_normal_unchecked(input: [f32; N]) -> UnitVector<N, f32> {
         UnitVector::new_unchecked(input)
     }
 
+    #[inline]
     #[must_use]
-    #[inline]
-    pub const fn into_inner(self) -> [f32; N] {
-        self.0
-    }
-
-    #[must_use]
-    #[inline]
-    pub const fn inner(&self) -> &[f32; N] {
-        &self.0
-    }
-
-    #[allow(clippy::len_without_is_empty)]
-    pub const fn len(&self) -> usize {
-        N
-    }
-
-    pub fn get<I: SliceIndex<[f32]>>(&self, index: I) -> Option<&<I as SliceIndex<[f32]>>::Output> {
-        self.0.get(index)
-    }
-
-    #[must_use]
-    #[inline]
-    pub const fn inner_mut(&mut self) -> &mut [f32; N] {
-        &mut self.0
-    }
-
-    #[inline]
-    pub const fn iter_mut(&mut self) -> impl Iterator<Item = &mut f32> {
-        self.inner_mut().iter_mut()
-    }
-
-    #[must_use]
-    #[inline]
-    pub fn map(self, op: impl Fn(f32) -> f32) -> Self {
-        let array = self.into_inner().map(op);
-        Self::new(array)
-    }
-
-    pub const fn magnitude_sq(self) -> f32 {
-        self.dot(self)
+    pub const fn is_zero(self) -> bool {
+        array_maths::is_zero(self.into_inner())
     }
 
     pub fn magnitude(self) -> f32 {
@@ -120,77 +87,27 @@ impl<const N: usize> Vector<N> {
     /// # Panics
     #[must_use]
     #[inline]
-    pub fn normalize(self) -> UnitVector<N> {
+    pub fn normalize(self) -> UnitVector<N, f32> {
         let Some(vec) = self.try_normalize() else {
             panic!("tried normalizing a zero vector");
         };
         vec
     }
 
-    pub fn try_normalize(self) -> Option<UnitVector<N>> {
+    pub fn try_normalize(self) -> Option<UnitVector<N, f32>> {
         let one_len = 1.0 / self.magnitude();
         one_len
             .is_finite()
             .then(|| unsafe { Self::new_normal_unchecked(self.0.map(|x| x * one_len)) })
     }
 
-    #[inline]
-    #[must_use]
-    pub const fn is_zero(self) -> bool {
-        array_maths::is_zero(self.into_inner())
-    }
-
-    #[inline]
-    #[must_use]
-    pub const fn dot(self, rhs: Self) -> f32 {
-        array_maths::dot(self.into_inner(), rhs.into_inner())
-    }
-
-    #[inline]
-    #[must_use]
-    pub const fn from_to(from: Self, to: Self) -> Self {
-        to.sub(from)
-    }
-
-    #[must_use]
-    #[inline]
-    pub const fn distance_squared(self, to: Self) -> f32 {
-        let direction = Self::from_to(self, to);
-        direction.dot(direction)
-    }
-
-    #[inline]
-    #[must_use]
-    pub const fn scale(mut self, scalar: f32) -> Self {
-        // CONST-HACK
-        // self.map(|elem| scalar * elem)
-
-        let mut index = 0;
-        while index < N {
-            self.0[index] *= scalar;
-            index += 1;
-        }
-
-        self
-    }
-
-    pub const fn flip(self) -> Self {
-        // CONST-HACK
-        // for x in self.inner_mut() {
-        // x = -*x;
-        // }
-        //
-        // self
-
-        Vector::new([0.0; N]).sub(self)
-    }
-
-    pub const fn truncate<const M: usize>(self) -> Vector<M> {
+    pub const fn truncate<const M: usize>(self) -> Vector<M, f32> {
         // CONST-HACK
         // let array = array::from_fn(|index|
         // self.0.get(index).copied().unwrap_or(0.0)); Vector::new(array)
 
-        let mut array = [0.0; M];
+        let mut array = [0.0; _];
+
         let mut index = 0;
         while let (Some(value), Some(dest)) = (self.0.get(index).copied(), array.get_mut(index)) {
             *dest = value;
@@ -200,14 +117,119 @@ impl<const N: usize> Vector<N> {
         Vector::new(array)
     }
 
-    pub const fn reflect(self, normal: UnitVector<N>) -> Self {
+    pub const fn reflect(self, normal: UnitVector<N, f32>) -> Self
+    where
+        Self: [const] Clone,
+    {
         let normal = normal.v();
-        let projection = normal.dot(self);
-        self.sub(normal.scale(2.0 * projection))
+        let projection = normal.dot(self.clone());
+        self - normal.scale(2.0 * projection)
     }
 }
 
-impl Vector<3> {
+impl<const N: usize, T> Vector<N, T> {
+    #[must_use]
+    #[inline]
+    pub const fn new(input: [T; N]) -> Self {
+        Self(input)
+    }
+
+    #[must_use]
+    #[inline]
+    pub const fn into_inner(self) -> [T; N]
+    where
+        T: [const] Destruct, // TODO: shouldn't be needed because it is destructured
+    {
+        let Self(out) = self;
+        out
+    }
+
+    #[must_use]
+    #[inline]
+    pub const fn inner(&self) -> &[T; N] {
+        &self.0
+    }
+
+    #[allow(clippy::len_without_is_empty)]
+    pub const fn len(&self) -> usize {
+        N
+    }
+
+    pub fn get<I: SliceIndex<[T]>>(&self, index: I) -> Option<&<I as SliceIndex<[T]>>::Output> {
+        self.0.get(index)
+    }
+
+    #[must_use]
+    #[inline]
+    pub const fn inner_mut(&mut self) -> &mut [T; N] {
+        &mut self.0
+    }
+
+    #[inline]
+    pub const fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
+        self.inner_mut().iter_mut()
+    }
+
+    #[must_use]
+    #[inline]
+    pub fn map(self, op: impl Fn(T) -> T) -> Self {
+        let array = self.into_inner().map(op);
+        Self::new(array)
+    }
+
+    pub const fn magnitude_sq(self) -> T
+    where
+        T: Copy + [const] Add<Output = T> + [const] Mul<Output = T> + [const] Default,
+        T: [const] Destruct, // TODO: remove once `dot` removes bound
+    {
+        self.dot(self)
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn dot(self, rhs: Self) -> T
+    where
+        T: [const] Add<Output = T> + [const] Mul<Output = T> + Copy + [const] Default,
+        T: [const] Destruct, // TODO: remove because `into_inner` is TODO remove
+    {
+        array_maths::dot(self.into_inner(), rhs.into_inner())
+    }
+
+    #[inline]
+    #[must_use]
+    pub const fn scale(mut self, scalar: T) -> Self
+    where
+        T: [const] Mul<Output = T> + Copy,
+    {
+        // CONST-HACK
+        // self.map(|elem| scalar * elem)
+
+        let mut index = 0;
+        while index < N {
+            self.0[index] = self.0[index] * scalar;
+            index += 1;
+        }
+
+        self
+    }
+
+    pub const fn flip(mut self) -> Self
+    where
+        T: [const] Neg<Output = T>,
+        T: Copy, // TODO: this ought ot be removed
+    {
+        let mut index = 0;
+        while index < N {
+            self.0[index] = -self.0[index];
+
+            index += 1;
+        }
+
+        self
+    }
+}
+
+impl Vector<3, f32> {
     #[inline]
     #[must_use]
     pub const fn cross(self, rhs: Self) -> Self {
@@ -221,7 +243,7 @@ impl Vector<3> {
         Self::new(out)
     }
 
-    pub const fn homogeneous(self) -> Vector<4> {
+    pub const fn homogeneous(self) -> Vector<4, f32> {
         let this = self.into_inner();
         Vector::new([this[0], this[1], this[2], 1.0])
     }
@@ -230,7 +252,10 @@ impl Vector<3> {
 macro_rules! impl_ops {
     ($trait:ident:: $fn:ident) => {
         use self::array_maths::$fn;
-        impl<const N: usize> core::ops::$trait for Vector<N> {
+        impl<const N: usize, T> const core::ops::$trait for Vector<N, T>
+        where
+            T: Copy + [const] Destruct + [const] core::ops::$trait<Output = T>,
+        {
             type Output = Self;
 
             #[inline]
@@ -239,149 +264,164 @@ macro_rules! impl_ops {
             }
         }
 
-        impl<const N: usize> Vector<N> {
-            pub const fn $fn(self, rhs: Self) -> Self {
-                Self::new($crate::vector::array_maths::$fn(
-                    self.into_inner(),
-                    rhs.into_inner(),
-                ))
-            }
-        }
+        // impl<const N: usize> Vector<N> {
+        // pub const fn $fn(self, rhs: Self) -> Self {
+        // Self::new($crate::vector::array_maths::$fn(
+        // self.into_inner(),
+        // rhs.into_inner(),
+        // ))
+        // }
+        // }
 
-        impl<const N: usize> core::ops::$trait<UnitVector<N>> for Vector<N> {
-            type Output = Self;
+        // impl<const N: usize> core::ops::$trait<UnitVector<N>> for Vector<N> {
+        // type Output = Self;
+        //
+        // #[inline]
+        // fn $fn(self, rhs: UnitVector<N>) -> Self::Output {
+        // Self::Output::new($fn(self.into_inner(), rhs.0.into_inner()))
+        // }
+        // }
 
-            #[inline]
-            fn $fn(self, rhs: UnitVector<N>) -> Self::Output {
-                Self::Output::new($fn(self.into_inner(), rhs.0.into_inner()))
-            }
-        }
-
-        impl<const N: usize> core::ops::$trait<Vector<N>> for UnitVector<N> {
-            type Output = Vector<N>;
-
-            #[inline]
-            fn $fn(self, rhs: Vector<N>) -> Vector<N> {
-                Vector::new($fn(self.0.into_inner(), rhs.into_inner()))
-            }
-        }
+        // impl<const N: usize> core::ops::$trait<Vector<N>> for UnitVector<N> {
+        // type Output = Vector<N>;
+        //
+        // #[inline]
+        // fn $fn(self, rhs: Vector<N>) -> Vector<N> {
+        // Vector::new($fn(self.0.into_inner(), rhs.into_inner()))
+        // }
+        // }
     };
 }
 
 impl_ops!(Add::add);
 impl_ops!(Sub::sub);
 
-impl<const N: usize> AddAssign for Vector<N> {
+impl<const N: usize, T> const AddAssign for Vector<N, T>
+where
+    Self: [const] Add<Output = Self> + [const] Clone + [const] Destruct,
+{
     fn add_assign(&mut self, rhs: Self) {
-        *self = *self + rhs;
+        *self = self.clone() + rhs;
     }
 }
 
-impl<const N: usize> SubAssign for Vector<N> {
+impl<const N: usize, T> const SubAssign for Vector<N, T>
+where
+    Self: [const] Sub<Output = Self> + [const] Clone + [const] Destruct,
+{
     fn sub_assign(&mut self, rhs: Self) {
-        *self = *self - rhs;
+        *self = self.clone() - rhs;
     }
 }
 
-impl<const N: usize> Mul<f32> for Vector<N> {
+impl<const N: usize, T> const Mul<T> for Vector<N, T>
+where
+    T: [const] Mul<Output = T> + Copy,
+{
     type Output = Self;
 
-    fn mul(self, rhs: f32) -> Self::Output {
+    fn mul(self, rhs: T) -> Self::Output {
         self.scale(rhs)
     }
 }
 
-impl<const N: usize> MulAssign<f32> for Vector<N> {
-    fn mul_assign(&mut self, rhs: f32) {
-        *self = *self * rhs;
+impl<const N: usize, T> const MulAssign<T> for Vector<N, T>
+where
+    Self: [const] Destruct + [const] Mul<T, Output = Self> + [const] Clone,
+{
+    fn mul_assign(&mut self, rhs: T) {
+        *self = self.clone() * rhs;
     }
 }
 
-impl<const N: usize> Mul<Vector<N>> for f32 {
-    type Output = Vector<N>;
+impl<const N: usize> const Mul<Vector<N, f32>> for f32 {
+    type Output = Vector<N, f32>;
 
-    fn mul(self, rhs: Vector<N>) -> Self::Output {
+    fn mul(self, rhs: Vector<N, f32>) -> Self::Output {
         rhs * self
     }
 }
 
-impl<const R: usize> From<Matrix<R, 1>> for Vector<R> {
+impl<const R: usize> From<Matrix<R, 1>> for Vector<R, f32> {
     #[inline]
     fn from(value: Matrix<R, 1>) -> Self {
         value.into_inner()[0]
     }
 }
 
-impl<const N: usize> From<[f32; N]> for Vector<N> {
+impl<const N: usize> From<[f32; N]> for Vector<N, f32> {
     #[inline]
     fn from(value: [f32; N]) -> Self {
         Self::new(value)
     }
 }
 
-impl<const N: usize> From<Vector<N>> for [f32; N] {
+impl<const N: usize, T> From<Vector<N, T>> for [T; N] {
     #[inline]
-    fn from(value: Vector<N>) -> Self {
+    fn from(value: Vector<N, T>) -> Self {
         value.into_inner()
     }
 }
 
-impl<'a, const N: usize> TryFrom<&'a [f32]> for Vector<N> {
-    type Error = <[f32; N] as TryFrom<&'a [f32]>>::Error;
+impl<'a, const N: usize, T> TryFrom<&'a [T]> for Vector<N, T>
+where
+    T: Copy,
+{
+    type Error = <[T; N] as TryFrom<&'a [T]>>::Error;
 
     #[inline]
-    fn try_from(value: &[f32]) -> Result<Self, Self::Error> {
+    fn try_from(value: &[T]) -> Result<Self, Self::Error> {
         value.try_into().map(Self::new)
     }
 }
 
-impl<const N: usize> AsRef<[f32; N]> for Vector<N> {
+impl<const N: usize, T> const AsRef<[T; N]> for Vector<N, T> {
     #[inline]
-    fn as_ref(&self) -> &[f32; N] {
+    fn as_ref(&self) -> &[T; N] {
         self.inner()
     }
 }
 
-impl<const N: usize> AsRef<[f32]> for Vector<N> {
+impl<const N: usize, T> const AsRef<[T]> for Vector<N, T> {
     #[inline]
-    fn as_ref(&self) -> &[f32] {
+    fn as_ref(&self) -> &[T] {
         self.inner()
     }
 }
 
-impl<const N: usize> AsRef<Self> for Vector<N> {
+impl<const N: usize, T> const AsRef<Self> for Vector<N, T> {
     #[inline]
     fn as_ref(&self) -> &Self {
         self
     }
 }
 
-impl<const N: usize> AsMut<[f32; N]> for Vector<N> {
+impl<const N: usize, T> const AsMut<[T; N]> for Vector<N, T> {
     #[inline]
-    fn as_mut(&mut self) -> &mut [f32; N] {
+    fn as_mut(&mut self) -> &mut [T; N] {
         self.inner_mut()
     }
 }
 
-impl<const N: usize> AsMut<[f32]> for Vector<N> {
+impl<const N: usize, T> const AsMut<[T]> for Vector<N, T> {
     #[inline]
-    fn as_mut(&mut self) -> &mut [f32] {
+    fn as_mut(&mut self) -> &mut [T] {
         self.inner_mut()
     }
 }
 
-impl<const N: usize> AsMut<Self> for Vector<N> {
+impl<const N: usize, T> const AsMut<Self> for Vector<N, T> {
     #[inline]
     fn as_mut(&mut self) -> &mut Self {
         self
     }
 }
 
-impl<I, const N: usize> Index<I> for Vector<N>
+impl<I, const N: usize, T> const Index<I> for Vector<N, T>
 where
-    [f32]: Index<I>,
+    [T]: [const] Index<I>,
 {
-    type Output = <[f32] as Index<I>>::Output;
+    type Output = <[T] as Index<I>>::Output;
 
     #[inline]
     fn index(&self, index: I) -> &Self::Output {
@@ -389,16 +429,19 @@ where
     }
 }
 
-impl<const N: usize> IndexMut<usize> for Vector<N> {
+impl<const N: usize, T, U> const IndexMut<U> for Vector<N, T>
+where
+    [T]: [const] IndexMut<U>,
+{
     #[inline]
-    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+    fn index_mut(&mut self, index: U) -> &mut Self::Output {
         self.inner_mut().index_mut(index)
     }
 }
 
-impl<const N: usize> IntoIterator for Vector<N> {
+impl<const N: usize, T> IntoIterator for Vector<N, T> {
     type IntoIter = array::IntoIter<Self::Item, N>;
-    type Item = f32;
+    type Item = T;
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
@@ -406,7 +449,11 @@ impl<const N: usize> IntoIterator for Vector<N> {
     }
 }
 
-impl<const N: usize> core::ops::Neg for Vector<N> {
+impl<const N: usize, T> const Neg for Vector<N, T>
+where
+    T: [const] Neg<Output = T>,
+    T: Copy, // TODO: ought to be removed when removed from `flip`
+{
     type Output = Self;
 
     #[inline]
@@ -415,14 +462,21 @@ impl<const N: usize> core::ops::Neg for Vector<N> {
     }
 }
 
-impl<const N: usize> Sum<Vector<N>> for Option<Vector<N>> {
-    fn sum<I: Iterator<Item = Vector<N>>>(iter: I) -> Self {
+impl<const N: usize, T> Sum<Vector<N, T>> for Option<Vector<N, T>>
+where
+    Vector<N, T>: Add<Output = Vector<N, T>>,
+{
+    fn sum<I: Iterator<Item = Vector<N, T>>>(iter: I) -> Self {
         iter.reduce(Add::add)
     }
 }
 
-impl<const N: usize> Sum for Vector<N> {
+impl<const N: usize, T> Sum for Vector<N, T>
+where
+    Option<Self>: Sum<Self>,
+    Self: Default,
+{
     fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
-        iter.reduce(Add::add).unwrap_or_default()
+        Option::<Vector<N, T>>::sum(iter).unwrap_or_default()
     }
 }

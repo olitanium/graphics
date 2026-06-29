@@ -52,8 +52,8 @@ fn truncate() {
 
     let vec1 = Vector::new([1.0, 2.0, 3.0]);
 
-    let vec2: Vector<4> = vec1.truncate();
-    let vec3: Vector<2> = vec1.truncate();
+    let vec2: Vector<4, f32> = vec1.truncate();
+    let vec3: Vector<2, f32> = vec1.truncate();
 
     assert_eq!(vec2, Vector::new([1.0, 2.0, 3.0, 0.0]));
     assert_eq!(vec3, Vector::new([1.0, 2.0]));

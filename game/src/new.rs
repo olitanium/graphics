@@ -2,8 +2,8 @@ use std::num::NonZero;
 use std::rc::Rc;
 
 use engine::entity::Mass;
-use engine::framebuffer::traits::FramebufferInternals;
 use engine::framebuffer::Builder;
+use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::camera::ManualPose;
 use engine::modelling::cubic::geometry::{Orientation, Pose};
@@ -19,6 +19,7 @@ use engine::{ColourRGBA, SimpleEntity};
 
 use crate::camera::GameCamera;
 use crate::morgan::Sun;
+use crate::player::Player;
 use crate::state::{State, StateError};
 
 impl State {
@@ -69,14 +70,7 @@ impl State {
             |_| (),
         );
 
-        const PLAYER_SIZE: f32 = 0.1;
-        let mut player = SimpleEntity::from_simple_cubic(
-            SimpleCubic::cube(PLAYER_SIZE, Rc::new(Material::white())).build(),
-            0,
-            Mass(f32::INFINITY),
-            |_| (),
-        );
-        player.pose = Pose::new_from_translation(Vector::new([0.25, PLAYER_SIZE * 0.5, 0.25]));
+        let player = Player::new();
 
         const START_LOC: Vector<3> = Vector::new([0.0, 0.5, 1.0]);
 
@@ -148,7 +142,7 @@ impl State {
             sun_duplicate_light,
             origin_cube: origin_cube.into(),
             small_cube: small_cube.into(),
-            player: player.into(),
+            player,
 
             toggle_m: true,
 

@@ -70,6 +70,8 @@ impl State {
         frame_time: Duration,
         _time: Duration,
     ) -> ControlOutput<()> {
+        let frame_time = frame_time.as_secs_f32();
+
         if keyboard.contains(&Key::LeftControl) && keyboard.contains(&Key::Num0) {
             return ControlOutput::Restart;
         }
@@ -77,10 +79,10 @@ impl State {
             return ControlOutput::Close;
         }
         if keyboard.contains(&Key::R) {
-            self.exposure -= 1.2 * frame_time.as_secs_f32();
+            self.exposure -= 1.2 * frame_time;
         }
         if keyboard.contains(&Key::E) {
-            self.exposure += 1.2 * frame_time.as_secs_f32();
+            self.exposure += 1.2 * frame_time;
         }
 
         if let Some(ch) = string.pop() {
@@ -101,7 +103,10 @@ impl State {
             self.game_camera.move_lock = !self.game_camera.move_lock;
         }
         self.game_camera
-            .controls(keyboard, string, mouse_delta, frame_time);
+            .controls(&keyboard, string, mouse_delta, frame_time);
+
+        self.player
+            .controls(&keyboard, frame_time, &self.small_cube, &self.origin_cube);
 
         ControlOutput::Data(())
     }

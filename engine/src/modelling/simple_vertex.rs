@@ -11,7 +11,7 @@ use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{CubicVertex, VertexHasTangent};
 use crate::transform::Transform;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct SimpleVertex {
     // 0
     pub position: Vector<3>,

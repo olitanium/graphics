@@ -12,7 +12,7 @@ impl<const N: usize> CompactUnitVector<N>
 where
     [(); N - 1]:,
 {
-    pub fn try_normalize(vec: Vector<N>) -> Option<Self> {
+    pub fn try_normalize(vec: Vector<N, f32>) -> Option<Self> {
         let normal_vec = vec.try_normalize()?.v().into_inner();
 
         let mut partial_sum_sq = normal_vec.iter().scan(1.0, |state, elem| {
@@ -48,7 +48,7 @@ where
         Some(CompactUnitVector(out))
     }
 
-    pub fn unit(self) -> UnitVector<N> {
+    pub fn unit(self) -> UnitVector<N, f32> {
         let mut as_float = self.0.map(|x| x.to_f32() * f32::consts::PI);
         as_float[N - 2] *= 2.0;
 

@@ -8,7 +8,7 @@ use crate::vector::Vector;
 
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
-pub struct Matrix<const R: usize, const C: usize>([Vector<R>; C]); // Col-Major!!!!!
+pub struct Matrix<const R: usize, const C: usize>([Vector<R, f32>; C]); // Col-Major!!!!!
 
 impl<const R: usize, const C: usize> Default for Matrix<R, C> {
     #[inline]
@@ -29,13 +29,13 @@ impl<const R: usize, const C: usize> Debug for Matrix<R, C> {
 
 impl<const R: usize, const C: usize> Matrix<R, C> {
     #[inline]
-    pub fn from_col_major(input: [impl Into<Vector<R>>; C]) -> Self {
+    pub fn from_col_major(input: [impl Into<Vector<R, f32>>; C]) -> Self {
         let vec_arr = input.map(Into::into);
         Self(vec_arr)
     }
 
     #[inline]
-    pub fn from_row_major(input: [impl Into<Vector<C>>; R]) -> Self {
+    pub fn from_row_major(input: [impl Into<Vector<C, f32>>; R]) -> Self {
         Matrix::from_col_major(input).transpose()
     }
 
@@ -43,7 +43,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     /// Panics if the length of the slice is not as given by the compile-time
     /// constants
     #[inline]
-    pub fn new_from_slice(input: &[Vector<R>]) -> Self {
+    pub fn new_from_slice(input: &[Vector<R, f32>]) -> Self {
         Self(input.try_into().unwrap())
     }
 
@@ -53,27 +53,27 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     #[inline]
-    pub const fn into_inner(self) -> [Vector<R>; C] {
+    pub const fn into_inner(self) -> [Vector<R, f32>; C] {
         self.0
     }
 
     #[inline]
-    pub const fn inner(&self) -> &[Vector<R>; C] {
+    pub const fn inner(&self) -> &[Vector<R, f32>; C] {
         &self.0
     }
 
     #[inline]
-    pub const fn inner_mut(&mut self) -> &mut [Vector<R>; C] {
+    pub const fn inner_mut(&mut self) -> &mut [Vector<R, f32>; C] {
         &mut self.0
     }
 
     #[inline]
-    pub fn col_iter(&self) -> impl Iterator<Item = Vector<R>> + '_ {
+    pub fn col_iter(&self) -> impl Iterator<Item = Vector<R, f32>> + '_ {
         self.inner().iter().copied()
     }
 
     #[inline]
-    pub fn col_iter_mut(&mut self) -> impl Iterator<Item = &mut Vector<R>> {
+    pub fn col_iter_mut(&mut self) -> impl Iterator<Item = &mut Vector<R, f32>> {
         self.inner_mut().iter_mut()
     }
 
@@ -89,13 +89,13 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
             .expect("Number of entries is permitted by compile time constants")
     }
 
-    pub fn col(&self, index: usize) -> Vector<R> {
+    pub fn col(&self, index: usize) -> Vector<R, f32> {
         self.0[index]
     }
 
     #[expect(clippy::missing_panics_doc)]
     #[inline]
-    pub fn row_iter(&self) -> impl Iterator<Item = Vector<C>> {
+    pub fn row_iter(&self) -> impl Iterator<Item = Vector<C, f32>> {
         let x = self.inner().map(Vector::into_iter);
         MultiZip::new(x).map(|vec| {
             Vector::try_from(vec.as_ref())
@@ -159,7 +159,7 @@ impl<const R: usize, const S: usize, const C: usize> ops::Mul<Matrix<S, C>> for 
         Self::Output::new_from_slice(
             &rhs.col_iter()
                 .map(|b_col| {
-                    Vector::<R>::try_from(
+                    Vector::<R, _>::try_from(
                         self.row_iter()
                             .map(|val| val.dot(b_col))
                             .collect::<Box<_>>()
@@ -201,7 +201,7 @@ impl_ops!(Add::add);
 impl_ops!(Sub::sub);
 
 impl<const R: usize, const C: usize> Index<(usize, usize)> for Matrix<R, C> {
-    type Output = <Vector<R> as Index<usize>>::Output;
+    type Output = <Vector<R, f32> as Index<usize>>::Output;
 
     #[inline]
     fn index(&self, index: (usize, usize)) -> &Self::Output {
@@ -220,9 +220,9 @@ impl<const R: usize, const C: usize> IndexMut<(usize, usize)> for Matrix<R, C> {
     }
 }
 
-impl<const R: usize> From<Vector<R>> for Matrix<R, 1> {
+impl<const R: usize> From<Vector<R, f32>> for Matrix<R, 1> {
     #[inline]
-    fn from(value: Vector<R>) -> Self {
+    fn from(value: Vector<R, f32>) -> Self {
         Self::from_col_major([value])
     }
 }
@@ -237,7 +237,7 @@ impl Matrix<4, 4> {
         matrix
     }
 
-    pub fn transform_translate(vec: Vector<3>) -> Self {
+    pub fn transform_translate(vec: Vector<3, f32>) -> Self {
         let mut matrix = Self::identity();
         matrix[(0, 3)] = vec[0];
         matrix[(1, 3)] = vec[1];

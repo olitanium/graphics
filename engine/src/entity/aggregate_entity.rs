@@ -20,7 +20,7 @@ use crate::modelling::cubic::geometry::{
     SkeletalAnimation,
 };
 use crate::modelling::cubic::lighting::simple::ListLights;
-use crate::modelling::{Collision, CubicVertex, Skeleton, TempModelTransform};
+use crate::modelling::{Collision, CubicVertex, Skeleton};
 
 mod group;
 pub use group::Group as AggregateGroup;
@@ -533,8 +533,8 @@ where
     }
 }
 
-impl<'a> TempModelTransform for &'a AggregateCalcAnim {
-    fn get_root_pose(&self) -> Pose {
-        self.root().root()
-    }
-}
+// impl<'a> TempModelTransform for &'a AggregateCalcAnim {
+// fn get_root_pose(&self) -> Pose {
+// self.root().root()
+// }
+// }

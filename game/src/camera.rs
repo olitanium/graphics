@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 use std::time::Duration;
 
+use engine::Key;
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic;
-use engine::Key;
 
 pub struct GameCamera {
     pub move_lock: bool,
@@ -15,13 +15,12 @@ pub struct GameCamera {
 impl GameCamera {
     pub fn controls(
         &mut self,
-        keyboard: HashSet<Key>,
+        keyboard: &HashSet<Key>,
         _typing_string: &mut String,
         mouse_delta: Vector<2>,
-        frame_time: Duration,
+        frame_time: f32,
     ) {
         if self.move_lock {
-            let frame_time = frame_time.as_secs_f32();
             let distance = frame_time * self.speed;
 
             if keyboard.contains(&Key::Right) | keyboard.contains(&Key::D) {
