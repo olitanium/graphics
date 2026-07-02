@@ -89,12 +89,10 @@ impl State {
             match ch {
                 'Q' => string.clear(),
                 'b' | 'B' => self.toggle_b = !self.toggle_b,
-                'm' | 'M' => {
-                    self.toggle_m = !self.toggle_m;
-                }
+                'm' | 'M' => self.toggle_m = !self.toggle_m,
                 'g' | 'G' => self.toggle_g = !self.toggle_g,
                 'h' | 'H' => self.toggle_h = !self.toggle_h,
-                other => string.push(other),
+                ch => string.push(ch),
             }
         }
 
@@ -105,8 +103,10 @@ impl State {
         self.game_camera
             .controls(&keyboard, string, mouse_delta, frame_time);
 
-        self.player
-            .controls(&keyboard, frame_time, &self.small_cube, &self.origin_cube);
+        if !self.game_camera.move_lock {
+            self.player
+                .controls(&keyboard, frame_time, &self.small_cube, &self.origin_cube);
+        }
 
         ControlOutput::Data(())
     }

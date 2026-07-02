@@ -94,6 +94,24 @@ where
         T::stencil_testing(stencil_testing, context);
     }
 }
+
+impl<T> FramebufferWithoutExtra<2> for T where T: FramebufferWithoutExtra<3> {}
+impl<T> FramebufferWithDepth<2> for T
+where
+    T: FramebufferWithDepth<3>,
+{
+    fn depth_testing(depth_testing: bool, context: &mut FramebufferContext) {
+        T::depth_testing(depth_testing, context);
+    }
+}
+impl<T> FramebufferWithStencil<2> for T
+where
+    T: FramebufferWithStencil<3>,
+{
+    fn stencil_testing(stencil_testing: bool, context: &mut FramebufferContext) {
+        T::stencil_testing(stencil_testing, context);
+    }
+}
 pub trait FramebufferWithoutExtra<const OUT: usize>: FramebufferInternals {
     fn bind<'a, 'b>(
         &'a self,

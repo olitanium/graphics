@@ -47,7 +47,9 @@ impl State {
         let origin_cube = SimpleEntity::from_simple_cubic(
             SimpleCubic::cube(ORIGIN_CUBE_SIDE_LENGTH, Rc::new(Material::white()))
                 .apply_transformation(Pose::new_from_orientation_translation(
-                    Orientation::new_forward_up((Vector::X + Vector::Z).normalize(), UnitVector::Y),
+                    Orientation::IDENTITY,
+                    // Orientation::new_forward_up((Vector::X +
+                    // Vector::Z).normalize(), UnitVector::Y),
                     Vector::new([0.0, -ORIGIN_CUBE_SIDE_LENGTH * 0.5, 0.0]),
                 ))
                 .build(),
@@ -71,25 +73,7 @@ impl State {
         );
 
         let player = Player::new();
-
-        const START_LOC: Vector<3> = Vector::new([0.0, 0.5, 1.0]);
-
-        let camera = camera::builder()
-            .pose(ManualPose::new_fixed_up_from_to(
-                START_LOC,
-                Vector::ZERO,
-                UnitVector::Y,
-            ))
-            .perspective(90.0, hdr_fb.aspect_ratio(), 0.01, 100.0)
-            .build();
-        let sensitivity = 0.01;
-
-        let game_camera = GameCamera {
-            move_lock: false,
-            camera,
-            sensitivity,
-            speed: 0.3,
-        };
+        let game_camera = GameCamera::new(&hdr_fb);
 
         let mut morgan = make_model("morgan").unwrap();
         let morgan_colour = ColourRGBA::new([1.0, 1.0, 1.0, 1.0]);

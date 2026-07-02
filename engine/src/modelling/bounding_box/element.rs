@@ -13,13 +13,18 @@ use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
 use graphics::{ActiveShaderProgram, Model};
 use utils::error_boilerplate;
 
+use crate::modelling::bounding_box::active_element::InnerChildrenOrMeta;
 use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
 use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
-pub struct BoundingBoxElement<V: ExtendedVertex<DIMS>, const DIMS: usize, T> {
-    pub(crate) meta: RefCell<T>,
+pub(crate) enum ChildrenOrMeta<T> {
+    Meta(RefCell<T>),
+    Children([usize; 2]),
+}
 
+#[derive(Debug, Clone)]
+pub struct BoundingBoxElement<V: ExtendedVertex<DIMS>, const DIMS: usize, T> {
     pub(crate) lower_bound: Vector<DIMS>,
     pub(crate) upper_bound: Vector<DIMS>,
 
@@ -27,7 +32,7 @@ pub struct BoundingBoxElement<V: ExtendedVertex<DIMS>, const DIMS: usize, T> {
     pub(crate) start_index: usize,
     pub(crate) len: usize,
 
-    pub(crate) children: Option<[NonZeroUsize; 2]>,
+    pub(crate) children_or_meta: ChildrenOrMeta<T>,
 }
 
 fn make_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
@@ -64,20 +69,9 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
         let upper_bounds = make_upper_bound(&vectors)?;
         let lower_bounds = make_lower_bound(&vectors)?;
 
-        let destination_index = so_far.len();
-
-        so_far.push(Self {
-            meta: RefCell::new(init(triangles)),
-            triangles: PhantomData,
-            start_index,
-            len: triangles.len(),
-            lower_bound: lower_bounds,
-            upper_bound: upper_bounds,
-            children: None,
-        });
-
-        if depth != 0 {
-            so_far[destination_index].children = {
+        let children_or_meta = if depth != 0 {
+            // so_far[destination_index].children =
+            let opt_children = {
                 let dimensions = upper_bounds - lower_bounds;
                 let (max_index, _) = dimensions
                     .into_iter()
@@ -119,19 +113,37 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
                     .then(|| {
                         partitions.try_map(|(lower_bound_partition, partition)| {
                             let bb_triangle = &mut triangles[lower_bound_partition..partition];
-                            let out = Self::new_from_many_inner(
+
+                            Self::new_from_many_inner(
                                 so_far,
                                 bb_triangle,
                                 lower_bound_partition + start_index,
                                 depth - 1,
                                 init,
-                            );
-                            out.and_then(NonZeroUsize::new)
+                            )
                         })
                     })
                     .flatten()
+            };
+
+            match opt_children {
+                Some(children) => ChildrenOrMeta::Children(children),
+                None => ChildrenOrMeta::Meta(RefCell::new(init(triangles))),
             }
+        } else {
+            ChildrenOrMeta::Meta(RefCell::new(init(triangles)))
         };
+
+        let destination_index = so_far.len();
+
+        so_far.push(Self {
+            triangles: PhantomData,
+            start_index,
+            len: triangles.len(),
+            lower_bound: lower_bounds,
+            upper_bound: upper_bounds,
+            children_or_meta,
+        });
 
         Some(destination_index)
     }
@@ -166,7 +178,7 @@ where
         D: FramebufferWithDepth<OUT>,
         P: Transform<Vector<DIMS>>,
         const OUT: usize,
-        F: Fn(&T) -> ColourRGBA,
+        F: FnMut() -> ColourRGBA,
     >(
         &self,
         bounding_box: &BoundingBox<V, DIMS, T>,
@@ -182,9 +194,9 @@ where
             OUT,
         >,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-        colour: &F,
+        colour: &mut F,
     ) -> Result<(), DrawRecursiveError<'a>> {
-        if let Some([lhs, rhs]) = self.get_children(bounding_box)
+        if let InnerChildrenOrMeta::Children([lhs, rhs]) = self.get_children(bounding_box)
             && level != 0
         {
             lhs.draw_recursive(
@@ -205,7 +217,7 @@ where
             )?;
             Ok(())
         } else {
-            let chosen_colour = colour(&*self.meta.borrow());
+            let chosen_colour = colour();
 
             let (lower_bounds, upper_bounds) = self.transform_by(pose);
             let positions_triangles = Volume::volume(lower_bounds, upper_bounds)

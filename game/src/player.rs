@@ -1,7 +1,9 @@
 use std::collections::HashSet;
+use std::collections::btree_map::Values;
 use std::rc::Rc;
 
-use engine::entity::{CalculateAnimationError, Mass, SkeletonEntity};
+use engine::Key::O;
+use engine::entity::{Mass, SkeletonEntity};
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::SimpleCubic;
 use engine::modelling::cubic::geometry::{CalculatedAnimation, Pose};
@@ -11,6 +13,7 @@ use engine::{ColourRGBA, Key, SimpleEntity};
 
 pub struct Player {
     entity: SkeletonEntity<()>,
+    velocity: Vector<3>,
 }
 
 impl Player {
@@ -25,6 +28,7 @@ impl Player {
         player.pose = Pose::new_from_translation(Vector::new([0.25, PLAYER_SIZE * 0.5, 0.25]));
         Player {
             entity: player.into(),
+            velocity: Vector::ZERO,
         }
     }
 
@@ -56,51 +60,69 @@ impl Player {
         ground: &SkeletonEntity<()>,
     ) {
         if simple_test_collision(self, ground) {
-            test_key_and_collision(self, environment, keyboard, Key::W, [0.0, 0.0, -frame_time]);
-            test_key_and_collision(self, environment, keyboard, Key::S, [0.0, 0.0, frame_time]);
-            test_key_and_collision(self, environment, keyboard, Key::A, [-frame_time, 0.0, 0.0]);
-            test_key_and_collision(self, environment, keyboard, Key::D, [frame_time, 0.0, 0.0]);
-        } else {
-            self.entity
-                .pose
-                .push_change(Pose::new_from_translation(Vector::new([
-                    0.0,
-                    -frame_time,
-                    0.0,
-                ])));
+            test_key_and_push(self, keyboard, Key::W, -Vector::Z, frame_time);
+            test_key_and_push(self, keyboard, Key::S, Vector::Z, frame_time);
+            test_key_and_push(self, keyboard, Key::A, -Vector::X, frame_time);
+            test_key_and_push(self, keyboard, Key::D, Vector::X, frame_time);
         }
+        process_force(self, -Vector::Y, frame_time);
+
+        for mask in [Vector::X, Vector::Z] {
+            force_in_direction(self, environment, frame_time, mask);
+        }
+        force_in_direction(self, ground, frame_time, Vector::Y);
+
+        // friction
+        let friction = Vector::new([
+            (-1.0 / self.entity.mass.0) * self.velocity[0],
+            0.0,
+            (-1.0 / self.entity.mass.0) * self.velocity[2],
+        ]);
+
+        process_force(self, friction, frame_time);
     }
 }
 
-fn test_key_and_collision(
+fn force_in_direction(
     player: &mut Player,
     environment: &SkeletonEntity<()>,
+    frame_time: f32,
+    mask: Vector<3>,
+) {
+    let old_pose = player.entity.pose;
+
+    player.entity.pose.push_change(Pose::new_from_translation(
+        player.velocity.elem_wise_mul(mask) * frame_time,
+    ));
+
+    if simple_test_collision(player, environment) {
+        player.entity.pose = old_pose;
+        let inverse_mask = mask.map(|val| if val == 0.0 { 1.0 } else { 0.0 });
+        player.velocity = player.velocity.elem_wise_mul(inverse_mask);
+    }
+}
+
+fn test_key_and_push(
+    player: &mut Player,
     keyboard: &HashSet<Key>,
     key: Key,
-    change: [f32; 3],
+    force: Vector<3>,
+    frame_time: f32,
 ) {
     if keyboard.contains(&key) {
-        let old_pose = player.entity.pose;
-
-        player
-            .entity
-            .pose
-            .push_change(Pose::new_from_translation(Vector::new(change)));
-
-        if simple_test_collision(player, environment) {
-            player.entity.pose = old_pose;
-        }
+        process_force(player, force, frame_time);
     }
+}
+
+fn process_force(player: &mut Player, force: Vector<3>, frame_time: f32) {
+    player.velocity += force * (1.0 / player.entity.mass.0) * frame_time;
 }
 
 fn simple_test_collision(player: &Player, environment: &SkeletonEntity<()>) -> bool {
     let (_, anim) = player.entity.get_pair_model_bind_pose();
     let (_, env_anim) = environment.get_pair_model_bind_pose();
 
-    player.entity.collides(
-        (&player.entity.model.skeleton, &anim),
-        environment,
-        (&environment.model.skeleton, &env_anim),
-        |_, _, _, _| (),
-    )
+    player
+        .entity
+        .collides(&anim, environment, &env_anim, |_, _, _, _| ())
 }

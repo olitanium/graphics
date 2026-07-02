@@ -1,17 +1,21 @@
 use std::array;
+use std::cell::RefMut;
 
 use graphics::linear_algebra::Vector;
 use graphics::vertex::Vertex;
 
+use super::element::ChildrenOrMeta;
 use crate::modelling::BoundingBox;
 use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::bounding_box::BoundingBoxElement;
 use crate::transform::Transform;
 
-impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T>
-where
-    Vector<DIMS>: ExtendedVertex<DIMS>,
-{
+pub(crate) enum InnerChildrenOrMeta<'a, V: ExtendedVertex<DIMS>, const DIMS: usize, T> {
+    Meta(RefMut<'a, T>),
+    Children([&'a BoundingBoxElement<V, DIMS, T>; 2]),
+}
+
+impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T> {
     pub fn transform_by<P: Transform<Vector<DIMS>>>(
         &self,
         pose: &P,
@@ -90,17 +94,18 @@ where
         point: Vector<DIMS>,
     ) -> bool
     where
+        Vector<DIMS>: ExtendedVertex<DIMS>,
         [(); Vector::<DIMS>::ELEMENT_COUNT]:,
     {
         let is_in = self.encloses_point_single(point);
 
         match self.get_children(bounding_box) {
-            Some([left, right]) => {
+            InnerChildrenOrMeta::Children([left, right]) => {
                 is_in
                     && (left.encloses_point_and_children(bounding_box, point)
                         || right.encloses_point_and_children(bounding_box, point))
             }
-            None => is_in,
+            _ => is_in,
         }
     }
 
@@ -121,6 +126,7 @@ where
         alter_meta: &mut F,
     ) -> bool
     where
+        Vector<DIMS>: ExtendedVertex<DIMS>,
         [(); Vector::<DIMS>::ELEMENT_COUNT]:,
     {
         let is_overlap = this.overlaps_bounding_box_single(this_transform, other, other_transform);
@@ -130,7 +136,10 @@ where
                 this.get_children(this_boundingbox),
                 other.get_children(other_boundingbox),
             ) {
-                (Some([thisleft, thisright]), Some([otherleft, otherright])) => [
+                (
+                    InnerChildrenOrMeta::Children([thisleft, thisright]),
+                    InnerChildrenOrMeta::Children([otherleft, otherright]),
+                ) => [
                     (thisleft, otherleft),
                     (thisleft, otherright),
                     (thisright, otherleft),
@@ -148,9 +157,11 @@ where
                         alter_meta,
                     )
                 }),
-                (None, Some([otherleft, otherright])) => [(this, otherleft), (this, otherright)]
-                    .into_iter()
-                    .any(|(new_this, new_other)| {
+                (
+                    InnerChildrenOrMeta::Meta(_),
+                    InnerChildrenOrMeta::Children([otherleft, otherright]),
+                ) => [(this, otherleft), (this, otherright)].into_iter().any(
+                    |(new_this, new_other)| {
                         BoundingBoxElement::overlaps_bounding_box_and_children(
                             new_this,
                             this_boundingbox,
@@ -160,10 +171,13 @@ where
                             other_transform,
                             alter_meta,
                         )
-                    }),
-                (Some([thisleft, thisright]), None) => [(thisleft, other), (thisright, other)]
-                    .into_iter()
-                    .any(|(new_this, new_other)| {
+                    },
+                ),
+                (
+                    InnerChildrenOrMeta::Children([thisleft, thisright]),
+                    InnerChildrenOrMeta::Meta(_),
+                ) => [(thisleft, other), (thisright, other)].into_iter().any(
+                    |(new_this, new_other)| {
                         BoundingBoxElement::overlaps_bounding_box_and_children(
                             new_this,
                             this_boundingbox,
@@ -173,9 +187,10 @@ where
                             other_transform,
                             alter_meta,
                         )
-                    }),
-                (None, None) => {
-                    alter_meta(&mut *this.meta.borrow_mut(), &mut *other.meta.borrow_mut());
+                    },
+                ),
+                (InnerChildrenOrMeta::Meta(mut lhs), InnerChildrenOrMeta::Meta(mut rhs)) => {
+                    alter_meta(&mut *lhs, &mut *rhs);
                     true
                 }
             }
@@ -184,15 +199,20 @@ where
         }
     }
 
-    pub fn get_children<'a>(
-        &self,
+    pub(crate) fn get_children<'a>(
+        &'a self,
         bounding_box: &'a BoundingBox<V, DIMS, T>,
-    ) -> Option<[&'a Self; 2]>
+    ) -> InnerChildrenOrMeta<'a, V, DIMS, T>
     where
+        Vector<DIMS>: ExtendedVertex<DIMS>,
         [(); Vector::<DIMS>::ELEMENT_COUNT]:,
     {
-        self.children
-            .map(|arr_children| arr_children.map(|index| bounding_box.get(index.get())))
+        match &self.children_or_meta {
+            ChildrenOrMeta::Meta(cell) => InnerChildrenOrMeta::Meta(cell.borrow_mut()),
+            ChildrenOrMeta::Children(children) => {
+                InnerChildrenOrMeta::Children(children.map(|index| bounding_box.get(index)))
+            }
+        }
     }
 }
 

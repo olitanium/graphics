@@ -23,7 +23,7 @@ pub struct Group<
     D: FramebufferWithDepth<OUT, Tex = FlatTexture>,
     V: CubicVertex,
     T,
-    F: Fn(&T) -> ColourRGBA,
+    F: FnMut() -> ColourRGBA,
 > {
     framebuffer: &'a D,
     bounding_box: &'a SkeletonBb<V, T>,
@@ -34,7 +34,7 @@ pub struct Group<
     colour: F,
 }
 
-impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn(&T) -> ColourRGBA>
+impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: FnMut() -> ColourRGBA>
     Group<'a, 1, D, V, T, F>
 {
     pub fn new<P: CameraPose>(
@@ -63,7 +63,7 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
     }
 }
 
-impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn(&T) -> ColourRGBA>
+impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: FnMut() -> ColourRGBA>
     Draw for Group<'a, 1, D, V, T, F>
 {
     fn draw(

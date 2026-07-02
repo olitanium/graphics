@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use std::rc::Rc;
 use std::time::Duration;
 
 use engine::entity::SkeletonEntity;
@@ -9,10 +8,9 @@ use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::camera::Projection;
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
-use engine::modelling::cubic::material::Material;
 use engine::modelling::{Bloom, Quad, SkyBox};
 use engine::types::TexDim;
-use engine::{ApiState, ColourRGBA, Event, PollResult};
+use engine::{ApiState, Event, PollResult};
 
 use crate::camera::GameCamera;
 use crate::morgan::Sun;
@@ -67,7 +65,7 @@ impl ApiState for State {
                     self.hdr_fb.resize(size);
                     // self.bloom.resize(size);
                     self.game_camera.camera.projection = Projection::Perspective {
-                        fov: (90.0_f32).to_radians(),
+                        fov: const { (90.0_f32).to_radians() },
                         aspect: self.hdr_fb.aspect_ratio(),
                         near: 0.1,
                         far: 100.0,

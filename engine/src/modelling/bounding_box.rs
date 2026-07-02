@@ -50,6 +50,12 @@ where
         &self.inner[index]
     }
 
+    fn root_element(&self) -> &BoundingBoxElement<V, DIMS, T> {
+        self.inner
+            .last()
+            .expect("guaranteed at least one element, or the BB create function would return None")
+    }
+
     pub(crate) fn new_from_vec_indexes<F: FnMut(&[(Vector<DIMS>, [V; 3])]) -> T>(
         vectors: Vec<V>,
         triangles: &[[usize; 3]],
@@ -98,7 +104,7 @@ where
     }
 
     pub fn encloses_point(&self, point: Vector<DIMS>) -> bool {
-        self.get(0).encloses_point_and_children(self, point)
+        self.root_element().encloses_point_and_children(self, point)
     }
 
     pub fn detect_collision<
@@ -118,10 +124,10 @@ where
         P: Transform<[V2; 3]>,
     {
         BoundingBoxElement::overlaps_bounding_box_and_children(
-            lhs.get(0),
+            lhs.root_element(),
             lhs,
             &lhs_pose,
-            rhs.get(0),
+            rhs.root_element(),
             rhs,
             &rhs_pose,
             &mut alter_meta,
@@ -154,7 +160,7 @@ where
         'a,
         P: Transform<Vector<DIMS>>,
         D: FramebufferWithDepth<1, Tex = FlatTexture>,
-        F: Fn(&T) -> ColourRGBA,
+        F: FnMut() -> ColourRGBA,
     >(
         &self,
         level: usize,
@@ -169,15 +175,15 @@ where
             1,
         >,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
-        colour: F,
+        mut colour: F,
     ) -> Result<(), DrawRecursiveError<'a>> {
-        self.get(0).draw_recursive(
+        self.root_element().draw_recursive(
             self,
             &pose,
             level,
             active_shader,
             active_framebuffer,
-            &colour,
+            &mut colour,
         )
     }
 }
@@ -282,11 +288,11 @@ mod test {
             upper_bound: Vector::X,
             start_index: 0,
             len: 0,
-            meta: Default::default(),
             triangles: Default::default(),
-            children: Default::default(),
+            children_or_meta: super::element::ChildrenOrMeta::Meta(Default::default()),
         }
     }
+
     #[test]
     fn test_point_in_square() {
         use crate::linear_algebra::Vector;

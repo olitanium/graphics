@@ -1,3 +1,5 @@
+use std::marker::Destruct;
+use std::mem;
 use std::ops::{Add, Mul, Sub};
 
 macro_rules! elem_wise {

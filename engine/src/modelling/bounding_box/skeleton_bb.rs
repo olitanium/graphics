@@ -1,3 +1,5 @@
+use std::ops::Bound;
+
 use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
@@ -41,6 +43,10 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
         Self {
             per_bone: vec![bbox],
         }
+    }
+
+    pub fn debug_get_first(&self) -> &BoundingBox<V, 3, T> {
+        self.per_bone.first().unwrap()
     }
 }
 
@@ -108,7 +114,7 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
     pub(crate) fn draw<
         'a,
         D: FramebufferWithDepth<1, Tex = FlatTexture>,
-        F: Fn(&T) -> ColourRGBA,
+        F: FnMut() -> ColourRGBA,
     >(
         &self,
         level: usize,
@@ -116,7 +122,7 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
         skeleton: &Skeleton,
         calculated_animation: CalculatedAnimation,
-        colour: F,
+        mut colour: F,
     ) -> Result<(), DrawError<'a>> {
         for (bone, bbox) in self.per_bone.iter().enumerate() {
             let bone = &SkeletonBoneIndex(bone);
@@ -124,7 +130,7 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
             let pose = calculated_animation
                 .get(bone, skeleton)
                 .map_err(|err| DrawError::GetAnimation(err))?;
-            bbox.draw(level, pose, active_shader, active_framebuffer, &colour)
+            bbox.draw(level, pose, active_shader, active_framebuffer, &mut colour)
                 .map_err(|err| DrawError::DrawRecursive(err))?
         }
 

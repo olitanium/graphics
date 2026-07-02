@@ -1,9 +1,9 @@
 use engine::array_vec::arrvec;
 use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::lighting::shadow::{PointLightIlluminatesGroup, ShadowListLights};
-use engine::modelling::{BloomGroup, QuadGroup, ShadowGroup, SkyBoxGroup};
+use engine::modelling::{BloomGroup, BoundingBoxGroup, QuadGroup, ShadowGroup, SkyBoxGroup};
 use engine::query::HasDrawnQuery;
-use engine::{PollResult, VecDraw};
+use engine::{ColourRGBA, PollResult, VecDraw};
 
 use crate::state::{State, StateError};
 
@@ -83,6 +83,16 @@ impl State {
             &(),
             vec![],
         ));
+
+        // out.push(BoundingBoxGroup::new(
+        // &self.hdr_fb,
+        // self.sun.inner.bounding_box().unwrap().debug_get_first(),
+        // self.sun.inner.pose,
+        // &self.game_camera.camera,
+        // &(),
+        // 20,
+        // || ColourRGBA::grayscale(1.0, 0.5),
+        // ));
 
         if !self.toggle_g {
             out.push(BloomGroup::new(default_framebuffer, &self.bloom_from_hdrfb));

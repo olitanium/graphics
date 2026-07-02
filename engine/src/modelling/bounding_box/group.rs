@@ -21,7 +21,7 @@ pub struct Group<
     V: ExtendedVertex<DIMS>,
     T: Transform<Vector<DIMS>>,
     Bt,
-    F: Fn(&Bt) -> ColourRGBA,
+    F: FnMut() -> ColourRGBA,
 > where
     BoundingBoxElement<V, DIMS, Bt>: BoundingBoxShaderProgram<DIMS>,
     T: Transform<Vector<DIMS>>,
@@ -43,7 +43,7 @@ impl<
     V: ExtendedVertex<DIMS>,
     Bt,
     T,
-    F: Fn(&Bt) -> ColourRGBA,
+    F: FnMut() -> ColourRGBA,
 > Group<'a, 1, DIMS, D, V, T, Bt, F>
 where
     BoundingBoxElement<V, DIMS, Bt>: BoundingBoxShaderProgram<DIMS>,
@@ -79,7 +79,7 @@ impl<
     V: ExtendedVertex<DIMS>,
     T,
     Bt,
-    F: Fn(&Bt) -> ColourRGBA,
+    F: FnMut() -> ColourRGBA,
 > Draw for Group<'a, 1, DIMS, D, V, T, Bt, F>
 where
     Vector<DIMS>: Volume<DIMS>,

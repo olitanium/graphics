@@ -79,7 +79,7 @@ impl<T> SkeletonEntity<T> {
 impl<TThis> Collision for SkeletonEntity<TThis> {
     type FuncInputs = <SkeletonBb<SimpleVertex, TThis> as Collision>::FuncInputs;
     type Meta = <SkeletonBb<SimpleVertex, TThis> as Collision>::Meta;
-    type Transform<'a> = <SkeletonBb<SimpleVertex, TThis> as Collision>::Transform<'a>;
+    type Transform<'a> = &'a CalculatedAnimation;
 
     fn collides<
         T: Collision,
@@ -97,7 +97,12 @@ impl<TThis> Collision for SkeletonEntity<TThis> {
         let Some(bbox) = &self.bounding_box else {
             return false;
         };
-        bbox.collides(transform, target, target_transform, alter_meta)
+        bbox.collides(
+            (&self.model.skeleton, transform),
+            target,
+            target_transform,
+            alter_meta,
+        )
     }
 }
 

@@ -1,9 +1,12 @@
 use std::collections::HashSet;
-use std::time::Duration;
 
 use engine::Key;
-use engine::linear_algebra::Vector;
-use engine::modelling::cubic;
+use engine::framebuffer::Framebuffer;
+use engine::framebuffer::attachments::WithDepth;
+use engine::framebuffer::traits::FramebufferInternals;
+use engine::linear_algebra::{UnitVector, Vector};
+use engine::modelling::cubic::camera::ManualPose;
+use engine::modelling::cubic::{self, camera};
 
 pub struct GameCamera {
     pub move_lock: bool,
@@ -13,6 +16,27 @@ pub struct GameCamera {
 }
 
 impl GameCamera {
+    pub fn new(hdr_fb: &Framebuffer<3, WithDepth>) -> Self {
+        const START_LOC: Vector<3> = Vector::new([0.0, 0.5, 1.0]);
+
+        let camera = camera::builder()
+            .pose(ManualPose::new_fixed_up_from_to(
+                START_LOC,
+                Vector::ZERO,
+                UnitVector::Y,
+            ))
+            .perspective(90.0, hdr_fb.aspect_ratio(), 0.01, 100.0)
+            .build();
+        let sensitivity = 0.01;
+
+        Self {
+            move_lock: false,
+            camera,
+            sensitivity,
+            speed: 0.3,
+        }
+    }
+
     pub fn controls(
         &mut self,
         keyboard: &HashSet<Key>,

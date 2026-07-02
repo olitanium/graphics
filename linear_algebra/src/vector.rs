@@ -8,6 +8,7 @@ use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use std::slice::SliceIndex;
 
 use super::matrix::Matrix;
+use crate::vector::array_maths::mul;
 
 mod unit_vector;
 pub use unit_vector::UnitVector;
@@ -41,26 +42,17 @@ impl<const N: usize> const PartialEq for Vector<N, f32> {
 }
 
 impl<const N: usize> Vector<N, f32> {
-    pub const X: Self = Self::x();
-    pub const Y: Self = Self::y();
-    pub const Z: Self = Self::z();
+    pub const X: Self = Self::make_single_vec(0);
+    pub const Y: Self = Self::make_single_vec(1);
+    pub const Z: Self = Self::make_single_vec(2);
     pub const ZERO: Self = Self::new([0.0; N]);
 
-    const fn x() -> Self {
+    const fn make_single_vec(position: usize) -> Self {
         let mut vec = Self::ZERO;
-        vec.inner_mut()[0] = 1.0;
-        vec
-    }
-
-    const fn y() -> Self {
-        let mut vec = Self::ZERO;
-        vec.inner_mut()[1] = 1.0;
-        vec
-    }
-
-    const fn z() -> Self {
-        let mut vec = Self::ZERO;
-        vec.inner_mut()[2] = 1.0;
+        let Some(inner) = vec.inner_mut().get_mut(position) else {
+            return vec;
+        };
+        *inner = 1.0;
         vec
     }
 
@@ -70,7 +62,7 @@ impl<const N: usize> Vector<N, f32> {
     /// optimisations
     #[must_use]
     #[inline]
-    pub const unsafe fn new_normal_unchecked(input: [f32; N]) -> UnitVector<N, f32> {
+    pub const fn new_normal_unchecked(input: [f32; N]) -> UnitVector<N, f32> {
         UnitVector::new_unchecked(input)
     }
 
@@ -226,6 +218,15 @@ impl<const N: usize, T> Vector<N, T> {
         }
 
         self
+    }
+
+    pub const fn elem_wise_mul(self, other: Self) -> Self
+    where
+        T: [const] Mul<Output = T>,
+        T: [const] Destruct,
+        T: Copy,
+    {
+        Vector::new(mul(self.into_inner(), other.into_inner()))
     }
 }
 
