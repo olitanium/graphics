@@ -1,8 +1,6 @@
 use std::collections::HashSet;
-use std::collections::btree_map::Values;
 use std::rc::Rc;
 
-use engine::Key::O;
 use engine::entity::{Mass, SkeletonEntity};
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::SimpleCubic;

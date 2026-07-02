@@ -1,4 +1,3 @@
-use std::ops::Bound;
 
 use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;

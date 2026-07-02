@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::marker::PhantomData;
-use std::num::NonZeroUsize;
-use std::{array, vec};
+use std::array;
 
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
