@@ -55,7 +55,7 @@ impl core::ops::Mul for sf8 {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        let (low, high) = self.inner.widening_mul(rhs.inner);
+        let (low, high) = self.inner.carrying_mul(rhs.inner, 0);
         let mut inner = high << 1;
         const MASK: u8 = i8::MIN.cast_unsigned();
         if low & MASK > 0 {

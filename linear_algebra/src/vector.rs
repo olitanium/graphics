@@ -20,7 +20,7 @@ pub use compact_unit::CompactUnitVector;
 #[derive(Copy, Debug)]
 pub struct Vector<const N: usize, T = f32>(pub(crate) [T; N]);
 
-impl<const N: usize, T> const Clone for Vector<N, T>
+const impl<const N: usize, T> Clone for Vector<N, T>
 where
     [T; N]: [const] Clone,
 {
@@ -29,13 +29,13 @@ where
     }
 }
 
-impl<const N: usize> const Default for Vector<N, f32> {
+const impl<const N: usize> Default for Vector<N, f32> {
     fn default() -> Self {
         Self::ZERO
     }
 }
 
-impl<const N: usize> const PartialEq for Vector<N, f32> {
+const impl<const N: usize> PartialEq for Vector<N, f32> {
     fn eq(&self, other: &Self) -> bool {
         array_maths::eq(self.into_inner(), other.into_inner())
     }
@@ -253,7 +253,7 @@ impl Vector<3, f32> {
 macro_rules! impl_ops {
     ($trait:ident:: $fn:ident) => {
         use self::array_maths::$fn;
-        impl<const N: usize, T> const core::ops::$trait for Vector<N, T>
+        const impl<const N: usize, T> core::ops::$trait for Vector<N, T>
         where
             T: Copy + [const] Destruct + [const] core::ops::$trait<Output = T>,
         {
@@ -297,7 +297,7 @@ macro_rules! impl_ops {
 impl_ops!(Add::add);
 impl_ops!(Sub::sub);
 
-impl<const N: usize, T> const AddAssign for Vector<N, T>
+const impl<const N: usize, T> AddAssign for Vector<N, T>
 where
     Self: [const] Add<Output = Self> + [const] Clone + [const] Destruct,
 {
@@ -306,7 +306,7 @@ where
     }
 }
 
-impl<const N: usize, T> const SubAssign for Vector<N, T>
+const impl<const N: usize, T> SubAssign for Vector<N, T>
 where
     Self: [const] Sub<Output = Self> + [const] Clone + [const] Destruct,
 {
@@ -315,7 +315,7 @@ where
     }
 }
 
-impl<const N: usize, T> const Mul<T> for Vector<N, T>
+const impl<const N: usize, T> Mul<T> for Vector<N, T>
 where
     T: [const] Mul<Output = T> + Copy,
 {
@@ -326,7 +326,7 @@ where
     }
 }
 
-impl<const N: usize, T> const MulAssign<T> for Vector<N, T>
+const impl<const N: usize, T> MulAssign<T> for Vector<N, T>
 where
     Self: [const] Destruct + [const] Mul<T, Output = Self> + [const] Clone,
 {
@@ -335,7 +335,7 @@ where
     }
 }
 
-impl<const N: usize> const Mul<Vector<N, f32>> for f32 {
+const impl<const N: usize> Mul<Vector<N, f32>> for f32 {
     type Output = Vector<N, f32>;
 
     fn mul(self, rhs: Vector<N, f32>) -> Self::Output {
@@ -376,49 +376,49 @@ where
     }
 }
 
-impl<const N: usize, T> const AsRef<[T; N]> for Vector<N, T> {
+const impl<const N: usize, T> AsRef<[T; N]> for Vector<N, T> {
     #[inline]
     fn as_ref(&self) -> &[T; N] {
         self.inner()
     }
 }
 
-impl<const N: usize, T> const AsRef<[T]> for Vector<N, T> {
+const impl<const N: usize, T> AsRef<[T]> for Vector<N, T> {
     #[inline]
     fn as_ref(&self) -> &[T] {
         self.inner()
     }
 }
 
-impl<const N: usize, T> const AsRef<Self> for Vector<N, T> {
+const impl<const N: usize, T> AsRef<Self> for Vector<N, T> {
     #[inline]
     fn as_ref(&self) -> &Self {
         self
     }
 }
 
-impl<const N: usize, T> const AsMut<[T; N]> for Vector<N, T> {
+const impl<const N: usize, T> AsMut<[T; N]> for Vector<N, T> {
     #[inline]
     fn as_mut(&mut self) -> &mut [T; N] {
         self.inner_mut()
     }
 }
 
-impl<const N: usize, T> const AsMut<[T]> for Vector<N, T> {
+const impl<const N: usize, T> AsMut<[T]> for Vector<N, T> {
     #[inline]
     fn as_mut(&mut self) -> &mut [T] {
         self.inner_mut()
     }
 }
 
-impl<const N: usize, T> const AsMut<Self> for Vector<N, T> {
+const impl<const N: usize, T> AsMut<Self> for Vector<N, T> {
     #[inline]
     fn as_mut(&mut self) -> &mut Self {
         self
     }
 }
 
-impl<I, const N: usize, T> const Index<I> for Vector<N, T>
+const impl<I, const N: usize, T> Index<I> for Vector<N, T>
 where
     [T]: [const] Index<I>,
 {
@@ -430,7 +430,7 @@ where
     }
 }
 
-impl<const N: usize, T, U> const IndexMut<U> for Vector<N, T>
+const impl<const N: usize, T, U> IndexMut<U> for Vector<N, T>
 where
     [T]: [const] IndexMut<U>,
 {
@@ -450,7 +450,7 @@ impl<const N: usize, T> IntoIterator for Vector<N, T> {
     }
 }
 
-impl<const N: usize, T> const Neg for Vector<N, T>
+const impl<const N: usize, T> Neg for Vector<N, T>
 where
     T: [const] Neg<Output = T>,
     T: Copy, // TODO: ought to be removed when removed from `flip`

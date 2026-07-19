@@ -4,12 +4,12 @@
 #![feature(generic_const_exprs)]
 #![feature(stmt_expr_attributes)]
 #![feature(type_changing_struct_update)]
-#![feature(box_as_ptr)]
 #![feature(lazy_type_alias)]
 #![feature(inherent_associated_types)]
 #![feature(never_type)]
 #![feature(option_array_transpose)]
 #![feature(generic_const_items)]
+#![feature(try_trait_v2_residual)]
 #![feature(try_trait_v2)]
 #![feature(unwrap_infallible)]
 
@@ -25,11 +25,12 @@ pub mod vertex;
 pub mod vertex_array;
 pub mod vertex_buffer;
 
+pub use colour;
 pub(crate) use environment::PrivateToken;
 pub use environment::{ApiState, Draw, DrawNothing, DrawOut, Environment, Event, Key, PollResult};
+pub use linear_algebra;
 pub use model::Model;
 pub use shader_program::{ActiveShaderProgram, ShaderProgram, ShaderProgramContext};
-pub use {colour, linear_algebra};
 
 pub mod query;
 

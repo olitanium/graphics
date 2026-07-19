@@ -1,5 +1,5 @@
 use std::convert::Infallible;
-use std::ops::{ControlFlow, FromResidual, Try};
+use std::ops::{ControlFlow, FromResidual, Residual, Try};
 
 use crate::framebuffer::FramebufferContext;
 use crate::shader_program::ShaderProgramContext;
@@ -16,6 +16,10 @@ pub enum PollResultResidual<E> {
     Close,
     Err(E),
     Restart,
+}
+
+impl<'a, E> Residual<Vec<Box<dyn Draw + 'a>>> for PollResultResidual<E> {
+    type TryType = PollResult<'a, E>;
 }
 
 impl<E> FromResidual<Result<Infallible, E>> for PollResult<'_, E> {

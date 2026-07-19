@@ -27,7 +27,7 @@ impl<const N: usize> UnitVector<N, f32> {
     }
 }
 
-impl<const N: usize> const Default for UnitVector<N, f32> {
+const impl<const N: usize> Default for UnitVector<N, f32> {
     fn default() -> Self {
         const { Self::const_default() }
     }

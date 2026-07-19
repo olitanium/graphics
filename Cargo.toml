@@ -13,4 +13,4 @@ members = [
     "infinite_window",
     "localrc",
     "fixed_point", "bezier"
-]
+, "handle_vec"]

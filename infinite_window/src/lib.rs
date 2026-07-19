@@ -1,5 +1,3 @@
-#![feature(option_array_transpose)]
-
 use std::array;
 
 /// returns an array of references (or ref mut)

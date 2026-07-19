@@ -1,6 +1,5 @@
 #![expect(incomplete_features)]
 #![feature(generic_const_exprs)]
-#![feature(derive_const)]
 #![feature(const_clone)]
 #![feature(const_default)]
 #![feature(const_trait_impl)]

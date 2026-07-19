@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-russimp = "3"
+russimp = { version =  "3" }#, features = ["static-link"]}
 graphics = { path = "../graphics" }
 utils = {path = "../utils" }
 infinite_window = {path = "../infinite_window" }

@@ -17,8 +17,6 @@
     buildInputs = with pkgs; [
       input.fenix.packages.${system}.complete.toolchain
 
-      libz
-
       assimp
       openssl
       pkg-config
@@ -26,15 +24,18 @@
       glfw
       #glfw-wayland
       cmake
-      xorg.libX11
-      xorg.libXrandr
-      xorg.libXinerama
-      xorg.libXcursor
-      xorg.libXi
+      libx11
+      libxrandr
+      libxinerama
+      libxcursor
+      libxi
       libglvnd
 
+      zlib
+
+      ninja
       clang
-      llvmPackages.bintools
+      bintools
     ];
   in {
     devShells.${system}.default = pkgs.mkShell {

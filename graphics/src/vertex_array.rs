@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::marker::PhantomData;
 use std::sync::LazyLock;
 use std::{iter, ptr};
 
@@ -18,13 +19,14 @@ use crate::{Model, gl_call, types};
 mod builder;
 
 #[derive(Debug)]
-pub struct VertexArray<V: Vertex> {
+pub struct VertexArray<V: Vertex, B = VertexBuffer<V>> {
     id: VertexArrayId,
-    vertex_buffer: Option<VertexBuffer<V>>,
+    vertex_buffer: B,
     element_array_buffer: Option<ElementArrayBuffer>,
+    _phantom_vertex: PhantomData<V>,
 }
 
-impl<V: Vertex> Drop for VertexArray<V> {
+impl<V: Vertex, B> Drop for VertexArray<V, B> {
     fn drop(&mut self) {
         let primitive = self.id.as_primitive();
         gl_call! {
@@ -33,14 +35,14 @@ impl<V: Vertex> Drop for VertexArray<V> {
     }
 }
 
-impl<V: Vertex> Default for VertexArray<V>
-where
-    [(); V::ELEMENT_COUNT]:,
-{
-    fn default() -> Self {
-        Self::empty()
-    }
-}
+// impl<V: Vertex> Default for VertexArray<V>
+// where
+// [(); V::ELEMENT_COUNT]:,
+// {
+// fn default() -> Self {
+// Self::empty()
+// }
+// }
 
 impl<V: Vertex> VertexArray<V>
 where
@@ -97,11 +99,31 @@ where
         // Return object
         VertexArray {
             id,
-            vertex_buffer: Some(vertex_buffer),
+            vertex_buffer,
             element_array_buffer,
+            _phantom_vertex: PhantomData,
         }
     }
 
+    pub fn triangles(&self) -> Cow<'_, [[V; 3]]> {
+        match self.element_array_buffer.as_ref() {
+            Some(element) => {
+                let triangles = element.triangles();
+                let vertices = self.vertex_buffer.vertices();
+
+                let option_vec_triangles: Option<Vec<_>> = triangles
+                    .iter()
+                    .map(|index| index.map(|value| vertices.get(value).copied()).transpose())
+                    .collect();
+
+                Cow::Owned(option_vec_triangles.unwrap_or_default())
+            }
+            None => Cow::Borrowed(self.vertex_buffer.vertices().as_chunks().0),
+        }
+    }
+}
+
+impl<V: Vertex, B> VertexArray<V, B> {
     pub(crate) fn bind(&self) {
         gl_call! {
             gl::BindVertexArray(self.id.as_primitive());
@@ -111,27 +133,6 @@ where
     pub(crate) fn unbind() {
         gl_call! {
             gl::BindVertexArray(0);
-        }
-    }
-
-    pub fn triangles(&self) -> Cow<'_, [[V; 3]]> {
-        match (
-            self.element_array_buffer.as_ref(),
-            self.vertex_buffer.as_ref(),
-        ) {
-            (Some(element), Some(vertex)) => {
-                let triangles = element.triangles();
-                let vertices = vertex.vertices();
-
-                let option_vec_triangles: Option<Vec<_>> = triangles
-                    .iter()
-                    .map(|index| index.map(|value| vertices.get(value).copied()).transpose())
-                    .collect();
-
-                Cow::Owned(option_vec_triangles.unwrap_or_default())
-            }
-            (None, Some(vertex)) => Cow::Borrowed(vertex.vertices().as_chunks().0),
-            _ => Cow::Owned(vec![]),
         }
     }
 }
@@ -173,38 +174,39 @@ where
                     ptr::null(),
                 );
             }
-        } else if let Some(vbo) = self.vertex_buffer.as_ref() {
+        } else {
             gl_call! {
-                gl::DrawArrays(gl::TRIANGLES, 0, vbo.len().as_primitive());
+                gl::DrawArrays(gl::TRIANGLES, 0, self.vertex_buffer.len().as_primitive());
             }
         }
 
         Ok(())
     }
+}
 
-    pub fn empty() -> Self {
-        let id = {
-            let mut id = 0;
-            gl_call! {
-                gl::GenVertexArrays(1, &raw mut id);
-            }
-            VertexArrayId::new(id)
-        };
-
-        Self {
-            id,
-            vertex_buffer: None,
-            element_array_buffer: None,
+fn empty() -> VertexArray<NoVertex, ()> {
+    let id = {
+        let mut id = 0;
+        gl_call! {
+            gl::GenVertexArrays(1, &raw mut id);
         }
+        VertexArrayId::new(id)
+    };
+
+    VertexArray {
+        id,
+        vertex_buffer: (),
+        element_array_buffer: None,
+        _phantom_vertex: PhantomData,
     }
 }
 
-pub fn dummy_vertex_array() -> &'static VertexArray<NoVertex> {
-    static DUMMY_VERTEX_ARRAY: LazyLock<VertexArray<NoVertex>> = LazyLock::new(VertexArray::empty);
+pub fn dummy_vertex_array() -> &'static VertexArray<NoVertex, ()> {
+    static DUMMY_VERTEX_ARRAY: LazyLock<VertexArray<NoVertex, ()>> = LazyLock::new(empty);
     &DUMMY_VERTEX_ARRAY
 }
 
-impl VertexArray<NoVertex> {
+impl VertexArray<NoVertex, ()> {
     pub fn draw_len<
         'a,
         M: Model<Vertex = NoVertex>,

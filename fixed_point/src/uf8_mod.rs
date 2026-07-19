@@ -57,7 +57,7 @@ impl core::ops::Mul for uf8 {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        let (_, inner) = self.inner.widening_mul(rhs.inner);
+        let (_, inner) = self.inner.carrying_mul(rhs.inner, 0);
         Self::Output { inner }
     }
 }
