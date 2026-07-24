@@ -1,7 +1,7 @@
 mod far_light;
 pub use far_light::FarLight;
 mod list;
-use graphics::shader_program::SetUniformError;
+use graphics::shader_program::ShaderSetUniformError;
 pub use list::ListLights;
 mod spot_light;
 pub use spot_light::SpotLight;
@@ -12,12 +12,12 @@ use utils::error_boilerplate;
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum SimpleBindError<'a> {
-    SetUniform(SetUniformError<'a>),
+    SetUniform(ShaderSetUniformError<'a>),
 }
 error_boilerplate!(<'a> SimpleBindError<'a>);
 
-impl<'a> From<SetUniformError<'a>> for SimpleBindError<'a> {
-    fn from(value: SetUniformError<'a>) -> Self {
+impl<'a> From<ShaderSetUniformError<'a>> for SimpleBindError<'a> {
+    fn from(value: ShaderSetUniformError<'a>) -> Self {
         Self::SetUniform(value)
     }
 }

@@ -35,8 +35,7 @@ pub struct State {
     pub skybox: SkyBox,
 
     pub hdr_fb: Framebuffer<3, WithDepth>,
-    pub bloom_from_hdrfb: Bloom,
-    pub quad_from_hdrfb: Quad<1>,
+    pub bloom: Bloom,
 }
 
 #[derive(Debug)]
@@ -62,7 +61,7 @@ impl ApiState for State {
                 Event::FrameTime(ft) => frame_time = ft,
                 Event::ElapsedTime(at) => game_duration = at,
                 Event::WindowResize(size) => {
-                    self.hdr_fb.resize(size);
+                    // self.hdr_fb.resize(size);
                     // self.bloom.resize(size);
                     self.game_camera.camera.projection = Projection::Perspective {
                         fov: const { (90.0_f32).to_radians() },
@@ -76,12 +75,11 @@ impl ApiState for State {
                     local_string = Some(buffer);
                 }
                 Event::Mouse { delta, .. } => mouse_delta = delta,
-                Event::Query(queries) => match queries.as_slice() {
-                    [(0, query)] if query.get_answer() => {
-                        can_see_player = true;
+                Event::Query(queries) => {
+                    if let Some((_, query)) = queries.into_iter().find(|(index, _)| *index == 0) {
+                        can_see_player = query.answer();
                     }
-                    _ => {}
-                },
+                }
                 _ => {}
             }
         }

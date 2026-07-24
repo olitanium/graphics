@@ -7,7 +7,7 @@ use utils::{builder, new};
 
 use super::FlatTexture;
 use crate::framebuffer::attachments::{WithDepth, WithStencil, WithoutExtra};
-use crate::framebuffer::traits::Attachment;
+use crate::framebuffer::traits::AttachmentWithoutExtra;
 use crate::gl_call;
 use crate::texture::image::TexInternalFormat;
 use crate::texture::{
@@ -35,7 +35,7 @@ pub struct MissingData;
 pub struct Dimensions((TexDim, TexDim));
 
 #[derive(Debug)]
-pub struct FramebufferAttachment<X: Attachment> {
+pub struct FramebufferAttachment<X: AttachmentWithoutExtra> {
     size: (TexDim, TexDim),
     _att_type: PhantomData<X>,
 }
@@ -246,7 +246,7 @@ impl TexBuilderCanBuild for Builder<Dimensions> {
 }
 
 // TODO: X: WithDepth and bugfix
-impl<X: Attachment> Builder<FramebufferAttachment<X>> {
+impl<X: AttachmentWithoutExtra> Builder<FramebufferAttachment<X>> {
     pub fn build(self) -> Option<FlatTexture> {
         X::components().map(|tex_info| {
             let id = gen_tex_set_parameters(&self);

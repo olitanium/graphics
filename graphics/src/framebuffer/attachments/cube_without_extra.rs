@@ -1,19 +1,13 @@
 use super::WithoutExtra;
 use crate::framebuffer::traits::{AttachmentTextureInfo, OptTexBuilderMap};
-use crate::framebuffer::{
-    self,
-    Attachment,
-    AttachmentWithoutExtra,
-    Framebuffer,
-    FramebufferContext,
-};
+use crate::framebuffer::{self, AttachmentWithoutExtra, Framebuffer, FramebufferContext};
 use crate::texture::{CubeFrameBufferAttachment, CubeMap, CubeMapBuilder};
 use crate::types::TexDim;
 
 #[derive(Debug)]
 pub struct CubeWithoutExtra;
 
-impl Attachment for CubeWithoutExtra {
+impl AttachmentWithoutExtra for CubeWithoutExtra {
     type Tex = CubeMap;
     type TexBuilder = CubeMapBuilder<CubeFrameBufferAttachment<Self>>;
 
@@ -26,7 +20,7 @@ impl Attachment for CubeWithoutExtra {
     }
 
     fn enables(context: &mut FramebufferContext) {
-        WithoutExtra::enables(context)
+        WithoutExtra::enables(context);
     }
 
     fn size(&self) -> (TexDim, TexDim) {
@@ -40,5 +34,3 @@ impl Attachment for CubeWithoutExtra {
         framebuffer::Builder::new_cubic().size(size).build()
     }
 }
-
-impl AttachmentWithoutExtra for CubeWithoutExtra {}

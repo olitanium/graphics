@@ -6,3 +6,5 @@ mod model;
 pub use model::{DrawError, Quad};
 mod quad_vertex;
 pub use quad_vertex::QuadVertex;
+mod screen_quad;
+pub use screen_quad::{FramebufferQuad, ScreenQuadGroup};

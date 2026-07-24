@@ -1,7 +1,14 @@
 use engine::array_vec::arrvec;
 use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::lighting::shadow::{PointLightIlluminatesGroup, ShadowListLights};
-use engine::modelling::{BloomGroup, QuadGroup, ShadowGroup, SkyBoxGroup};
+use engine::modelling::{
+    BloomGroup,
+    FramebufferQuad,
+    QuadGroup,
+    ScreenQuadGroup,
+    ShadowGroup,
+    SkyBoxGroup,
+};
 use engine::query::HasDrawnQuery;
 use engine::{PollResult, VecDraw};
 
@@ -95,12 +102,16 @@ impl State {
         // ));
 
         if !self.toggle_g {
-            out.push(BloomGroup::new(default_framebuffer, &self.bloom_from_hdrfb));
-        } else {
-            out.push(QuadGroup::new(
-                engine::opengl_shaders::exposure(),
+            out.push(BloomGroup::new(
+                &self.hdr_fb,
                 default_framebuffer,
-                vec![&self.quad_from_hdrfb],
+                &self.bloom,
+            ));
+        } else {
+            out.push(ScreenQuadGroup::new(
+                engine::opengl_shaders::exposure3(),
+                default_framebuffer,
+                vec![FramebufferQuad::new_from_framebuffer(&self.hdr_fb)],
                 vec![(String::from("exposure"), &self.exposure)],
             ));
         }

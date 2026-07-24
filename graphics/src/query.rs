@@ -2,6 +2,7 @@ use crate::framebuffer::FramebufferContext;
 use crate::types::Query;
 use crate::{Draw, DrawOut, ShaderProgramContext, gl_call};
 
+#[derive(Debug)]
 pub struct HasDrawnQuery<D: Draw + ?Sized> {
     name: usize,
     query: Query,
@@ -9,6 +10,7 @@ pub struct HasDrawnQuery<D: Draw + ?Sized> {
 }
 
 impl<D: Draw + ?Sized> HasDrawnQuery<D> {
+    #[must_use]
     pub fn new(name: usize, target: Box<D>) -> Box<Self> {
         let query = {
             let mut value = 0;
@@ -35,13 +37,11 @@ impl<D: Draw + ?Sized> Draw for HasDrawnQuery<D> {
 
         gl_call! {gl::EndQuery(gl::ANY_SAMPLES_PASSED);}
 
-        let out = DrawOut::QueryOutput {
+        DrawOut::QueryOutput {
             _token: crate::PrivateToken,
             query_object: self.query,
             name: self.name,
-        };
-
-        out
+        }
     }
 }
 
@@ -53,7 +53,8 @@ impl Drop for Query {
 }
 
 impl Query {
-    pub fn get_answer(&self) -> bool {
+    #[must_use]
+    pub fn answer(self) -> bool {
         let mut did_succeed = 0;
         gl_call! {gl::GetQueryObjectiv(self.as_primitive(), gl::QUERY_RESULT, &raw mut did_succeed)}
 

@@ -5,11 +5,11 @@ use engine::entity::Mass;
 use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::Vector;
+use engine::modelling::cubic::SimpleCubic;
 use engine::modelling::cubic::geometry::{Orientation, Pose};
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
 use engine::modelling::cubic::lighting::simple::PointLight;
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::SimpleCubic;
 use engine::modelling::{Bloom, Quad, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
@@ -108,10 +108,7 @@ impl State {
             light: point_light,
         };
 
-        let bloom = Bloom::new_from_framebuffer(&hdr_fb);
-
-        let [original_colour, ..] = hdr_fb.get_all_colour();
-        let quad_to_draw = Quad::screen([original_colour]);
+        let bloom = Bloom::new(hdr_fb.size());
 
         Ok(Self {
             toggle_b: true,
@@ -132,9 +129,7 @@ impl State {
             hdr_fb,
             toggle_g: true,
             toggle_h: true,
-            bloom_from_hdrfb: bloom,
-
-            quad_from_hdrfb: quad_to_draw,
+            bloom,
         })
     }
 }

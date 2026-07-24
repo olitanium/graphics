@@ -1,4 +1,5 @@
 use std::array;
+use std::ops::Rem;
 
 /// returns an array of references (or ref mut)
 #[derive(Debug)]
@@ -20,15 +21,24 @@ impl<'a, T, const N: usize> Iterator for InfiniteWindowIter<'a, T, N> {
     type Item = [&'a T; N];
 
     fn next(&mut self) -> Option<<Self as Iterator>::Item> {
-        let len = if self.backing.is_empty() {
-            return None;
-        } else {
-            self.backing.len()
+        let len = match self.backing.len() {
+            0 => return None,
+            x => x,
         };
 
-        let output = array::from_fn(|index| &self.backing[(index + self.current_index) % len]);
+        /// valid when value is 0 <= value < 2*divisor
+        fn short_modulo(value: usize, divisor: usize) -> usize {
+            if value >= divisor {
+                value - divisor
+            } else {
+                value
+            }
+        }
 
-        self.current_index = (self.current_index + 1) % len;
+        let output =
+            array::from_fn(|index| &self.backing[short_modulo(index + self.current_index, len)]);
+
+        self.current_index = short_modulo(self.current_index + 1, len);
 
         Some(output)
     }
@@ -39,14 +49,15 @@ impl<'a, T, const N: usize> Iterator for InfiniteWindowIter<'a, T, N> {
         P: FnMut(&Self::Item) -> bool,
     {
         let len = self.backing.len();
-        let max_windows_before_repeat = len + 1;
 
-        self.take(max_windows_before_repeat).find(predicate)
+        self.take(len).find(predicate)
     }
 }
 
 #[cfg(test)]
 mod test {
+    use std::iter;
+
     use super::InfiniteWindowIter;
 
     #[test]
@@ -74,5 +85,16 @@ mod test {
         let mut iterator = InfiniteWindowIter::<_, 1>::new(slice);
 
         assert!(iterator.next().is_none())
+    }
+
+    #[test]
+    fn find_at_end() {
+        let slice = &[1, 2, 3, 4, 5, 6, 7];
+        let mut iterator = InfiniteWindowIter::new(slice);
+
+        assert_eq!(
+            iterator.find(|&[val, val2]| val == &7 && val2 == &1),
+            Some([&7, &1])
+        );
     }
 }

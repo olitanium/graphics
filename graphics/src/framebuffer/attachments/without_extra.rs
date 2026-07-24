@@ -1,9 +1,4 @@
-use crate::framebuffer::traits::{
-    Attachment,
-    AttachmentTextureInfo,
-    AttachmentWithoutExtra,
-    OptTexBuilderMap,
-};
+use crate::framebuffer::traits::{AttachmentTextureInfo, AttachmentWithoutExtra, OptTexBuilderMap};
 use crate::framebuffer::{self, Framebuffer, FramebufferContext};
 use crate::texture::FlatTexture;
 use crate::types::TexDim;
@@ -12,7 +7,7 @@ use crate::types::TexDim;
 #[derive(Debug, Default)]
 pub struct WithoutExtra;
 
-impl Attachment for WithoutExtra {
+impl AttachmentWithoutExtra for WithoutExtra {
     type Tex = FlatTexture;
     type TexBuilder = ();
 
@@ -44,5 +39,3 @@ impl Attachment for WithoutExtra {
         context.srgb_framebuffer(false);
     }
 }
-
-impl AttachmentWithoutExtra for WithoutExtra {}

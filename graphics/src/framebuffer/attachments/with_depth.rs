@@ -5,7 +5,6 @@ use std::rc::Rc;
 use crate::framebuffer::traits::{AttachmentTextureInfo, OptTexBuilderMap};
 use crate::framebuffer::{
     self,
-    Attachment,
     AttachmentWithDepth,
     AttachmentWithoutExtra,
     Framebuffer,
@@ -34,7 +33,7 @@ impl fmt::Debug for WithDepth {
     }
 }
 
-impl Attachment for WithDepth {
+impl AttachmentWithoutExtra for WithDepth {
     type Tex = FlatTexture;
     type TexBuilder = FlatTextureBuilder<FramebufferAttachment<Self>>;
 
@@ -83,7 +82,6 @@ impl Attachment for WithDepth {
     }
 }
 
-impl AttachmentWithoutExtra for WithDepth {}
 impl AttachmentWithDepth for WithDepth {
     fn get_texture(&self) -> Rc<RefCell<FlatTexture>> {
         self.texture.clone()

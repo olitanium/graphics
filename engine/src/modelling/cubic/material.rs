@@ -1,6 +1,6 @@
 use graphics::Model;
 use graphics::colour::{ColourRGB, ColourRGBA};
-use graphics::shader_program::{ActiveShaderProgram, SetUniformError};
+use graphics::shader_program::{ActiveShaderProgram, ShaderSetUniformError};
 use graphics::texture::{FlatTexture, Texture};
 use utils::{builder, error_boilerplate, new};
 
@@ -55,7 +55,7 @@ impl Material {
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum RegisterToError<'a> {
-    SetUniformError(SetUniformError<'a>),
+    SetUniformError(ShaderSetUniformError<'a>),
 }
 error_boilerplate!(<'a> RegisterToError<'a>);
 

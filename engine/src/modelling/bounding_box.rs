@@ -35,7 +35,7 @@ use crate::transform::Transform;
 pub struct BoundingBox<V: ExtendedVertex<DIMS>, const DIMS: usize, T>
 where
     Vector<DIMS>: ExtendedVertex<DIMS>,
-    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+    [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
 {
     triangles: Vec<(Vector<DIMS>, [V; 3])>,
     inner: Vec<BoundingBoxElement<V, DIMS, T>>,
@@ -44,7 +44,7 @@ where
 impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T>
 where
     Vector<DIMS>: ExtendedVertex<DIMS>,
-    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+    [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
 {
     fn get(&self, index: usize) -> &BoundingBoxElement<V, DIMS, T> {
         &self.inner[index]
@@ -70,14 +70,17 @@ where
         Self::new_from_triangles(new_triangles, depth, init)
     }
 
-    pub(crate) fn new_from_triangles<F: FnMut(&[(Vector<DIMS>, [V; 3])]) -> T>(
-        triangles: Vec<[V; 3]>,
+    pub(crate) fn new_from_triangles<
+        I: IntoIterator<Item = [V; 3]>,
+        F: FnMut(&[(Vector<DIMS>, [V; 3])]) -> T,
+    >(
+        triangles: I,
         depth: usize,
         mut init: F,
     ) -> Option<Self> {
         let mut triangles_with_mid: Vec<_> = triangles
-            .iter()
-            .map(|&triangle| {
+            .into_iter()
+            .map(|triangle| {
                 let vertices = triangle.map(|vertex| vertex.position());
                 let mut mid: Vector<_> = vertices.into_iter().sum();
                 const ONE_THIRD: f32 = 1.0 / 3.0;
@@ -88,7 +91,6 @@ where
             .collect();
 
         let mut accumulator = Vec::new();
-
         BoundingBoxElement::new_from_many_inner(
             &mut accumulator,
             &mut triangles_with_mid,
@@ -148,13 +150,22 @@ where
         // })
         // .collect()
     }
+
+    pub fn triangles<'a>(
+        &'a self,
+        element: &'a BoundingBoxElement<V, DIMS, T>,
+    ) -> &'a [(Vector<DIMS>, [V; 3])] {
+        let lower_bound = element.start_index;
+        let upper_bound = element.start_index + element.len;
+        &self.triangles[lower_bound..upper_bound]
+    }
 }
 
 impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T>
 where
     BoundingBoxElement<V, DIMS, T>: BoundingBoxShaderProgram<DIMS>,
     Vector<DIMS>: Volume<DIMS>,
-    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+    [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
 {
     pub(crate) fn draw<
         'a,
@@ -194,11 +205,7 @@ impl<T> BoundingBox<SimpleVertex, 3, T> {
         depth: usize,
         init: F,
     ) -> Option<Self> {
-        let triangles = model
-            .triangles()
-            .into_iter()
-            .map(|(_, triangle)| triangle)
-            .collect();
+        let triangles = model.triangles().into_iter().map(|(_, triangle)| triangle);
         Self::new_from_triangles(triangles, depth, init)
     }
 }

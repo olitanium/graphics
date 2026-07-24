@@ -24,7 +24,7 @@ pub struct SimpleVertex {
 }
 
 impl Vertex for SimpleVertex {
-    const ELEMENT_COUNT: usize = 4;
+    type const ELEMENT_COUNT: usize = 4;
 
     fn offsets() -> [usize; Self::ELEMENT_COUNT] {
         [
@@ -35,7 +35,7 @@ impl Vertex for SimpleVertex {
         ]
     }
 
-    fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
+    fn types_of() -> [VertexAttrType; Self::ELEMENT_COUNT] {
         let [vec3] = Vector::<3>::types_of();
         let [vec2] = Vector::<2>::types_of();
         let [unitvec] = UnitVector::<3>::types_of();

@@ -90,7 +90,7 @@ impl<const N: usize> Vector<N, f32> {
         let one_len = 1.0 / self.magnitude();
         one_len
             .is_finite()
-            .then(|| unsafe { Self::new_normal_unchecked(self.0.map(|x| x * one_len)) })
+            .then(|| Self::new_normal_unchecked(self.0.map(|x| x * one_len)))
     }
 
     pub const fn truncate<const M: usize>(self) -> Vector<M, f32> {

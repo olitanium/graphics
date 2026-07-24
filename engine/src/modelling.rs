@@ -13,7 +13,14 @@ mod line;
 pub use line::{DrawError as LineDrawError, Line, LineGroup, TestLineVertex};
 
 mod quad;
-pub use quad::{DrawError as QuadDrawError, Quad, QuadGroup, QuadVertex};
+pub use quad::{
+    DrawError as QuadDrawError,
+    FramebufferQuad,
+    Quad,
+    QuadGroup,
+    QuadVertex,
+    ScreenQuadGroup,
+};
 mod skybox;
 pub use skybox::{DrawError as SkyBoxDrawError, SkyBox, SkyBoxGroup, SkyBoxVertex};
 mod bloom;

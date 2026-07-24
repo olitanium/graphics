@@ -9,7 +9,7 @@ use crate::framebuffer::traits::{
     AttachmentWithoutExtra,
     OptTexBuilderMap,
 };
-use crate::framebuffer::{self, Attachment, Framebuffer, FramebufferContext};
+use crate::framebuffer::{self, Framebuffer, FramebufferContext};
 use crate::texture::{
     CubeFrameBufferAttachment,
     CubeMap,
@@ -32,7 +32,7 @@ impl Debug for CubeWithDepth {
     }
 }
 
-impl Attachment for CubeWithDepth {
+impl AttachmentWithoutExtra for CubeWithDepth {
     type Tex = CubeMap;
     type TexBuilder = CubeMapBuilder<CubeFrameBufferAttachment<Self>>;
 
@@ -61,7 +61,7 @@ impl Attachment for CubeWithDepth {
     }
 
     fn enables(context: &mut FramebufferContext) {
-        WithDepth::enables(context)
+        WithDepth::enables(context);
     }
 
     fn size(&self) -> (TexDim, TexDim) {
@@ -77,14 +77,12 @@ impl Attachment for CubeWithDepth {
     }
 }
 
-impl AttachmentWithoutExtra for CubeWithDepth {}
-
 impl AttachmentWithDepth for CubeWithDepth {
-    fn get_texture(&self) -> Rc<RefCell<<Self as Attachment>::Tex>> {
+    fn get_texture(&self) -> Rc<RefCell<<Self as AttachmentWithoutExtra>::Tex>> {
         self.texture.clone()
     }
 
-    unsafe fn get_texture_ref(&self) -> &<Self as Attachment>::Tex {
+    unsafe fn get_texture_ref(&self) -> &<Self as AttachmentWithoutExtra>::Tex {
         unsafe { self.texture.try_borrow_unguarded() }.unwrap()
     }
 }

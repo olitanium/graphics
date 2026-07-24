@@ -1,4 +1,3 @@
-
 use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;

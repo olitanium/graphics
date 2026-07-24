@@ -1,8 +1,7 @@
-#![feature(bigint_helper_methods)]
+//#![feature(bigint_helper_methods)]
 #![feature(float_algebraic)]
 #![feature(int_lowest_highest_one)]
-
-//#![feature(signed_bigint_helpers)]
+#![feature(signed_bigint_helpers)]
 
 mod sf8_mod;
 mod uf8_mod;

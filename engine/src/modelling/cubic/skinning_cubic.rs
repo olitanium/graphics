@@ -73,13 +73,13 @@ impl SkinningCubic {
             .iter()
             .map(|pose| pose.as_transformation_matrix())
             .collect();
-        _ = active_shader.set_uniform("bones", &matrices);
+        _ = active_shader.set_uniform("bones", matrices.as_slice());
 
         let matrices_quat: Vec<_> = poses
             .iter()
             .map(|pose| pose.as_matrix_for_shader())
             .collect();
-        _ = active_shader.set_uniform("bones_quat", &matrices_quat);
+        _ = active_shader.set_uniform("bones_quat", matrices_quat.as_slice());
 
         for mesh in &self.meshes {
             mesh.draw(active_shader, active_framebuffer)
@@ -103,14 +103,12 @@ impl EntityInner for SkinningCubic {
         init: F,
     ) -> Option<Self::BoundingBox<T>> {
         let per_mesh = partition(
-            self.triangles(),
+            &self.triangles(),
             |tri| {
-                tri.iter()
-                    .flat_map(|vertex| {
-                        iter::zip(vertex.bone_indices, vertex.bone_weights)
-                            .filter_map(|(index, weight)| (weight != 0.0).then_some(index as usize))
-                    })
-                    .collect()
+                tri.iter().flat_map(|vertex| {
+                    iter::zip(vertex.bone_indices, vertex.bone_weights)
+                        .filter_map(|(index, weight)| (weight != 0.0).then_some(index as usize))
+                })
             },
             convert::identity,
         );

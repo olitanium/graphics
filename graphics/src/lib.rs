@@ -2,7 +2,6 @@
 #![feature(debug_closure_helpers)]
 #![feature(string_from_utf8_lossy_owned)]
 #![feature(generic_const_exprs)]
-#![feature(stmt_expr_attributes)]
 #![feature(type_changing_struct_update)]
 #![feature(lazy_type_alias)]
 #![feature(inherent_associated_types)]
@@ -12,6 +11,8 @@
 #![feature(try_trait_v2_residual)]
 #![feature(try_trait_v2)]
 #![feature(unwrap_infallible)]
+#![feature(min_generic_const_args)]
+#![feature(array_try_map)]
 
 mod environment;
 pub mod shader_program;

@@ -34,7 +34,7 @@ fn test_deref() {
     assert_eq!(*value, 1.0);
 
     // let mut value = LocalRc::new(1_usize);
-    //*value = 2;
+    // *value = 2;
 }
 
 #[test]

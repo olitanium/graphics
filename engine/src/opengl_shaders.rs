@@ -77,6 +77,20 @@ make_included! {
 }
 
 make_included! {
+    ShaderProgram<Quad<2>, (), 1, FlatTexture>,
+    exposure2,
+    "shaders/quad/quad.vert",
+    "shaders/quad/exposure.frag",
+}
+
+make_included! {
+    ShaderProgram<Quad<3>, (), 1, FlatTexture>,
+    exposure3,
+    "shaders/quad/quad.vert",
+    "shaders/quad/exposure.frag",
+}
+
+make_included! {
     ShaderProgram<SkeletonCubic, ShadowListLights<'static, 2>, 3, FlatTexture>,
     shadow,
     "shaders/hdr_tangent_shadow/hdr_tangent_shadow.vert",
@@ -99,7 +113,7 @@ make_included! {
 }
 
 make_included! {
-    ShaderProgram<Quad<2>, (), 2, FlatTexture>,
+    ShaderProgram<Quad<3>, (), 2, FlatTexture>,
     bloom_x,
     "shaders/bloom/blur_x/blur_x.vert",
     "shaders/bloom/blur_x/blur_x.frag",

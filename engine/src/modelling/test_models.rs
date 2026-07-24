@@ -85,6 +85,19 @@ pub fn vertex_array_quad(
     builder.build()
 }
 
+pub fn vertex_array_screen_quad() -> VertexArray<QuadVertex> {
+    let vertices = QuadVertex::from_incomplete_triangle([
+        IncompleteVertex::new(Vector::new([-1.0, -1.0])).texture(Vector::ZERO),
+        IncompleteVertex::new(Vector::new([3.0, -1.0])).texture(Vector::new([2.0, 0.0])),
+        IncompleteVertex::new(Vector::new([-1.0, 3.0])).texture(Vector::new([0.0, 2.0])),
+    ])
+    .expect("I have given enough to make a QuadVertex");
+
+    let mut builder = VertexArray::builder();
+    builder.push_triangle(vertices);
+    builder.build()
+}
+
 pub fn quad_triangles(
     lower_bound: Vector<2>,
     upper_bound: Vector<2>,
@@ -109,7 +122,9 @@ pub fn quad_triangles(
 
 pub fn screen_quad() -> &'static VertexArray<QuadVertex> {
     static SCREEN_QUAD: LazyLock<VertexArray<QuadVertex>> =
-        LazyLock::new(|| vertex_array_quad(Vector::from([-1.0, -1.0]), Vector::new([1.0, 1.0])));
+        // LazyLock::new(|| vertex_array_quad(Vector::from([-1.0, -1.0]), Vector::new([1.0,
+        // 1.0])));
+        LazyLock::new(vertex_array_screen_quad);
 
     &SCREEN_QUAD
 }

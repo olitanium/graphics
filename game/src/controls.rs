@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 use std::convert::Infallible;
-use std::ops::{FromResidual, Try};
+use std::ops::{FromResidual, Residual, Try};
 use std::time::Duration;
 
 use engine::linear_algebra::Vector;
@@ -13,6 +13,10 @@ pub enum ControlOutput<T> {
     Error(StateError),
     Close,
     Restart,
+}
+
+impl<T> Residual<T> for ControlOutput<!> {
+    type TryType = ControlOutput<T>;
 }
 
 impl<T> Try for ControlOutput<T> {

@@ -1,12 +1,12 @@
+use std::array;
 use std::cell::RefCell;
 use std::marker::PhantomData;
-use std::array;
 
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
-use graphics::shader_program::SetUniformError;
+use graphics::shader_program::ShaderSetUniformError;
 use graphics::vertex::Vertex;
 use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
 use graphics::{ActiveShaderProgram, Model};
@@ -27,7 +27,7 @@ pub struct BoundingBoxElement<V: ExtendedVertex<DIMS>, const DIMS: usize, T> {
     pub(crate) lower_bound: Vector<DIMS>,
     pub(crate) upper_bound: Vector<DIMS>,
 
-    pub(crate) triangles: PhantomData<Vec<[V; 3]>>,
+    pub(crate) triangles: PhantomData<Vec<(Vector<DIMS>, [V; 3])>>,
     pub(crate) start_index: usize,
     pub(crate) len: usize,
 
@@ -35,24 +35,28 @@ pub struct BoundingBoxElement<V: ExtendedVertex<DIMS>, const DIMS: usize, T> {
 }
 
 fn make_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
-    vectors: &[V],
-    func: fn(f32, f32) -> f32,
-) -> Option<Vector<DIMS>> {
-    array::from_fn(|index| vectors.iter().map(|vec| vec.position()[index]).reduce(func))
-        .transpose()
-        .map(Vector::new)
-}
+    vectors: &[(Vector<DIMS>, [V; 3])],
+) -> Option<(Vector<DIMS>, Vector<DIMS>)> {
+    let iter = vectors
+        .iter()
+        .flat_map(|(_, vec)| vec.iter())
+        .map(|vert| vert.position());
 
-fn make_upper_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
-    vectors: &[V],
-) -> Option<Vector<DIMS>> {
-    make_bound(vectors, f32::max)
-}
+    let lower_bound = iter.clone().reduce(|array1, array2| {
+        Vector::new(array::from_fn(|index| {
+            f32::min(array1[index], array2[index])
+        }))
+    })?;
 
-fn make_lower_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
-    vectors: &[V],
-) -> Option<Vector<DIMS>> {
-    make_bound(vectors, f32::min)
+    let upper_bound = iter.clone().reduce(|array1, array2| {
+        Vector::new(array::from_fn(|index| {
+            f32::max(array1[index], array2[index])
+        }))
+    })?;
+
+    assert!(core::iter::zip(upper_bound, lower_bound).all(|(x, y)| x > y));
+
+    Some((lower_bound, upper_bound))
 }
 
 impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T> {
@@ -63,10 +67,7 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
         depth: usize,
         init: &mut F,
     ) -> Option<usize> {
-        let vectors: Vec<_> = triangles.iter_mut().flat_map(|&mut (_, arr)| arr).collect();
-
-        let upper_bounds = make_upper_bound(&vectors)?;
-        let lower_bounds = make_lower_bound(&vectors)?;
+        let (lower_bounds, upper_bounds) = make_bound(triangles)?;
 
         let children_or_meta = if depth != 0 {
             // so_far[destination_index].children =
@@ -75,12 +76,7 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
                 let (max_index, _) = dimensions
                     .into_iter()
                     .enumerate()
-                    .max_by(|(_, size), (_, size2)| {
-                        f32::partial_cmp(size, size2).expect(
-                            "`vectors` has values, so was filled the previous step. No NAN in \
-                             this vector",
-                        )
-                    })
+                    .max_by(|(_, size), (_, size2)| f32::total_cmp(size, size2))
                     .expect("input vector const DIMS > 0");
 
                 // sort on the dimension given by max_index
@@ -88,20 +84,26 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
                     f32::total_cmp(&lhs[max_index], &rhs[max_index])
                 });
 
-                const CHILDREN: usize = 2;
-                const CHILDRENPLUS1: usize = CHILDREN + 1;
+                type const CHILDREN: usize = 2;
+                type const CHILDRENPLUS1: usize = const { CHILDREN + 1 };
 
-                let number_of_partitions: [_; CHILDRENPLUS1] =
-                    //array::from_fn(|index| (index) as f32 / CHILDREN as f32);
-                    [0.0, 0.5, 1.0]; // at the beginning, mid point and end.
-                let points = number_of_partitions.map(|mult| {
+                let mut new_partition: [_; CHILDRENPLUS1] = array::from_fn(|index| {
+                    let partition_mult = (index) as f32 / CHILDREN as f32;
+                    let partition_value = partition_mult * upper_bounds[max_index] + (1.0 - partition_mult) * lower_bounds[max_index];
+                    let partition_points = triangles.partition_point(|(centre, _)| centre[max_index] <= partition_value);
+                    partition_points
+                });
+
+                //ensure that no floating point errors happened above
+                *new_partition.last_mut().unwrap() = triangles.len();
+
+                /*let points = number_of_partitions.map(|mult| {
                     mult * upper_bounds[max_index] + (1.0 - mult) * lower_bounds[max_index]
                 });
 
                 let mut new_partition = points.map(|centre_point| {
                     triangles.partition_point(|(centre, _)| centre[max_index] <= centre_point)
-                });
-                new_partition[CHILDRENPLUS1 - 1] = triangles.len();
+                });*/
 
                 let partitions: [_; CHILDREN] =
                     array::from_fn(|index| (new_partition[index], new_partition[index + 1]));
@@ -161,7 +163,7 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum DrawRecursiveError<'a> {
-    SetUniform(SetUniformError<'a>),
+    SetUniform(ShaderSetUniformError<'a>),
     VertexArrayDraw(VertexArrayDrawError<'a>),
 }
 
@@ -170,7 +172,7 @@ error_boilerplate!(<'a> DrawRecursiveError<'a>);
 impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T>
 where
     Vector<DIMS>: Volume<DIMS>,
-    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+    [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
 {
     pub fn draw_recursive<
         'a,

@@ -11,6 +11,7 @@ pub struct VertexBuffer<V: Vertex> {
 }
 
 impl<V: Vertex> VertexBuffer<V> {
+    #[must_use]
     pub fn new(vertices: Vec<V>) -> Self {
         let id = {
             let mut id = 0;
@@ -26,7 +27,9 @@ impl<V: Vertex> VertexBuffer<V> {
 
         gl_call! { gl::BufferData(
             gl::ARRAY_BUFFER,
-            mem::size_of_val(vertices.as_slice()) as types::GLsizeiptr,
+            #[allow(clippy::cast_possible_wrap)]
+            // slice not allowed to be bigger than isize for non-zero types anyway
+            (mem::size_of_val(vertices.as_slice()) as types::GLsizeiptr),
             vertices.as_ptr().cast(),
             gl::STATIC_DRAW,
         ); };
@@ -35,7 +38,9 @@ impl<V: Vertex> VertexBuffer<V> {
     }
 
     pub(crate) fn len(&self) -> VertexBufferLen {
-        VertexBufferLen::new(self.vertices.len() as i32)
+        #[allow(clippy::cast_possible_truncation)]
+        // vertices len is unlikely to be greater than 4 billion
+        VertexBufferLen::new(self.vertices.len() as VertexBufferLen::Primitive)
     }
 
     pub(crate) fn bind(&self) {

@@ -2,6 +2,7 @@ use std::fmt::Debug;
 use std::iter;
 use std::ops::{self, Index, IndexMut};
 
+use array_vec::ArrayVec;
 use multi_zip::MultiZip;
 
 use crate::vector::Vector;
@@ -43,8 +44,8 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     /// Panics if the length of the slice is not as given by the compile-time
     /// constants
     #[inline]
-    pub fn new_from_slice(input: &[Vector<R, f32>]) -> Self {
-        Self(input.try_into().unwrap())
+    pub fn new_from_slice(input: &[Vector<R, f32>]) -> Option<Self> {
+        Some(Self(input.try_into().ok()?))
     }
 
     #[inline]
@@ -126,9 +127,11 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
 
     #[inline]
     pub fn transpose(self) -> Matrix<C, R> {
-        let matrix_as_vec = self.row_iter().collect::<Box<_>>();
-
-        Matrix::new_from_slice(&matrix_as_vec)
+        let matrix_as_vec = self.row_iter().collect::<ArrayVec<Vector<C>, R>>();
+        let array = matrix_as_vec
+            .try_into_array()
+            .expect("RC matrix has as many elements as CR");
+        Matrix::from_col_major(array)
     }
 
     #[inline]
@@ -138,9 +141,13 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
             .map(Vector::truncate)
             .into_iter()
             .chain(iter::repeat(Vector::ZERO))
-            .take(C2)
-            .collect::<Box<_>>();
-        Matrix::new_from_slice(x.as_ref())
+            .collect::<ArrayVec<_, C2>>();
+
+        let array = x
+            .try_into_array()
+            .expect("ArrayVec filling from unlimited iterator");
+
+        Matrix::from_col_major(array)
     }
 
     #[must_use]
@@ -156,8 +163,8 @@ impl<const R: usize, const S: usize, const C: usize> ops::Mul<Matrix<S, C>> for 
 
     #[inline]
     fn mul(self, rhs: Matrix<S, C>) -> Self::Output {
-        Self::Output::new_from_slice(
-            &rhs.col_iter()
+        Self::Output::from_col_major(
+            rhs.col_iter()
                 .map(|b_col| {
                     Vector::<R, _>::try_from(
                         self.row_iter()
@@ -167,7 +174,9 @@ impl<const R: usize, const S: usize, const C: usize> ops::Mul<Matrix<S, C>> for 
                     )
                     .unwrap()
                 })
-                .collect::<Box<_>>(),
+                .collect::<ArrayVec<_, C>>()
+                .try_into_array()
+                .expect("enough components"),
         )
     }
 }
@@ -185,12 +194,14 @@ macro_rules! impl_ops {
 
             #[inline]
             fn $fn(self, rhs: Self) -> Self::Output {
-                Self::Output::new_from_slice(
-                    &self
-                        .col_iter()
+                Self::Output::from_col_major(
+                    // TODO: would be great with array::zip_map
+                    self.col_iter()
                         .zip(rhs.col_iter())
                         .map(|(a, b)| Vector::$fn(a, b))
-                        .collect::<Box<_>>(),
+                        .collect::<ArrayVec<_, C>>()
+                        .try_into_array()
+                        .expect("enough elements from input"),
                 )
             }
         }

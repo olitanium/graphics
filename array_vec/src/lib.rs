@@ -1,24 +1,24 @@
 #![feature(maybe_uninit_array_assume_init)]
-#![feature(const_convert)]
 #![feature(const_trait_impl)]
 #![feature(maybe_uninit_uninit_array_transpose)]
-#![feature(maybe_uninit_slice)]
+#![feature(const_destruct)]
+#![feature(const_index)]
 
 use std::fmt::Debug;
-use std::mem::{self, ManuallyDrop, MaybeUninit};
+use std::marker::Destruct;
+use std::mem::{self, MaybeUninit};
 use std::ops::{Deref, DerefMut, Index, IndexMut};
 use std::ptr;
 mod iterators;
 mod test;
 
-pub use ArrayVec as StackVec;
 pub use iterators::{IntoIter, Iter, IterMut};
 
 mod initmacro;
 
 pub struct ArrayVec<T, const N: usize> {
     len: usize,
-    array: ManuallyDrop<[MaybeUninit<T>; N]>,
+    array: [MaybeUninit<T>; N],
 }
 
 #[derive(Debug)]
@@ -28,7 +28,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
     pub const fn new() -> Self {
         Self {
             len: 0,
-            array: ManuallyDrop::new([const { MaybeUninit::zeroed() }; N]),
+            array: [const { MaybeUninit::zeroed() }; N],
         }
     }
 
@@ -39,11 +39,14 @@ impl<T, const N: usize> ArrayVec<T, N> {
     pub fn from_array(array: [T; N]) -> Self {
         Self {
             len: N,
-            array: ManuallyDrop::new(MaybeUninit::new(array).transpose()),
+            array: MaybeUninit::new(array).transpose(),
         }
     }
 
-    pub const fn push_within_capacity(&mut self, elem: T) -> Result<(), T> {
+    pub const fn push_within_capacity(&mut self, elem: T) -> Result<(), T>
+    where
+        T: [const] Destruct,
+    {
         if self.len >= N {
             return Err(elem);
         }
@@ -53,12 +56,20 @@ impl<T, const N: usize> ArrayVec<T, N> {
         Ok(())
     }
 
-    pub const fn push_lossy(&mut self, elem: T) {
-        self.array[self.len] = MaybeUninit::new(elem);
-        self.len += 1;
+    pub const fn push_lossy(&mut self, elem: T)
+    where
+        T: [const] Destruct,
+    {
+        if let Some(dest) = self.array.get_mut(self.len) {
+            *dest = MaybeUninit::new(elem);
+            self.len += 1;
+        }
     }
 
-    pub const fn const_collect<const M: usize>(array: [T; M]) -> Self {
+    pub const fn const_collect<const M: usize>(array: [T; M]) -> Self
+    where
+        T: [const] Destruct,
+    {
         assert!(M <= N);
         let mut this = Self::new();
         let mut array = MaybeUninit::transpose(MaybeUninit::new(array));
@@ -107,9 +118,8 @@ impl<T, const N: usize> ArrayVec<T, N> {
 
     fn into_raw_parts(mut self) -> (usize, [MaybeUninit<T>; N]) {
         let len = mem::replace(&mut self.len, 0);
-        let uninit_array = ManuallyDrop::new([const { MaybeUninit::uninit() }; N]);
-        let md_array = mem::replace(&mut self.array, uninit_array);
-        let array = ManuallyDrop::into_inner(md_array);
+        let uninit_array = [const { MaybeUninit::uninit() }; N];
+        let array = mem::replace(&mut self.array, uninit_array);
         (len, array)
     }
 
@@ -207,7 +217,7 @@ impl<T: Clone, const N: usize> Clone for ArrayVec<T, N> {
 impl<T: Debug, const N: usize> Debug for ArrayVec<T, N> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ArrayVec")
-            .field("max_len", &N)
+            .field("capacity", &N)
             .field("len", &self.len())
             .field("values", &self.as_slice())
             .finish()

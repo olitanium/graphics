@@ -95,7 +95,7 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
     ) -> bool
     where
         Vector<DIMS>: ExtendedVertex<DIMS>,
-        [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+        [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
     {
         let is_in = self.encloses_point_single(point);
 
@@ -127,7 +127,7 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
     ) -> bool
     where
         Vector<DIMS>: ExtendedVertex<DIMS>,
-        [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+        [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
     {
         let is_overlap = this.overlaps_bounding_box_single(this_transform, other, other_transform);
 
@@ -205,7 +205,7 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
     ) -> InnerChildrenOrMeta<'a, V, DIMS, T>
     where
         Vector<DIMS>: ExtendedVertex<DIMS>,
-        [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+        [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
     {
         match &self.children_or_meta {
             ChildrenOrMeta::Meta(cell) => InnerChildrenOrMeta::Meta(cell.borrow_mut()),

@@ -1,7 +1,7 @@
 mod far_light;
 pub use far_light::ShadowFarLight;
 mod spot_light;
-use graphics::shader_program::SetUniformError;
+use graphics::shader_program::ShaderSetUniformError;
 pub use spot_light::ShadowSpotLight;
 mod list;
 pub use list::{GenDepthError, ShadowListLights};
@@ -15,12 +15,12 @@ use crate::modelling::cubic::lighting::simple::SimpleBindError;
 #[non_exhaustive]
 pub enum ShadowBindError<'a> {
     BindSimpleLight(SimpleBindError<'a>),
-    SetUniform(SetUniformError<'a>),
+    SetUniform(ShaderSetUniformError<'a>),
 }
 error_boilerplate!(<'a> ShadowBindError<'a>);
 
-impl<'a> From<SetUniformError<'a>> for ShadowBindError<'a> {
-    fn from(value: SetUniformError<'a>) -> Self {
+impl<'a> From<ShaderSetUniformError<'a>> for ShadowBindError<'a> {
+    fn from(value: ShaderSetUniformError<'a>) -> Self {
         Self::SetUniform(value)
     }
 }

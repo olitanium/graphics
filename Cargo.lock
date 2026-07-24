@@ -1122,6 +1122,7 @@ dependencies = [
 name = "linear_algebra"
 version = "0.1.0"
 dependencies = [
+ "array_vec",
  "fixed_point",
  "multi_zip",
 ]
@@ -2324,6 +2325,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9d12581f227e93f094d3af2ae690a574abb8a2b9b7a96e7cfe9647b2b617678"
 dependencies = [
  "once_cell",
+]
+
+[[package]]
+name = "triangle-intersection"
+version = "0.1.0"
+dependencies = [
+ "linear_algebra",
 ]
 
 [[package]]

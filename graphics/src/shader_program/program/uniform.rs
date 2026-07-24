@@ -2,10 +2,19 @@ use std::fmt::Debug;
 
 use colour::{ColourRGB, ColourRGBA};
 use linear_algebra::{Matrix, UnitVector, Vector};
+use utils::error_boilerplate;
 
 use crate::gl_call;
-use crate::shader_program::program::active_shader::{IsActiveShaderProgram, SetUniformError};
+use crate::shader_program::GetUniformLocationError;
+use crate::shader_program::program::active_shader::IsActiveShaderProgram;
 use crate::types::UniformLocation;
+
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum SetUniformError<'a> {
+    GetLocation(GetUniformLocationError<'a>),
+}
+error_boilerplate!(<'a> SetUniformError<'a>);
 
 pub trait Uniform: Debug {
     fn set_uniform<'a>(
@@ -105,15 +114,15 @@ impl<U: Uniform> Uniform for [U] {
     }
 }
 
-impl<U: Uniform> Uniform for Vec<U> {
-    fn set_uniform<'a>(
-        &self,
-        name: String,
-        shader_program: &dyn IsActiveShaderProgram<'a>,
-    ) -> Result<(), SetUniformError<'a>> {
-        self.as_slice().set_uniform(name, shader_program)
-    }
-}
+// impl<U: Uniform> Uniform for Vec<U> {
+// fn set_uniform<'a>(
+// &self,
+// name: String,
+// shader_program: &dyn IsActiveShaderProgram<'a>,
+// ) -> Result<(), SetUniformError<'a>> {
+// self.as_slice().set_uniform(name, shader_program)
+// }
+// }
 
 impl<U: Uniform> Uniform for &U {
     fn set_uniform<'a>(

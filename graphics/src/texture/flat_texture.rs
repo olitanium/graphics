@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::num::NonZero;
 use std::sync::LazyLock;
 
 use colour::ColourRGBA;
@@ -44,7 +45,15 @@ impl Drop for FlatTexture {
 
 impl Default for FlatTexture {
     fn default() -> Self {
-        Self::zeroes()
+        const {
+            Self {
+                id: TexId::new(0),
+                size: (
+                    TexDim::from_non_zero(NonZero::new(1).expect("one")),
+                    TexDim::from_non_zero(NonZero::new(1).expect("one")),
+                ),
+            }
+        }
     }
 }
 

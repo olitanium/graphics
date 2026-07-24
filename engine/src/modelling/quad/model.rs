@@ -1,6 +1,6 @@
+use std::array;
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::{array, mem};
 
 use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
@@ -17,7 +17,7 @@ use crate::modelling::test_models;
 #[derive(Debug)]
 pub struct Quad<const N: usize> {
     pub(crate) vertex_array: RefOwned<'static, VertexArray<QuadVertex>>,
-    pub texture: [Rc<RefCell<FlatTexture>>; N],
+    pub texture: [Rc<FlatTexture>; N],
 }
 
 impl<const N: usize> Quad<N> {
@@ -28,7 +28,7 @@ impl<const N: usize> Quad<N> {
     pub fn new(
         lower_bound: Vector<2>,
         upper_bound: Vector<2>,
-        texture: [Rc<RefCell<FlatTexture>>; N],
+        texture: [Rc<FlatTexture>; N],
     ) -> Self {
         Self::builder()
             .vertex_array(test_models::vertex_array_quad(lower_bound, upper_bound))
@@ -36,12 +36,12 @@ impl<const N: usize> Quad<N> {
             .build()
     }
 
-    pub fn screen(texture: [Rc<RefCell<FlatTexture>>; N]) -> Self {
-        Quad {
-            vertex_array: RefOwned::Ref(test_models::screen_quad()),
-            texture,
-        }
-    }
+    // pub fn screen(texture: [Rc<FlatTexture>; N]) -> Self {
+    // Quad {
+    // vertex_array: RefOwned::Ref(test_models::screen_quad()),
+    // texture,
+    // }
+    // }
 
     pub fn downcast<const M: usize>(self) -> Quad<M> {
         let Self {
@@ -75,7 +75,8 @@ impl<const N: usize> Quad<N> {
 
         let input = self.texture
             .iter()
-            .map(|tex| /*SAFETY: ref only lives for this function call*/ unsafe { tex.try_borrow_unguarded().expect("the only borrow") as &dyn Texture} ) 
+            //.map(|tex| /*SAFETY: ref only lives for this function call*/ unsafe { tex.try_borrow_unguarded().expect("the only borrow") as &dyn Texture} ) 
+            .map(|tex| &**tex as &dyn Texture )
             .enumerate()
             .map(|(index, tex)| (format!("in_texture{index}"), tex));
 

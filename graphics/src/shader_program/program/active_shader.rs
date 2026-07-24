@@ -1,6 +1,7 @@
 use std::collections::HashMap;
-use std::ffi::CString;
+use std::ffi::{CString, NulError};
 use std::fmt::Debug;
+use std::ops::Deref;
 use std::sync::LazyLock;
 use std::{iter, ptr};
 
@@ -8,8 +9,9 @@ use utils::error_boilerplate;
 
 use super::uniform::Uniform;
 use super::{CullFace, ShaderProgram, ShaderProgramContext};
-use crate::shader_program::program::GetUniformLocationError;
 use crate::shader_program::program::context::FaceCullingForcedByProgramError;
+use crate::shader_program::program::uniform::SetUniformError;
+use crate::shader_program::program::{GetUniformLocationError, uniform};
 use crate::texture::Texture;
 use crate::types::{self, UniformLocation};
 use crate::{Model, gl_call};
@@ -104,26 +106,46 @@ impl<'c, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum SetUniformError<'a> {
-    GetLocation(GetUniformLocationError<'a>),
+pub enum ShaderSetUniformError<'a> {
+    NameNul(NulError),
+    NotFound {
+        c_name: CString,
+        shader_source: &'a str,
+    },
 }
-error_boilerplate!(<'a> SetUniformError<'a>);
+error_boilerplate!(<'a> ShaderSetUniformError<'a>);
+
+fn match_result(res: Result<(), SetUniformError<'_>>) -> Result<(), ShaderSetUniformError<'_>> {
+    match res {
+        Ok(()) | Err(SetUniformError::GetLocation(GetUniformLocationError::OptimizedOut)) => Ok(()),
+        Err(SetUniformError::GetLocation(GetUniformLocationError::NotFound {
+            c_name,
+            shader_source,
+        })) => Err(ShaderSetUniformError::NotFound {
+            c_name,
+            shader_source,
+        }),
+        Err(uniform::SetUniformError::GetLocation(GetUniformLocationError::NameNul(err))) => {
+            Err(ShaderSetUniformError::NameNul(err))
+        }
+    }
+}
 
 impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, '_, M, O, T, OUT> {
     pub fn set_uniform<U: Uniform + ?Sized, S: Into<String>>(
         &mut self,
         name: S,
         value: &U,
-    ) -> Result<(), SetUniformError<'a>> {
-        value.set_uniform(name.into(), self)
+    ) -> Result<(), ShaderSetUniformError<'a>> {
+        match_result(value.set_uniform(name.into(), self))
     }
 
     pub fn set_uniform_dyn(
         &mut self,
         values: Vec<(String, &dyn Uniform)>,
-    ) -> Result<(), SetUniformError<'a>> {
+    ) -> Result<(), ShaderSetUniformError<'a>> {
         for (name, value) in values {
-            value.set_uniform(name, self)?;
+            match_result(value.set_uniform(name, self))?;
         }
         Ok(())
     }
@@ -140,7 +162,7 @@ impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, 
 #[non_exhaustive]
 pub enum BindTexturesError<'a> {
     BindTooHigh { maximum: usize },
-    SetUniform(SetUniformError<'a>),
+    SetUniform(Vec<ShaderSetUniformError<'a>>),
 }
 error_boilerplate!(<'a> BindTexturesError<'a>);
 
@@ -155,12 +177,22 @@ impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, 
         });
 
         if self.texture_list.len() <= *MAX_TEX_UNITS {
+            let mut errors = Vec::new();
+
             for (index, (name, tex)) in self.texture_list.clone().into_iter().enumerate() {
                 tex.bind_to(index as u32);
-                self.set_uniform(name, &(index as i32))
-                    .map_err(|err| BindTexturesError::SetUniform(err))?;
+                let result = self.set_uniform(name, &(index as i32));
+                match result {
+                    Err(x) => errors.push(x),
+                    Ok(()) => {}
+                }
+                //.map_err(|err| BindTexturesError::SetUniform(err))?;
             }
-            Ok(())
+            if errors.is_empty() {
+                Ok(())
+            } else {
+                Err(BindTexturesError::SetUniform(errors))
+            }
         } else {
             Err(BindTexturesError::BindTooHigh {
                 maximum: *MAX_TEX_UNITS,

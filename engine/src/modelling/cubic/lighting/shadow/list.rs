@@ -4,8 +4,8 @@ use graphics::framebuffer::FramebufferContext;
 use graphics::linear_algebra::Vector;
 use graphics::shader_program::{
     ActiveShaderProgram,
-    SetUniformError,
     ShaderProgramContext,
+    ShaderSetUniformError,
     Uniform,
 };
 use graphics::texture::Texture;
@@ -32,12 +32,12 @@ pub enum GenDepthError<'a> {
         error: skeleton_cubic::DrawError<'static>,
         model: &'a SkeletonCubic,
     },
-    SetUniform(SetUniformError<'static>),
+    SetUniform(ShaderSetUniformError<'static>),
 }
 error_boilerplate!(<'a> GenDepthError<'a>);
 
-impl From<SetUniformError<'static>> for GenDepthError<'_> {
-    fn from(value: SetUniformError<'static>) -> Self {
+impl From<ShaderSetUniformError<'static>> for GenDepthError<'_> {
+    fn from(value: ShaderSetUniformError<'static>) -> Self {
         Self::SetUniform(value)
     }
 }

@@ -26,7 +26,7 @@ pub struct Group<
     BoundingBoxElement<V, DIMS, Bt>: BoundingBoxShaderProgram<DIMS>,
     T: Transform<Vector<DIMS>>,
     Vector<DIMS>: Volume<DIMS>,
-    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+    [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
 {
     framebuffer: &'a D,
     bounding_box: &'a BoundingBox<V, DIMS, Bt>,
@@ -49,7 +49,7 @@ where
     BoundingBoxElement<V, DIMS, Bt>: BoundingBoxShaderProgram<DIMS>,
     T: Transform<Vector<DIMS>>,
     Vector<DIMS>: Volume<DIMS>,
-    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+    [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
 {
     pub fn new<P: CameraPose>(
         framebuffer: &'a D,
@@ -85,7 +85,7 @@ where
     Vector<DIMS>: Volume<DIMS>,
     T: Transform<Vector<DIMS>>,
     BoundingBoxElement<V, DIMS, Bt>: BoundingBoxShaderProgram<DIMS>,
-    [(); Vector::<DIMS>::ELEMENT_COUNT]:,
+    [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
 {
     fn draw(
         self: Box<Self>,

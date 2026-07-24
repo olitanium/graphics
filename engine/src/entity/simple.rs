@@ -53,7 +53,7 @@ impl<T> SimpleEntity<T> {
     pub const fn bounding_box(&self) -> Option<&BoundingBox<SimpleVertex, 3, T>>
     where
         Vector<3>: Volume<3>,
-        [(); Vector::<3>::ELEMENT_COUNT]:,
+        [(); <Vector<3> as Vertex>::ELEMENT_COUNT]:,
     {
         self.bounding_box.as_ref()
     }
@@ -144,16 +144,29 @@ impl<T> SimpleEntity<T> {
 }
 
 pub fn get_average_normal<I: IntoIterator<Item = [SimpleVertex; 3]>>(input: I) -> UnitVector<3> {
+    // input
+    // .into_iter()
+    // .map(|triangle| {
+    // triangle
+    // .into_iter()
+    // .map(|vertex| vertex.normal.v())
+    // .sum::<Vector<3>>()
+    // .normalize()
+    // .v()
+    // })
+    // .sum::<Vector<3>>()
+    // .normalize()
+
+    // input
+    // .into_iter()
+    // .flat_map(|triangle| triangle.into_iter().map(|vertex| vertex.normal.v()))
+    // .sum::<Vector<3>>()
+    // .normalize();
+
     input
         .into_iter()
-        .map(|triangle| {
-            triangle
-                .into_iter()
-                .map(|vertex| vertex.normal.v())
-                .sum::<Vector<3>>()
-                .normalize()
-                .v()
-        })
+        .flatten()
+        .map(|vert| vert.normal.v())
         .sum::<Vector<3>>()
         .normalize()
 }
@@ -176,10 +189,9 @@ impl<TThis> Collision for SimpleEntity<TThis> {
     where
         for<'a> T::Transform<'a>: Clone,
     {
-        let Some(bbox) = &self.bounding_box else {
-            return false;
-        };
-        bbox.collides(transform, target, target_transform, alter_meta)
+        self.bounding_box
+            .as_ref()
+            .is_some_and(|bbox| bbox.collides(transform, target, target_transform, alter_meta))
     }
 }
 

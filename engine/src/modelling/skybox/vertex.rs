@@ -1,4 +1,5 @@
 use graphics::linear_algebra::Vector;
+use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
 
 use crate::TransformBy;
@@ -11,13 +12,13 @@ use crate::modelling::{CubicVertex, SimpleVertex};
 pub struct SkyBoxVertex(SimpleVertex);
 
 impl Vertex for SkyBoxVertex {
-    const ELEMENT_COUNT: usize = SimpleVertex::ELEMENT_COUNT;
+    type const ELEMENT_COUNT: usize = <SimpleVertex as Vertex>::ELEMENT_COUNT;
 
     fn offsets() -> [usize; Self::ELEMENT_COUNT] {
         SimpleVertex::offsets()
     }
 
-    fn types_of() -> [(graphics::types::VertexAttrType, usize); Self::ELEMENT_COUNT] {
+    fn types_of() -> [VertexAttrType; Self::ELEMENT_COUNT] {
         SimpleVertex::types_of()
     }
 }

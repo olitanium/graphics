@@ -4,6 +4,9 @@ in vec2 texture_coord;
 out vec4 frag_colour;
 
 uniform sampler2D in_texture0;
+uniform sampler2D in_texture1;
+uniform sampler2D in_texture2;
+uniform sampler2D in_texture3;
 
 void main() {  
     // Regular

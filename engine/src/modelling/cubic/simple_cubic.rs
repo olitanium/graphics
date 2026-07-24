@@ -5,7 +5,7 @@ use std::rc::Rc;
 use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
-use graphics::shader_program::{ActiveShaderProgram, CullFace, SetUniformError};
+use graphics::shader_program::{ActiveShaderProgram, CullFace, ShaderSetUniformError};
 use russimp::scene::PostProcess;
 use utils::error_boilerplate;
 
@@ -75,7 +75,7 @@ impl SimpleCubic {
 #[non_exhaustive]
 pub enum DrawError<'a> {
     Mesh(mesh::DrawError<'a>),
-    SetUniform(SetUniformError<'a>),
+    SetUniform(ShaderSetUniformError<'a>),
 }
 error_boilerplate!(<'a> DrawError<'a>);
 

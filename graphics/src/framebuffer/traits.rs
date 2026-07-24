@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::{RefCell, RefMut};
 use std::rc::Rc;
 
 /// Helpful traits to ensure that certain draw operations cannot be applied to
@@ -15,10 +15,10 @@ pub struct AttachmentTextureInfo {
     pub attachment: types::GLenum,
 }
 
-pub type OptTexBuilderMap<B: Attachment> =
+pub type OptTexBuilderMap<B: AttachmentWithoutExtra> =
     Option<Box<dyn Fn(B::TexBuilder) -> B::TexBuilder + 'static>>;
 
-pub trait Attachment: Sized {
+pub trait AttachmentWithoutExtra: Sized {
     type Tex: Texture + TextureHasBuilder;
     type TexBuilder;
 
@@ -40,9 +40,6 @@ pub trait Attachment: Sized {
     /// Enable the various OpenGL drawing modes.
     fn enables(context: &mut FramebufferContext);
 }
-
-/// Marker trait for attachments which do not provide any new buffers
-pub trait AttachmentWithoutExtra: Attachment {}
 
 /// Marker trait for attachments which provide a depth buffer
 pub trait AttachmentWithDepth: AttachmentWithoutExtra {
@@ -70,14 +67,23 @@ pub trait FramebufferInternals: Sized {
     fn size(&self) -> (TexDim, TexDim);
     fn aspect_ratio(&self) -> f32 {
         let (x, y) = self.size();
-        x.as_primitive() as f32 / y.as_primitive() as f32
+        #[allow(clippy::cast_precision_loss)]
+        (x.as_primitive() as f32 / y.as_primitive() as f32)
     }
     fn id(&self) -> &FrameBufferId;
 
     fn enables(&self, context: &mut FramebufferContext);
 }
 
-impl<T> FramebufferWithoutExtra<1> for T where T: FramebufferWithoutExtra<2> {}
+impl<T> FramebufferWithoutExtra<1> for T
+where
+    T: FramebufferWithoutExtra<2>,
+{
+    fn try_give_texture_lock(&self) -> Option<[RefMut<'_, Self::Tex>; 1]> {
+        let [a, ..] = self.try_give_texture_lock()?;
+        Some([a])
+    }
+}
 impl<T> FramebufferWithDepth<1> for T
 where
     T: FramebufferWithDepth<2>,
@@ -95,7 +101,15 @@ where
     }
 }
 
-impl<T> FramebufferWithoutExtra<2> for T where T: FramebufferWithoutExtra<3> {}
+impl<T> FramebufferWithoutExtra<2> for T
+where
+    T: FramebufferWithoutExtra<3>,
+{
+    fn try_give_texture_lock(&self) -> Option<[RefMut<'_, Self::Tex>; 2]> {
+        let [a, b, ..] = self.try_give_texture_lock()?;
+        Some([a, b])
+    }
+}
 impl<T> FramebufferWithDepth<2> for T
 where
     T: FramebufferWithDepth<3>,
@@ -119,6 +133,8 @@ pub trait FramebufferWithoutExtra<const OUT: usize>: FramebufferInternals {
     ) -> ActiveFramebuffer<'a, 'b, OUT, Self> {
         fb_context.register(self)
     }
+
+    fn try_give_texture_lock(&self) -> Option<[RefMut<'_, Self::Tex>; OUT]>;
 }
 
 pub trait FramebufferWithDepth<const OUT: usize>: FramebufferWithoutExtra<OUT> {

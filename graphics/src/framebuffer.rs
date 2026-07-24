@@ -1,8 +1,8 @@
-use std::cell::RefCell;
+use std::cell::{LazyCell, Ref, RefCell, RefMut};
 use std::rc::Rc;
+use std::sync::LazyLock;
 
 use crate::framebuffer::traits::{
-    Attachment,
     AttachmentWithDepth,
     AttachmentWithStencil,
     AttachmentWithoutExtra,
@@ -24,9 +24,11 @@ pub use active_framebuffer::{ActiveFramebuffer, FramebufferContext};
 pub use builder::Builder;
 use builder::MissingSize;
 
+#[must_use]
 pub fn flat_builder<const N: usize>() -> Builder<N, MissingSize, WithoutExtra> {
     Builder::new_flat()
 }
+#[must_use]
 pub fn cubic_builder<const N: usize>() -> Builder<N, MissingSize, CubeWithoutExtra> {
     Builder::new_cubic()
 }
@@ -44,6 +46,7 @@ use attachments::{CubeWithDepth, CubeWithoutExtra, WithStencil, WithoutExtra};
 #[derive(Debug)]
 pub struct DefaultFramebuffer {
     size: (TexDim, TexDim),
+    texture: RefCell<FlatTexture>,
 }
 
 pub static DEFAULT_FB_ID: FrameBufferId = FrameBufferId::new(0);
@@ -70,7 +73,11 @@ impl FramebufferInternals for DefaultFramebuffer {
     }
 }
 
-impl FramebufferWithoutExtra<1> for DefaultFramebuffer {}
+impl FramebufferWithoutExtra<1> for DefaultFramebuffer {
+    fn try_give_texture_lock(&self) -> Option<[RefMut<'_, Self::Tex>; 1]> {
+        self.texture.try_borrow_mut().ok().map(|x| [x])
+    }
+}
 impl FramebufferWithDepth<1> for DefaultFramebuffer {
     fn depth_testing(depth_testing: bool, context: &mut FramebufferContext) {
         // `DefaultFramebuffer` is effectively a `WithStencil` buffer
@@ -87,7 +94,7 @@ impl FramebufferWithStencil<1> for DefaultFramebuffer {
 /// A Framebuffer for drawing anything onto. Can be any size (rectangle). As an
 /// HDR buffer it can store any value in it's four channels (rgba)
 #[derive(Debug)]
-pub struct Framebuffer<const OUT: usize, X: Attachment> {
+pub struct Framebuffer<const OUT: usize, X: AttachmentWithoutExtra> {
     /// OpenGL ID for this Framebuffer
     id: FrameBufferId,
     /// Holder for Stencil and/or Depth buffers.
@@ -98,7 +105,7 @@ pub struct Framebuffer<const OUT: usize, X: Attachment> {
     // quad: Quad<OUT>,
 }
 
-impl<const OUT: usize, X: Attachment> Drop for Framebuffer<OUT, X> {
+impl<const OUT: usize, X: AttachmentWithoutExtra> Drop for Framebuffer<OUT, X> {
     fn drop(&mut self) {
         let id = self.id().as_primitive();
         gl_call! {
@@ -107,7 +114,7 @@ impl<const OUT: usize, X: Attachment> Drop for Framebuffer<OUT, X> {
     }
 }
 
-impl<const OUT: usize, X: Attachment> FramebufferInternals for Framebuffer<OUT, X> {
+impl<const OUT: usize, X: AttachmentWithoutExtra> FramebufferInternals for Framebuffer<OUT, X> {
     type Tex = X::Tex;
 
     fn id(&self) -> &FrameBufferId {
@@ -121,13 +128,16 @@ impl<const OUT: usize, X: Attachment> FramebufferInternals for Framebuffer<OUT, 
     }
 
     fn enables(&self, context: &mut FramebufferContext) {
-        X::enables(context)
+        X::enables(context);
     }
 }
 
 impl<const OUT: usize, X: AttachmentWithoutExtra> FramebufferWithoutExtra<OUT>
     for Framebuffer<OUT, X>
 {
+    fn try_give_texture_lock(&self) -> Option<[RefMut<'_, Self::Tex>; OUT]> {
+        self.get_all_refmut()
+    }
 }
 impl<const OUT: usize, X: AttachmentWithDepth> FramebufferWithDepth<OUT> for Framebuffer<OUT, X> {
     fn depth_testing(depth_testing: bool, context: &mut FramebufferContext) {
@@ -145,7 +155,10 @@ impl<const OUT: usize, X: AttachmentWithStencil> FramebufferWithStencil<OUT>
 impl DefaultFramebuffer {
     /// Internal function to generate the default (screen) `FrameBuffer`
     pub(crate) fn new(size: (TexDim, TexDim)) -> Self {
-        Self { size }
+        Self {
+            size,
+            texture: RefCell::default(),
+        }
     }
 }
 
@@ -153,22 +166,38 @@ impl Default for DefaultFramebuffer {
     fn default() -> Self {
         Self {
             size: (TexDim::new(1), TexDim::new(1)),
+            texture: RefCell::default(),
         }
     }
 }
 
-impl<const N: usize, X: Attachment> Framebuffer<N, X> {
+impl<const N: usize, X: AttachmentWithoutExtra> Framebuffer<N, X> {
     /// Access one of the Framebuffer draw locations,
     ///
     /// # Errors
     /// Returns Error if `index` >= `N` i.e. out of bounds
-    pub fn get_colour(&self, index: usize) -> Option<Rc<RefCell<X::Tex>>> {
-        self.textures.get(index).cloned()
+    // pub fn get_colour(&self, index: usize) -> Option<Rc<X::Tex>> {
+    // self.textures.get(index).cloned()
+    // }
+
+    // /// Return all textures, in order, of the Framebuffer.
+    // pub fn get_all_colour(&self) -> [Rc<X::Tex>; N] {
+    // self.textures.clone()
+    // }
+
+    pub fn get_all_refmut(&self) -> Option<[RefMut<'_, X::Tex>; N]> {
+        self.textures
+            .each_ref()
+            .try_map(|ref_rc| ref_rc.try_borrow_mut())
+            .ok()
     }
 
-    /// Return all textures, in order, of the Framebuffer.
-    pub fn get_all_colour(&self) -> [Rc<RefCell<X::Tex>>; N] {
-        self.textures.clone()
+    pub fn get_all_colour_ref(&self) -> [Ref<'_, X::Tex>; N] {
+        self.textures.each_ref().map(|ref_rc| ref_rc.borrow())
+    }
+
+    pub fn get_textures_raw(&self) -> &[Rc<RefCell<X::Tex>>] {
+        &self.textures
     }
 }
 

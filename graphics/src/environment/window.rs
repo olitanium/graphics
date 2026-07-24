@@ -73,7 +73,7 @@ impl Window {
         self.glfw_window.set_cursor_mode(mode);
     }
 
-    pub fn configure(&mut self) {
+    pub(crate) fn configure(&mut self) {
         gl_call! {
             gl::Enable(gl::BLEND);
         };

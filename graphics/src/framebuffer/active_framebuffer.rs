@@ -1,3 +1,4 @@
+use std::cell::RefMut;
 use std::collections::HashSet;
 use std::marker::PhantomData;
 use std::sync::Mutex;
@@ -70,7 +71,8 @@ impl FramebufferContext {
 
 #[derive(Debug)]
 pub struct ActiveFramebuffer<'a, 'b, const OUT: usize, D: FramebufferWithoutExtra<OUT>> {
-    _framebuffer: PhantomData<&'a D>,
+    framebuffer: PhantomData<&'a D>,
+    _texture_locks: [RefMut<'a, D::Tex>; OUT],
     context: &'b mut FramebufferContext,
 }
 
@@ -87,8 +89,13 @@ impl<'a, 'b, const OUT: usize, D: FramebufferWithoutExtra<OUT>> ActiveFramebuffe
 
         framebuffer.enables(context);
 
+        let texture_locks = framebuffer
+            .try_give_texture_lock()
+            .expect("should do everything sequentially, this would break anyway");
+
         Self {
-            _framebuffer: PhantomData,
+            framebuffer: PhantomData,
+            _texture_locks: texture_locks,
             context,
         }
     }

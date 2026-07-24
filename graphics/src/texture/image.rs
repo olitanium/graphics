@@ -49,8 +49,8 @@ fn new_from_file<P: AsRef<Path>>(
 
         let size_as_u32 = image.dimensions();
         let size = (
-            TexDim::new(size_as_u32.0 as i32),
-            TexDim::new(size_as_u32.1 as i32),
+            TexDim::new(size_as_u32.0 as TexDim::Primitive),
+            TexDim::new(size_as_u32.1 as TexDim::Primitive),
         );
 
         Ok((size, pixels))

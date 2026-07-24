@@ -32,10 +32,12 @@ where
     builder!(element_array: Vec<ElementArrayElem>);
 
     pub fn push_triangle(&mut self, triangle: [V; 3]) {
+        #[allow(clippy::cast_possible_truncation)]
+        // vertices are not likely to have length greater than GLuint::MAX
         let original_len = self.vertices.len() as crate::types::GLuint;
         self.vertices.extend(triangle);
         self.element_array
-            .extend([original_len, original_len + 1, original_len + 2].map(ElementArrayElem::new));
+            .extend((original_len..=original_len + 2).map(ElementArrayElem::new));
     }
 
     pub fn push_triangle_by_index(&mut self, triangle: [ElementArrayElem; 3]) {

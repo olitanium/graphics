@@ -9,7 +9,7 @@ use utils::{builder, error_boilerplate, new};
 
 use super::CubeMap;
 use crate::framebuffer::attachments::CubeWithDepth;
-use crate::framebuffer::traits::Attachment;
+use crate::framebuffer::traits::AttachmentWithoutExtra;
 use crate::texture::{Magnification, Minification, TexBuilder, TexBuilderCanBuild};
 use crate::types::{TexDim, TexId};
 use crate::{gl_call, types};
@@ -21,7 +21,7 @@ pub struct MissingData;
 pub struct Dimensions(TexDim);
 
 #[derive(Debug)]
-pub struct FramebufferAttachment<T: Attachment> {
+pub struct FramebufferAttachment<T: AttachmentWithoutExtra> {
     size: TexDim,
     _att_type: PhantomData<T>,
 }
@@ -252,7 +252,7 @@ impl Builder<HasSomeImage> {
     }
 }
 
-impl<T: Attachment> Builder<FramebufferAttachment<T>> {
+impl<T: AttachmentWithoutExtra> Builder<FramebufferAttachment<T>> {
     pub fn build(self) -> Option<CubeMap> {
         T::components().map(|tex_info| {
             let id = make_tex_set_parameters(&self);

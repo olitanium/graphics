@@ -11,10 +11,7 @@ use super::camera::Camera;
 use super::lighting::shadow::ShadowListLights;
 use crate::modelling::SkeletonCubic;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::{
-    CalculatedAnimation,
-    SignaturesDoNotMatchError,
-};
+use crate::modelling::cubic::geometry::{CalculatedAnimation, SignaturesDoNotMatchError};
 use crate::opengl_shaders;
 
 pub const SHADOW_SHADER_MAX_LIGHTS: usize = 2;

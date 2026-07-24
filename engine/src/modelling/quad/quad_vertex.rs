@@ -14,7 +14,7 @@ pub struct QuadVertex {
 }
 
 impl Vertex for QuadVertex {
-    const ELEMENT_COUNT: usize = 2;
+    type const ELEMENT_COUNT: usize = 2;
 
     fn offsets() -> [usize; Self::ELEMENT_COUNT] {
         [
@@ -23,7 +23,7 @@ impl Vertex for QuadVertex {
         ]
     }
 
-    fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
+    fn types_of() -> [VertexAttrType; Self::ELEMENT_COUNT] {
         let [vec2] = Vector::<2>::types_of();
         [vec2, vec2]
     }

@@ -21,7 +21,7 @@ pub struct SkeletalVertex {
 }
 
 impl Vertex for SkeletalVertex {
-    const ELEMENT_COUNT: usize = 6;
+    type const ELEMENT_COUNT: usize = 6;
 
     fn offsets() -> [usize; Self::ELEMENT_COUNT] {
         [
@@ -34,7 +34,7 @@ impl Vertex for SkeletalVertex {
         ]
     }
 
-    fn types_of() -> [(VertexAttrType, usize); Self::ELEMENT_COUNT] {
+    fn types_of() -> [VertexAttrType; Self::ELEMENT_COUNT] {
         let [vec2] = Vector::<2>::types_of();
         let [vec3] = Vector::<3>::types_of();
         let [uvec3] = UnitVector::<3>::types_of();

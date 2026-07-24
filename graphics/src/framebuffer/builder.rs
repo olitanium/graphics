@@ -6,7 +6,8 @@ use std::rc::Rc;
 
 use super::attachments::{CubeWithoutExtra, WithDepth, WithStencil, WithoutExtra};
 use super::traits::OptTexBuilderMap;
-use super::{Attachment, CubeWithDepth, Framebuffer};
+use super::{CubeWithDepth, Framebuffer};
+use crate::framebuffer::traits::{AttachmentWithStencil, AttachmentWithoutExtra};
 use crate::gl_call;
 use crate::texture::{TexBuilder, TexBuilderCanBuild, Texture, TextureHasBuilder};
 use crate::types::{self, FrameBufferId, TexDim};
@@ -20,7 +21,7 @@ pub struct HasSize((TexDim, TexDim));
 /// Framebuffer builder type, used to select the number of colour buffers and
 /// types of depth testing
 #[derive(Default)]
-pub struct Builder<const N: usize, S, B: Attachment> {
+pub struct Builder<const N: usize, S, B: AttachmentWithoutExtra> {
     /// Size of the underlying texture
     size: S,
     /// What type of internal
@@ -28,7 +29,7 @@ pub struct Builder<const N: usize, S, B: Attachment> {
     map_attachment: OptTexBuilderMap<B>,
 }
 
-impl<const N: usize, S: Debug, B: Attachment + Debug> Debug for Builder<N, S, B> {
+impl<const N: usize, S: Debug, B: AttachmentWithoutExtra + Debug> Debug for Builder<N, S, B> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Builder")
             .field("size", &self.size)
@@ -75,7 +76,7 @@ impl<const N: usize, S> Builder<N, S, CubeWithoutExtra> {
     }
 }
 
-impl<const N: usize, B: Attachment> Builder<N, MissingSize, B> {
+impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, MissingSize, B> {
     /// Set the framebuffer size
     pub fn size(self, size: (TexDim, TexDim)) -> Builder<N, HasSize, B> {
         Builder {
@@ -108,7 +109,7 @@ impl<const N: usize, S> Builder<N, S, WithDepth> {
     }
 }
 
-impl<const N: usize, B: Attachment> Builder<N, HasSize, B> {
+impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, HasSize, B> {
     pub fn map_attachment<F: Fn(B::TexBuilder) -> B::TexBuilder + 'static>(
         self,
         map_attachment: F,
@@ -120,7 +121,7 @@ impl<const N: usize, B: Attachment> Builder<N, HasSize, B> {
     }
 }
 
-impl<const N: usize, B: Attachment> Builder<N, HasSize, B> {
+impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, HasSize, B> {
     /// Build from information given to the `Builder` before.
     pub fn build(self) -> Framebuffer<N, B> {
         let id = {
@@ -133,7 +134,7 @@ impl<const N: usize, B: Attachment> Builder<N, HasSize, B> {
             gl::BindFramebuffer(gl::FRAMEBUFFER, id.as_primitive());
         }
 
-        let colour: [Rc<RefCell<B::Tex>>; N] = array::from_fn(|_| {
+        let colour: [_; N] = array::from_fn(|_| {
             Rc::new(RefCell::new(
                 B::Tex::builder()
                     .size(self.size.0)

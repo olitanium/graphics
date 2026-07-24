@@ -7,11 +7,11 @@ pub(crate) use gl::types::*;
 macro_rules! opaque {
     ($name:ident : $type:ident $(, $derives: ident)* $(,)?) => {
         #[derive(Debug, Hash, PartialEq, Eq $(, $derives)*)]
-        pub struct $name(gl::types::$type);
+        pub struct $name($type);
         // TODO: make inner a Self::Primitive
         // Currently this makes rust-analyzer unhappy
 
-        impl From<gl::types::$type> for $name {
+        impl From<$type> for $name {
             fn from(value: Self::Primitive) -> Self {
                 Self::new(value)
             }
@@ -19,7 +19,7 @@ macro_rules! opaque {
 
         impl $name {
             #[allow(dead_code)]
-            pub type Primitive = gl::types::$type;
+            pub type Primitive = $type;
 
             #[allow(dead_code)]
             pub(crate) fn as_primitive(&self) -> Self::Primitive {
@@ -38,7 +38,7 @@ macro_rules! opaque {
 macro_rules! nz_opaque {
     ($name:ident : $type:ident $(, $derives: ident)* $(,)?) => {
         #[derive(Debug, Hash, PartialEq, Eq $(, $derives)*)]
-        pub struct $name(NonZero<gl::types::$type>);
+        pub struct $name(NonZero<$type>);
 
         /*impl From<gl::types::$type> for $name {
             fn from(value: Self::Primitive) -> Self {
@@ -60,7 +60,7 @@ macro_rules! nz_opaque {
 
         impl $name {
             #[expect(dead_code)]
-            pub(crate) type Primitive = gl::types::$type;
+            pub(crate) type Primitive = $type;
 
             pub(crate) fn as_primitive(&self) -> Self::Primitive {
                 self.0.get()
@@ -76,7 +76,7 @@ impl TexDim {
         Self(NonZero::new(value.get() as _).unwrap())
     }
 }
-nz_opaque!(TexId: GLuint);
+opaque!(TexId: GLuint);
 opaque!(FrameBufferId: GLuint);
 nz_opaque!(VertexArrayId: GLuint);
 nz_opaque!(ElementArrayId: GLuint);
@@ -121,28 +121,32 @@ impl Debug for GLError {
 #[derive(Debug, Clone, Copy)]
 pub enum VertexAttrType {
     #[doc(hidden)]
-    GLfloat,
+    GLfloat(u8),
     #[doc(hidden)]
-    GLint,
+    GLint(u8),
 }
 
 impl VertexAttrType {
     pub(crate) fn get_enum(self) -> gl::types::GLenum {
         match self {
-            Self::GLfloat => gl::FLOAT,
-            Self::GLint => gl::INT,
+            Self::GLfloat(_) => gl::FLOAT,
+            Self::GLint(_) => gl::INT,
         }
     }
 }
 
 pub trait VertexAttr: Copy {
-    const ATTR: VertexAttrType;
+    fn attr(val: u8) -> VertexAttrType;
 }
 
 impl VertexAttr for gl::types::GLfloat {
-    const ATTR: VertexAttrType = VertexAttrType::GLfloat;
+    fn attr(val: u8) -> VertexAttrType {
+        VertexAttrType::GLfloat(val)
+    }
 }
 
 impl VertexAttr for gl::types::GLint {
-    const ATTR: VertexAttrType = VertexAttrType::GLint;
+    fn attr(val: u8) -> VertexAttrType {
+        VertexAttrType::GLint(val)
+    }
 }

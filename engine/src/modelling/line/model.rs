@@ -1,6 +1,6 @@
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
-use graphics::shader_program::{SetUniformError, Uniform};
+use graphics::shader_program::{ShaderSetUniformError, Uniform};
 use graphics::types::ElementArrayLen;
 use graphics::vertex::NoVertex;
 use graphics::vertex_array::VertexArrayDrawError;
@@ -31,7 +31,7 @@ impl<U: Uniform> Line<U> {
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum DrawError<'a> {
-    SetUniform(SetUniformError<'a>),
+    SetUniform(ShaderSetUniformError<'a>),
     VertexArrayDraw(VertexArrayDrawError<'a>),
     LineTooLong { len: usize },
 }
@@ -44,7 +44,7 @@ impl<U: Uniform> Line<U> {
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, F>,
     ) -> Result<(), DrawError<'b>> {
         active_shader
-            .set_uniform("vertex".to_string(), &self.vertices)
+            .set_uniform("vertex".to_string(), self.vertices.as_slice())
             .map_err(|err| DrawError::SetUniform(err))?;
 
         let len = if self.vertices.len() <= LINE_SHADER_MAX_VERTICES {

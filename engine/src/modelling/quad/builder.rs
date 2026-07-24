@@ -12,13 +12,13 @@ use crate::modelling::test_models;
 #[derive(Debug, Default)]
 pub struct Builder<const N: usize> {
     vertex_array: Option<VertexArray<QuadVertex>>,
-    texture: Option<[Rc<RefCell<FlatTexture>>; N]>, // Option<Rc<FlatTexture>>,
+    texture: Option<[Rc<FlatTexture>; N]>, // Option<Rc<FlatTexture>>,
 }
 
 impl<const N: usize> Builder<N> {
     builder!(vertex_array: Option<VertexArray<QuadVertex>>);
 
-    builder!(texture: Option<[Rc<RefCell<FlatTexture>>; N]>);
+    builder!(texture: Option<[Rc<FlatTexture>; N]>);
 }
 
 impl<const N: usize> Builder<N> {
@@ -28,9 +28,9 @@ impl<const N: usize> Builder<N> {
                 || RefOwned::Ref(test_models::screen_quad()),
                 RefOwned::Owned,
             ),
-            texture: self.texture.unwrap_or(array::from_fn(|_| {
-                Rc::new(RefCell::new(FlatTexture::default()))
-            })),
+            texture: self
+                .texture
+                .unwrap_or(array::from_fn(|_| Default::default())),
         }
     }
 }

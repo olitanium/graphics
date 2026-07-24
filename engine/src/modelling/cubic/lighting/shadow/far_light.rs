@@ -1,4 +1,3 @@
-
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::attachments::WithDepth;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;

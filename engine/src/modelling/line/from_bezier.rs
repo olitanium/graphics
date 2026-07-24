@@ -8,7 +8,7 @@ impl<const DIMS: usize> Line<Vector<DIMS>>
 where
     Vector<DIMS>: Uniform,
 {
-    fn from_bezier<const N: usize>(
+    pub fn from_bezier<const N: usize>(
         _curve: BezierCurve<DIMS, N>,
         _lower_bound: f32,
         _upper_bound: f32,

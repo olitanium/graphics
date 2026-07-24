@@ -5,7 +5,7 @@ use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Matrix;
-use graphics::shader_program::{ActiveShaderProgram, CullFace, SetUniformError};
+use graphics::shader_program::{ActiveShaderProgram, CullFace, ShaderSetUniformError};
 use utils::{error_boilerplate, partition};
 
 use super::material::Material;
@@ -110,7 +110,7 @@ impl SkeletonCubic {
 #[non_exhaustive]
 pub enum DrawError<'a> {
     Mesh(mesh::DrawError<'a>),
-    SetUniform(SetUniformError<'a>),
+    SetUniform(ShaderSetUniformError<'a>),
 }
 error_boilerplate!(<'a> DrawError<'a>);
 
@@ -153,7 +153,7 @@ impl EntityInner for SkeletonCubic {
         depth: usize,
         init: F,
     ) -> Option<Self::BoundingBox<T>> {
-        let per_mesh = partition(self.triangles(), |(bone, _)| vec![bone.0], |(_, tri)| tri);
+        let per_mesh = partition(&self.triangles(), |(bone, _)| vec![bone.0], |(_, tri)| tri);
 
         SkeletonBb::from_vec_triangle(per_mesh, depth, init)
     }

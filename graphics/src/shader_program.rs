@@ -11,6 +11,7 @@ pub use program::{
     SetUniformError,
     ShaderProgram,
     ShaderProgramContext,
+    ShaderSetUniformError,
     Uniform,
     ValidateError,
 };

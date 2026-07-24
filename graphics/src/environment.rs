@@ -1,7 +1,6 @@
 use std::cell::RefMut;
 use std::collections::HashSet;
 use std::fmt::Debug;
-use std::task::Poll;
 use std::time::{Duration, Instant};
 
 mod draw;

@@ -1,6 +1,4 @@
 #![feature(never_type)]
-#![feature(iter_map_windows)]
-#![feature(array_windows)]
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
@@ -33,17 +31,31 @@ pub enum GetError {
 error_boilerplate!(GetError);
 
 impl<const DIMS: usize, const N: usize> BezierSegment<DIMS, N> {
-    // returns None if N == 0
     pub fn get(&self, t: f32) -> Result<Vector<DIMS>, GetError> {
         let mut out: ArrayVec<Vector<DIMS>, N> = ArrayVec::from_array(self.0);
-        while out.len() > 1 {
-            out = out
-                .array_windows()
-                .map(|[vec1, vec2]| *vec1 * (1.0 - t) + *vec2 * t)
-                .collect()
-        }
+        // while out.len() > 1 {
+        // out = out
+        // .array_windows()
+        // .copied()
+        // .map(|[vec1, vec2]| vec1 * (1.0 - t) + vec2 * t)
+        // .collect()
+        // }
+        //
+        // out.get(0).copied().ok_or(GetError::ZeroDimension)
 
-        out.get(0).copied().ok_or(GetError::ZeroDimension)
+        loop {
+            match out.as_slice() {
+                &[] => return Err(GetError::ZeroDimension),
+                &[out] => return Ok(out),
+                other => {
+                    out = other
+                        .array_windows()
+                        .copied()
+                        .map(|[vec1, vec2]| vec1 * (1.0 - t) + vec2 * t)
+                        .collect()
+                }
+            }
+        }
     }
 
     pub fn end(&self) -> Result<Vector<DIMS>, GetError> {

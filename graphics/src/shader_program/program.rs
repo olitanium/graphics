@@ -14,7 +14,7 @@ pub use active_shader::{
     ActiveShaderProgram,
     BindTexturesError,
     IsActiveShaderProgram,
-    SetUniformError,
+    ShaderSetUniformError,
     ValidateError,
 };
 
@@ -25,7 +25,7 @@ mod builder;
 pub use builder::Builder;
 use builder::{MissingFragmentShader, MissingVertexShader};
 mod uniform;
-pub use uniform::Uniform;
+pub use uniform::{SetUniformError, Uniform};
 
 mod cull_face;
 use ::utils::error_boilerplate;
@@ -78,6 +78,7 @@ pub enum GetUniformLocationError<'a> {
         c_name: CString,
         shader_source: &'a str,
     },
+    OptimizedOut,
 }
 error_boilerplate!(<'a> GetUniformLocationError<'a>);
 
@@ -93,16 +94,25 @@ impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
             .borrow_mut()
             .entry(c_name.clone())
             .or_insert_with_key(|c_name| {
-                gl_call! { gl::GetUniformLocation(self.id.as_primitive(), c_name.as_ptr()) }
+                let mut location =
+                    gl_call! { gl::GetUniformLocation(self.id.as_primitive(), c_name.as_ptr()) };
+                if location == -1 {
+                    let is_it_in_the_source = self
+                        .concat_all_text
+                        .contains(c_name.to_string_lossy().as_ref());
+                    location = if is_it_in_the_source { -2 } else { -1 };
+                }
+                location
             });
 
-        if out != -1 {
-            Ok(UniformLocation::new(out))
-        } else {
-            Err(GetUniformLocationError::NotFound {
+        // if shader_source contains c_name then
+        match out {
+            -2 => Err(GetUniformLocationError::OptimizedOut),
+            -1 => Err(GetUniformLocationError::NotFound {
                 c_name,
                 shader_source: &self.concat_all_text,
-            })
+            }),
+            other => Ok(UniformLocation::new(other)),
         }
     }
 }

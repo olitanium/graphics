@@ -1,4 +1,3 @@
-#![feature(const_mul_add)]
 #![feature(const_trait_impl)]
 
 use std::ops;

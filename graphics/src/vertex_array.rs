@@ -10,8 +10,14 @@ use super::framebuffer::ActiveFramebuffer;
 use crate::element_array_buffer::ElementArrayBuffer;
 // use crate::error::ApiResult;
 use crate::framebuffer::traits::FramebufferWithoutExtra;
-use crate::shader_program::{ActiveShaderProgram, BindTexturesError, ValidateError};
-use crate::types::{ElementArrayLen, VertexArrayId};
+use crate::shader_program::{
+    ActiveShaderProgram,
+    BindTexturesError,
+    GetUniformLocationError,
+    ShaderSetUniformError,
+    ValidateError,
+};
+use crate::types::{ElementArrayLen, VertexArrayId, VertexAttrType};
 use crate::vertex::{NoVertex, Vertex};
 use crate::vertex_buffer::VertexBuffer;
 use crate::{Model, gl_call, types};
@@ -48,6 +54,7 @@ impl<V: Vertex> VertexArray<V>
 where
     [(); V::ELEMENT_COUNT]:,
 {
+    #[must_use = "builders must be built to obtain their relevant type"]
     pub fn builder() -> Builder<V> {
         Builder::new()
     }
@@ -71,23 +78,42 @@ where
         vertex_buffer.bind();
         if let Some(buffer) = &element_array_buffer {
             buffer.bind();
-        };
+        }
 
-        for (index, (offset, (type_of, count))) in
-            iter::zip(V::offsets(), V::types_of()).enumerate()
-        {
-            gl_call! {
-                gl::VertexAttribPointer(
-                    index as types::GLuint,
-                    count as types::GLint,
-                    type_of.get_enum(),
-                    gl::FALSE,
-                    V::stride() as i32,
-                    (offset as *const ()).cast(),
-                );
+        for (index, (offset, type_of)) in iter::zip(V::offsets(), V::types_of()).enumerate() {
+            #[allow(clippy::cast_possible_truncation)]
+            // there probably will not be more than GLuint::MAX components to a vertex,
+            // but usize is a more "Rust" type
+            let index = index as types::GLuint;
+
+            #[allow(clippy::cast_possible_truncation)]
+            // there probably will not be more than GLsizei::MAX bytes in a vertex but usize is a
+            // more "Rust" type
+            let stride = V::stride() as types::GLsizei;
+            match type_of {
+                VertexAttrType::GLfloat(count) => gl_call! {
+                    gl::VertexAttribPointer(
+                        index,
+                        types::GLint::from(count),
+                        type_of.get_enum(),
+                        gl::FALSE,
+                        stride,
+                        offset as *const _,
+                    );
+                },
+                VertexAttrType::GLint(count) => gl_call! {
+                    gl::VertexAttribIPointer(
+                        index,
+                        types::GLint::from(count),
+                        type_of.get_enum(),
+                        stride,
+                        offset as *const _,
+                    );
+                },
             }
+
             gl_call! {
-                gl::EnableVertexAttribArray(index as types::GLuint);
+                gl::EnableVertexAttribArray(index);
             }
         }
 
@@ -105,6 +131,7 @@ where
         }
     }
 
+    #[must_use]
     pub fn triangles(&self) -> Cow<'_, [[V; 3]]> {
         match self.element_array_buffer.as_ref() {
             Some(element) => {
@@ -149,20 +176,32 @@ impl<V: Vertex> VertexArray<V>
 where
     [(); V::ELEMENT_COUNT]:,
 {
+    /// # Errors
+    ///
+    /// Errors when the active shader program is not correctly configured for
+    /// drawing. This may be because the shader program as written does not line
+    /// up with the type provided to Rust
     pub fn draw<'a, M: Model<Vertex = V>, O, const OUT: usize, D: FramebufferWithoutExtra<OUT>>(
         &self,
         active_shader_program: &mut ActiveShaderProgram<'a, '_, '_, M, O, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
     ) -> Result<(), VertexArrayDrawError<'a>> {
         self.bind();
-        active_shader_program
+        let texture_result = active_shader_program
             .bind_textures()
-            .map_err(|err| VertexArrayDrawError::BindTextures(err))?;
+            .map_err(VertexArrayDrawError::BindTextures);
 
-        #[cfg(debug_assertions)]
+        // match texture_result {
+        // Ok(()) => {}
+        // Err(VertexArrayDrawError::BindTextures(BindTexturesError::SetUniform(
+        // SetUniformError::GetLocation(GetUniformLocationError::NotFound { c_name, ..
+        // }), ))) if c_name.to_string_lossy().contains("texture") => { /* do
+        // nothing */ } Err(x) => return Err(x),
+        // }
+
         active_shader_program
             .validate()
-            .map_err(|err| VertexArrayDrawError::Validate(err))?;
+            .map_err(VertexArrayDrawError::Validate)?;
 
         if let Some(element_buffer) = &self.element_array_buffer {
             element_buffer.bind();
@@ -180,7 +219,7 @@ where
             }
         }
 
-        Ok(())
+        texture_result
     }
 }
 
@@ -201,12 +240,18 @@ fn empty() -> VertexArray<NoVertex, ()> {
     }
 }
 
+#[must_use]
 pub fn dummy_vertex_array() -> &'static VertexArray<NoVertex, ()> {
     static DUMMY_VERTEX_ARRAY: LazyLock<VertexArray<NoVertex, ()>> = LazyLock::new(empty);
     &DUMMY_VERTEX_ARRAY
 }
 
 impl VertexArray<NoVertex, ()> {
+    /// # Errors
+    ///
+    /// Errors when the active shader program is not correctly configured for
+    /// drawing. This may be because the shader program as written does not line
+    /// up with the type provided to Rust
     pub fn draw_len<
         'a,
         M: Model<Vertex = NoVertex>,
@@ -220,9 +265,11 @@ impl VertexArray<NoVertex, ()> {
         len: ElementArrayLen,
     ) -> Result<(), VertexArrayDrawError<'a>> {
         self.bind();
+
+        #[cfg(debug_assertions)]
         active_shader_program
             .validate()
-            .map_err(|err| VertexArrayDrawError::Validate(err))?;
+            .map_err(VertexArrayDrawError::Validate)?;
 
         gl_call! {
             gl::DrawArrays(gl::LINE_STRIP, 0, len.as_primitive());
