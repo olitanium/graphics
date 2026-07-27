@@ -101,8 +101,7 @@ pub struct Framebuffer<const OUT: usize, X: AttachmentWithoutExtra> {
     /// To ensure no Stencil without depth (which would be an incomplete buffer)
     stencil_or_depth: X,
     /// A default screen-size quad whose texture(s) are those drawn onto.
-    textures: [Rc<RefCell<X::Tex>>; OUT],
-    // quad: Quad<OUT>,
+    textures: [RefCell<X::Tex>; OUT],
 }
 
 impl<const OUT: usize, X: AttachmentWithoutExtra> Drop for Framebuffer<OUT, X> {
@@ -196,7 +195,7 @@ impl<const N: usize, X: AttachmentWithoutExtra> Framebuffer<N, X> {
         self.textures.each_ref().map(|ref_rc| ref_rc.borrow())
     }
 
-    pub fn get_textures_raw(&self) -> &[Rc<RefCell<X::Tex>>] {
+    pub fn get_textures_raw(&self) -> &[RefCell<X::Tex>] {
         &self.textures
     }
 }

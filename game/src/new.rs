@@ -10,7 +10,7 @@ use engine::modelling::cubic::geometry::{Orientation, Pose};
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
 use engine::modelling::cubic::lighting::simple::PointLight;
 use engine::modelling::cubic::material::Material;
-use engine::modelling::{Bloom, Quad, SkyBox};
+use engine::modelling::{Bloom, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;

@@ -1,18 +1,15 @@
 mod group;
-use std::cell::{Ref, RefMut};
-use std::rc::Rc;
 
-use graphics::framebuffer::attachments::WithoutExtra;
 use graphics::framebuffer::traits::{AttachmentWithoutExtra, FramebufferWithoutExtra};
 use graphics::framebuffer::{ActiveFramebuffer, Framebuffer};
-use graphics::shader_program::{BindTexturesError, CullFace};
+use graphics::shader_program::CullFace;
 use graphics::texture::{FlatTexture, Texture};
-use graphics::vertex_array::{self, VertexArray, VertexArrayDrawError};
-use graphics::{ActiveShaderProgram, Model};
+use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
+use graphics::ActiveShaderProgram;
 pub use group::Group as ScreenQuadGroup;
 use utils::error_boilerplate;
 
-use crate::modelling::test_models::{screen_quad, vertex_array_screen_quad};
+use crate::modelling::test_models::screen_quad;
 use crate::modelling::{Quad, QuadVertex};
 
 #[derive(Debug)]

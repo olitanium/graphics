@@ -1,14 +1,7 @@
 use engine::array_vec::arrvec;
 use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::lighting::shadow::{PointLightIlluminatesGroup, ShadowListLights};
-use engine::modelling::{
-    BloomGroup,
-    FramebufferQuad,
-    QuadGroup,
-    ScreenQuadGroup,
-    ShadowGroup,
-    SkyBoxGroup,
-};
+use engine::modelling::{BloomGroup, FramebufferQuad, ScreenQuadGroup, ShadowGroup, SkyBoxGroup};
 use engine::query::HasDrawnQuery;
 use engine::{PollResult, VecDraw};
 
@@ -21,17 +14,12 @@ impl State {
     ) -> PollResult<'a, StateError> {
         let mut out = VecDraw::new();
 
-        let mut x = if self.toggle_b {
-            vec![
-                self.origin_cube.get_pair_model_bind_pose(),
-                self.player.get_pair_model_bind_pose(),
-            ]
-        } else {
-            vec![]
-        };
-
+        let mut opaque = vec![
+            self.origin_cube.get_pair_model_bind_pose(),
+            self.player.get_pair_model_bind_pose(),
+        ];
         if self.toggle_m {
-            x.push(self.small_cube.get_pair_model_bind_pose());
+            opaque.push(self.small_cube.get_pair_model_bind_pose());
         }
 
         let sun = vec![self.sun.inner.get_pair_model_bind_pose()];
@@ -45,41 +33,25 @@ impl State {
                     point: arrvec![&self.sun.light,],
                     ..Default::default()
                 },
-                x,
+                opaque.clone(),
                 sun,
                 vec![],
             )
             .unwrap(),
         );
 
-        // out.push(
-        // SkeletonCubicGroup::new(
-        // opengl_shaders::hdr_skeleton(),
-        // &self.hdr_fb,
-        // &self.game_camera.camera,
-        // &(),
-        // ListLights {
-        // point: arrvec![&self.sun.light.light],
-        // ..Default::default()
-        // },
-        // vec![],
-        // vec![],
-        // )
-        // .unwrap(),
-        // );
         let mut opaque = vec![self.origin_cube.get_pair_model_bind_pose()];
         if self.toggle_m {
             opaque.push(self.small_cube.get_pair_model_bind_pose());
         }
-        let illuminates = PointLightIlluminatesGroup::new_dyn(&self.sun_duplicate_light, opaque);
 
+        let illuminates = PointLightIlluminatesGroup::new_dyn(&self.sun_duplicate_light, opaque);
         out.push(illuminates);
 
         let player_illuminates = PointLightIlluminatesGroup::new_dyn(
             &self.sun_duplicate_light,
             vec![self.player.get_pair_model_bind_pose()],
         );
-
         out.push(HasDrawnQuery::new(0, player_illuminates));
 
         out.push(SkyBoxGroup::new(

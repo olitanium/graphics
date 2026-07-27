@@ -1,3 +1,5 @@
+mod array;
 mod vec;
 
-pub use vec::HeapMultiZip as MultiZip;
+pub use array::MultiZip;
+pub use vec::HeapMultiZip;

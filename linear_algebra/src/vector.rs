@@ -191,14 +191,16 @@ impl<const N: usize, T> Vector<N, T> {
     #[must_use]
     pub const fn scale(mut self, scalar: T) -> Self
     where
-        T: [const] Mul<Output = T> + Copy,
+        T: [const] Mul<Output = T> + [const] Clone + [const] Destruct,
     {
         // CONST-HACK
         // self.map(|elem| scalar * elem)
 
         let mut index = 0;
-        while index < N {
-            self.0[index] = self.0[index] * scalar;
+
+        while let Some(value) = self.0.get_mut(index) {
+            *value = value.clone() * scalar.clone();
+
             index += 1;
         }
 
@@ -208,11 +210,19 @@ impl<const N: usize, T> Vector<N, T> {
     pub const fn flip(mut self) -> Self
     where
         T: [const] Neg<Output = T>,
-        T: Copy, // TODO: this ought ot be removed
+        T: [const] Clone,
+        T: [const] Destruct,
     {
         let mut index = 0;
-        while index < N {
-            self.0[index] = -self.0[index];
+        // while index < N {
+        // self.0[index] = -self.0[index];
+        //
+        // index += 1;
+        // }
+
+        while let Some(value) = self.0.get_mut(index) {
+            let temp = -value.clone();
+            *value = temp;
 
             index += 1;
         }
@@ -220,6 +230,7 @@ impl<const N: usize, T> Vector<N, T> {
         self
     }
 
+    #[must_use]
     pub const fn elem_wise_mul(self, other: Self) -> Self
     where
         T: [const] Mul<Output = T>,
@@ -244,6 +255,7 @@ impl Vector<3, f32> {
         Self::new(out)
     }
 
+    #[must_use]
     pub const fn homogeneous(self) -> Vector<4, f32> {
         let this = self.into_inner();
         Vector::new([this[0], this[1], this[2], 1.0])
@@ -317,7 +329,7 @@ where
 
 const impl<const N: usize, T> Mul<T> for Vector<N, T>
 where
-    T: [const] Mul<Output = T> + Copy,
+    T: [const] Mul<Output = T> + [const] Clone + [const] Destruct,
 {
     type Output = Self;
 
@@ -346,7 +358,8 @@ const impl<const N: usize> Mul<Vector<N, f32>> for f32 {
 impl<const R: usize> From<Matrix<R, 1>> for Vector<R, f32> {
     #[inline]
     fn from(value: Matrix<R, 1>) -> Self {
-        value.into_inner()[0]
+        let [arr] = value.into_inner();
+        Vector::new(arr)
     }
 }
 
@@ -452,8 +465,7 @@ impl<const N: usize, T> IntoIterator for Vector<N, T> {
 
 const impl<const N: usize, T> Neg for Vector<N, T>
 where
-    T: [const] Neg<Output = T>,
-    T: Copy, // TODO: ought to be removed when removed from `flip`
+    T: [const] Neg<Output = T> + [const] Clone + [const] Destruct,
 {
     type Output = Self;
 

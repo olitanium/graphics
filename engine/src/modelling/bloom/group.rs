@@ -5,7 +5,7 @@ use graphics::texture::FlatTexture;
 use graphics::{Draw, DrawOut};
 
 use super::Bloom;
-use crate::modelling::{FramebufferQuad, Quad};
+use crate::modelling::FramebufferQuad;
 use crate::opengl_shaders;
 
 #[derive(Debug)]

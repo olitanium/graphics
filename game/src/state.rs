@@ -8,7 +8,7 @@ use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::camera::Projection;
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
-use engine::modelling::{Bloom, Quad, SkyBox};
+use engine::modelling::{Bloom, SkyBox};
 use engine::types::TexDim;
 use engine::{ApiState, Event, PollResult};
 
@@ -60,7 +60,7 @@ impl ApiState for State {
                 Event::WindowBuffer(buffer) => default_fb = Some(buffer),
                 Event::FrameTime(ft) => frame_time = ft,
                 Event::ElapsedTime(at) => game_duration = at,
-                Event::WindowResize(size) => {
+                Event::WindowResize(_size) => {
                     // self.hdr_fb.resize(size);
                     // self.bloom.resize(size);
                     self.game_camera.camera.projection = Projection::Perspective {

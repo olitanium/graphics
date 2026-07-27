@@ -1,4 +1,3 @@
-use std::any;
 
 pub use linear_algebra::Vector;
 
@@ -36,7 +35,7 @@ pub fn intersect(one: [Vector<3>; 3], two: [Vector<3>; 3]) -> bool {
         // non-coplanar
 
         // L = o + td
-        let d = one_normal.cross(two_normal);
+        let _d = one_normal.cross(two_normal);
     }
 
     todo!()

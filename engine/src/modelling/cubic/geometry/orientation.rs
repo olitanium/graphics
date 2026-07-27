@@ -39,9 +39,9 @@ impl Orientation {
         let view_up = forward.v().cross(left.v()).normalize();
 
         let matrix = Matrix::from_col_major([
-            left.v(),    // left = x
-            view_up.v(), // up = y
-            forward.v(), // forward = z
+            left.into_inner(),    // left = x
+            view_up.into_inner(), // up = y
+            forward.into_inner(), // forward = z
         ]);
 
         Self::from_matrix(matrix)
@@ -131,10 +131,10 @@ impl Orientation {
         // ])
 
         Matrix::from_col_major([
-            self.view_left().v().truncate(),
-            self.view_up().v().truncate(),
-            self.view_forward().v().truncate(),
-            Vector::from([0.0, 0.0, 0.0, 1.0]),
+            self.view_left().v().truncate().into_inner(),
+            self.view_up().v().truncate().into_inner(),
+            self.view_forward().v().truncate().into_inner(),
+            [0.0, 0.0, 0.0, 1.0],
         ])
     }
 }

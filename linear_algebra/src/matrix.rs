@@ -9,7 +9,7 @@ use crate::vector::Vector;
 
 #[repr(transparent)]
 #[derive(Clone, Copy, PartialEq)]
-pub struct Matrix<const R: usize, const C: usize>([Vector<R, f32>; C]); // Col-Major!!!!!
+pub struct Matrix<const R: usize, const C: usize>([[f32; R]; C]); // Col-Major!!!!!
 
 impl<const R: usize, const C: usize> Default for Matrix<R, C> {
     #[inline]
@@ -21,8 +21,7 @@ impl<const R: usize, const C: usize> Default for Matrix<R, C> {
 impl<const R: usize, const C: usize> Debug for Matrix<R, C> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for row in self.row_iter() {
-            let array = row.into_inner();
-            writeln!(f, "{array:?}")?
+            writeln!(f, "{row:?}")?
         }
         Ok(())
     }
@@ -30,13 +29,12 @@ impl<const R: usize, const C: usize> Debug for Matrix<R, C> {
 
 impl<const R: usize, const C: usize> Matrix<R, C> {
     #[inline]
-    pub fn from_col_major(input: [impl Into<Vector<R, f32>>; C]) -> Self {
-        let vec_arr = input.map(Into::into);
-        Self(vec_arr)
+    pub fn from_col_major(input: [[f32; R]; C]) -> Self {
+        Self(input)
     }
 
     #[inline]
-    pub fn from_row_major(input: [impl Into<Vector<C, f32>>; R]) -> Self {
+    pub fn from_row_major(input: [[f32; C]; R]) -> Self {
         Matrix::from_col_major(input).transpose()
     }
 
@@ -44,7 +42,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     /// Panics if the length of the slice is not as given by the compile-time
     /// constants
     #[inline]
-    pub fn new_from_slice(input: &[Vector<R, f32>]) -> Option<Self> {
+    pub fn new_from_slice(input: &[[f32; R]]) -> Option<Self> {
         Some(Self(input.try_into().ok()?))
     }
 
@@ -54,27 +52,35 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     #[inline]
-    pub const fn into_inner(self) -> [Vector<R, f32>; C] {
+    pub const fn into_inner(self) -> [[f32; R]; C] {
         self.0
     }
 
     #[inline]
-    pub const fn inner(&self) -> &[Vector<R, f32>; C] {
+    pub const fn inner(&self) -> &[[f32; R]; C] {
         &self.0
     }
 
     #[inline]
-    pub const fn inner_mut(&mut self) -> &mut [Vector<R, f32>; C] {
+    pub const fn inner_mut(&mut self) -> &mut [[f32; R]; C] {
         &mut self.0
     }
 
+    pub const fn col_flattened(&self) -> &[f32] {
+        self.0.as_flattened()
+    }
+
+    pub const fn col_flattened_mut(&mut self) -> &mut [f32] {
+        self.0.as_flattened_mut()
+    }
+
     #[inline]
-    pub fn col_iter(&self) -> impl Iterator<Item = Vector<R, f32>> + '_ {
+    pub fn col_iter(&self) -> impl Iterator<Item = [f32; R]> + '_ {
         self.inner().iter().copied()
     }
 
     #[inline]
-    pub fn col_iter_mut(&mut self) -> impl Iterator<Item = &mut Vector<R, f32>> {
+    pub fn col_iter_mut(&mut self) -> impl Iterator<Item = &mut [f32; R]> {
         self.inner_mut().iter_mut()
     }
 
@@ -90,18 +96,15 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
             .expect("Number of entries is permitted by compile time constants")
     }
 
-    pub fn col(&self, index: usize) -> Vector<R, f32> {
-        self.0[index]
+    pub fn col(&self, index: usize) -> Option<Vector<R, f32>> {
+        self.0.get(index).copied().map(Vector::new)
     }
 
     #[expect(clippy::missing_panics_doc)]
     #[inline]
-    pub fn row_iter(&self) -> impl Iterator<Item = Vector<C, f32>> {
-        let x = self.inner().map(Vector::into_iter);
-        MultiZip::new(x).map(|vec| {
-            Vector::try_from(vec.as_ref())
-                .expect("Number of entries is permitted by compile time constants")
-        })
+    pub fn row_iter(&self) -> impl Iterator<Item = [f32; C]> {
+        let x = self.into_inner();
+        MultiZip::new(x)
     }
 
     #[expect(clippy::missing_panics_doc)]
@@ -127,7 +130,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
 
     #[inline]
     pub fn transpose(self) -> Matrix<C, R> {
-        let matrix_as_vec = self.row_iter().collect::<ArrayVec<Vector<C>, R>>();
+        let matrix_as_vec = self.row_iter().collect::<ArrayVec<[f32; C], R>>();
         let array = matrix_as_vec
             .try_into_array()
             .expect("RC matrix has as many elements as CR");
@@ -138,9 +141,9 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     pub fn truncate<const R2: usize, const C2: usize>(self) -> Matrix<R2, C2> {
         let x = self
             .into_inner()
-            .map(Vector::truncate)
             .into_iter()
-            .chain(iter::repeat(Vector::ZERO))
+            .map(|arr| Vector::new(arr).truncate().into_inner())
+            .chain(iter::repeat([0.0; _]))
             .collect::<ArrayVec<_, C2>>();
 
         let array = x
@@ -166,17 +169,15 @@ impl<const R: usize, const S: usize, const C: usize> ops::Mul<Matrix<S, C>> for 
         Self::Output::from_col_major(
             rhs.col_iter()
                 .map(|b_col| {
-                    Vector::<R, _>::try_from(
-                        self.row_iter()
-                            .map(|val| val.dot(b_col))
-                            .collect::<Box<_>>()
-                            .as_ref(),
-                    )
-                    .unwrap()
+                    self.row_iter()
+                        .map(|val| Vector::new(val).dot(Vector::new(b_col)))
+                        .collect::<ArrayVec<_, R>>()
+                        .try_into_array()
+                        .expect("correct number of components R")
                 })
                 .collect::<ArrayVec<_, C>>()
                 .try_into_array()
-                .expect("enough components"),
+                .expect("enough components C"),
         )
     }
 }
@@ -198,7 +199,7 @@ macro_rules! impl_ops {
                     // TODO: would be great with array::zip_map
                     self.col_iter()
                         .zip(rhs.col_iter())
-                        .map(|(a, b)| Vector::$fn(a, b))
+                        .map(|(a, b)| Vector::$fn(Vector::new(a), Vector::new(b)).into_inner())
                         .collect::<ArrayVec<_, C>>()
                         .try_into_array()
                         .expect("enough elements from input"),
@@ -234,7 +235,23 @@ impl<const R: usize, const C: usize> IndexMut<(usize, usize)> for Matrix<R, C> {
 impl<const R: usize> From<Vector<R, f32>> for Matrix<R, 1> {
     #[inline]
     fn from(value: Vector<R, f32>) -> Self {
-        Self::from_col_major([value])
+        Self::from_col_major([value.into_inner()])
+    }
+}
+
+impl Matrix<2, 2> {
+    pub fn determinant(&self) -> f32 {
+        let [[a, c], [b, d]] = self.0.map(|vec| vec);
+
+        a * d - b * c
+    }
+}
+
+impl Matrix<3, 3> {
+    pub fn determinant(&self) -> f32 {
+        let [[a, d, g], [b, e, h], [c, f, i]] = self.into_inner();
+
+        a * e * i + b * f * g + c * d * h - c * e * g - b * d * i - a * f * h
     }
 }
 

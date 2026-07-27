@@ -28,8 +28,6 @@ pub trait AttachmentWithoutExtra: Sized {
 
     /// Shortcut function to make a framebuffer based on an attachment
     /// Used to assist in resizing a framebuffer.
-    // TODO: this method is technically destructive on self. Can the signature
-    // be updated to reflect this?
     fn new_framebuffer<const N: usize>(&mut self, size: (TexDim, TexDim)) -> Framebuffer<N, Self>;
 
     /// Get size of the internal buffer, as a fallback if there is no

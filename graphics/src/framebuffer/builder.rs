@@ -2,12 +2,11 @@ use std::array;
 use std::cell::RefCell;
 use std::fmt::Debug;
 use std::marker::PhantomData;
-use std::rc::Rc;
 
 use super::attachments::{CubeWithoutExtra, WithDepth, WithStencil, WithoutExtra};
 use super::traits::OptTexBuilderMap;
 use super::{CubeWithDepth, Framebuffer};
-use crate::framebuffer::traits::{AttachmentWithStencil, AttachmentWithoutExtra};
+use crate::framebuffer::traits::AttachmentWithoutExtra;
 use crate::gl_call;
 use crate::texture::{TexBuilder, TexBuilderCanBuild, Texture, TextureHasBuilder};
 use crate::types::{self, FrameBufferId, TexDim};
@@ -135,13 +134,13 @@ impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, HasSize, B> {
         }
 
         let colour: [_; N] = array::from_fn(|_| {
-            Rc::new(RefCell::new(
+            RefCell::new(
                 B::Tex::builder()
                     .size(self.size.0)
                     // TODO: Add `Map` field to implement this map
                     //.wrap_s_t((gl::CLAMP_TO_EDGE, gl::CLAMP_TO_EDGE))
                     .build(),
-            ))
+            )
         });
 
         for (index, texture) in colour.iter().enumerate() {

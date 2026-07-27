@@ -1,5 +1,4 @@
 use std::borrow::Cow;
-use std::marker::PhantomData;
 use std::sync::LazyLock;
 use std::{iter, ptr};
 
@@ -10,13 +9,7 @@ use super::framebuffer::ActiveFramebuffer;
 use crate::element_array_buffer::ElementArrayBuffer;
 // use crate::error::ApiResult;
 use crate::framebuffer::traits::FramebufferWithoutExtra;
-use crate::shader_program::{
-    ActiveShaderProgram,
-    BindTexturesError,
-    GetUniformLocationError,
-    ShaderSetUniformError,
-    ValidateError,
-};
+use crate::shader_program::{ActiveShaderProgram, BindTexturesError, ValidateError};
 use crate::types::{ElementArrayLen, VertexArrayId, VertexAttrType};
 use crate::vertex::{NoVertex, Vertex};
 use crate::vertex_buffer::VertexBuffer;
@@ -24,15 +17,16 @@ use crate::{Model, gl_call, types};
 
 mod builder;
 
+pub type VertexArray<V: Vertex> = GenVertexArray<VertexBuffer<V>>;
+
 #[derive(Debug)]
-pub struct VertexArray<V: Vertex, B = VertexBuffer<V>> {
+pub struct GenVertexArray<B> {
     id: VertexArrayId,
     vertex_buffer: B,
     element_array_buffer: Option<ElementArrayBuffer>,
-    _phantom_vertex: PhantomData<V>,
 }
 
-impl<V: Vertex, B> Drop for VertexArray<V, B> {
+impl<B> Drop for GenVertexArray<B> {
     fn drop(&mut self) {
         let primitive = self.id.as_primitive();
         gl_call! {
@@ -41,7 +35,7 @@ impl<V: Vertex, B> Drop for VertexArray<V, B> {
     }
 }
 
-// impl<V: Vertex> Default for VertexArray<V>
+// impl<V: Vertex> Default for GenVertexArray<V>
 // where
 // [(); V::ELEMENT_COUNT]:,
 // {
@@ -50,7 +44,7 @@ impl<V: Vertex, B> Drop for VertexArray<V, B> {
 // }
 // }
 
-impl<V: Vertex> VertexArray<V>
+impl<V: Vertex> GenVertexArray<VertexBuffer<V>>
 where
     [(); V::ELEMENT_COUNT]:,
 {
@@ -118,16 +112,15 @@ where
         }
 
         // Tidy in this order
-        VertexArray::<V>::unbind();
+        GenVertexArray::<V>::unbind();
         ElementArrayBuffer::unbind();
         VertexBuffer::<V>::unbind();
 
         // Return object
-        VertexArray {
+        GenVertexArray {
             id,
             vertex_buffer,
             element_array_buffer,
-            _phantom_vertex: PhantomData,
         }
     }
 
@@ -150,7 +143,7 @@ where
     }
 }
 
-impl<V: Vertex, B> VertexArray<V, B> {
+impl<B> GenVertexArray<B> {
     pub(crate) fn bind(&self) {
         gl_call! {
             gl::BindVertexArray(self.id.as_primitive());
@@ -172,7 +165,7 @@ pub enum VertexArrayDrawError<'a> {
 }
 error_boilerplate!(<'a> VertexArrayDrawError<'a>);
 
-impl<V: Vertex> VertexArray<V>
+impl<V: Vertex> GenVertexArray<VertexBuffer<V>>
 where
     [(); V::ELEMENT_COUNT]:,
 {
@@ -193,7 +186,7 @@ where
 
         // match texture_result {
         // Ok(()) => {}
-        // Err(VertexArrayDrawError::BindTextures(BindTexturesError::SetUniform(
+        // Err(GenVertexArrayDrawError::BindTextures(BindTexturesError::SetUniform(
         // SetUniformError::GetLocation(GetUniformLocationError::NotFound { c_name, ..
         // }), ))) if c_name.to_string_lossy().contains("texture") => { /* do
         // nothing */ } Err(x) => return Err(x),
@@ -223,7 +216,7 @@ where
     }
 }
 
-fn empty() -> VertexArray<NoVertex, ()> {
+fn empty() -> GenVertexArray<()> {
     let id = {
         let mut id = 0;
         gl_call! {
@@ -232,21 +225,20 @@ fn empty() -> VertexArray<NoVertex, ()> {
         VertexArrayId::new(id)
     };
 
-    VertexArray {
+    GenVertexArray {
         id,
         vertex_buffer: (),
         element_array_buffer: None,
-        _phantom_vertex: PhantomData,
     }
 }
 
 #[must_use]
-pub fn dummy_vertex_array() -> &'static VertexArray<NoVertex, ()> {
-    static DUMMY_VERTEX_ARRAY: LazyLock<VertexArray<NoVertex, ()>> = LazyLock::new(empty);
+pub fn dummy_vertex_array() -> &'static GenVertexArray<()> {
+    static DUMMY_VERTEX_ARRAY: LazyLock<GenVertexArray<()>> = LazyLock::new(empty);
     &DUMMY_VERTEX_ARRAY
 }
 
-impl VertexArray<NoVertex, ()> {
+impl GenVertexArray<()> {
     /// # Errors
     ///
     /// Errors when the active shader program is not correctly configured for

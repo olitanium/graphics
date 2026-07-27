@@ -1,4 +1,3 @@
-use std::mem::transmute;
 use std::{convert, iter};
 
 use graphics::linear_algebra::Vector;

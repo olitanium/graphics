@@ -54,7 +54,8 @@ impl Pose {
     }
 
     pub fn new_from_matrix(matrix: Matrix<4, 4>) -> Self {
-        let translation = matrix.col(3).truncate();
+        let [_, _, _, translation] = matrix.into_inner();
+        let translation = Vector::new(translation).truncate();
         let orientation = matrix.truncate();
 
         Self::new_from_orientation_translation(Orientation::from_matrix(orientation), translation)

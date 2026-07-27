@@ -1,5 +1,4 @@
 use std::array;
-use std::cell::RefCell;
 use std::rc::Rc;
 
 use graphics::Model;

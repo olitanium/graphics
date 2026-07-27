@@ -20,4 +20,3 @@
 - Bounding Box Collision uses refrerences, specifically for bone_index and unit_index
 - Assess Vector<DIMS>: ExtendedVertex bound
 - Collision generic over DIMS, but needs a "TransformBy" shenanigans to ensure Pose, Complex Number etc. in all dims
-- Off by one error in chain animation, doesn't start exactly on schedule

@@ -7,3 +7,7 @@ edition = "2021"
 multi_zip = {path = "../multi_zip"}
 fixed_point = {path = "../fixed_point"}
 array_vec = {path = "../array_vec"}
+
+[lints]
+
+workspace = true

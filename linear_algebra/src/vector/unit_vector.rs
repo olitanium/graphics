@@ -57,6 +57,13 @@ impl<const N: usize, T> UnitVector<N, T> {
     pub const fn new_unchecked(input: [T; N]) -> Self {
         Self(Vector(input))
     }
+
+    pub const fn into_inner(self) -> [T; N]
+    where
+        T: [const] Destruct,
+    {
+        self.0.into_inner()
+    }
 }
 
 impl<const N: usize, T> core::ops::Neg for UnitVector<N, T>

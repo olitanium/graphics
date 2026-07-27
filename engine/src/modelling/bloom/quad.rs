@@ -1,14 +1,8 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-
 pub use graphics::framebuffer::Builder;
 use graphics::framebuffer::Framebuffer;
 use graphics::framebuffer::attachments::WithoutExtra;
-use graphics::framebuffer::traits::AttachmentWithoutExtra;
-use graphics::texture::{FlatTexture, Texture};
 use graphics::types::TexDim;
 
-use crate::modelling::quad::Quad;
 #[derive(Debug)]
 /// A pseudo-quad which takes the output of a framebuffer and blurs.
 /// Works in conjuntion with the `BloomGroup` to take output from a
@@ -36,7 +30,7 @@ impl Bloom {
     // }
 
     // TODO: resize
-    // pub fn resize(&mut self, size: (TexDim, TexDim)) {
-    // self.framebuffer_x.resize(size)
-    // }
+    pub fn resize(&mut self, size: (TexDim, TexDim)) {
+        self.framebuffer_x.resize(size)
+    }
 }

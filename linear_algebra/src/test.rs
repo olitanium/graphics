@@ -1,3 +1,5 @@
+use super::*;
+
 #[test]
 fn invoke_and_print() {
     use super::matrix::Matrix;
@@ -35,6 +37,14 @@ fn flip() {
     assert_eq!(
         Vector::new([1.0, 1.0, 1.0]),
         Vector::new([-1.0, -1.0, -1.0]).flip()
+    )
+}
+
+#[test]
+fn scale() {
+    assert_eq!(
+        Vector::new([1.0, 1.0, 1.0]),
+        Vector::new([0.5, 0.5, 0.5]).scale(2.0)
     )
 }
 
