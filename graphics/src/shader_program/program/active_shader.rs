@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::ffi::{CString, NulError};
 use std::fmt::Debug;
-use std::ops::Deref;
 use std::sync::LazyLock;
 use std::{iter, ptr};
 

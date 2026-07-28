@@ -1,5 +1,4 @@
-use std::cell::{RefCell, RefMut};
-use std::rc::Rc;
+use std::cell::RefMut;
 
 /// Helpful traits to ensure that certain draw operations cannot be applied to
 /// framebuffer's which are missing particular attachments

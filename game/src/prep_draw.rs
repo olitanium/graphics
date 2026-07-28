@@ -1,11 +1,10 @@
-use std::task::Poll;
 
 use engine::array_vec::arrvec;
 use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::lighting::shadow::{PointLightIlluminatesGroup, ShadowListLights};
 use engine::modelling::{BloomGroup, FramebufferQuad, ScreenQuadGroup, ShadowGroup, SkyBoxGroup};
 use engine::query::HasDrawnQuery;
-use engine::{Draw, PollResult, VecDraw};
+use engine::{PollResult, VecDraw};
 
 use crate::state::{State, StateError};
 

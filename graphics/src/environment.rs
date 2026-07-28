@@ -19,8 +19,7 @@ pub use window::Window;
 
 pub use crate::environment::draw::PollResult;
 use crate::environment::window::GlfwError;
-use crate::framebuffer::attachments::WithStencil;
-use crate::framebuffer::{DefaultFramebuffer, Framebuffer, FramebufferContext};
+use crate::framebuffer::{DefaultFramebuffer, FramebufferContext};
 use crate::gl_call;
 use crate::linear_algebra::Vector;
 use crate::shader_program::ShaderProgramContext;
@@ -231,7 +230,7 @@ impl<G: ApiState> Environment<G> {
         }
     }
 
-    fn poll(&mut self, queries: Option<Vec<(usize, Query)>>) -> PollResult<G::Error> {
+    fn poll(&mut self, queries: Option<Vec<(usize, Query)>>) -> PollResult<'_, G::Error> {
         let curr_time = Instant::now();
         let frametime = curr_time - *self.old_frame.get_or_insert(curr_time);
         self.old_frame = Some(curr_time);
@@ -265,7 +264,7 @@ impl<'env, G: ApiState> FrameIter<'env, G> {
 }
 
 impl<G: ApiState> FrameIter<'_, G> {
-    pub fn next(&mut self, queries: Option<Vec<(usize, Query)>>) -> PollResult<G::Error> {
+    pub fn next(&mut self, queries: Option<Vec<(usize, Query)>>) -> PollResult<'_, G::Error> {
         if !self.env.window.should_close() {
             // Poll for and process events
             self.env.glfw.poll_events();

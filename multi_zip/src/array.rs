@@ -23,7 +23,7 @@ impl<T: Iterator, const N: usize> MultiZip<T, N> {
 }
 
 mod test {
-    use super::*;
+    
 
     #[test]
     fn diff_len() {
