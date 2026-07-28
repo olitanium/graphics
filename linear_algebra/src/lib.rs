@@ -9,6 +9,8 @@
 #![feature(const_destruct)]
 #![feature(const_cmp)]
 #![feature(const_convert)]
+#![feature(const_option_ops)]
+#![feature(const_try)]
 
 mod matrix;
 mod vector;

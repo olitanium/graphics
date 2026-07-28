@@ -13,6 +13,7 @@
 #![feature(unwrap_infallible)]
 #![feature(min_generic_const_args)]
 #![feature(array_try_map)]
+#![feature(negative_impls)]
 
 mod environment;
 pub mod shader_program;

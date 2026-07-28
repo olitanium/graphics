@@ -1,3 +1,5 @@
+use std::iter;
+
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::attachments::WithDepth;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
@@ -70,9 +72,10 @@ impl ShadowSpotLight {
         self.light.bind_to(shader, name, index)?;
         shader.set_uniform(format!("{name}[{index}].matrix"), &self.projtimesview())?;
         // SAFETY: Reference must not live to a point where the
-        shader.register_texture(Some((format!("{name}[{index}].depth"), unsafe {
-            self.framebuffer.get_attachment_ref()
-        })));
+        shader.register_texture(iter::once((
+            format!("{name}[{index}].depth"),
+            self.framebuffer.get_attachment_ref(),
+        )));
 
         Ok(())
     }
@@ -90,7 +93,7 @@ impl ShadowSpotLight {
     ) where
         M::Vertex: VertexHasTangent,
     {
-        shader.register_texture(Some((
+        shader.register_texture(iter::once((
             format!("{name}[{index}].depth"),
             FlatTexture::dyn_blank(),
         )));

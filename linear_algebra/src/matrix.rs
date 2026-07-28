@@ -29,7 +29,7 @@ impl<const R: usize, const C: usize> Debug for Matrix<R, C> {
 
 impl<const R: usize, const C: usize> Matrix<R, C> {
     #[inline]
-    pub fn from_col_major(input: [[f32; R]; C]) -> Self {
+    pub const fn from_col_major(input: [[f32; R]; C]) -> Self {
         Self(input)
     }
 
@@ -47,7 +47,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     #[inline]
-    pub fn zeros() -> Self {
+    pub const fn zeros() -> Self {
         Self::from_col_major([[0.0; R]; C])
     }
 
@@ -96,11 +96,24 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
             .expect("Number of entries is permitted by compile time constants")
     }
 
-    pub fn col(&self, index: usize) -> Option<Vector<R, f32>> {
+    pub const fn col(&self, index: usize) -> Option<Vector<R, f32>> {
         self.0.get(index).copied().map(Vector::new)
     }
 
-    #[expect(clippy::missing_panics_doc)]
+    pub const fn col_mut(&mut self, index: usize) -> Option<&mut [f32; R]> {
+        self.0.get_mut(index)
+    }
+
+    pub const fn get(&self, (row, col): (usize, usize)) -> Option<f32> {
+        let vec = self.col(col)?;
+        vec.get(row).copied()
+    }
+
+    pub const fn get_mut(&mut self, (row, col): (usize, usize)) -> Option<&mut f32> {
+        let vec = self.col_mut(col)?;
+        vec.get_mut(row)
+    }
+
     #[inline]
     pub fn row_iter(&self) -> impl Iterator<Item = [f32; C]> {
         let x = self.into_inner();
@@ -120,11 +133,16 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     #[inline]
-    pub fn identity() -> Self {
+    pub const fn identity() -> Self {
         let mut output = Self::zeros();
-        for i in 0..[R, C][usize::from(R < C)] {
-            output[(i, i)] = 1.0;
+
+        let mut i = 0;
+
+        while let Some(val) = output.get_mut((i, i)) {
+            *val = 1.0;
+            i += 1;
         }
+
         output
     }
 
@@ -240,15 +258,15 @@ impl<const R: usize> From<Vector<R, f32>> for Matrix<R, 1> {
 }
 
 impl Matrix<2, 2> {
-    pub fn determinant(&self) -> f32 {
-        let [[a, c], [b, d]] = self.0.map(|vec| vec);
+    pub const fn determinant(&self) -> f32 {
+        let [[a, c], [b, d]] = self.0;
 
         a * d - b * c
     }
 }
 
 impl Matrix<3, 3> {
-    pub fn determinant(&self) -> f32 {
+    pub const fn determinant(&self) -> f32 {
         let [[a, d, g], [b, e, h], [c, f, i]] = self.into_inner();
 
         a * e * i + b * f * g + c * d * h - c * e * g - b * d * i - a * f * h
@@ -256,35 +274,44 @@ impl Matrix<3, 3> {
 }
 
 impl Matrix<4, 4> {
-    pub fn transform_scale(sx: f32, sy: f32, sz: f32) -> Self {
-        let mut matrix = Self::zeros();
-        matrix[(0, 0)] = sx;
-        matrix[(1, 1)] = sy;
-        matrix[(2, 2)] = sz;
-        matrix[(3, 3)] = 1.0;
-        matrix
+    pub const fn transform_scale(sx: f32, sy: f32, sz: f32) -> Self {
+        // let mut matrix = Self::zeros();
+        // matrix[(0, 0)] = sx;
+        // matrix[(1, 1)] = sy;
+        // matrix[(2, 2)] = sz;
+        // matrix[(3, 3)] = 1.0;
+        // matrix
+
+        Matrix::from_col_major([
+            [sx, 0.0, 0.0, 0.0],
+            [0.0, sy, 0.0, 0.0],
+            [0.0, 0.0, sz, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ])
     }
 
-    pub fn transform_translate(vec: Vector<3, f32>) -> Self {
+    pub const fn transform_translate(vec: Vector<3, f32>) -> Self {
         let mut matrix = Self::identity();
-        matrix[(0, 3)] = vec[0];
-        matrix[(1, 3)] = vec[1];
-        matrix[(2, 3)] = vec[2];
+        let [_, _, _, [x, y, z, _]] = matrix.inner_mut();
+        let [vecx, vecy, vecz] = vec.into_inner();
+        *x = vecx;
+        *y = vecy;
+        *z = vecz;
+
         matrix
     }
 
     pub fn transform_perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Self {
-        let mut matrix = Self::zeros();
-        let fovbytwo = fov * 0.5;
-        matrix[(0, 0)] = 1.0 / (fovbytwo.tan() * aspect);
-        matrix[(1, 1)] = 1.0 / fovbytwo.tan();
-        matrix[(2, 2)] = -(far + near) / (far - near);
-        matrix[(3, 2)] = -1.0;
-        matrix[(2, 3)] = -2.0 * far * near / (far - near);
-        matrix
+        let tan_fov = (fov * 0.5).tan();
+        Matrix::from_col_major([
+            [1.0 / (tan_fov * aspect), 0.0, 0.0, 0.0],
+            [0.0, 1.0 / tan_fov, 0.0, 0.0],
+            [0.0, 0.0, -(far + near) / (far - near), -1.0],
+            [0.0, 0.0, -2.0 * far * near / (far - near), 0.0],
+        ])
     }
 
-    pub fn transform_orthogonal(width: f32, height: f32, near: f32, far: f32) -> Self {
+    pub const fn transform_orthogonal(width: f32, height: f32, near: f32, far: f32) -> Self {
         Self::from_col_major([
             [2.0 / width, 0.0, 0.0, 0.0],
             [0.0, 2.0 / height, 0.0, 0.0],

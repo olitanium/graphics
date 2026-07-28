@@ -19,7 +19,8 @@ pub use window::Window;
 
 pub use crate::environment::draw::PollResult;
 use crate::environment::window::GlfwError;
-use crate::framebuffer::{DefaultFramebuffer, FramebufferContext};
+use crate::framebuffer::attachments::WithStencil;
+use crate::framebuffer::{DefaultFramebuffer, Framebuffer, FramebufferContext};
 use crate::gl_call;
 use crate::linear_algebra::Vector;
 use crate::shader_program::ShaderProgramContext;

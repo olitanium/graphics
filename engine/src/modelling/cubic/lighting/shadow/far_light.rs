@@ -1,3 +1,5 @@
+use std::iter;
+
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::attachments::WithDepth;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
@@ -87,11 +89,11 @@ impl ShadowFarLight {
             format!("{name}[{index}].matrix"),
             &self.projtimesview(target),
         )?;
-        // SAFETY: Reference, therefore the ActiveShaderProgram, must not live to a
-        // point where the inner framebuffer is resized.
-        shader.register_texture(Some((format!("{name}[{index}].depth"), unsafe {
-            self.framebuffer.get_attachment_ref()
-        })));
+
+        shader.register_texture(iter::once((
+            format!("{name}[{index}].depth"),
+            self.framebuffer.get_attachment_ref(),
+        )));
 
         Ok(())
     }
@@ -112,7 +114,7 @@ impl ShadowFarLight {
     ) where
         M::Vertex: VertexHasTangent,
     {
-        shader.register_texture(Some((
+        shader.register_texture(iter::once((
             format!("{name}[{index}].depth"),
             FlatTexture::dyn_blank(),
         )));

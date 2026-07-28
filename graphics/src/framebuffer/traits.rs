@@ -41,11 +41,12 @@ pub trait AttachmentWithoutExtra: Sized {
 
 /// Marker trait for attachments which provide a depth buffer
 pub trait AttachmentWithDepth: AttachmentWithoutExtra {
-    fn get_texture(&self) -> Rc<RefCell<Self::Tex>>;
+    // fn get_texture(&self) -> Rc<RefCell<Self::Tex>>;
+
     /// # Safety
     /// This method's reference must not live long enough that the texture can
     /// be mutably borrowed by the underlying RefCell
-    unsafe fn get_texture_ref(&self) -> &Self::Tex;
+    fn get_texture_ref(&self) -> &Self::Tex;
 
     fn depth_testing(depth_testing: bool, context: &mut FramebufferContext) {
         context.depth_testing(depth_testing)

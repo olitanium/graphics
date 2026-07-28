@@ -1,3 +1,5 @@
+use std::iter;
+
 use graphics::framebuffer::attachments::CubeWithDepth;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::framebuffer::{Builder, Framebuffer, FramebufferContext};
@@ -105,9 +107,10 @@ impl ShadowPointLight {
         shader.set_uniform(format!("{name}[{index}].far_plane"), &self.far_plane())?;
         // SAFETY: Reference must not live to a point where RefCell::borrow_mut can be
         // called on the texture
-        shader.register_texture(Some((format!("{name}[{index}].depth"), unsafe {
-            self.framebuffer.get_attachment_ref()
-        })));
+        shader.register_texture(iter::once((
+            format!("{name}[{index}].depth"),
+            self.framebuffer.get_attachment_ref(),
+        )));
 
         Ok(())
     }
@@ -125,7 +128,7 @@ impl ShadowPointLight {
     ) where
         M::Vertex: VertexHasTangent,
     {
-        shader.register_texture(Some((
+        shader.register_texture(iter::once((
             format!("{name}[{index}].depth"),
             CubeMap::dyn_blank(),
         )));

@@ -114,7 +114,7 @@ impl<const N: usize> Vector<N, f32> {
         Self: [const] Clone,
     {
         let normal = normal.v();
-        let projection = normal.dot(self.clone());
+        let projection = normal.dot(self);
         self - normal.scale(2.0 * projection)
     }
 }
@@ -147,7 +147,10 @@ impl<const N: usize, T> Vector<N, T> {
         N
     }
 
-    pub fn get<I: SliceIndex<[T]>>(&self, index: I) -> Option<&<I as SliceIndex<[T]>>::Output> {
+    pub const fn get<I: [const] SliceIndex<[T]>>(
+        &self,
+        index: I,
+    ) -> Option<&<I as SliceIndex<[T]>>::Output> {
         self.0.get(index)
     }
 
@@ -171,17 +174,22 @@ impl<const N: usize, T> Vector<N, T> {
 
     pub const fn magnitude_sq(self) -> T
     where
-        T: Copy + [const] Add<Output = T> + [const] Mul<Output = T> + [const] Default,
-        T: [const] Destruct, // TODO: remove once `dot` removes bound
+        T: [const] Clone
+            + [const] Add<Output = T>
+            + [const] Mul<Output = T>
+            + [const] Default
+            + Copy
+            + [const] Destruct,
     {
-        self.dot(self)
+        let temp = self;
+        self.dot(temp)
     }
 
     #[inline]
     #[must_use]
     pub const fn dot(self, rhs: Self) -> T
     where
-        T: [const] Add<Output = T> + [const] Mul<Output = T> + Copy + [const] Default,
+        T: [const] Add<Output = T> + [const] Mul<Output = T> + [const] Clone + [const] Default,
         T: [const] Destruct, // TODO: remove because `into_inner` is TODO remove
     {
         array_maths::dot(self.into_inner(), rhs.into_inner())
@@ -235,7 +243,7 @@ impl<const N: usize, T> Vector<N, T> {
     where
         T: [const] Mul<Output = T>,
         T: [const] Destruct,
-        T: Copy,
+        T: [const] Clone,
     {
         Vector::new(mul(self.into_inner(), other.into_inner()))
     }
@@ -245,20 +253,20 @@ impl Vector<3, f32> {
     #[inline]
     #[must_use]
     pub const fn cross(self, rhs: Self) -> Self {
-        let lhs = self.into_inner();
-        let rhs = rhs.into_inner();
+        let [lhs0, lhs1, lhs2] = self.into_inner();
+        let [rhs0, rhs1, rhs2] = rhs.into_inner();
         let out = [
-            lhs[1].mul_add(rhs[2], -(lhs[2] * rhs[1])), // lhs[1] * rhs[2] - lhs[2] * rhs[1],
-            lhs[2].mul_add(rhs[0], -(lhs[0] * rhs[2])), // lhs[2] * rhs[0] - lhs[0] * rhs[2],
-            lhs[0].mul_add(rhs[1], -(lhs[1] * rhs[0])), // lhs[0] * rhs[1] - lhs[1] * rhs[0],
+            lhs1.mul_add(rhs2, -(lhs2 * rhs1)), // lhs1 * rhs2 - lhs2 * rhs1,
+            lhs2.mul_add(rhs0, -(lhs0 * rhs2)), // lhs2 * rhs0 - lhs0 * rhs2,
+            lhs0.mul_add(rhs1, -(lhs1 * rhs0)), // lhs0 * rhs1 - lhs1 * rhs0,
         ];
         Self::new(out)
     }
 
     #[must_use]
     pub const fn homogeneous(self) -> Vector<4, f32> {
-        let this = self.into_inner();
-        Vector::new([this[0], this[1], this[2], 1.0])
+        let [this0, this1, this2] = self.into_inner();
+        Vector::new([this0, this1, this2, 1.0])
     }
 }
 
@@ -267,7 +275,7 @@ macro_rules! impl_ops {
         use self::array_maths::$fn;
         const impl<const N: usize, T> core::ops::$trait for Vector<N, T>
         where
-            T: Copy + [const] Destruct + [const] core::ops::$trait<Output = T>,
+            T: [const] Clone + [const] Destruct + [const] core::ops::$trait<Output = T>,
         {
             type Output = Self;
 

@@ -201,15 +201,11 @@ impl<const N: usize, X: AttachmentWithoutExtra> Framebuffer<N, X> {
 }
 
 impl<const N: usize, D: AttachmentWithDepth> Framebuffer<N, D> {
-    pub fn get_attachment_texture(&self) -> Rc<RefCell<D::Tex>> {
-        self.stencil_or_depth.get_texture()
-    }
+    // pub fn get_attachment_texture(&self) -> Rc<RefCell<D::Tex>> {
+    // self.stencil_or_depth.get_texture()
+    // }
 
-    /// # Safety
-    /// User must not let reference live long enough to allow mutable borrowing
-    /// via the Texture refcell
-    pub unsafe fn get_attachment_ref(&self) -> &dyn Texture {
-        // SAFETY: to be upheld by caller
-        unsafe { self.stencil_or_depth.get_texture_ref() }
+    pub fn get_attachment_ref(&self) -> &dyn Texture {
+        self.stencil_or_depth.get_texture_ref()
     }
 }

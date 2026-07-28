@@ -21,7 +21,7 @@ use crate::types::TexDim;
 
 /// Marker type to hold a framebuffer's depth buffer
 pub struct WithDepth {
-    texture: Rc<RefCell<FlatTexture>>,
+    texture: FlatTexture,
     builder_map: OptTexBuilderMap<Self>,
 }
 
@@ -49,7 +49,7 @@ impl AttachmentWithoutExtra for WithDepth {
             .expect("This is not a WithoutExtra texture");
 
         Self {
-            texture: Rc::new(RefCell::new(texture)),
+            texture,
             builder_map,
         }
     }
@@ -72,7 +72,7 @@ impl AttachmentWithoutExtra for WithDepth {
     }
 
     fn size(&self) -> (TexDim, TexDim) {
-        self.texture.borrow().size()
+        self.texture.size()
     }
 
     fn enables(context: &mut FramebufferContext) {
@@ -83,11 +83,11 @@ impl AttachmentWithoutExtra for WithDepth {
 }
 
 impl AttachmentWithDepth for WithDepth {
-    fn get_texture(&self) -> Rc<RefCell<FlatTexture>> {
-        self.texture.clone()
-    }
-
-    unsafe fn get_texture_ref(&self) -> &FlatTexture {
-        unsafe { self.texture.try_borrow_unguarded() }.unwrap()
+    // fn get_texture(&self) -> Rc<RefCell<FlatTexture>> {
+    // self.texture.clone()
+    // }
+    //
+    fn get_texture_ref(&self) -> &FlatTexture {
+        &self.texture
     }
 }

@@ -16,7 +16,7 @@ where
         let normal_vec = vec.try_normalize()?.v().into_inner();
 
         let mut partial_sum_sq = normal_vec.iter().scan(1.0, |state, elem| {
-            *state = *state - elem * elem;
+            *state -= elem * elem;
             let out = if *state >= 0.0 { state.sqrt() } else { 0.0 };
 
             Some(out)

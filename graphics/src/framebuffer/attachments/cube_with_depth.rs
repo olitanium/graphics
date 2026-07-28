@@ -78,11 +78,11 @@ impl AttachmentWithoutExtra for CubeWithDepth {
 }
 
 impl AttachmentWithDepth for CubeWithDepth {
-    fn get_texture(&self) -> Rc<RefCell<<Self as AttachmentWithoutExtra>::Tex>> {
-        self.texture.clone()
-    }
-
-    unsafe fn get_texture_ref(&self) -> &<Self as AttachmentWithoutExtra>::Tex {
+    // fn get_texture(&self) -> Rc<RefCell<<Self as AttachmentWithoutExtra>::Tex>> {
+    // self.texture.clone()
+    // }
+    //
+    fn get_texture_ref(&self) -> &<Self as AttachmentWithoutExtra>::Tex {
         unsafe { self.texture.try_borrow_unguarded() }.unwrap()
     }
 }

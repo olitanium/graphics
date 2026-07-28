@@ -1,3 +1,5 @@
+use std::iter;
+
 use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
@@ -44,7 +46,10 @@ impl SkyBox {
         active_shader
             .cull_face(CullFace::DoNotCull)
             .map_err(|err| DrawError::FaceCulling(err))?;
-        active_shader.register_texture(Some(("skybox".to_string(), &self.texture as &dyn Texture)));
+        active_shader.register_texture(iter::once((
+            "skybox".to_string(),
+            &self.texture as &dyn Texture,
+        )));
 
         self.model
             .draw(active_shader, active_framebuffer)

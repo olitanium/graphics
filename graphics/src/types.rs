@@ -32,6 +32,8 @@ macro_rules! opaque {
                 Self(value)
             }
         }
+
+        //impl !Send for $name {}
     };
 }
 
@@ -39,12 +41,6 @@ macro_rules! nz_opaque {
     ($name:ident : $type:ident $(, $derives: ident)* $(,)?) => {
         #[derive(Debug, Hash, PartialEq, Eq $(, $derives)*)]
         pub struct $name(NonZero<$type>);
-
-        /*impl From<gl::types::$type> for $name {
-            fn from(value: Self::Primitive) -> Self {
-                Self::new(value)
-            }
-        }*/
 
         impl $name {
             pub(crate) fn new(value: Self::Primitive) -> Self {
@@ -66,6 +62,8 @@ macro_rules! nz_opaque {
                 self.0.get()
             }
         }
+
+        //impl !Send for $name {}
     };
 }
 

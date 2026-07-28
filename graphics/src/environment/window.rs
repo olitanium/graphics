@@ -14,7 +14,7 @@ use crate::{Event, gl_call};
 #[expect(dead_code)]
 #[derive(Debug)]
 pub struct Window {
-    glfw_window: PWindow, // DefaultFramebuffer,
+    glfw_window: PWindow,
     default_framebuffer: DefaultFramebuffer,
     events: GlfwReceiver<(f64, WindowEvent)>,
     pub(crate) window_resized: Rc<Cell<bool>>,

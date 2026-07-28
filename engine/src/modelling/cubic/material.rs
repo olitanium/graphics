@@ -71,17 +71,13 @@ impl Material {
         shader
             .set_uniform(format!("{name}.shininess"), &self.shininess)
             .map_err(|err| RegisterToError::SetUniformError(err))?;
-        shader.register_texture(
-            vec![
-                (format!("{name}.diffuse"), &self.diffuse),
-                (format!("{name}.specular_map"), &self.specular_map),
-                (format!("{name}.emission"), &self.emission),
-                (format!("{name}.normal_map"), &self.normal_map),
-                (format!("{name}.ambient_occlusion"), &self.ambient_occlusion),
-            ]
-            .into_iter()
-            .map(|(string, tex)| (string, tex as &dyn Texture)),
-        );
+        shader.register_texture(vec![
+            (format!("{name}.diffuse"), &self.diffuse as &dyn Texture),
+            (format!("{name}.specular_map"), &self.specular_map),
+            (format!("{name}.emission"), &self.emission),
+            (format!("{name}.normal_map"), &self.normal_map),
+            (format!("{name}.ambient_occlusion"), &self.ambient_occlusion),
+        ]);
 
         Ok(())
     }
