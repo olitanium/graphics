@@ -6,7 +6,7 @@ use crate::shader_program::ShaderProgramContext;
 use crate::types::Query;
 
 pub enum PollResult<'a, E> {
-    Draw(Vec<Box<dyn Draw + 'a>>),
+    Draw(Box<dyn Draw + 'a>),
     Error(E),
     Close,
     Restart,
@@ -18,7 +18,7 @@ pub enum PollResultResidual<E> {
     Restart,
 }
 
-impl<'a, E> Residual<Vec<Box<dyn Draw + 'a>>> for PollResultResidual<E> {
+impl<'a, E> Residual<Box<dyn Draw + 'a>> for PollResultResidual<E> {
     type TryType = PollResult<'a, E>;
 }
 
@@ -38,7 +38,7 @@ impl<E> FromResidual<Result<!, E>> for PollResult<'_, E> {
 }
 
 impl<'a, E> Try for PollResult<'a, E> {
-    type Output = Vec<Box<dyn Draw + 'a>>;
+    type Output = Box<dyn Draw + 'a>;
     type Residual = PollResultResidual<E>;
 
     fn branch(self) -> std::ops::ControlFlow<Self::Residual, Self::Output> {
@@ -95,7 +95,7 @@ impl DrawOut {
     pub const OK: Self = Self::Draw;
 }
 
-impl<T: Draw + ?Sized> Draw for [Box<T>] {
+impl<'a, T: Draw + ?Sized + 'a> Draw for [Box<T>] {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
@@ -126,17 +126,16 @@ impl<T: Draw + ?Sized> Draw for [Box<T>] {
         }
     }
 }
-// impl<E: Error> Draw<E> for Vec<Box<dyn Draw<E>>> {
-// fn draw(
-// self: Box<Self>,
-// fb_context: &mut FramebufferContext,
-// shader_marker: &mut ShaderProgramContext,
-// ) {
-// for group in *self {
-// group.draw(fb_context, shader_marker);
-// }
-// }
-// }
+impl<'a> Draw for Vec<Box<dyn Draw + 'a>> {
+    fn draw(
+        self: Box<Self>,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
+    ) -> DrawOut {
+        let slice = self.into_boxed_slice();
+        slice.draw(fb_context, sp_context)
+    }
+}
 
 pub struct DrawNothing;
 

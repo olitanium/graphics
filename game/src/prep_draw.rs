@@ -1,16 +1,18 @@
+use std::task::Poll;
+
 use engine::array_vec::arrvec;
 use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::lighting::shadow::{PointLightIlluminatesGroup, ShadowListLights};
 use engine::modelling::{BloomGroup, FramebufferQuad, ScreenQuadGroup, ShadowGroup, SkyBoxGroup};
 use engine::query::HasDrawnQuery;
-use engine::{PollResult, VecDraw};
+use engine::{Draw, PollResult, VecDraw};
 
 use crate::state::{State, StateError};
 
 impl State {
-    pub fn draw<'a>(
-        &'a mut self,
-        default_framebuffer: &'a DefaultFramebuffer,
+    pub fn draw<'b: 'a, 'a>(
+        &'b mut self,
+        default_framebuffer: &'b DefaultFramebuffer,
     ) -> PollResult<'a, StateError> {
         let mut out = VecDraw::new();
 
@@ -44,7 +46,6 @@ impl State {
         if self.toggle_m {
             opaque.push(self.small_cube.get_pair_model_bind_pose());
         }
-
         let illuminates = PointLightIlluminatesGroup::new_dyn(&self.sun_duplicate_light, opaque);
         out.push(illuminates);
 
@@ -81,13 +82,12 @@ impl State {
             ));
         } else {
             out.push(ScreenQuadGroup::new(
-                engine::opengl_shaders::exposure3(),
+                engine::opengl_shaders::exposure3() as &'a _,
                 default_framebuffer,
                 vec![FramebufferQuad::new_from_framebuffer(&self.hdr_fb)],
                 vec![(String::from("exposure"), &self.exposure)],
             ));
         }
-
-        PollResult::Draw(out)
+        PollResult::Draw(Box::new(out))
     }
 }

@@ -25,4 +25,4 @@ pub use russimp::scene::PostProcess;
 mod transform;
 pub use transform::{Transform, TransformBy};
 
-pub type VecDraw<'a> = Vec<Box<dyn Draw + 'a>>;
+pub type VecDraw = Vec<Box<dyn Draw>>;

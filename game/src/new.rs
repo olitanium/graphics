@@ -75,7 +75,7 @@ impl State {
         let game_camera = GameCamera::new(&hdr_fb);
 
         let mut morgan = make_model("morgan").unwrap();
-        let morgan_colour = ColourRGBA::new([1.0, 1.0, 1.0, 1.0]);
+        let morgan_colour = ColourRGBA::new([0.5, 0.0, 0.0, 1.0]);
         morgan.temp_set_all_material(Rc::new(
             Material::builder()
                 .emission(FlatTexture::monochrome(morgan_colour))
