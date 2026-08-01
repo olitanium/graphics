@@ -136,7 +136,7 @@ impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, 
         name: S,
         value: &U,
     ) -> Result<(), ShaderSetUniformError<'a>> {
-        match_result(value.set_uniform(dbg!(name.into()), self))
+        match_result(value.set_uniform(name.into(), self))
     }
 
     pub fn set_uniform_dyn(
