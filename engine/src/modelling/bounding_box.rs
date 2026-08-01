@@ -118,17 +118,15 @@ impl<V: ExtendedVertex<3>, T> BoundingBox<V, 3, T> {
         U,
         F: FnMut(&mut T, &mut U),
         P: Transform<Vector<3>>,
+        P2: Transform<Vector<3>>,
     >(
         lhs: &'a Self,
         lhs_pose: P,
         rhs: &'b BoundingBox<V2, 3, U>,
-        rhs_pose: P,
+        rhs_pose: P2,
         mut alter_meta: F,
     ) -> Option<Vec<(&'a [V; 3], &'b [V2; 3])>>
-    where
-        P: Transform<[V; 3]>,
-        P: Transform<[V2; 3]>,
-    {
+where {
         let output = BoundingBoxElement::overlaps_bounding_box_and_children(
             lhs.root_element(),
             lhs,
@@ -297,6 +295,7 @@ mod test {
 
     use crate::modelling::{BoundingBoxElement, ExtendedVertex};
 
+    #[allow(dead_code)]
     fn default<const DIMS: usize, V: ExtendedVertex<DIMS>, T: Default>()
     -> BoundingBoxElement<V, DIMS, T> {
         BoundingBoxElement {

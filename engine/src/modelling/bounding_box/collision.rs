@@ -1,4 +1,3 @@
-use std::ops::Deref;
 
 use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{BoundingBox, CubicVertex};

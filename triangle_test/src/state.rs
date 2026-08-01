@@ -1,25 +1,21 @@
-use std::collections::HashSet;
 use std::rc::Rc;
 
 use engine::entity::Mass;
-use engine::framebuffer::{self, DefaultFramebuffer};
 use engine::linear_algebra::{UnitVector, Vector};
-use engine::modelling::cubic::camera::{CameraPose, ManualPose};
+use engine::modelling::cubic::camera::ManualPose;
 use engine::modelling::cubic::geometry::Pose;
-use engine::modelling::cubic::lighting::simple::{ListLights, SimpleBindError};
+use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{Camera, CameraBuilder, Mesh, MeshBuilder, SimpleCubic, camera};
+use engine::modelling::cubic::{Camera, MeshBuilder, SimpleCubic, camera};
 use engine::modelling::{Collision, IncompleteVertex, SimpleCubicGroup};
 use engine::types::TexDim;
 use engine::{
     ApiState,
     ColourRGBA,
-    DrawNothing,
     Event,
     Key,
     PollResult,
     SimpleEntity,
-    modelling,
     opengl_shaders,
     shader_program,
 };
@@ -98,10 +94,7 @@ impl ApiState for State {
             match event {
                 Event::FrameTime(in_ft) => frame_time = in_ft,
                 Event::WindowBuffer(in_buff) => opt_default = Some(in_buff),
-                Event::Keyboard {
-                    keys: in_keys,
-                    buffer: _,
-                } => keys = in_keys,
+                Event::Keyboard { keys: in_keys, .. } => keys = in_keys,
                 _ => {}
             }
         }

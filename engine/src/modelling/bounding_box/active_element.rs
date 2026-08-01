@@ -2,7 +2,6 @@ use std::array;
 use std::cell::RefMut;
 
 use graphics::linear_algebra::Vector;
-use graphics::vertex::Vertex;
 
 use super::element::ChildrenOrMeta;
 use crate::TransformBy;

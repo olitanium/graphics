@@ -123,4 +123,5 @@ fn simple_test_collision(player: &Player, environment: &SkeletonEntity<()>) -> b
     player
         .entity
         .collides(&anim, environment, &env_anim, |_, _, _, _| ())
+        .is_some()
 }

@@ -31,6 +31,7 @@ impl<'a, const N: usize, X: AttachmentWithoutExtra<Tex = FlatTexture>> Framebuff
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum DrawError<'a> {
+    #[allow(unused)]
     VertexArrayDraw(VertexArrayDrawError<'a>),
 }
 error_boilerplate!(<'a> DrawError<'a>);
