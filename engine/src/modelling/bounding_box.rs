@@ -33,18 +33,18 @@ use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
 pub struct BoundingBox<V: ExtendedVertex<DIMS>, const DIMS: usize, T>
-where
-    Vector<DIMS>: ExtendedVertex<DIMS>,
-    [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
+// where
+// Vector<DIMS>: ExtendedVertex<DIMS>,
+//[(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
 {
     triangles: Vec<(Vector<DIMS>, [V; 3])>,
     inner: Vec<BoundingBoxElement<V, DIMS, T>>,
 }
 
 impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T>
-where
-    Vector<DIMS>: ExtendedVertex<DIMS>,
-    [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
+// where
+// Vector<DIMS>: ExtendedVertex<DIMS>,
+//[(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
 {
     fn get(&self, index: usize) -> &BoundingBoxElement<V, DIMS, T> {
         &self.inner[index]
@@ -108,24 +108,28 @@ where
     pub fn encloses_point(&self, point: Vector<DIMS>) -> bool {
         self.root_element().encloses_point_and_children(self, point)
     }
+}
 
-    pub fn detect_collision<
-        V2: ExtendedVertex<DIMS>,
+impl<V: ExtendedVertex<3>, T> BoundingBox<V, 3, T> {
+    fn detect_collision<
+        'a,
+        'b,
+        V2: ExtendedVertex<3>,
         U,
         F: FnMut(&mut T, &mut U),
-        P: Transform<Vector<DIMS>>,
+        P: Transform<Vector<3>>,
     >(
-        lhs: &Self,
+        lhs: &'a Self,
         lhs_pose: P,
-        rhs: &BoundingBox<V2, DIMS, U>,
+        rhs: &'b BoundingBox<V2, 3, U>,
         rhs_pose: P,
         mut alter_meta: F,
-    ) -> bool
+    ) -> Option<Vec<(&'a [V; 3], &'b [V2; 3])>>
     where
         P: Transform<[V; 3]>,
         P: Transform<[V2; 3]>,
     {
-        BoundingBoxElement::overlaps_bounding_box_and_children(
+        let output = BoundingBoxElement::overlaps_bounding_box_and_children(
             lhs.root_element(),
             lhs,
             &lhs_pose,
@@ -133,24 +137,17 @@ where
             rhs,
             &rhs_pose,
             &mut alter_meta,
-        )
-        // .map(|(lhs, rhs)| {
-        // (
-        // lhs.get_triangles()
-        // .iter()
-        // .map(|triangle| lhs_pose.transform(triangle))
-        // .copied()
-        // .collect(),
-        // rhs.get_triangles()
-        // .iter()
-        // .map(|triangle| rhs_pose.transform(triangle))
-        // .copied()
-        // .collect(),
-        // )
-        // })
-        // .collect()
-    }
+        );
 
+        if output.is_empty() {
+            None
+        } else {
+            Some(output)
+        }
+    }
+}
+
+impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T> {
     pub fn triangles<'a>(
         &'a self,
         element: &'a BoundingBoxElement<V, DIMS, T>,
@@ -214,41 +211,53 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, 3, TThis> {
     type FuncInputs = ();
     type Meta = TThis;
     type Transform<'a> = Pose;
+    type Vertex = VThis;
 
     fn collides_with_cubic_primitive<
+        'a,
+        'b,
         V: CubicVertex,
         U,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, &mut U),
     >(
-        &self,
+        &'a self,
         transform: Self::Transform<'_>,
-        target: &BoundingBox<V, 3, U>,
+        target: &'b BoundingBox<V, 3, U>,
         target_transform: Pose,
         mut alter_meta: F,
-    ) -> bool {
+    ) -> Option<
+        Vec<(
+            &'a [Self::Vertex; 3],
+            &'b [<BoundingBox<V, 3, U> as Collision>::Vertex; 3],
+        )>,
+    > {
         Self::detect_collision(self, transform, target, target_transform, |x, y| {
             alter_meta((), x, y)
         })
     }
 
     fn collides<
+        'a,
+        'b,
         T: Collision,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
-        &self,
+        &'a self,
         self_transform: Self::Transform<'_>,
-        target: &T,
+        target: &'b T,
         target_transform: T::Transform<'_>,
         mut alter_meta: F,
-    ) -> bool {
-        target.collides_with_cubic_primitive(
-            target_transform,
-            self,
-            self_transform,
-            |target_input, target_meta, self_meta| {
-                alter_meta((), self_meta, target_input, target_meta)
-            },
-        )
+    ) -> Option<Vec<(&'a [Self::Vertex; 3], &'b [T::Vertex; 3])>> {
+        target
+            .collides_with_cubic_primitive(
+                target_transform,
+                self,
+                self_transform,
+                |target_input, target_meta, self_meta| {
+                    alter_meta((), self_meta, target_input, target_meta)
+                },
+            )
+            .map(|is_vec| is_vec.into_iter().map(|(a, b)| (b, a)).collect())
     }
 }
 

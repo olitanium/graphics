@@ -402,6 +402,7 @@ dependencies = [
  "infinite_window",
  "quaternion",
  "russimp",
+ "triangle_intersection",
  "utils",
 ]
 

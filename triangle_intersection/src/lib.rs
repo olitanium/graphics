@@ -1,10 +1,10 @@
 use linear_algebra::Matrix;
 pub use linear_algebra::Vector;
 
-type Triangle = [Vector<3>; 3];
+type Triangle<const DIMS: usize> = [Vector<DIMS>; 3];
 
 /// https://inria.hal.science/inria-00072100/document
-pub fn intersect(one: Triangle, two: Triangle) -> bool {
+pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
     // TODO: handle degenerate triangles
 
     fn two_dimension_determinant(vec1: Vector<2>, vec2: Vector<2>, vec3: Vector<2>) -> f32 {
@@ -32,7 +32,7 @@ pub fn intersect(one: Triangle, two: Triangle) -> bool {
         .determinant()
     }
 
-    fn make_determinants(one: Triangle, two: Triangle) -> [f32; 3] {
+    fn make_determinants(one: Triangle<3>, two: Triangle<3>) -> [f32; 3] {
         let [p2, q2, r2] = two;
         one.map(|elem| three_dimension_determinant(p2, q2, r2, elem))
     }
@@ -56,7 +56,7 @@ pub fn intersect(one: Triangle, two: Triangle) -> bool {
     enum CrossType {
         None,
         Coplanar,
-        Success(Triangle, Triangle),
+        Success(Triangle<3>, Triangle<3>),
     }
 
     macro_rules! permute {
@@ -71,13 +71,13 @@ pub fn intersect(one: Triangle, two: Triangle) -> bool {
         }};
     }
 
-    fn swap_qr(triangle: Triangle) -> Triangle {
+    fn swap_qr(triangle: Triangle<3>) -> Triangle<3> {
         let [p, q, r] = triangle;
 
         [p, r, q]
     }
 
-    fn determiant_crossing(one: Triangle, two: Triangle) -> CrossType {
+    fn determiant_crossing(one: Triangle<3>, two: Triangle<3>) -> CrossType {
         let determinants = make_determinants(one, two);
         use SignOrZero as S;
         match determinants.map(get_signorzero) {
@@ -143,7 +143,7 @@ pub fn intersect(one: Triangle, two: Triangle) -> bool {
         }
     }
 
-    fn smart_determinants_crossing(one: Triangle, two: Triangle) -> CrossType {
+    fn smart_determinants_crossing(one: Triangle<3>, two: Triangle<3>) -> CrossType {
         match determiant_crossing(one, two) {
             nope @ (CrossType::None | CrossType::Coplanar) => nope,
             CrossType::Success(new_one, new_two) => match determiant_crossing(new_two, new_one) {

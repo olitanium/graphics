@@ -2,18 +2,21 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use engine::entity::Mass;
-use engine::framebuffer::DefaultFramebuffer;
+use engine::framebuffer::{self, DefaultFramebuffer};
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::camera::{CameraPose, ManualPose};
+use engine::modelling::cubic::geometry::Pose;
 use engine::modelling::cubic::lighting::simple::{ListLights, SimpleBindError};
 use engine::modelling::cubic::material::Material;
 use engine::modelling::cubic::{Camera, CameraBuilder, Mesh, MeshBuilder, SimpleCubic, camera};
-use engine::modelling::{IncompleteVertex, SimpleCubicGroup};
+use engine::modelling::{Collision, IncompleteVertex, SimpleCubicGroup};
 use engine::types::TexDim;
 use engine::{
     ApiState,
+    ColourRGBA,
     DrawNothing,
     Event,
+    Key,
     PollResult,
     SimpleEntity,
     modelling,
@@ -23,6 +26,7 @@ use engine::{
 
 pub struct State {
     triangle_one: SimpleEntity<()>,
+    triangle_two: SimpleEntity<()>,
 
     camera: Camera,
 }
@@ -37,30 +41,48 @@ impl ApiState for State {
         let camera = camera::builder()
             .perspective(90f32.to_radians(), aspect, 0.1, 10.0)
             .pose(ManualPose::new_fixed_forward_up(
-                Vector::new([0.0, 0.0, -2.0]),
-                UnitVector::Z,
+                Vector::new([0.0, 0.0, 2.0]),
+                -UnitVector::Z,
                 UnitVector::Y,
             ))
             .build();
 
-        let triangle_one_vertices = [-Vector::X + Vector::Y, -Vector::X, Vector::Y]
-            .map(|vec| IncompleteVertex::new(vec).texture(vec.truncate()));
+        let triangle_one = {
+            let triangle_one_vertices = [-Vector::X + Vector::Y + Vector::Z, -Vector::X, Vector::Y]
+                .map(|vec| IncompleteVertex::new(vec).texture(vec.truncate()));
 
-        let mut triangle_one_cubic =
-            SimpleCubic::builder().cull_face(shader_program::CullFace::DoNotCull);
-        let mut mesh_builder = MeshBuilder::new().material(Rc::new(Material::white()));
+            let mut triangle_one_cubic =
+                SimpleCubic::builder().cull_face(shader_program::CullFace::DoNotCull);
+            let mut mesh_builder = MeshBuilder::new().material(Rc::new(Material::white()));
 
-        mesh_builder.push_triangle(triangle_one_vertices);
-        triangle_one_cubic.push_mesh(mesh_builder);
+            mesh_builder.push_triangle(triangle_one_vertices);
+            triangle_one_cubic.push_mesh(mesh_builder);
 
-        let triangle_one_model = triangle_one_cubic.build();
+            let triangle_one_model = triangle_one_cubic.build();
 
-        let triangle_one =
-            SimpleEntity::from_simple_cubic(triangle_one_model, 1, Mass(1.0), |_| ());
+            SimpleEntity::from_simple_cubic(triangle_one_model, 1, Mass(1.0), |_| ())
+        };
+
+        let triangle_two = {
+            let triangle_two_vertices = [Vector::ZERO, Vector::X, -Vector::Y]
+                .map(|vec| IncompleteVertex::new(vec).texture(vec.truncate()));
+
+            let mut triangle_two_cubic =
+                SimpleCubic::builder().cull_face(shader_program::CullFace::DoNotCull);
+            let mut mesh_builder = MeshBuilder::new().material(Rc::new(Material::black()));
+
+            mesh_builder.push_triangle(triangle_two_vertices);
+            triangle_two_cubic.push_mesh(mesh_builder);
+
+            let triangle_one_model = triangle_two_cubic.build();
+
+            SimpleEntity::from_simple_cubic(triangle_one_model, 1, Mass(1.0), |_| ())
+        };
 
         Ok(Self {
             camera,
             triangle_one,
+            triangle_two,
         })
     }
 
@@ -84,6 +106,44 @@ impl ApiState for State {
             }
         }
 
+        let frame_time = frame_time.as_secs_f32();
+
+        fn move_triangle_two(state: &mut State, translation: [f32; 3]) {
+            state
+                .triangle_two
+                .pose
+                .push_change(Pose::new_from_translation(Vector::new(translation)));
+        }
+
+        for key in keys {
+            match key {
+                Key::Escape => return PollResult::Close,
+                Key::W => move_triangle_two(self, [0.0, frame_time, 0.0]),
+                Key::S => move_triangle_two(self, [0.0, -frame_time, 0.0]),
+                Key::A => move_triangle_two(self, [-frame_time, 0.0, 0.0]),
+                Key::D => move_triangle_two(self, [frame_time, 0.0, 0.0]),
+                Key::Space => move_triangle_two(self, [0.0, 0.0, frame_time]),
+                Key::LeftShift => move_triangle_two(self, [0.0, 0.0, -frame_time]),
+                _ => {}
+            }
+        }
+
+        let test_collision =
+            self.triangle_one
+                .collides((), &self.triangle_two, (), |_, _, _, _| ());
+
+        if test_collision.is_some() {
+            self.triangle_one
+                .model
+                .temp_set_all_material(Rc::new(Material::from_colour(ColourRGBA::GREEN)));
+            eprintln!("yes");
+        } else {
+            self.triangle_one
+                .model
+                .temp_set_all_material(Rc::new(Material::from_colour(ColourRGBA::RED)));
+            eprintln!("no");
+        }
+
         if let Some(default_fb) = opt_default {
             PollResult::Draw(SimpleCubicGroup::new(
                 opengl_shaders::hdr_without_bright_simple(),
@@ -91,7 +151,10 @@ impl ApiState for State {
                 &self.camera,
                 &(),
                 ListLights::new_ambient(),
-                vec![self.triangle_one.temp_as_simplecubic_and_anim()],
+                vec![
+                    self.triangle_one.temp_as_simplecubic_and_anim(),
+                    self.triangle_two.temp_as_simplecubic_and_anim(),
+                ],
                 vec![],
             ))
         } else {

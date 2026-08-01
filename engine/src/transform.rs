@@ -2,7 +2,7 @@ use graphics::linear_algebra::{UnitVector, Vector};
 
 use crate::modelling::cubic::geometry::Pose;
 
-pub trait TransformBy<By> {
+pub trait TransformBy<By: ?Sized>: Sized {
     /// TransformBy takes an object, say a vector, and a transformation, say a
     /// matrix. The output is the result of applying the transformation to
     /// the object.

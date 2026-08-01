@@ -506,30 +506,38 @@ where
     );
     type Meta = <M::BoundingBox<SelfMeta> as Collision>::Meta;
     type Transform<'a> = &'a AggregateCalcAnim;
+    type Vertex = <M::BoundingBox<SelfMeta> as Collision>::Vertex;
 
     fn collides<
+        'a,
+        'b,
         Other: Collision,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, Other::FuncInputs, &mut Other::Meta),
     >(
-        &self,
+        &'a self,
         transform: Self::Transform<'_>,
-        target: &Other,
+        target: &'b Other,
         target_transform: Other::Transform<'_>,
         mut alter_meta: F,
-    ) -> bool
+    ) -> Option<Vec<(&'a [Self::Vertex; 3], &'b [Other::Vertex; 3])>>
     where
-        for<'a> Other::Transform<'a>: Clone,
+        for<'c> Other::Transform<'c>: Clone,
     {
-        self.zip_calculated_animation_get_index(transform)
+        let out = self
+            .zip_calculated_animation_get_index(transform)
             .flat_map(|(x, y, opt_z, t)| opt_z.map(|z| (x, y, z, t)))
-            .any(|(index, model, bbox, animation)| {
+            .flat_map(|(index, model, bbox, animation)| {
                 let transform = (model.skeleton(), animation);
                 let transform = transform.into();
 
                 bbox.collides(transform, target, target_transform.clone(), |x, y, z, t| {
                     alter_meta((index.inner_clone(), x), y, z, t)
                 })
+                .unwrap_or_default()
             })
+            .collect::<Vec<_>>();
+
+        if out.is_empty() { None } else { Some(out) }
     }
 }
 

@@ -1,4 +1,5 @@
 use graphics::ActiveShaderProgram;
+use graphics::Key::W;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
@@ -140,27 +141,31 @@ impl<VThis: CubicVertex, TThis> Collision for SkeletonBb<VThis, TThis> {
     type FuncInputs = SkeletonBoneIndex;
     type Meta = TThis;
     type Transform<'a> = (&'a Skeleton, &'a CalculatedAnimation);
+    type Vertex = VThis;
 
     fn collides<
+        'a,
+        'b,
         T: Collision,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
-        &self,
+        &'a self,
         transform: Self::Transform<'_>,
-        target: &T,
+        target: &'b T,
         target_transform: T::Transform<'_>,
         mut alter_meta: F,
-    ) -> bool
+    ) -> Option<Vec<(&'a [Self::Vertex; 3], &'b [T::Vertex; 3])>>
     where
-        for<'a> T::Transform<'a>: Clone,
+        for<'c> T::Transform<'c>: Clone,
     {
-        self.per_bone
+        let out = self
+            .per_bone
             .iter()
             .enumerate()
-            .any(|(index, self_bounding_box)| {
+            .filter_map(|(index, self_bounding_box)| {
                 let skeleton_index = SkeletonBoneIndex(index);
                 let Ok(this_transform) = transform.1.get(&skeleton_index, transform.0) else {
-                    return false;
+                    return None;
                 };
 
                 self_bounding_box.collides(
@@ -177,6 +182,10 @@ impl<VThis: CubicVertex, TThis> Collision for SkeletonBb<VThis, TThis> {
                     },
                 )
             })
+            .flatten()
+            .collect::<Vec<_>>();
+
+        if out.is_empty() { None } else { Some(out) }
     }
 }
 

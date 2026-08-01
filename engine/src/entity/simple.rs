@@ -174,24 +174,27 @@ pub fn get_average_normal<I: IntoIterator<Item = [SimpleVertex; 3]>>(input: I) -
 impl<TThis> Collision for SimpleEntity<TThis> {
     type FuncInputs = <BoundingBox<SimpleVertex, 3, TThis> as Collision>::FuncInputs;
     type Meta = <BoundingBox<SimpleVertex, 3, TThis> as Collision>::Meta;
-    type Transform<'a> = <BoundingBox<SimpleVertex, 3, TThis> as Collision>::Transform<'a>;
+    type Transform<'a> = ();
+    type Vertex = <BoundingBox<SimpleVertex, 3, TThis> as Collision>::Vertex;
 
     fn collides<
+        'a,
+        'b,
         T: Collision,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
-        &self,
-        transform: Self::Transform<'_>,
-        target: &T,
+        &'a self,
+        _: Self::Transform<'_>,
+        target: &'b T,
         target_transform: T::Transform<'_>,
         alter_meta: F,
-    ) -> bool
+    ) -> Option<Vec<(&'a [Self::Vertex; 3], &'b [T::Vertex; 3])>>
     where
-        for<'a> T::Transform<'a>: Clone,
+        for<'c> T::Transform<'c>: Clone,
     {
         self.bounding_box
-            .as_ref()
-            .is_some_and(|bbox| bbox.collides(transform, target, target_transform, alter_meta))
+            .as_ref()?
+            .collides(self.pose, target, target_transform, alter_meta)
     }
 }
 

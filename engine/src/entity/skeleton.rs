@@ -80,24 +80,27 @@ impl<TThis> Collision for SkeletonEntity<TThis> {
     type FuncInputs = <SkeletonBb<SimpleVertex, TThis> as Collision>::FuncInputs;
     type Meta = <SkeletonBb<SimpleVertex, TThis> as Collision>::Meta;
     type Transform<'a> = &'a CalculatedAnimation;
+    type Vertex = <SkeletonBb<SimpleVertex, TThis> as Collision>::Vertex;
 
     fn collides<
+        'a,
+        'b,
         T: Collision,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
-        &self,
+        &'a self,
         transform: Self::Transform<'_>,
-        target: &T,
+        target: &'b T,
         target_transform: T::Transform<'_>,
         alter_meta: F,
-    ) -> bool
+    ) -> Option<Vec<(&'a [Self::Vertex; 3], &'b [T::Vertex; 3])>>
     where
-        for<'a> T::Transform<'a>: Clone,
+        for<'c> T::Transform<'c>: Clone,
     {
-        let Some(bbox) = &self.bounding_box else {
-            return false;
-        };
-        bbox.collides(
+        // let Some(bbox) = &self.bounding_box else {
+        // return None;
+        // };
+        self.bounding_box.as_ref()?.collides(
             (&self.model.skeleton, transform),
             target,
             target_transform,

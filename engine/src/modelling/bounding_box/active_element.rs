@@ -5,6 +5,7 @@ use graphics::linear_algebra::Vector;
 use graphics::vertex::Vertex;
 
 use super::element::ChildrenOrMeta;
+use crate::TransformBy;
 use crate::modelling::BoundingBox;
 use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::bounding_box::BoundingBoxElement;
@@ -44,11 +45,16 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
         (Vector::new(lower_bounds), Vector::new(upper_bounds))
     }
 
-    pub fn overlaps_bounding_box_single<U, V2: ExtendedVertex<DIMS>, P: Transform<Vector<DIMS>>>(
+    pub fn overlaps_bounding_box_single<
+        U,
+        V2: ExtendedVertex<DIMS>,
+        P: Transform<Vector<DIMS>>,
+        P2: Transform<Vector<DIMS>>,
+    >(
         &self,
         self_transform: &P,
         other: &BoundingBoxElement<V2, DIMS, U>,
-        other_transform: &P,
+        other_transform: &P2,
     ) -> bool {
         // let self_lower_bound = self_transform.transform(&self.lower_bound);
         // let self_upper_bound = self_transform.transform(&self.upper_bound);
@@ -93,9 +99,9 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
         bounding_box: &BoundingBox<V, DIMS, T>,
         point: Vector<DIMS>,
     ) -> bool
-    where
-        Vector<DIMS>: ExtendedVertex<DIMS>,
-        [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
+//where
+        //Vector<DIMS>: ExtendedVertex<DIMS>,
+        //[(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
     {
         let is_in = self.encloses_point_single(point);
 
@@ -108,26 +114,29 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
             _ => is_in,
         }
     }
+}
 
+impl<V: ExtendedVertex<3>, T> BoundingBoxElement<V, 3, T> {
     pub fn overlaps_bounding_box_and_children<
         'a,
         'b,
-        V2: ExtendedVertex<DIMS>,
+        V2: ExtendedVertex<3>,
         U,
-        P: Transform<Vector<DIMS>>,
+        P: Transform<Vector<3>>,
+        P2: Transform<Vector<3>>,
         F: FnMut(&mut T, &mut U),
     >(
         this: &'a Self,
-        this_boundingbox: &'a BoundingBox<V, DIMS, T>,
+        this_boundingbox: &'a BoundingBox<V, 3, T>,
         this_transform: &P,
-        other: &'b BoundingBoxElement<V2, DIMS, U>,
-        other_boundingbox: &'b BoundingBox<V2, DIMS, U>,
-        other_transform: &P,
+        other: &'b BoundingBoxElement<V2, 3, U>,
+        other_boundingbox: &'b BoundingBox<V2, 3, U>,
+        other_transform: &P2,
         alter_meta: &mut F,
-    ) -> bool
-    where
-        Vector<DIMS>: ExtendedVertex<DIMS>,
-        [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
+    ) -> Vec<(&'a [V; 3], &'b [V2; 3])>
+//where
+        //Vector<DIMS>: ExtendedVertex<DIMS>,
+        //[(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
     {
         let is_overlap = this.overlaps_bounding_box_single(this_transform, other, other_transform);
 
@@ -146,7 +155,7 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
                     (thisright, otherright),
                 ]
                 .into_iter()
-                .any(|(new_this, new_other)| {
+                .flat_map(|(new_this, new_other)| {
                     BoundingBoxElement::overlaps_bounding_box_and_children(
                         new_this,
                         this_boundingbox,
@@ -156,12 +165,14 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
                         other_transform,
                         alter_meta,
                     )
-                }),
+                })
+                .collect(),
                 (
                     InnerChildrenOrMeta::Meta(_),
                     InnerChildrenOrMeta::Children([otherleft, otherright]),
-                ) => [(this, otherleft), (this, otherright)].into_iter().any(
-                    |(new_this, new_other)| {
+                ) => [(this, otherleft), (this, otherright)]
+                    .into_iter()
+                    .flat_map(|(new_this, new_other)| {
                         BoundingBoxElement::overlaps_bounding_box_and_children(
                             new_this,
                             this_boundingbox,
@@ -171,13 +182,14 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
                             other_transform,
                             alter_meta,
                         )
-                    },
-                ),
+                    })
+                    .collect(),
                 (
                     InnerChildrenOrMeta::Children([thisleft, thisright]),
                     InnerChildrenOrMeta::Meta(_),
-                ) => [(thisleft, other), (thisright, other)].into_iter().any(
-                    |(new_this, new_other)| {
+                ) => [(thisleft, other), (thisright, other)]
+                    .into_iter()
+                    .flat_map(|(new_this, new_other)| {
                         BoundingBoxElement::overlaps_bounding_box_and_children(
                             new_this,
                             this_boundingbox,
@@ -187,25 +199,52 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
                             other_transform,
                             alter_meta,
                         )
-                    },
-                ),
+                    })
+                    .collect(),
                 (InnerChildrenOrMeta::Meta(mut lhs), InnerChildrenOrMeta::Meta(mut rhs)) => {
                     alter_meta(&mut *lhs, &mut *rhs);
-                    true
+
+                    let this_triangles = this.get_triangles(this_boundingbox);
+                    let other_triangles = other.get_triangles(other_boundingbox);
+
+                    // compare all triangles in this with all triangles in other.
+
+                    let other_iter = other_triangles.iter().map(|(_, tri)| {
+                        (
+                            tri,
+                            tri.each_ref()
+                                .map(|vert| other_transform.transform(&vert.position())),
+                        )
+                    });
+
+                    this_triangles
+                        .iter()
+                        .flat_map(|(_, tri)| {
+                            let new_tri = tri
+                                .each_ref()
+                                .map(|vert| this_transform.transform(&vert.position()));
+                            other_iter.clone().flat_map(move |(other, new_other)| {
+                                triangle_intersection::intersect3(new_tri, new_other)
+                                    .then_some((tri, other))
+                            })
+                        })
+                        .collect()
                 }
             }
         } else {
-            false
+            Vec::new()
         }
     }
+}
 
+impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T> {
     pub(crate) fn get_children<'a>(
         &'a self,
         bounding_box: &'a BoundingBox<V, DIMS, T>,
     ) -> InnerChildrenOrMeta<'a, V, DIMS, T>
-    where
-        Vector<DIMS>: ExtendedVertex<DIMS>,
-        [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
+//where
+     //   Vector<DIMS>: ExtendedVertex<DIMS>,
+        //[(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
     {
         match &self.children_or_meta {
             ChildrenOrMeta::Meta(cell) => InnerChildrenOrMeta::Meta(cell.borrow_mut()),
@@ -232,8 +271,8 @@ fn line_overlap(
         two_ub,
     }: TestBoxVertex,
 ) -> bool {
-    assert!(one_ub > one_lb);
-    assert!(two_ub > two_lb);
+    assert!(one_ub >= one_lb);
+    assert!(two_ub >= two_lb);
 
     let fail = (one_ub < two_lb) || (two_ub < one_lb);
     !fail

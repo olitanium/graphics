@@ -151,12 +151,11 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
 
     pub fn get_triangles<'a>(
         &self,
-        all_triangles: &'a [(Vector<DIMS>, [V; 3])],
+        bounding_box: &'a BoundingBox<V, DIMS, T>,
+        //all_triangles: &'a [(Vector<DIMS>, [V; 3])],
     ) -> &'a [(Vector<DIMS>, [V; 3])]
-    where
-        V: PartialEq,
     {
-        &all_triangles[self.start_index..(self.start_index + self.len)]
+        &bounding_box.triangles[self.start_index..(self.start_index + self.len)]
     }
 }
 
