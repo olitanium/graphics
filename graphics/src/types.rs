@@ -22,7 +22,7 @@ macro_rules! opaque {
             pub type Primitive = $type;
 
             #[allow(dead_code)]
-            pub(crate) fn as_primitive(&self) -> Self::Primitive {
+            pub(crate) const fn as_primitive(&self) -> Self::Primitive {
                 self.0
             }
         }
@@ -43,7 +43,7 @@ macro_rules! nz_opaque {
         pub struct $name(NonZero<$type>);
 
         impl $name {
-            pub(crate) fn new(value: Self::Primitive) -> Self {
+            pub(crate) const fn new(value: Self::Primitive) -> Self {
                 $name(NonZero::new(value).unwrap())
             }
         }
@@ -58,7 +58,7 @@ macro_rules! nz_opaque {
             #[expect(dead_code)]
             pub(crate) type Primitive = $type;
 
-            pub(crate) fn as_primitive(&self) -> Self::Primitive {
+            pub(crate) const  fn as_primitive(&self) -> Self::Primitive {
                 self.0.get()
             }
         }
@@ -72,6 +72,10 @@ nz_opaque!(TexDim: GLsizei, Clone, Copy);
 impl TexDim {
     pub const fn from_non_zero(value: NonZeroUsize) -> Self {
         Self(NonZero::new(value.get() as _).unwrap())
+    }
+
+    pub const fn aspect_ratio(x: Self, y: Self) -> f32 {
+        x.as_primitive() as f32 / y.as_primitive() as f32
     }
 }
 opaque!(TexId: GLuint);

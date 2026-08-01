@@ -2328,10 +2328,18 @@ dependencies = [
 ]
 
 [[package]]
-name = "triangle-intersection"
+name = "triangle_intersection"
 version = "0.1.0"
 dependencies = [
  "linear_algebra",
+]
+
+[[package]]
+name = "triangle_test"
+version = "0.1.0"
+dependencies = [
+ "engine",
+ "triangle_intersection",
 ]
 
 [[package]]

@@ -46,7 +46,7 @@ impl<'a, const N: usize, X: AttachmentWithoutExtra<Tex = FlatTexture>> Framebuff
         let input = self
             .texture
             .get_textures_raw()
-            .into_iter()
+            .iter()
             .map(|tex|
                 // SAFETY: this `tex` is only borrowed here, is never passed to another function and the reference expires at the end of the function
                 unsafe {
@@ -60,7 +60,7 @@ impl<'a, const N: usize, X: AttachmentWithoutExtra<Tex = FlatTexture>> Framebuff
 
         self.vertex_array
             .draw(active_shader, active_framebuffer)
-            .map_err(|err| DrawError::VertexArrayDraw(err))?;
+            .map_err(DrawError::VertexArrayDraw)?;
 
         Ok(())
     }

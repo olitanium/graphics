@@ -45,7 +45,7 @@ impl SkyBox {
     ) -> Result<(), DrawError<'a>> {
         active_shader
             .cull_face(CullFace::DoNotCull)
-            .map_err(|err| DrawError::FaceCulling(err))?;
+            .map_err(DrawError::FaceCulling)?;
         active_shader.register_texture(iter::once((
             "skybox".to_string(),
             &self.texture as &dyn Texture,
@@ -53,7 +53,7 @@ impl SkyBox {
 
         self.model
             .draw(active_shader, active_framebuffer)
-            .map_err(|err| DrawError::VertexArrayDraw(err))?;
+            .map_err(DrawError::VertexArrayDraw)?;
 
         Ok(())
     }

@@ -161,6 +161,9 @@ GenericOutput generic_light(GenericLight light) {
 }
 
 vec4 attenuation(vec3 factors, float light_dist) {
+    if (factors == vec3(0.0) || light_dist == 0.0) {
+        return vec4(0.0);
+    }
     float x =  1.0 / (
         factors.x
         + (factors.y * light_dist)
@@ -185,7 +188,6 @@ vec4 PointLight_illuminate(PointLight light, PointLightVarying light_vary) {
     
     // Attenuation
     float light_dist = length(frag_to_light);
-//    vec4 light_attenuation = attenuation(light.attenuation[index], light_dist);
     vec4 light_attenuation = attenuation(light.attenuation, light_dist);
 
     // Return

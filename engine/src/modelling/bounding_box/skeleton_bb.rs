@@ -127,9 +127,9 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
 
             let pose = calculated_animation
                 .get(bone, skeleton)
-                .map_err(|err| DrawError::GetAnimation(err))?;
+                .map_err(DrawError::GetAnimation)?;
             bbox.draw(level, pose, active_shader, active_framebuffer, &mut colour)
-                .map_err(|err| DrawError::DrawRecursive(err))?
+                .map_err(DrawError::DrawRecursive)?
         }
 
         Ok(())

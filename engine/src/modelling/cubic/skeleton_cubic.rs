@@ -131,10 +131,10 @@ impl SkeletonCubic {
                         .get(bone, &self.skeleton)
                         .map_or_else(|_| Matrix::identity(), Pose::as_transformation_matrix),
                 )
-                .map_err(|err| DrawError::SetUniform(err))?;
+                .map_err(DrawError::SetUniform)?;
 
             mesh.draw(active_shader, active_framebuffer)
-                .map_err(|err| DrawError::Mesh(err))?;
+                .map_err(DrawError::Mesh)?;
         }
 
         Ok(())

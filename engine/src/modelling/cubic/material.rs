@@ -70,7 +70,7 @@ impl Material {
     {
         shader
             .set_uniform(format!("{name}.shininess"), &self.shininess)
-            .map_err(|err| RegisterToError::SetUniformError(err))?;
+            .map_err(RegisterToError::SetUniformError)?;
         shader.register_texture(vec![
             (format!("{name}.diffuse"), &self.diffuse as &dyn Texture),
             (format!("{name}.specular_map"), &self.specular_map),

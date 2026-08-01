@@ -54,7 +54,7 @@ fn make_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
         }))
     })?;
 
-    assert!(core::iter::zip(upper_bound, lower_bound).all(|(x, y)| x > y));
+    assert!(core::iter::zip(upper_bound, lower_bound).all(|(x, y)| x >= y));
 
     Some((lower_bound, upper_bound))
 }
@@ -90,8 +90,8 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
                 let mut new_partition: [_; CHILDRENPLUS1] = array::from_fn(|index| {
                     let partition_mult = (index) as f32 / CHILDREN as f32;
                     let partition_value = partition_mult * upper_bounds[max_index] + (1.0 - partition_mult) * lower_bounds[max_index];
-                    let partition_points = triangles.partition_point(|(centre, _)| centre[max_index] <= partition_value);
-                    partition_points
+                    
+                    triangles.partition_point(|(centre, _)| centre[max_index] <= partition_value)
                 });
 
                 //ensure that no floating point errors happened above
@@ -229,14 +229,14 @@ where
 
             active_shader
                 .set_uniform("colour", &chosen_colour)
-                .map_err(|err| DrawRecursiveError::SetUniform(err))?;
+                .map_err(DrawRecursiveError::SetUniform)?;
             active_shader
                 .set_uniform("model", &Matrix::<4, 4>::identity())
-                .map_err(|err| DrawRecursiveError::SetUniform(err))?;
+                .map_err(DrawRecursiveError::SetUniform)?;
 
             vertex_array
                 .draw(active_shader, active_framebuffer)
-                .map_err(|err| DrawRecursiveError::VertexArrayDraw(err))?;
+                .map_err(DrawRecursiveError::VertexArrayDraw)?;
 
             Ok(())
         }

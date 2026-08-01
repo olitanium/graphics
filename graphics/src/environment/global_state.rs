@@ -3,7 +3,7 @@ use crate::environment::draw::PollResult;
 use crate::types::TexDim;
 
 pub trait ApiState: Sized {
-    type Error: core::error::Error;
+    type Error;
     fn poll<'a>(
         &'a mut self,
         events: Vec<Event<'a>>,

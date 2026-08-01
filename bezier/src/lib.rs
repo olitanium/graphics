@@ -67,6 +67,12 @@ impl<const DIMS: usize, const N: usize> BezierSegment<DIMS, N> {
     }
 }
 
+impl<const DIMS: usize, const N: usize> Default for BezierCurve<DIMS, N> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<const DIMS: usize, const N: usize> BezierCurve<DIMS, N> {
     pub fn new() -> Self {
         Self { segments: vec![] }

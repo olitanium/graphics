@@ -87,7 +87,7 @@ impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
         &self,
         name: String,
     ) -> Result<UniformLocation, GetUniformLocationError<'_>> {
-        let c_name = CString::new(name).map_err(|err| GetUniformLocationError::NameNul(err))?;
+        let c_name = CString::new(name).map_err(GetUniformLocationError::NameNul)?;
 
         let out = *self
             .uniform_locations
@@ -97,9 +97,14 @@ impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
                 let mut location =
                     gl_call! { gl::GetUniformLocation(self.id.as_primitive(), c_name.as_ptr()) };
                 if location == -1 {
-                    let is_it_in_the_source = self
-                        .concat_all_text
-                        .contains(c_name.to_string_lossy().as_ref());
+                    let is_it_in_the_source = self.concat_all_text.contains(&{
+                        let name = c_name.to_string_lossy();
+                        let opt_name_before_list_index = name.split('[').next();
+
+                        opt_name_before_list_index
+                            .unwrap_or(name.as_ref())
+                            .to_owned()
+                    });
                     location = if is_it_in_the_source { -2 } else { -1 };
                 }
                 location

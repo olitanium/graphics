@@ -58,7 +58,7 @@ where
 
         self.vertex_array
             .draw(active_shader, active_framebuffer)
-            .map_err(|err| DrawError::VertexArrayDraw(err))?;
+            .map_err(DrawError::VertexArrayDraw)?;
 
         Ok(())
     }

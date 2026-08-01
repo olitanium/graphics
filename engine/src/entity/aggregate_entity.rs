@@ -80,7 +80,7 @@ pub struct AggregateModelIndex(pub(crate) usize);
 impl AggregateModelIndex {
     pub const ROOT_MODEL_INDEX: Self = Self(0);
 
-    pub(crate) fn inner_clone(&self) -> Self {
+    pub(crate) const fn inner_clone(&self) -> Self {
         Self(self.0)
     }
 }
@@ -323,7 +323,7 @@ where
 
         let anim = if let Some((unit_index, bone_index, pose)) = fix_anim {
             let unit_index = *parent_locations
-                .get(&unit_index)
+                .get(unit_index)
                 .ok_or(CalculateAnimationError::FixAnimationUnitDoesNotExist)?;
             anim_builder
                 .build_fixing_bone(unit_index, bone_index, pose)

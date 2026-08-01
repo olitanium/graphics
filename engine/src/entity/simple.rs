@@ -44,7 +44,7 @@ impl<T> SimpleEntity<T> {
         }
     }
 
-    pub fn temp_as_simplecubic_and_anim(&self) -> (&SimpleCubic, Pose) {
+    pub const fn temp_as_simplecubic_and_anim(&self) -> (&SimpleCubic, Pose) {
         (&self.model, self.pose)
     }
 }

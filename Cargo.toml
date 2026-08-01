@@ -13,8 +13,7 @@ members = [
     "infinite_window",
     "localrc",
     "fixed_point", "bezier"
-, "handle_vec", "triangle-intersection"]
-
+, "handle_vec", "triangle_intersection", "triangle_test"]
 
 [workspace.lints.clippy]
 indexing_slicing = "deny"

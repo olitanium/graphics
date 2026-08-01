@@ -32,7 +32,7 @@ impl<'a> Builder<'a> {
     pub(crate) fn build(self, skeleton: &SkeletonBuilder) -> Option<Bone> {
         let inverse_bind_pose = match (
             self.inverse_bind_pose_relative_to_parent,
-            skeleton.get(&self.parent),
+            skeleton.get(self.parent),
         ) {
             (None, GetBone::Bone { bone: parent, .. }) => parent.inverse_bind_pose(),
             (None, GetBone::RootBone) => Pose::default(),

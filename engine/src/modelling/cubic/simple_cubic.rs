@@ -65,7 +65,7 @@ impl SimpleCubic {
         let import_output = import::import(path, post_process, load_tangent_space)?;
 
         let mut out = Self::builder();
-        out.extend_meshes(import_output.meshes.into_iter());
+        out.extend_meshes(import_output.meshes);
 
         Ok(out)
     }
@@ -90,11 +90,11 @@ impl SimpleCubic {
         _ = active_shader.cull_face(self.cull_face);
         active_shader
             .set_uniform("model", &pose.as_transformation_matrix())
-            .map_err(|err| DrawError::SetUniform(err))?;
+            .map_err(DrawError::SetUniform)?;
 
         for mesh in self.meshes.iter() {
             mesh.draw(active_shader, active_framebuffer)
-                .map_err(|err| DrawError::Mesh(err))?;
+                .map_err(DrawError::Mesh)?;
         }
 
         Ok(())

@@ -1,12 +1,14 @@
-use array_vec::ArrayVec;
+use array_vec::{ArrayVec, arrvec};
 use graphics::Model;
+use graphics::colour::ColourRGB;
+use graphics::linear_algebra::Vector;
 use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::Texture;
 
 use super::super::traits::ListLightCompatible;
 use super::{FarLight, PointLight, SpotLight};
 use crate::modelling::CubicVertex;
-use crate::modelling::cubic::lighting::simple::SimpleBindError;
+use crate::modelling::cubic::lighting::simple::{SimpleBindError, point_light};
 
 #[derive(Clone, Debug, Default)]
 pub struct ListLights<'a, const MAX: usize> {
@@ -39,5 +41,22 @@ impl<'b, const MAX: usize> ListLights<'b, MAX> {
         }
 
         Ok(())
+    }
+}
+
+impl<const MAX: usize> ListLights<'static, MAX> {
+    pub fn new_ambient() -> Self {
+        static LIGHT: PointLight = PointLight {
+            position: Vector::Z,
+            ambient: ColourRGB::WHITE,
+            attenuation: [0.0; 3],
+            diffuse: ColourRGB::BLACK,
+            specular: ColourRGB::BLACK,
+        };
+
+        Self {
+            point: arrvec![&LIGHT],
+            ..Default::default()
+        }
     }
 }

@@ -46,7 +46,7 @@ pub use bounding_box::{
 };
 
 mod advanced_vertex;
-pub use advanced_vertex::{CubicVertex, ExtendedVertex, VertexHasTangent};
+pub use advanced_vertex::{CubicVertex, ExtendedVertex, IncompleteVertex, VertexHasTangent};
 
 mod volumes;
 pub use volumes::Volume;

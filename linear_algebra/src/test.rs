@@ -2,7 +2,6 @@ use super::*;
 
 #[test]
 fn invoke_and_print() {
-    use super::matrix::Matrix;
     let _x = Matrix::from_row_major([
         [1.0, 1.0, 1.0, 2.0],
         [1.0, 1.0, 1.0, 2.0],
@@ -22,7 +21,6 @@ fn invoke_and_print() {
 
 #[test]
 fn reflect() {
-    use crate::Vector;
     let vector = Vector::new([1.0, 1.0, -0.5]);
     let normal = Vector::new([0.0, 0.0, 1.0]).normalize();
 
@@ -33,7 +31,6 @@ fn reflect() {
 
 #[test]
 fn flip() {
-    use crate::Vector;
     assert_eq!(
         Vector::new([1.0, 1.0, 1.0]),
         Vector::new([-1.0, -1.0, -1.0]).flip()
@@ -50,7 +47,6 @@ fn scale() {
 
 #[test]
 fn eq() {
-    use crate::Vector;
     assert_eq!(Vector::new([1.0]), Vector::new([1.0]));
 
     assert_ne!(Vector::new([1.0]), Vector::new([0.0]));
@@ -58,8 +54,6 @@ fn eq() {
 
 #[test]
 fn truncate() {
-    use crate::Vector;
-
     let vec1 = Vector::new([1.0, 2.0, 3.0]);
 
     let vec2: Vector<4, f32> = vec1.truncate();
@@ -67,4 +61,13 @@ fn truncate() {
 
     assert_eq!(vec2, Vector::new([1.0, 2.0, 3.0, 0.0]));
     assert_eq!(vec3, Vector::new([1.0, 2.0]));
+}
+
+#[test]
+fn as_ref_test() {
+    let x = [1.0, 2.0, 3.0_f32];
+
+    let vector_x = Vector::new(x);
+
+    assert_eq!(AsRef::<Vector<_>>::as_ref(&x), &vector_x)
 }

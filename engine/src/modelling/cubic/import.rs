@@ -169,10 +169,10 @@ fn process_node(
                 .flat_map(|face| face.0.iter().copied().map(Into::into))
                 .collect();
 
-            fn is_no_vec_or_element_exists<'a, T>(
-                opt_value: &'a Option<Vec<T>>,
+            fn is_no_vec_or_element_exists<T>(
+                opt_value: &Option<Vec<T>>,
                 index: usize,
-            ) -> Result<Option<&'a T>, usize> {
+            ) -> Result<Option<&T>, usize> {
                 match opt_value {
                     None => Ok(None),
                     Some(vector) => match vector.get(index) {
@@ -191,14 +191,14 @@ fn process_node(
                         let index = index.as_usize();
                         let triangle_position = *positions
                             .get(index)
-                            .ok_or_else(|| positions.len())
+                            .ok_or(positions.len())
                             .map_err(|actual_len| ImportError::ElementArrayOverflow {
                                 which: "position",
                                 index_asked: index,
                                 actual_len,
                             })?;
                         let triangle_texture =
-                            *textures.get(index).ok_or_else(|| textures.len()).map_err(
+                            *textures.get(index).ok_or(textures.len()).map_err(
                                 |actual_len| ImportError::ElementArrayOverflow {
                                     which: "texture",
                                     index_asked: index,

@@ -73,13 +73,7 @@ impl Builder {
         let meshes = self
             .mesh_builders
             .into_iter()
-            .map(move |builder| {
-                builder
-                    .transforms(Rc::clone(&transforms))
-                    //.opt_transform(self.transform)
-                    //.scale(self.scale)
-                    .build()
-            })
+            .map(move |builder| builder.transforms(Rc::clone(&transforms)).build())
             .collect::<Vec<_>>();
 
         SimpleCubic {

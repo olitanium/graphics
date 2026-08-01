@@ -9,6 +9,7 @@
 == Can Do Now
 - Model auto-generated normals smooth option
 - Renderbuffer Objects (like textures for Framebuffer attachments. Might cause issues for shadows because they are unreadable)
+- Multisample FBs
 - Light uniform location cacheing without strings
 - BoneAnimation don't store poses, store ScLERPS
 - Camera ManualPose use Pose

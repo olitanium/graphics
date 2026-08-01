@@ -5,6 +5,9 @@ pub use ref_or_owned::RefOwned;
 mod zip_with;
 pub use zip_with::ArrayZipWith;
 
+#[allow(unused)]
+mod testbed;
+
 #[macro_export]
 macro_rules! getter {
     ($value:ident : $type:ty) => {
@@ -138,10 +141,10 @@ impl<T> GetAtOrExtend for Vec<T> {
 }
 
 mod test1 {
-    use super::*;
 
     #[test]
     fn get_at_index() {
+        use crate::get_at_index_or_extend_with;
         let mut test = vec![0, 1, 2, 3, 4, 5];
         let ref_five = get_at_index_or_extend_with(&mut test, 5, || 0);
         assert_eq!(ref_five, &5);

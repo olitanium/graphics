@@ -34,11 +34,11 @@ fn new_from_file<P: AsRef<Path>>(
         path: &Path,
     ) -> Result<((TexDim, TexDim), Vec<ColourRGBA>), NewImageError> {
         let image = image::ImageReader::open(path)
-            .map_err(|err| NewImageError::Io(err))?
+            .map_err(NewImageError::Io)?
             .with_guessed_format()
-            .map_err(|err| NewImageError::Io(err))?
+            .map_err(NewImageError::Io)?
             .decode()
-            .map_err(|err| NewImageError::Parse(err))?
+            .map_err(NewImageError::Parse)?
             .flipv() // All OpenGL texture images are flipped (maybe)
             .into_rgba32f();
 

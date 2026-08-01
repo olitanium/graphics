@@ -1,0 +1,12 @@
+[package]
+name = "template_app"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+linear_algebra = {path = "../linear_algebra"}
+triangle_intersection = {path = "../triangle_intersection"}
+engine = {path = "../engine"}
+
+[lints]
+workspace = true

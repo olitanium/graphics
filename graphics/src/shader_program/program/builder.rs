@@ -162,8 +162,7 @@ impl<M: Model, O, T: Texture, const OUT: usize>
             Err(LinkError {
                 info_log,
                 total_string,
-            }
-            .into())
+            })
         } else {
             Ok(ShaderProgram {
                 id: program_id,

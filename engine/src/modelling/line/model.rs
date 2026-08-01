@@ -45,7 +45,7 @@ impl<U: Uniform> Line<U> {
     ) -> Result<(), DrawError<'b>> {
         active_shader
             .set_uniform("vertex".to_string(), self.vertices.as_slice())
-            .map_err(|err| DrawError::SetUniform(err))?;
+            .map_err(DrawError::SetUniform)?;
 
         let len = if self.vertices.len() <= LINE_SHADER_MAX_VERTICES {
             ElementArrayLen::new(self.vertices.len() as _)
@@ -57,7 +57,7 @@ impl<U: Uniform> Line<U> {
 
         vertex_array::dummy_vertex_array()
             .draw_len(active_shader, active_framebuffer, len)
-            .map_err(|err| DrawError::VertexArrayDraw(err))?;
+            .map_err(DrawError::VertexArrayDraw)?;
 
         Ok(())
     }

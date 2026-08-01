@@ -23,10 +23,9 @@ impl<T: Iterator, const N: usize> MultiZip<T, N> {
 }
 
 mod test {
-    
-
     #[test]
     fn diff_len() {
+        use crate::MultiZip;
         let x = vec![1, 2, 3, 4];
         let y = vec![2, 3, 4_usize];
 

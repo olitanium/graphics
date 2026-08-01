@@ -169,10 +169,9 @@ impl Default for DefaultFramebuffer {
 }
 
 impl<const N: usize, X: AttachmentWithoutExtra> Framebuffer<N, X> {
-    /// Access one of the Framebuffer draw locations,
-    ///
-    /// # Errors
-    /// Returns Error if `index` >= `N` i.e. out of bounds
+    // /// Access one of the Framebuffer draw locations,
+    // /// # Errors
+    // /// Returns Error if `index` >= `N` i.e. out of bounds*/
     // pub fn get_colour(&self, index: usize) -> Option<Rc<X::Tex>> {
     // self.textures.get(index).cloned()
     // }

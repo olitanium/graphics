@@ -24,10 +24,10 @@ impl Shader {
     pub fn new<P: AsRef<Path>>(shader_type: GLenum, source: P) -> Result<Self, NewShaderError> {
         let source = source.as_ref();
 
-        let shader_source = fs::read_to_string(source).map_err(|err| NewShaderError::Io(err))?;
+        let shader_source = fs::read_to_string(source).map_err(NewShaderError::Io)?;
 
         Self::new_from_slice(shader_type, shader_source.as_bytes())
-            .map_err(|err| NewShaderError::NewFromSlice(err))
+            .map_err(NewShaderError::NewFromSlice)
     }
 }
 

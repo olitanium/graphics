@@ -4,6 +4,7 @@ use core::array;
 use core::ops::{Index, IndexMut};
 use std::iter::Sum;
 use std::marker::Destruct;
+use std::mem;
 use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use std::slice::SliceIndex;
 
@@ -499,5 +500,12 @@ where
 {
     fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
         Option::<Vector<N, T>>::sum(iter).unwrap_or_default()
+    }
+}
+
+impl<const N: usize, T> AsRef<Vector<N, T>> for [T; N] {
+    fn as_ref(&self) -> &Vector<N, T> {
+        // transmute reference
+        unsafe { mem::transmute(self) }
     }
 }

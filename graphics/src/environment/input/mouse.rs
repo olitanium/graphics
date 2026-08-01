@@ -59,13 +59,17 @@ impl Mouse {
                 MouseState::Moved {
                     current_location,
                     delta,
-                } => MouseState::Moved {
-                    current_location: Vector::new([x, y]),
-                    delta: Vector::new([
-                        x - current_location[0] + delta[0],
-                        y - current_location[1] + delta[1],
-                    ]),
-                },
+                } => {
+                    let [deltax, deltay] = delta.into_inner();
+                    let [current_locationx, current_locationy] = current_location.into_inner();
+                    MouseState::Moved {
+                        current_location: Vector::new([x, y]),
+                        delta: Vector::new([
+                            x - current_locationx + deltax,
+                            y - current_locationy + deltay,
+                        ]),
+                    }
+                }
             };
 
             state_ptr.state.set(new);
@@ -93,7 +97,7 @@ impl Mouse {
     pub(crate) fn get_delta(&self) -> Vector<2> {
         let out = match self.0.state.get() {
             MouseState::Moved { delta, .. } => delta,
-            _ => Vector::new([0.0, 0.0]),
+            MouseState::FirstMouse | MouseState::Stationary { .. } => Vector::new([0.0, 0.0]),
         };
 
         if let MouseState::Moved {

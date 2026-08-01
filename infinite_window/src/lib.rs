@@ -1,5 +1,4 @@
 use std::array;
-use std::ops::Rem;
 
 /// returns an array of references (or ref mut)
 #[derive(Debug)]

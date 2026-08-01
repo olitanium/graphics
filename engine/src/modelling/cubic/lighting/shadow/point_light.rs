@@ -175,7 +175,7 @@ pub struct PointLightIlluminatesGroup<'a> {
 }
 
 impl<'a> PointLightIlluminatesGroup<'a> {
-    pub fn new(
+    pub const fn new(
         light: &'a ShadowPointLight,
         opaque: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
     ) -> Self {

@@ -8,8 +8,18 @@ use multi_zip::MultiZip;
 use crate::vector::Vector;
 
 #[repr(transparent)]
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy)]
 pub struct Matrix<const R: usize, const C: usize>([[f32; R]; C]); // Col-Major!!!!!
+
+impl<const R: usize, const C: usize> PartialEq for Matrix<R, C> {
+    fn eq(&self, other: &Self) -> bool {
+        iter::zip(self.0, other.0).all(|(arr1, arr2)| {
+            let ref_vec: &Vector<R> = arr1.as_ref();
+            let ref_vec2: &Vector<R> = arr2.as_ref();
+            ref_vec == ref_vec2
+        })
+    }
+}
 
 impl<const R: usize, const C: usize> Default for Matrix<R, C> {
     #[inline]

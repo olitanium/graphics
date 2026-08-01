@@ -67,7 +67,7 @@ impl SkinningCubic {
 
         let poses = calculated_animation
             .poses(&self.skeleton)
-            .map_err(|err| DrawError::SignaturesDoNotMatch(err))?;
+            .map_err(DrawError::SignaturesDoNotMatch)?;
 
         let matrices: Vec<_> = poses
             .iter()
@@ -83,7 +83,7 @@ impl SkinningCubic {
 
         for mesh in &self.meshes {
             mesh.draw(active_shader, active_framebuffer)
-                .map_err(|err| DrawError::Mesh(err))?;
+                .map_err(DrawError::Mesh)?;
         }
 
         Ok(())

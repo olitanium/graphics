@@ -132,7 +132,7 @@ pub struct SkeletonBoneIndex(pub(crate) usize);
 impl SkeletonBoneIndex {
     pub const SKELETON_ROOT_BONE: Self = Self(0);
 
-    pub(crate) fn clone_inner(&self) -> Self {
+    pub(crate) const fn clone_inner(&self) -> Self {
         Self(self.0)
     }
 }

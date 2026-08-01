@@ -56,7 +56,7 @@ pub fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [SkeletalVertex; 3])]) -> T>(
     let per_mesh = partition(
         &cubic.triangles(),
         |tri| {
-            tri.into_iter().flat_map(|vertex| {
+            tri.iter().flat_map(|vertex| {
                 iter::zip(vertex.bone_indices, vertex.bone_weights)
                     .filter_map(|(index, weight)| (weight != 0.0).then_some(index as usize))
             })

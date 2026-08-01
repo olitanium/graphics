@@ -31,6 +31,7 @@ pub struct HeapHandle<'a, T> {
 }
 
 impl<'a, T> Heap<'a, T> {
+    #[allow(clippy::new_ret_no_self)]
     pub fn new<F: for<'b> FnOnce(Heap<'b, T>)>(func: F) {
         let value = Self::default();
         func(value)
@@ -63,12 +64,10 @@ impl<'a, T> Heap<'a, T> {
             .get(index)
             .expect("handle exists, so heap holds item");
 
-        let data = self
+        (self
             .data
             .get(actual_index)
-            .expect("actual_index is in data_index, so this area must exist");
-
-        data
+            .expect("actual_index is in data_index, so this area must exist")) as _
     }
 
     // TODO: check lifetimes
@@ -79,12 +78,10 @@ impl<'a, T> Heap<'a, T> {
             .get(index)
             .expect("handle exists, so heap holds item");
 
-        let data = self
+        (self
             .data
             .get_mut(actual_index)
-            .expect("actual_index is in data_index, so this area must exist");
-
-        data
+            .expect("actual_index is in data_index, so this area must exist")) as _
     }
 
     pub fn pop(&mut self, handle: HeapHandle<'a, T>) -> T {

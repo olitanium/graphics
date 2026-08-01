@@ -85,7 +85,7 @@ impl<'a> AggregateCalcAnimBuilder<'a> {
                     bone_attachment_point: attachment_point.clone_inner(),
                 });
                 let unit = AnimationUnit::new(parent, local_transform, skeleton, animation)
-                    .map_err(|error| PushAnimationError::SignaturesDoNotMatch(error))?;
+                    .map_err(PushAnimationError::SignaturesDoNotMatch)?;
 
                 self.units.push(unit);
                 Ok(CalcAnimUnitIndex {

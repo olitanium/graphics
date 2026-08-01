@@ -1,0 +1,11 @@
+[package]
+name = "triangle_test"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+triangle_intersection = {path = "../triangle_intersection"}
+engine = {path = "../engine"}
+
+[lints]
+workspace = true

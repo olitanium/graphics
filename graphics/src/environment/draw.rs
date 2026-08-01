@@ -95,7 +95,7 @@ impl DrawOut {
     pub const OK: Self = Self::Draw;
 }
 
-impl<'a, T: Draw + ?Sized + 'a> Draw for [Box<T>] {
+impl<T: Draw + ?Sized> Draw for [Box<T>] {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
@@ -137,7 +137,14 @@ impl<'a> Draw for Vec<Box<dyn Draw + 'a>> {
     }
 }
 
+#[derive(Debug)]
 pub struct DrawNothing;
+
+impl DrawNothing {
+    pub fn new() -> Box<Self> {
+        Box::new(DrawNothing)
+    }
+}
 
 impl Draw for DrawNothing {
     fn draw(self: Box<Self>, _: &mut FramebufferContext, _: &mut ShaderProgramContext) -> DrawOut {

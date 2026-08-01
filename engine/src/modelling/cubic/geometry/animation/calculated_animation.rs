@@ -74,7 +74,7 @@ impl CalculatedAnimation {
         skeleton: &Skeleton,
     ) -> Result<Pose, GetAnimationError> {
         self.poses(skeleton)
-            .map_err(|err| GetAnimationError::SignaturesDoNotMatch(err))?
+            .map_err(GetAnimationError::SignaturesDoNotMatch)?
             .get(index.0)
             .copied()
             .ok_or(GetAnimationError::BoneDoesNotExist)
@@ -103,7 +103,7 @@ pub struct SignaturesDoNotMatchError;
 error_boilerplate!(SignaturesDoNotMatchError);
 
 impl<'a> AnimationUnit<'a> {
-    pub(crate) fn new(
+    pub(crate) const fn new(
         parent: Option<Parent>,
         root_pose: Pose,
         root_skeleton: &'a Skeleton,
@@ -123,7 +123,9 @@ impl<'a> AnimationUnit<'a> {
     }
 
     pub(crate) fn calculate_animation(self, root: Pose) -> (Vec<PoseAndInverseBindPose>, u64) {
-        let poses = if let Some((animation, time)) = self.animation {
+        
+
+        if let Some((animation, time)) = self.animation {
             let mut poses = vec![PoseAndInverseBindPose {
                 pose: root,
                 inverse_bind_pose: Pose::IDENTITY,
@@ -161,9 +163,7 @@ impl<'a> AnimationUnit<'a> {
                 ],
                 self.skeleton.signature(),
             )
-        };
-
-        poses
+        }
     }
 }
 

@@ -65,9 +65,9 @@ error_boilerplate!(LoadImageError);
 
 fn load_image<P: AsRef<Path>>(path: P) -> Result<DynamicImage, LoadImageError> {
     let image = image::ImageReader::open(&path)
-        .map_err(|err| LoadImageError::Io(err))?
+        .map_err(LoadImageError::Io)?
         .decode()
-        .map_err(|err| LoadImageError::Parse(err))?;
+        .map_err(LoadImageError::Parse)?;
 
     Ok(image)
 }
