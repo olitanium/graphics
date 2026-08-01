@@ -120,130 +120,130 @@ fn process_node(
     let node_transform = assimp_matrix_to_pose(node.transformation);
     let accum_transform = node_transform.transform(&accum_transform);
 
-    let mut curr_meshes = node
-        .meshes
-        .iter()
-        .map(|mesh_id| {
-            let mesh = &scene.meshes[*mesh_id as usize];
+    let mut curr_meshes =
+        node.meshes
+            .iter()
+            .map(|mesh_id| {
+                let mesh = &scene.meshes[*mesh_id as usize];
 
-            let positions: Vec<Vector<3>> = mesh
-                .vertices
-                .iter()
-                .map(|vec3d| Vector::new([vec3d.x, vec3d.y, vec3d.z]))
-                .collect();
-
-            let textures: Vec<Vector<2>> = mesh
-                .texture_coords
-                .first()
-                .ok_or(ImportError::ShouldNotOccur)?
-                .as_ref()
-                .ok_or_else(|| ImportError::NoTexCoords { dir: dir.into() })?
-                .iter()
-                .map(|vec3d| Vector::new([vec3d.x, vec3d.y]))
-                .collect();
-
-            let (opt_normal, opt_tangent) = if load_tangent_space {
-                let normals: Vec<Option<UnitVector<3>>> = mesh
-                    .normals
+                let positions: Vec<Vector<3>> = mesh
+                    .vertices
                     .iter()
-                    .map(|vec3d| Vector::new([vec3d.x, vec3d.y, vec3d.z]).try_normalize())
+                    .map(|vec3d| Vector::new([vec3d.x, vec3d.y, vec3d.z]))
                     .collect();
 
-                let opt_normal = (!normals.is_empty()).then_some(normals);
-
-                let tangent: Vec<Option<UnitVector<3>>> = mesh
-                    .tangents
+                let textures: Vec<Vector<2>> = mesh
+                    .texture_coords
+                    .first()
+                    .ok_or(ImportError::ShouldNotOccur)?
+                    .as_ref()
+                    .ok_or_else(|| ImportError::NoTexCoords { dir: dir.into() })?
                     .iter()
-                    .map(|vec3d| Vector::new([vec3d.x, vec3d.y, vec3d.z]).try_normalize())
+                    .map(|vec3d| Vector::new([vec3d.x, vec3d.y]))
                     .collect();
 
-                let opt_tangent = (!tangent.is_empty()).then_some(tangent);
+                let (opt_normal, opt_tangent) = if load_tangent_space {
+                    let normals: Vec<Option<UnitVector<3>>> = mesh
+                        .normals
+                        .iter()
+                        .map(|vec3d| Vector::new([vec3d.x, vec3d.y, vec3d.z]).try_normalize())
+                        .collect();
 
-                (opt_normal, opt_tangent)
-            } else {
-                (None, None)
-            };
-            let element_buffer: Vec<ElementArrayElem> = mesh
-                .faces
-                .iter()
-                .flat_map(|face| face.0.iter().copied().map(Into::into))
-                .collect();
+                    let opt_normal = (!normals.is_empty()).then_some(normals);
 
-            fn is_no_vec_or_element_exists<T>(
-                opt_value: &Option<Vec<T>>,
-                index: usize,
-            ) -> Result<Option<&T>, usize> {
-                match opt_value {
-                    None => Ok(None),
-                    Some(vector) => match vector.get(index) {
-                        Some(value) => Ok(Some(value)),
-                        None => Err(vector.len()),
-                    },
+                    let tangent: Vec<Option<UnitVector<3>>> = mesh
+                        .tangents
+                        .iter()
+                        .map(|vec3d| Vector::new([vec3d.x, vec3d.y, vec3d.z]).try_normalize())
+                        .collect();
+
+                    let opt_tangent = (!tangent.is_empty()).then_some(tangent);
+
+                    (opt_normal, opt_tangent)
+                } else {
+                    (None, None)
+                };
+                let element_buffer: Vec<ElementArrayElem> = mesh
+                    .faces
+                    .iter()
+                    .flat_map(|face| face.0.iter().copied().map(Into::into))
+                    .collect();
+
+                fn is_no_vec_or_element_exists<T>(
+                    opt_value: &Option<Vec<T>>,
+                    index: usize,
+                ) -> Result<Option<&T>, usize> {
+                    match opt_value {
+                        None => Ok(None),
+                        Some(vector) => match vector.get(index) {
+                            Some(value) => Ok(Some(value)),
+                            None => Err(vector.len()),
+                        },
+                    }
                 }
-            }
 
-            let mesh_buffer = element_buffer
-                .as_chunks()
-                .0
-                .iter()
-                .map(|triangle| {
-                    triangle.try_map(|index| {
-                        let index = index.as_usize();
-                        let triangle_position = *positions
-                            .get(index)
-                            .ok_or(positions.len())
-                            .map_err(|actual_len| ImportError::ElementArrayOverflow {
-                                which: "position",
-                                index_asked: index,
-                                actual_len,
-                            })?;
-                        let triangle_texture =
-                            *textures.get(index).ok_or(textures.len()).map_err(
-                                |actual_len| ImportError::ElementArrayOverflow {
+                let mesh_buffer = element_buffer
+                    .as_chunks()
+                    .0
+                    .iter()
+                    .map(|triangle| {
+                        triangle.try_map(|index| {
+                            let index = index.as_usize();
+                            let triangle_position = *positions
+                                .get(index)
+                                .ok_or(positions.len())
+                                .map_err(|actual_len| ImportError::ElementArrayOverflow {
+                                    which: "position",
+                                    index_asked: index,
+                                    actual_len,
+                                })?;
+                            let triangle_texture = *textures
+                                .get(index)
+                                .ok_or(textures.len())
+                                .map_err(|actual_len| ImportError::ElementArrayOverflow {
                                     which: "texture",
                                     index_asked: index,
                                     actual_len,
-                                },
-                            )?;
-                        let triangle_normal = is_no_vec_or_element_exists(&opt_normal, index)
-                            .map_err(|actual_len| ImportError::ElementArrayOverflow {
-                                which: "normal",
-                                index_asked: index,
-                                actual_len,
-                            })?
-                            .copied()
-                            .flatten();
-                        let triangle_tangent = is_no_vec_or_element_exists(&opt_tangent, index)
-                            .map_err(|actual_len| ImportError::ElementArrayOverflow {
-                                which: "tangent",
-                                index_asked: index,
-                                actual_len,
-                            })?
-                            .copied()
-                            .flatten();
+                                })?;
+                            let triangle_normal = is_no_vec_or_element_exists(&opt_normal, index)
+                                .map_err(|actual_len| ImportError::ElementArrayOverflow {
+                                    which: "normal",
+                                    index_asked: index,
+                                    actual_len,
+                                })?
+                                .copied()
+                                .flatten();
+                            let triangle_tangent = is_no_vec_or_element_exists(&opt_tangent, index)
+                                .map_err(|actual_len| ImportError::ElementArrayOverflow {
+                                    which: "tangent",
+                                    index_asked: index,
+                                    actual_len,
+                                })?
+                                .copied()
+                                .flatten();
 
-                        Ok(IncompleteVertex::new(triangle_position)
-                            .texture(triangle_texture)
-                            .opt_normal(triangle_normal)
-                            .opt_tangent(triangle_tangent)
-                            .transform_by(&accum_transform))
-                    }) //;
-                })
-                .collect::<Result<Vec<_>, ImportError>>();
-            let mesh_buffer = mesh_buffer?;
+                            Ok(IncompleteVertex::new(triangle_position)
+                                .texture(triangle_texture)
+                                .opt_normal(triangle_normal)
+                                .opt_tangent(triangle_tangent)
+                                .transform_by(&accum_transform))
+                        }) //;
+                    })
+                    .collect::<Result<Vec<_>, ImportError>>();
+                let mesh_buffer = mesh_buffer?;
 
-            let mat = current_mat
-                .entry(mesh.material_index)
-                .or_insert_with_key(|key| parse_material(&scene.materials[*key as usize], dir))
-                .clone()
-                .unwrap_or_default();
+                let mat = current_mat
+                    .entry(mesh.material_index)
+                    .or_insert_with_key(|key| parse_material(&scene.materials[*key as usize], dir))
+                    .clone()
+                    .unwrap_or_default();
 
-            let mut builder = MeshBuilder::new().material(mat);
-            builder.extend_triangle(mesh_buffer);
+                let mut builder = MeshBuilder::new().material(mat);
+                builder.extend_triangle(mesh_buffer);
 
-            Ok(builder)
-        })
-        .collect::<Result<Vec<_>, ImportError>>()?;
+                Ok(builder)
+            })
+            .collect::<Result<Vec<_>, ImportError>>()?;
 
     let children = node.children.borrow();
     let child_meshes = children

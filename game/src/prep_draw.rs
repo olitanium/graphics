@@ -1,4 +1,3 @@
-
 use engine::array_vec::arrvec;
 use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::lighting::shadow::{PointLightIlluminatesGroup, ShadowListLights};

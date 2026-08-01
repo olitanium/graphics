@@ -123,8 +123,6 @@ impl<'a> AnimationUnit<'a> {
     }
 
     pub(crate) fn calculate_animation(self, root: Pose) -> (Vec<PoseAndInverseBindPose>, u64) {
-        
-
         if let Some((animation, time)) = self.animation {
             let mut poses = vec![PoseAndInverseBindPose {
                 pose: root,

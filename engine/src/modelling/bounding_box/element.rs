@@ -90,7 +90,7 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
                 let mut new_partition: [_; CHILDRENPLUS1] = array::from_fn(|index| {
                     let partition_mult = (index) as f32 / CHILDREN as f32;
                     let partition_value = partition_mult * upper_bounds[max_index] + (1.0 - partition_mult) * lower_bounds[max_index];
-                    
+
                     triangles.partition_point(|(centre, _)| centre[max_index] <= partition_value)
                 });
 
@@ -152,9 +152,8 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
     pub fn get_triangles<'a>(
         &self,
         bounding_box: &'a BoundingBox<V, DIMS, T>,
-        //all_triangles: &'a [(Vector<DIMS>, [V; 3])],
-    ) -> &'a [(Vector<DIMS>, [V; 3])]
-    {
+        // all_triangles: &'a [(Vector<DIMS>, [V; 3])],
+    ) -> &'a [(Vector<DIMS>, [V; 3])] {
         &bounding_box.triangles[self.start_index..(self.start_index + self.len)]
     }
 }

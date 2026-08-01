@@ -1,11 +1,11 @@
 mod group;
 
+use graphics::ActiveShaderProgram;
 use graphics::framebuffer::traits::{AttachmentWithoutExtra, FramebufferWithoutExtra};
 use graphics::framebuffer::{ActiveFramebuffer, Framebuffer};
 use graphics::shader_program::CullFace;
 use graphics::texture::{FlatTexture, Texture};
 use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
-use graphics::ActiveShaderProgram;
 pub use group::Group as ScreenQuadGroup;
 use utils::error_boilerplate;
 
