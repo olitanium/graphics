@@ -8,18 +8,17 @@ use get_or_extend::GetAtOrExtend as _;
 /// used to `Clone` the value, or transform the type before collection into the
 /// `Vec`.
 #[inline]
-pub fn partition<'a, U, T, I, Fo, F, O>(iter: I, mut part_fn: F, mut manipulate: O) -> Vec<Vec<U>>
+pub fn partition<U, T, I, Fo, F, O>(iter: I, mut part_fn: F, mut manipulate: O) -> Vec<Vec<U>>
 where
-    T: 'a,
-    I: IntoIterator<Item = &'a T>,
+    I: IntoIterator<Item = T>,
     Fo: IntoIterator<Item = usize>,
     F: FnMut(&T) -> Fo,
     O: FnMut(&T) -> U,
 {
     iter.into_iter().fold(Vec::new(), |mut accum, item| {
-        for index in part_fn(item) {
+        for index in part_fn(&item) {
             let at_index = accum.get_at_or_extend(index, Vec::new);
-            at_index.push(manipulate(item));
+            at_index.push(manipulate(&item));
         }
 
         accum

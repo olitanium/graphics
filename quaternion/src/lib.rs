@@ -25,6 +25,7 @@ impl Quaternion {
     pub const IDENTITY: Self = Self::new(1.0, 0.0, 0.0, 0.0);
     pub const ZERO: Self = Self::new(0.0, 0.0, 0.0, 0.0);
 
+    #[must_use]
     pub const fn new(real: f32, i: f32, j: f32, k: f32) -> Self {
         Self {
             real,
@@ -32,6 +33,7 @@ impl Quaternion {
         }
     }
 
+    #[must_use]
     pub const fn from_scalar_vec(scalar: f32, vector: Vector<3>) -> Self {
         Self {
             real: scalar,
@@ -39,6 +41,7 @@ impl Quaternion {
         }
     }
 
+    #[must_use]
     pub const fn is_zero(self) -> bool {
         const EPSILON: f32 = 0.001;
 
@@ -48,18 +51,22 @@ impl Quaternion {
         real_same && vec_same
     }
 
+    #[must_use]
     pub const fn dot(self, other: Self) -> f32 {
         self.real.mul_add(other.real, self.vector.dot(other.vector))
     }
 
-    pub fn vector(self) -> Vector<3> {
+    #[must_use]
+    pub const fn vector(self) -> Vector<3> {
         self.vector
     }
 
-    pub fn scalar(self) -> f32 {
+    #[must_use]
+    pub const fn scalar(self) -> f32 {
         self.real
     }
 
+    #[must_use]
     pub fn axis_angle(angle: f32, axis: UnitVector<3>) -> UnitQuaternion {
         let sin = (angle / 2.0).sin();
         let cos = (angle / 2.0).cos();
@@ -68,15 +75,18 @@ impl Quaternion {
         non_normal.normalize()
     }
 
+    #[must_use]
     pub const fn conjugate(mut self) -> Self {
         self.vector = self.vector.flip();
         self
     }
 
-    pub fn from_vector(vector: Vector<3>) -> Self {
+    #[must_use]
+    pub const fn from_vector(vector: Vector<3>) -> Self {
         Self { real: 0.0, vector }
     }
 
+    #[must_use]
     pub const fn scale(self, scalar: f32) -> Self {
         Self {
             real: self.real * scalar,
@@ -84,18 +94,22 @@ impl Quaternion {
         }
     }
 
+    #[must_use]
     pub fn inverse(self) -> Self {
         self.conjugate().scale(1.0 / self.magnitude_sq())
     }
 
+    #[must_use]
     pub const fn magnitude_sq(self) -> f32 {
         self.real * self.real + self.vector.magnitude_sq()
     }
 
+    #[must_use]
     pub fn magnitude(self) -> f32 {
         self.magnitude_sq().sqrt()
     }
 
+    #[must_use]
     pub fn normalize(self) -> UnitQuaternion {
         UnitQuaternion::normalize_quaternion(self)
     }
@@ -128,7 +142,7 @@ impl ops::Mul for Quaternion {
 
     fn mul(self, rhs: Self) -> Self::Output {
         Self {
-            real: self.real * rhs.real - self.vector.dot(rhs.vector),
+            real: self.real.mul_add(rhs.real, -self.vector.dot(rhs.vector)),
             vector: rhs.vector.scale(self.real)
                 + self.vector.scale(rhs.real)
                 + self.vector.cross(rhs.vector),

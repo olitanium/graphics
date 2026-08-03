@@ -1,6 +1,6 @@
-use std::fmt::Debug;
-use std::iter;
-use std::ops::{self, Index, IndexMut};
+use core::fmt::Debug;
+use core::iter;
+use core::ops::{self, Index, IndexMut};
 
 use array_vec::ArrayVec;
 use multi_zip::MultiZip;
@@ -29,9 +29,9 @@ impl<const R: usize, const C: usize> Default for Matrix<R, C> {
 }
 
 impl<const R: usize, const C: usize> Debug for Matrix<R, C> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         for row in self.row_iter() {
-            writeln!(f, "{row:?}")?
+            writeln!(f, "{row:?}")?;
         }
         Ok(())
     }
@@ -39,11 +39,13 @@ impl<const R: usize, const C: usize> Debug for Matrix<R, C> {
 
 impl<const R: usize, const C: usize> Matrix<R, C> {
     #[inline]
+    #[must_use]
     pub const fn from_col_major(input: [[f32; R]; C]) -> Self {
         Self(input)
     }
 
     #[inline]
+    #[must_use]
     pub fn from_row_major(input: [[f32; C]; R]) -> Self {
         Matrix::from_col_major(input).transpose()
     }
@@ -52,21 +54,25 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     /// Panics if the length of the slice is not as given by the compile-time
     /// constants
     #[inline]
+    #[must_use]
     pub fn new_from_slice(input: &[[f32; R]]) -> Option<Self> {
         Some(Self(input.try_into().ok()?))
     }
 
     #[inline]
+    #[must_use]
     pub const fn zeros() -> Self {
         Self::from_col_major([[0.0; R]; C])
     }
 
     #[inline]
+    #[must_use]
     pub const fn into_inner(self) -> [[f32; R]; C] {
         self.0
     }
 
     #[inline]
+    #[must_use]
     pub const fn inner(&self) -> &[[f32; R]; C] {
         &self.0
     }
@@ -76,6 +82,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
         &mut self.0
     }
 
+    #[must_use]
     pub const fn col_flattened(&self) -> &[f32] {
         self.0.as_flattened()
     }
@@ -114,6 +121,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
         self.0.get_mut(index)
     }
 
+    #[must_use]
     pub const fn get(&self, (row, col): (usize, usize)) -> Option<f32> {
         let vec = self.col(col)?;
         vec.get(row).copied()
@@ -143,6 +151,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     #[inline]
+    #[must_use]
     pub const fn identity() -> Self {
         let mut output = Self::zeros();
 
@@ -157,6 +166,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     #[inline]
+    #[must_use]
     pub fn transpose(self) -> Matrix<C, R> {
         let matrix_as_vec = self.row_iter().collect::<ArrayVec<[f32; C], R>>();
         let array = matrix_as_vec
@@ -166,6 +176,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     #[inline]
+    #[must_use]
     pub fn truncate<const R2: usize, const C2: usize>(self) -> Matrix<R2, C2> {
         let x = self
             .into_inner()
@@ -268,6 +279,7 @@ impl<const R: usize> From<Vector<R, f32>> for Matrix<R, 1> {
 }
 
 impl Matrix<2, 2> {
+    #[must_use]
     pub const fn determinant(&self) -> f32 {
         let [[a, c], [b, d]] = self.0;
 
@@ -276,6 +288,7 @@ impl Matrix<2, 2> {
 }
 
 impl Matrix<3, 3> {
+    #[must_use]
     pub const fn determinant(&self) -> f32 {
         let [[a, d, g], [b, e, h], [c, f, i]] = self.into_inner();
 
@@ -284,6 +297,7 @@ impl Matrix<3, 3> {
 }
 
 impl Matrix<4, 4> {
+    #[must_use]
     pub const fn transform_scale(sx: f32, sy: f32, sz: f32) -> Self {
         // let mut matrix = Self::zeros();
         // matrix[(0, 0)] = sx;
@@ -292,7 +306,7 @@ impl Matrix<4, 4> {
         // matrix[(3, 3)] = 1.0;
         // matrix
 
-        Matrix::from_col_major([
+        Self::from_col_major([
             [sx, 0.0, 0.0, 0.0],
             [0.0, sy, 0.0, 0.0],
             [0.0, 0.0, sz, 0.0],
@@ -300,6 +314,7 @@ impl Matrix<4, 4> {
         ])
     }
 
+    #[must_use]
     pub const fn transform_translate(vec: Vector<3, f32>) -> Self {
         let mut matrix = Self::identity();
         let [_, _, _, [x, y, z, _]] = matrix.inner_mut();
@@ -311,9 +326,10 @@ impl Matrix<4, 4> {
         matrix
     }
 
+    #[must_use]
     pub fn transform_perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Self {
         let tan_fov = (fov * 0.5).tan();
-        Matrix::from_col_major([
+        Self::from_col_major([
             [1.0 / (tan_fov * aspect), 0.0, 0.0, 0.0],
             [0.0, 1.0 / tan_fov, 0.0, 0.0],
             [0.0, 0.0, -(far + near) / (far - near), -1.0],
@@ -321,6 +337,7 @@ impl Matrix<4, 4> {
         ])
     }
 
+    #[must_use]
     pub const fn transform_orthogonal(width: f32, height: f32, near: f32, far: f32) -> Self {
         Self::from_col_major([
             [2.0 / width, 0.0, 0.0, 0.0],

@@ -1,6 +1,6 @@
 #![feature(phantom_variance_markers)]
 
-use std::marker::{PhantomData, PhantomInvariantLifetime};
+use core::marker::{PhantomData, PhantomInvariantLifetime};
 
 #[derive(Debug)]
 pub struct Heap<'a, T> {
@@ -10,7 +10,7 @@ pub struct Heap<'a, T> {
     _invariant: PhantomInvariantLifetime<'a>,
 }
 
-impl<'a, T> Default for Heap<'a, T> {
+impl<T> Default for Heap<'_, T> {
     fn default() -> Self {
         Self {
             data: Default::default(),
@@ -31,22 +31,19 @@ pub struct HeapHandle<'a, T> {
 }
 
 impl<'a, T> Heap<'a, T> {
-    #[allow(clippy::new_ret_no_self)]
-    pub fn new<F: for<'b> FnOnce(Heap<'b, T>)>(func: F) {
+    #[expect(clippy::new_ret_no_self)]
+    pub fn new<F>(func: F) where F: for<'b> FnOnce(Heap<'b, T>) {
         let value = Self::default();
-        func(value)
+        func(value);
     }
 
     pub fn push(&mut self, item: T) -> HeapHandle<'a, T> {
         let new_position = self.data.len();
         self.data.push(item);
-        let index = match self.id.get(new_position) {
-            Some(&index) => index,
-            None => {
-                self.id.push(new_position);
-                self.data_index.push(new_position);
-                new_position
-            }
+        let index = if let Some(&index) = self.id.get(new_position) { index } else {
+            self.id.push(new_position);
+            self.data_index.push(new_position);
+            new_position
         };
         HeapHandle {
             index,
@@ -56,6 +53,7 @@ impl<'a, T> Heap<'a, T> {
     }
 
     // TODO: check lifetimes
+    #[must_use]
     pub fn get<'b>(&'b self, handle: &HeapHandle<'a, T>) -> &'b T {
         let index = handle.index;
 
@@ -67,7 +65,7 @@ impl<'a, T> Heap<'a, T> {
         (self
             .data
             .get(actual_index)
-            .expect("actual_index is in data_index, so this area must exist")) as _
+            .expect("actual_index is in data_index, so this area must exist")) as &T
     }
 
     // TODO: check lifetimes
@@ -81,22 +79,22 @@ impl<'a, T> Heap<'a, T> {
         (self
             .data
             .get_mut(actual_index)
-            .expect("actual_index is in data_index, so this area must exist")) as _
+            .expect("actual_index is in data_index, so this area must exist")) as &mut T
     }
 
     pub fn pop(&mut self, handle: HeapHandle<'a, T>) -> T {
         let HeapHandle { index, .. } = handle;
 
-        let actual_index = *self.data_index.get(index).unwrap();
+        let actual_index = self.data_index[index];
 
         let out = self.data.swap_remove(actual_index);
         let new_len = self.data.len();
         self.id.swap(actual_index, new_len);
 
-        *self.data_index.get_mut(index).unwrap() = self.data.len();
+        self.data_index[index] = self.data.len();
 
-        let actual_index_id = *self.id.get(actual_index).unwrap();
-        *self.data_index.get_mut(actual_index_id).unwrap() = actual_index;
+        let actual_index_id = self.id[actual_index];
+        self.data_index[actual_index_id] = actual_index;
 
         out
     }

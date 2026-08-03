@@ -1,6 +1,6 @@
-use std::array;
+use core::array;
 use std::marker::Destruct;
-use std::ops::{Index, Neg};
+use core::ops::{Index, Neg};
 
 use crate::Vector;
 
@@ -50,7 +50,7 @@ impl<const N: usize, T> UnitVector<N, T> {
     }
 
     #[inline(always)]
-    pub fn v_ref(&self) -> &Vector<N, T> {
+    pub const fn v_ref(&self) -> &Vector<N, T> {
         &self.0
     }
 

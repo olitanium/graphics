@@ -12,6 +12,7 @@ impl<const N: usize> CompactUnitVector<N>
 where
     [(); N - 1]:,
 {
+    #[must_use]
     pub fn try_normalize(vec: Vector<N, f32>) -> Option<Self> {
         let normal_vec = vec.try_normalize()?.v().into_inner();
 
@@ -45,9 +46,10 @@ where
 
         let out = out_of_one.map(|float| uf8::from_f32(float).expect("less than one"));
 
-        Some(CompactUnitVector(out))
+        Some(Self(out))
     }
 
+    #[must_use]
     pub fn unit(self) -> UnitVector<N, f32> {
         let mut as_float = self.0.map(|x| x.to_f32() * f32::consts::PI);
         as_float[N - 2] *= 2.0;

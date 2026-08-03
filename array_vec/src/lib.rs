@@ -4,11 +4,11 @@
 #![feature(const_destruct)]
 #![feature(const_index)]
 
-use std::fmt::Debug;
+use core::fmt::Debug;
 use std::marker::Destruct;
-use std::mem::{self, MaybeUninit};
-use std::ops::{Deref, DerefMut, Index, IndexMut};
-use std::ptr;
+use core::mem::{self, MaybeUninit};
+use core::ops::{Deref, DerefMut, Index, IndexMut};
+use core::ptr;
 mod iterators;
 mod test;
 
@@ -25,6 +25,7 @@ pub struct ArrayVec<T, const N: usize> {
 struct LengthError<const N: usize>;
 
 impl<T, const N: usize> ArrayVec<T, N> {
+    #[must_use]
     pub const fn new() -> Self {
         Self {
             len: 0,
@@ -32,11 +33,11 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
     }
 
-    pub fn capacity(&self) -> usize {
+    pub const fn capacity(&self) -> usize {
         N
     }
 
-    pub fn from_array(array: [T; N]) -> Self {
+    pub const fn from_array(array: [T; N]) -> Self {
         Self {
             len: N,
             array: MaybeUninit::new(array).transpose(),
@@ -108,11 +109,11 @@ impl<T, const N: usize> ArrayVec<T, N> {
         Some(unsafe { output.assume_init() })
     }
 
-    pub fn as_slice(&self) -> &[T] {
+    pub const fn as_slice(&self) -> &[T] {
         unsafe { self.array[..self.len].assume_init_ref() }
     }
 
-    pub fn as_mut_slice(&mut self) -> &mut [T] {
+    pub const fn as_mut_slice(&mut self) -> &mut [T] {
         unsafe { self.array[..self.len].assume_init_mut() }
     }
 
@@ -126,17 +127,17 @@ impl<T, const N: usize> ArrayVec<T, N> {
     pub fn try_into_array(self) -> Result<[T; N], TryFromErr> {
         let (len, array) = self.into_raw_parts();
 
-        if len != N {
+        if len == N {
+            Ok(unsafe { MaybeUninit::array_assume_init(array) })
+        } else {
             Err(TryFromErr {
                 array_size: N,
                 stack_vec_size: len,
             })
-        } else {
-            Ok(unsafe { MaybeUninit::array_assume_init(array) })
         }
     }
 
-    pub fn map<U, F: FnMut(T) -> U>(self, f: F) -> ArrayVec<U, N> {
+    pub fn map<U, F>(self, f: F) -> ArrayVec<U, N> where F: FnMut(T) -> U {
         self.into_iter().map(f).collect()
     }
 
@@ -215,7 +216,7 @@ impl<T: Clone, const N: usize> Clone for ArrayVec<T, N> {
 }
 
 impl<T: Debug, const N: usize> Debug for ArrayVec<T, N> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         f.debug_struct("ArrayVec")
             .field("capacity", &N)
             .field("len", &self.len())

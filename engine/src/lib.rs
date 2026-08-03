@@ -1,5 +1,5 @@
+#![expect(incomplete_features, reason = "Nightly used")]
 #![feature(type_changing_struct_update)]
-#![expect(incomplete_features)]
 #![feature(generic_const_exprs)]
 #![feature(array_try_map)]
 #![feature(never_type)]
@@ -8,9 +8,7 @@
 #![feature(iter_map_windows)]
 #![feature(inherent_associated_types)]
 #![feature(generic_const_items)]
-#![deny(unused_must_use)]
-#![deny(clippy::missing_const_for_fn)]
-#![deny(missing_debug_implementations)]
+#![feature(const_trait_impl)]
 
 pub mod eng_state;
 pub mod entity;

@@ -2,7 +2,7 @@
 #![allow(incomplete_features)]
 #![feature(generic_const_exprs)]
 
-use std::fmt::{Debug, Display};
+use core::fmt::{Debug, Display};
 
 use array_vec::ArrayVec;
 use linear_algebra::Vector;
@@ -17,7 +17,8 @@ pub struct BezierCurve<const DIMS: usize, const N: usize> {
 }
 
 impl<const DIMS: usize, const N: usize> BezierSegment<DIMS, N> {
-    pub fn new(control: [Vector<DIMS>; N]) -> Self {
+    #[must_use]
+    pub const fn new(control: [Vector<DIMS>; N]) -> Self {
         Self(control)
     }
 }
@@ -52,7 +53,7 @@ impl<const DIMS: usize, const N: usize> BezierSegment<DIMS, N> {
                         .array_windows()
                         .copied()
                         .map(|[vec1, vec2]| vec1 * (1.0 - t) + vec2 * t)
-                        .collect()
+                        .collect();
                 }
             }
         }
@@ -74,7 +75,8 @@ impl<const DIMS: usize, const N: usize> Default for BezierCurve<DIMS, N> {
 }
 
 impl<const DIMS: usize, const N: usize> BezierCurve<DIMS, N> {
-    pub fn new() -> Self {
+    #[must_use]
+    pub const fn new() -> Self {
         Self { segments: vec![] }
     }
 }
@@ -87,7 +89,7 @@ pub enum PushError<const DIMS: usize> {
 }
 // Error boilerplate
 impl<const DIMS: usize> Display for PushError<DIMS> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         Debug::fmt(self, f)
     }
 }
@@ -110,7 +112,7 @@ impl<const DIMS: usize, const N: usize> BezierCurve<DIMS, N> {
                     end_of_previous: peek,
                 })
             }
-            (Ok(_), Ok(_)) | (Ok(_), Err(PeekError::NoSegment)) => {
+            (Ok(_), Ok(_) | Err(PeekError::NoSegment)) => {
                 self.segments.push(segment);
                 Ok(())
             }

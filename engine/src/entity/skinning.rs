@@ -1,7 +1,7 @@
 use std::{convert, iter};
 
+use graphics::PollResult::Close;
 use graphics::linear_algebra::Vector;
-use utils::partition;
 
 use crate::entity::{EntityInner, Mass, ToAggregateEntity};
 use crate::modelling::cubic::SkinningCubic;
@@ -53,16 +53,15 @@ pub fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [SkeletalVertex; 3])]) -> T>(
     depth: usize,
     init: F,
 ) -> Option<SkeletonBb<SkeletalVertex, T>> {
-    let per_mesh = partition(
+    let per_mesh = partition::partition(
         &cubic.triangles(),
         |tri| {
             tri.iter().flat_map(|vertex| {
                 iter::zip(vertex.bone_indices, vertex.bone_weights)
                     .filter_map(|(index, weight)| (weight != 0.0).then_some(index as usize))
             })
-            //.collect::<Vec<_>>()
         },
-        convert::identity,
+        |arr| **arr,
     );
 
     SkeletonBb::from_vec_triangle(per_mesh, depth, init)

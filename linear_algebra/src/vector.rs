@@ -2,11 +2,11 @@ mod array_maths;
 
 use core::array;
 use core::ops::{Index, IndexMut};
-use std::iter::Sum;
+use core::iter::Sum;
 use std::marker::Destruct;
-use std::mem;
-use std::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-use std::slice::SliceIndex;
+use core::mem;
+use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use core::slice::SliceIndex;
 
 use super::matrix::Matrix;
 use crate::vector::array_maths::mul;
@@ -73,6 +73,7 @@ impl<const N: usize> Vector<N, f32> {
         array_maths::is_zero(self.into_inner())
     }
 
+    #[must_use]
     pub fn magnitude(self) -> f32 {
         self.magnitude_sq().sqrt()
     }
@@ -87,6 +88,7 @@ impl<const N: usize> Vector<N, f32> {
         vec
     }
 
+    #[must_use]
     pub fn try_normalize(self) -> Option<UnitVector<N, f32>> {
         let one_len = 1.0 / self.magnitude();
         one_len
@@ -94,6 +96,7 @@ impl<const N: usize> Vector<N, f32> {
             .then(|| Self::new_normal_unchecked(self.0.map(|x| x * one_len)))
     }
 
+    #[must_use]
     pub const fn truncate<const M: usize>(self) -> Vector<M, f32> {
         // CONST-HACK
         // let array = array::from_fn(|index|
@@ -110,6 +113,7 @@ impl<const N: usize> Vector<N, f32> {
         Vector::new(array)
     }
 
+    #[must_use]
     pub const fn reflect(self, normal: UnitVector<N, f32>) -> Self
     where
         Self: [const] Clone,
@@ -143,15 +147,15 @@ impl<const N: usize, T> Vector<N, T> {
         &self.0
     }
 
-    #[allow(clippy::len_without_is_empty)]
+    #[expect(clippy::len_without_is_empty)]
     pub const fn len(&self) -> usize {
         N
     }
 
-    pub const fn get<I: [const] SliceIndex<[T]>>(
+    pub const fn get<I>(
         &self,
         index: I,
-    ) -> Option<&<I as SliceIndex<[T]>>::Output> {
+    ) -> Option<&<I as SliceIndex<[T]>>::Output> where I: [const] SliceIndex<[T]> {
         self.0.get(index)
     }
 
@@ -246,7 +250,7 @@ impl<const N: usize, T> Vector<N, T> {
         T: [const] Destruct,
         T: [const] Clone,
     {
-        Vector::new(mul(self.into_inner(), other.into_inner()))
+        Self::new(mul(self.into_inner(), other.into_inner()))
     }
 }
 
@@ -368,7 +372,7 @@ impl<const R: usize> From<Matrix<R, 1>> for Vector<R, f32> {
     #[inline]
     fn from(value: Matrix<R, 1>) -> Self {
         let [arr] = value.into_inner();
-        Vector::new(arr)
+        Self::new(arr)
     }
 }
 
@@ -488,7 +492,7 @@ impl<const N: usize, T> Sum<Vector<N, T>> for Option<Vector<N, T>>
 where
     Vector<N, T>: Add<Output = Vector<N, T>>,
 {
-    fn sum<I: Iterator<Item = Vector<N, T>>>(iter: I) -> Self {
+    fn sum<I>(iter: I) -> Self where I: Iterator<Item = Vector<N, T>> {
         iter.reduce(Add::add)
     }
 }
@@ -498,8 +502,8 @@ where
     Option<Self>: Sum<Self>,
     Self: Default,
 {
-    fn sum<I: Iterator<Item = Self>>(iter: I) -> Self {
-        Option::<Vector<N, T>>::sum(iter).unwrap_or_default()
+    fn sum<I>(iter: I) -> Self where I: Iterator<Item = Self> {
+        Option::<Self>::sum(iter).unwrap_or_default()
     }
 }
 

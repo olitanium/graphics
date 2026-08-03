@@ -4,6 +4,7 @@ use super::{DualNumber, DualQuaternion};
 pub struct UnitDualQuaternion(DualQuaternion);
 
 impl UnitDualQuaternion {
+    #[must_use]
     pub fn normalize_dual_quaternion(dual_quaternion: DualQuaternion) -> Self {
         // https://stackoverflow.com/questions/23174899/properly-normalizing-a-dual-quaternion
         let DualNumber { real: s, dual: t } = dual_quaternion.magnitude_sq();
@@ -18,19 +19,23 @@ impl UnitDualQuaternion {
         Self(normalized)
     }
 
+    #[must_use]
     pub const fn new_normal_unchecked(dual_quaternion: DualQuaternion) -> Self {
         Self(dual_quaternion)
     }
 
+    #[must_use]
     pub fn conjugate(self) -> Self {
         Self(self.0.quaternion_conjugate())
     }
 
+    #[must_use]
     pub fn inverse(self) -> Self {
         self.conjugate()
     }
 
-    pub fn u(self) -> DualQuaternion {
+    #[must_use]
+    pub const fn u(self) -> DualQuaternion {
         self.0
     }
 }

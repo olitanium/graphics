@@ -19,16 +19,19 @@ impl UnitQuaternion {
         Self(quaternion)
     }
 
+    #[must_use]
     pub const fn q(self) -> Quaternion {
         self.0
     }
 
-    pub fn inverse(self) -> Self {
+    #[must_use]
+    pub const fn inverse(self) -> Self {
         Self(self.0.conjugate())
     }
 
     /// #Safety
-    /// matrix must be a pure rotation matrix
+    /// matrix must be a pure rotation matrix.
+    #[must_use]
     pub fn from_matrix(mat: Matrix<3, 3>) -> Self {
         // courtesy of http://marc-b-reynolds.github.io/quaternions/2017/08/08/QuatRotMatrix.html
         #[rustfmt::ignore]

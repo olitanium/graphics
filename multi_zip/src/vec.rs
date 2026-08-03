@@ -20,7 +20,7 @@ impl<F> HeapMultiZip<F> {
         T: IntoIterator,
         <T as IntoIterator>::Item: IntoIterator<IntoIter = F>,
     {
-        Self(iters.into_iter().map(|x| x.into_iter()).collect())
+        Self(iters.into_iter().map(std::iter::IntoIterator::into_iter).collect())
     }
 }
 

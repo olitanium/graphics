@@ -1,4 +1,4 @@
-use std::mem::MaybeUninit;
+use core::mem::MaybeUninit;
 
 use crate::ArrayVec;
 
@@ -20,7 +20,7 @@ fn get_iter<T, const N: usize>(vec: ArrayVec<T, N>) -> IntoIter<T, N> {
         .map(|init| unsafe { init.assume_init() })
 }
 
-pub type IntoIter<T, const N: usize> = std::iter::Map<
-    std::iter::Take<std::array::IntoIter<MaybeUninit<T>, N>>,
+pub type IntoIter<T, const N: usize> = core::iter::Map<
+    core::iter::Take<core::array::IntoIter<MaybeUninit<T>, N>>,
     fn(MaybeUninit<T>) -> T,
 >;

@@ -1,4 +1,4 @@
-#[allow(non_camel_case_types)]
+#[expect(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
 pub struct uf8 {

@@ -12,12 +12,13 @@ where
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         let out: Option<ArrayVec<T::Item, N>> = self.0.iter_mut().map(Iterator::next).collect();
-        out.and_then(|inner| inner.try_into().ok())
+        let inner = out?;
+        inner.try_into().ok()
     }
 }
 
 impl<T: Iterator, const N: usize> MultiZip<T, N> {
-    pub fn new<I: IntoIterator<IntoIter = T>>(iters: [I; N]) -> Self {
+    pub fn new<I>(iters: [I; N]) -> Self where I: IntoIterator<IntoIter = T> {
         Self(iters.map(IntoIterator::into_iter))
     }
 }

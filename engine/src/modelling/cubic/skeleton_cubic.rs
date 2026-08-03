@@ -6,7 +6,7 @@ use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Matrix;
 use graphics::shader_program::{ActiveShaderProgram, CullFace, ShaderSetUniformError};
-use utils::{error_boilerplate, partition};
+use utils::error_boilerplate;
 
 use super::material::Material;
 use super::{Mesh, Skeleton};
@@ -153,7 +153,8 @@ impl EntityInner for SkeletonCubic {
         depth: usize,
         init: F,
     ) -> Option<Self::BoundingBox<T>> {
-        let per_mesh = partition(&self.triangles(), |(bone, _)| vec![bone.0], |(_, tri)| tri);
+        let per_mesh =
+            partition::partition(&self.triangles(), |(bone, _)| vec![bone.0], |(_, tri)| *tri);
 
         SkeletonBb::from_vec_triangle(per_mesh, depth, init)
     }

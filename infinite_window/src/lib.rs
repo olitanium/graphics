@@ -1,4 +1,4 @@
-use std::array;
+use core::array;
 
 /// returns an array of references (or ref mut)
 #[derive(Debug)]
@@ -8,7 +8,7 @@ pub struct InfiniteWindowIter<'a, T, const N: usize> {
 }
 
 impl<'a, T, const N: usize> InfiniteWindowIter<'a, T, N> {
-    pub fn new(slice: &'a [T]) -> Self {
+    pub const fn new(slice: &'a [T]) -> Self {
         Self {
             backing: slice,
             current_index: 0,
@@ -26,7 +26,7 @@ impl<'a, T, const N: usize> Iterator for InfiniteWindowIter<'a, T, N> {
         };
 
         /// valid when value is 0 <= value < 2*divisor
-        fn short_modulo(value: usize, divisor: usize) -> usize {
+        const fn short_modulo(value: usize, divisor: usize) -> usize {
             if value >= divisor {
                 value - divisor
             } else {

@@ -5,7 +5,7 @@ use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::shader_program::CullFace;
 use graphics::{ActiveShaderProgram, Model};
-use utils::{error_boilerplate, partition};
+use utils::error_boilerplate;
 
 use crate::entity::EntityInner;
 use crate::modelling::cubic::geometry::{
@@ -102,15 +102,15 @@ impl EntityInner for SkinningCubic {
         depth: usize,
         init: F,
     ) -> Option<Self::BoundingBox<T>> {
-        let per_mesh = partition(
-            &self.triangles(),
-            |tri| {
-                tri.iter().flat_map(|vertex| {
+        let per_mesh = partition::partition(
+            self.triangles(),
+            |&tri| {
+                tri.into_iter().flat_map(|vertex| {
                     iter::zip(vertex.bone_indices, vertex.bone_weights)
                         .filter_map(|(index, weight)| (weight != 0.0).then_some(index as usize))
                 })
             },
-            convert::identity,
+            Clone::clone,
         );
 
         SkeletonBb::from_vec_triangle(per_mesh, depth, init)

@@ -1,10 +1,10 @@
 use std::marker::Destruct;
-use std::ops::{Add, Mul, Sub};
+use core::ops::{Add, Mul, Sub};
 
 macro_rules! elem_wise {
     ($trait:ident:: $fn:ident, $token:tt) => {
         #[inline]
-        pub const fn $fn<const N: usize, T: [const] $trait<Output = T> + [const] Clone + [const] Destruct>(mut lhs: [T; N], rhs: [T; N]) -> [T; N] {
+        pub const fn $fn<const N: usize, T>(mut lhs: [T; N], rhs: [T; N]) -> [T; N] where T: [const] $trait<Output = T> + [const] Clone + [const] Destruct {
             //core::array::from_fn(|index| core::ops::$trait::$fn(lhs[index], rhs[index]))
 
             /*let mut array = lhs;
@@ -28,10 +28,10 @@ macro_rules! elem_wise {
 
 pub const fn sum<
     const N: usize,
-    T: [const] Add<Output = T> + [const] Clone + [const] Destruct + [const] Default,
+    T,
 >(
     v1: [T; N],
-) -> T {
+) -> T where T: [const] Add<Output = T> + [const] Clone + [const] Destruct + [const] Default {
     // if N > 0 {
     // let mut output = v1[0];
     //
@@ -63,15 +63,15 @@ elem_wise!(Mul::mul, *);
 #[inline]
 pub const fn dot<
     const N: usize,
-    T: [const] Add<Output = T>
-        + [const] Mul<Output = T>
-        + [const] Clone
-        + [const] Default
-        + [const] Destruct,
+    T,
 >(
     v1: [T; N],
     v2: [T; N],
-) -> T {
+) -> T where T: [const] Add<Output = T>
+        + [const] Mul<Output = T>
+        + [const] Clone
+        + [const] Default
+        + [const] Destruct {
     sum(mul(v1, v2))
 }
 

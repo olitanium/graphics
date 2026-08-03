@@ -9,7 +9,7 @@ pub use iter::Iter;
 pub use iter_mut::IterMut;
 
 impl<T, const N: usize> FromIterator<T> for ArrayVec<T, N> {
-    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+    fn from_iter<I>(iter: I) -> Self where I: IntoIterator<Item = T> {
         let mut out = Self::new();
 
         for elem in iter {

@@ -91,21 +91,13 @@ impl Pose {
         Matrix::transform_translate(self.translation()) * self.orientation().as_matrix()
     }
 
-    pub fn as_matrix_for_shader(self) -> Matrix<4, 2> {
+    pub const fn as_matrix_for_shader(self) -> Matrix<4, 2> {
         let DualNumber { real, dual } = self.into_inner().u();
+        let [real0, real1, real2] = real.vector().into_inner();
+        let [dual0, dual1, dual2] = dual.vector().into_inner();
         Matrix::from_col_major([
-            [
-                real.vector()[0],
-                real.vector()[1],
-                real.vector()[2],
-                real.scalar(),
-            ],
-            [
-                dual.vector()[0],
-                dual.vector()[1],
-                dual.vector()[2],
-                dual.scalar(),
-            ],
+            [real0, real1, real2, real.scalar()],
+            [dual0, dual1, dual2, dual.scalar()],
         ])
     }
 

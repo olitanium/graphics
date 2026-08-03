@@ -14,6 +14,7 @@ pub struct Sclerp {
 }
 
 impl Sclerp {
+    #[must_use]
     pub fn new(
         from: UnitDualQuaternion,
         to: UnitDualQuaternion,
@@ -61,6 +62,7 @@ impl Sclerp {
         }
     }
 
+    #[must_use]
     pub fn get(self, time: f32) -> UnitDualQuaternion {
         let time = time / self.duration;
 

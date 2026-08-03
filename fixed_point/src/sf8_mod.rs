@@ -1,6 +1,6 @@
 use crate::uf8;
 
-#[allow(non_camel_case_types)]
+#[expect(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
 pub struct sf8 {
@@ -59,7 +59,7 @@ impl core::ops::Mul for sf8 {
         let mut inner = high << 1;
         const MASK: u8 = i8::MIN.cast_unsigned();
         if low & MASK > 0 {
-            inner += 1
+            inner += 1;
         }
         Self::Output { inner }
     }

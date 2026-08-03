@@ -1,6 +1,5 @@
 use graphics::linear_algebra::Vector;
 use graphics::vertex::Vertex;
-use utils::partition;
 
 use crate::SimpleEntity;
 use crate::entity::{Mass, ToAggregateEntity};
@@ -51,7 +50,11 @@ pub fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
     depth: usize,
     init: F,
 ) -> Option<SkeletonBb<SimpleVertex, T>> {
-    let per_mesh = partition(&cubic.triangles(), |(bone, _)| vec![bone.0], |(_, tri)| tri);
+    let per_mesh = partition::partition(
+        &cubic.triangles(),
+        |&&(bone, _)| vec![bone.0],
+        |&&(_, tri)| tri,
+    );
 
     SkeletonBb::from_vec_triangle(per_mesh, depth, init)
 }

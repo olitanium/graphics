@@ -1,5 +1,5 @@
-use std::fmt::Debug;
-use std::ops::{Add, Mul, Neg, Sub};
+use core::fmt::Debug;
+use core::ops::{Add, Mul, Neg, Sub};
 
 mod dual_quaternion;
 pub use dual_quaternion::{DualQuaternion, Sclerp, UnitDualQuaternion};
@@ -94,6 +94,7 @@ impl<U, T: Neg<Output = U>> Neg for DualNumber<T> {
 }
 
 impl DualNumber<f32> {
+    #[must_use]
     pub fn sin(self) -> Self {
         // https://math.stackexchange.com/a/1072309
         let Self { real: a, dual: b } = self;
@@ -101,6 +102,7 @@ impl DualNumber<f32> {
         Self::new(a.sin(), b * a.cos())
     }
 
+    #[must_use]
     pub fn cos(self) -> Self {
         // https://math.stackexchange.com/a/1072309
         let Self { real: a, dual: b } = self;
@@ -111,6 +113,7 @@ impl DualNumber<f32> {
         }
     }
 
+    #[must_use]
     pub fn tan(self) -> Self {
         // https://math.stackexchange.com/a/1072309
         let Self { real: a, dual: b } = self;

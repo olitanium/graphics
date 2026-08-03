@@ -400,6 +400,7 @@ dependencies = [
  "dual_number",
  "graphics",
  "infinite_window",
+ "partition",
  "quaternion",
  "russimp",
  "triangle_intersection",
