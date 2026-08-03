@@ -1,6 +1,6 @@
 #![feature(const_trait_impl)]
 
-use std::ops;
+use core::ops;
 
 use linear_algebra::{UnitVector, Vector};
 pub use unit_quaternion::UnitQuaternion;

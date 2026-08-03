@@ -109,6 +109,7 @@ impl<const N: usize, S> Builder<N, S, WithDepth> {
 }
 
 impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, HasSize, B> {
+    #[must_use]
     pub fn map_attachment<F: Fn(B::TexBuilder) -> B::TexBuilder + 'static>(
         self,
         map_attachment: F,
@@ -118,14 +119,14 @@ impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, HasSize, B> {
             ..self
         }
     }
-}
 
-impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, HasSize, B> {
     /// Build from information given to the `Builder` before.
+    #[must_use]
+    #[inline]
     pub fn build(self) -> Framebuffer<N, B> {
         let id = {
             let mut id = 0;
-            gl_call! { gl::GenFramebuffers(1, &mut id); }
+            gl_call! { gl::GenFramebuffers(1, &raw mut id); }
             FrameBufferId::new(id)
         };
 

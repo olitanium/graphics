@@ -1,4 +1,4 @@
-use std::ops;
+use core::ops;
 
 use linear_algebra::Matrix;
 
@@ -10,6 +10,8 @@ pub struct UnitQuaternion(Quaternion);
 impl UnitQuaternion {
     pub const IDENTITY: Self = Self(Quaternion::IDENTITY);
 
+    #[must_use]
+    #[inline]
     pub fn normalize_quaternion(input: Quaternion) -> Self {
         let one_magnitude = 1.0 / input.magnitude();
         let quaternion = input.scale(one_magnitude);

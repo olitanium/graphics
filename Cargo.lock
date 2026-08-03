@@ -2170,6 +2170,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "template_app"
+version = "0.1.0"
+dependencies = [
+ "engine",
+ "linear_algebra",
+ "triangle_intersection",
+]
+
+[[package]]
 name = "thiserror"
 version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"

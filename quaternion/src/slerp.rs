@@ -1,17 +1,30 @@
+//! Spherical Linear Interpolation.
+
 use super::Quaternion;
 use crate::UnitQuaternion;
 
+/// Spherical linear interpolation is a smoother interpolation between two
+/// unit quaternions. This is especially useful when the Quaternions represent
+/// orientations.
 #[derive(Debug, Clone, Copy)]
 pub struct Slerp {
+    /// Origin quaternion.
     from: Quaternion,
+    /// Destination quaternion.
     to: Quaternion,
-    duration: f32,
+    /// Pre-calculated field.
     omega: f32,
+    /// Pre-calculated field.
     coef: f32,
 }
 
 impl Slerp {
-    pub fn new(from: UnitQuaternion, to: UnitQuaternion, duration: f32, long_way: bool) -> Self {
+    /// Get a new `Slerp` calculator from two `UnitQuaternions`. The `Slerp` can
+    /// be configured to go the shortest path or the longest path by setting
+    /// `long_way`.
+    #[must_use]
+    #[inline]
+    pub fn new(from: UnitQuaternion, to: UnitQuaternion, long_way: bool) -> Self {
         let from = from.q();
         let mut to = to.q();
         let mut dot = from.dot(to);
@@ -22,23 +35,23 @@ impl Slerp {
         }
 
         let omega = dot.acos();
-        let coef = 1.0 / (1.0 - dot * dot).sqrt();
+        // let coef = 1.0 / (1.0 - dot * dot).sqrt();
+        let coef = 1.0 / f32::mul_add(-dot, dot, 1.0);
 
         Self {
             from,
             to,
-            duration,
             omega,
             coef,
         }
     }
 
+    #[must_use]
+    #[inline]
     pub fn get(self, time: f32) -> UnitQuaternion {
         if self.from == self.to {
             self.from.normalize();
         }
-
-        let time = (time / self.duration) % 1.0;
 
         let tmp = time * self.omega;
         let s1 = (self.omega - tmp).sin() * self.coef;

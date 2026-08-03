@@ -1,4 +1,4 @@
-#![expect(incomplete_features)]
+#![expect(incomplete_features, reason = "Nightly used")]
 #![feature(debug_closure_helpers)]
 #![feature(string_from_utf8_lossy_owned)]
 #![feature(generic_const_exprs)]
@@ -41,14 +41,19 @@ macro_rules! gl_call_inner {
         // Skip all previous errors which have been ignored
         while unsafe { gl::GetError() } != gl::NO_ERROR {}
         // perform the expression
-        #[allow(clippy::macro_metavars_in_unsafe)]
-        let output = unsafe {
-            //#[expect(clippy::macro_metavars_in_unsafe)]
-            $input
-        };
+        #[expect(
+            clippy::allow_attributes,
+            reason = "Some calls will not require unsafety"
+        )]
+        #[allow(
+            clippy::macro_metavars_in_unsafe,
+            reason = "gl_call is itself an unsafety marker"
+        )]
+        #[expect(clippy::undocumented_unsafe_blocks, reason = "FFI")]
+        let output = unsafe { $input };
         // read through errors, returning Err if there are many.
         let errors: Vec<$crate::types::GLError> =
-            std::iter::repeat_with(|| $crate::types::GLError(unsafe { gl::GetError() }))
+            core::iter::repeat_with(|| $crate::types::GLError(unsafe { gl::GetError() }))
                 .take_while(|error| error.0 != gl::NO_ERROR)
                 .collect();
         if errors.is_empty() {

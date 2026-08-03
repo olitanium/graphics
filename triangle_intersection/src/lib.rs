@@ -1,21 +1,28 @@
+//! Test triangles (as arrays of `linear_algebra::Vector<DIMS>`) for
+//! intersection.
+#![deny(missing_docs)]
+
 use linear_algebra::Matrix;
 pub use linear_algebra::Vector;
 
 /// Triangle is just an array of Vectors.
 type Triangle<const DIMS: usize> = [Vector<DIMS>; 3];
 
+/// calculate a two dimensional determinant as features in [here](https://inria.hal.science/inria-00072100/document).
+#[expect(dead_code, reason = "will be used shortly for 2D intersection")]
+fn two_dimension_determinant(vec1: Vector<2>, vec2: Vector<2>, vec3: Vector<2>) -> f32 {
+    let [xa, ya] = vec1.into_inner();
+    let [xb, yb] = vec2.into_inner();
+    let [xc, yc] = vec3.into_inner();
+    Matrix::from_col_major([[xa - xc, xb - xc], [ya - yc, yb - yc]]).determinant()
+}
+
 /// from [here](https://inria.hal.science/inria-00072100/document).
 #[inline]
+#[expect(clippy::missing_panics_doc, reason = "will be fixed")]
+#[must_use]
 pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
-    // TODO: handle degenerate triangles
-
-    fn two_dimension_determinant(vec1: Vector<2>, vec2: Vector<2>, vec3: Vector<2>) -> f32 {
-        let [xa, ya] = vec1.into_inner();
-        let [xb, yb] = vec2.into_inner();
-        let [xc, yc] = vec3.into_inner();
-        Matrix::from_col_major([[xa - xc, xb - xc], [ya - yc, yb - yc]]).determinant()
-    }
-
+    /// calculate a three dimensional determinant as features in [here](https://inria.hal.science/inria-00072100/document).
     #[inline]
     fn three_dimension_determinant(a: Vector<3>, b: Vector<3>, c: Vector<3>, d: Vector<3>) -> f32 {
         let [xa, ya, za] = a.into_inner();
