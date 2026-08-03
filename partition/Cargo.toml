@@ -1,0 +1,10 @@
+[package]
+name = "partition"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+get_or_extend = { path = "../get_or_extend" }
+
+[lints]
+workspace = true

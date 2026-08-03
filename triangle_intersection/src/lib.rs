@@ -1,9 +1,11 @@
 use linear_algebra::Matrix;
 pub use linear_algebra::Vector;
 
+/// Triangle is just an array of Vectors.
 type Triangle<const DIMS: usize> = [Vector<DIMS>; 3];
 
-/// https://inria.hal.science/inria-00072100/document
+/// from [here](https://inria.hal.science/inria-00072100/document).
+#[inline]
 pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
     // TODO: handle degenerate triangles
 
@@ -14,16 +16,12 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
         Matrix::from_col_major([[xa - xc, xb - xc], [ya - yc, yb - yc]]).determinant()
     }
 
-    fn three_dimension_determinant(
-        veca: Vector<3>,
-        vecb: Vector<3>,
-        vecc: Vector<3>,
-        vecd: Vector<3>,
-    ) -> f32 {
-        let [xa, ya, za] = veca.into_inner();
-        let [xb, yb, zb] = vecb.into_inner();
-        let [xc, yc, zc] = vecc.into_inner();
-        let [xd, yd, zd] = vecd.into_inner();
+    #[inline]
+    fn three_dimension_determinant(a: Vector<3>, b: Vector<3>, c: Vector<3>, d: Vector<3>) -> f32 {
+        let [xa, ya, za] = a.into_inner();
+        let [xb, yb, zb] = b.into_inner();
+        let [xc, yc, zc] = c.into_inner();
+        let [xd, yd, zd] = d.into_inner();
         Matrix::from_col_major([
             [xa - xd, xb - xd, xc - xd],
             [ya - yd, yb - yd, yc - yd],
@@ -32,17 +30,20 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
         .determinant()
     }
 
+    #[inline]
     fn make_determinants(one: Triangle<3>, two: Triangle<3>) -> [f32; 3] {
         let [p2, q2, r2] = two;
         one.map(|elem| three_dimension_determinant(p2, q2, r2, elem))
     }
 
+    #[derive(Debug)]
     enum SignOrZero {
         Positive,
         Negative,
         Zero,
     }
 
+    #[inline]
     fn get_signorzero(float: f32) -> SignOrZero {
         if float > 0.0 {
             SignOrZero::Positive
@@ -51,6 +52,10 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
         } else {
             SignOrZero::Zero
         }
+    }
+
+    fn make_determinants_signorzero(one: Triangle<3>, two: Triangle<3>) -> [SignOrZero; 3] {
+        make_determinants(one, two).map(get_signorzero)
     }
 
     enum CrossType {
@@ -71,16 +76,21 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
         }};
     }
 
-    fn swap_qr(triangle: Triangle<3>) -> Triangle<3> {
+    #[inline]
+    const fn swap_qr(triangle: Triangle<3>) -> Triangle<3> {
         let [p, q, r] = triangle;
 
         [p, r, q]
     }
 
+    #[inline]
+    #[expect(
+        clippy::match_same_arms,
+        reason = "better clarity on what each combination does"
+    )]
     fn determiant_crossing(one: Triangle<3>, two: Triangle<3>) -> CrossType {
-        let determinants = make_determinants(one, two);
         use SignOrZero as S;
-        match determinants.map(get_signorzero) {
+        match make_determinants_signorzero(one, two) {
             [S::Zero, S::Zero, S::Zero] => CrossType::Coplanar,
             [S::Positive, S::Positive, S::Positive] | [S::Negative, S::Negative, S::Negative] => {
                 CrossType::None
@@ -100,7 +110,7 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
                 CrossType::Success(permuted1, two)
             }
             // only one vertex is negative, this must be rotated around and the other triangle
-            // permuted to make psositive.
+            // flipped to make positive.
             [S::Negative, S::Positive | S::Zero, S::Positive | S::Zero] => {
                 let permuted2 = swap_qr(two);
                 CrossType::Success(one, permuted2)
@@ -143,17 +153,20 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
         }
     }
 
-    fn smart_determinants_crossing(one: Triangle<3>, two: Triangle<3>) -> CrossType {
+    let smart_determinants_crossing = {
         match determiant_crossing(one, two) {
             nope @ (CrossType::None | CrossType::Coplanar) => nope,
-            CrossType::Success(new_one, new_two) => match determiant_crossing(new_two, new_one) {
-                nope @ (CrossType::None | CrossType::Coplanar) => nope,
-                CrossType::Success(output1, output2) => CrossType::Success(output1, output2),
-            },
+            CrossType::Success(new_one, new_two) => {
+                make_determinants_signorzero(new_one, new_two);
+                match determiant_crossing(new_two, new_one) {
+                    nope @ (CrossType::None | CrossType::Coplanar) => nope,
+                    CrossType::Success(output1, output2) => CrossType::Success(output1, output2),
+                }
+            }
         }
-    }
+    };
 
-    match smart_determinants_crossing(one, two) {
+    match smart_determinants_crossing {
         CrossType::None => false,
         CrossType::Coplanar => {
             // TODO: colinear triangles
@@ -162,15 +175,26 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
         CrossType::Success(new_one, new_two) => {
             // TODO: intersecting planes and/or triangles
             use SignOrZero as S;
-            assert!(matches!(
-                make_determinants(one, two).map(get_signorzero),
-                [S::Positive | S::Zero, S::Negative, S::Negative] | [S::Positive, S::Zero, S::Zero]
-            ));
 
-            assert!(matches!(
-                make_determinants(two, one).map(get_signorzero),
-                [S::Positive | S::Zero, S::Negative, S::Negative] | [S::Positive, S::Zero, S::Zero]
-            ));
+            let test1 = make_determinants_signorzero(new_one, new_two);
+            assert!(
+                matches!(
+                    test1,
+                    [S::Positive | S::Zero, S::Negative, S::Negative]
+                        | [S::Positive, S::Zero, S::Zero]
+                ),
+                "{test1:?}"
+            );
+
+            let test2 = make_determinants_signorzero(new_two, new_one);
+            assert!(
+                matches!(
+                    test2,
+                    [S::Positive | S::Zero, S::Negative, S::Negative]
+                        | [S::Positive, S::Zero, S::Zero]
+                ),
+                "{test2:?}"
+            );
 
             let [p1, q1, r1] = new_one;
             let [p2, q2, r2] = new_two;

@@ -6,3 +6,6 @@ edition = "2024"
 [dependencies]
 linear_algebra = {path = "../linear_algebra"}
 quaternion = {path = "../quaternion"}
+
+[lints]
+workspace = true

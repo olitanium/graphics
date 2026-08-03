@@ -58,36 +58,12 @@ impl<T> SimpleEntity<T> {
         self.bounding_box.as_ref()
     }
 
-    // pub fn detect_collision<F: Fn(&mut T), O: Fn(&mut T)>(
-    // &self,
-    // self_alter_meta: F,
-    // other: &Self,
-    // other_alter_meta: O,
-    // ) -> bool {
-    // let Some(vec) = (try { BoundingBox::detect_collision(
-    // self.bounding_box()?,
-    // self.pose,
-    // self_alter_meta,
-    // other.bounding_box()?,
-    // other.pose,
-    // other_alter_meta,
-    // )} ) else {return false};
+    // pub fn elastic_collision_no_rotation(&mut self, other: &mut Self) -> bool {
+    // let Some(mut vec) = self.collides((), other, (), |_, _, _, _| {}) else {
+    // return false;
+    // };
     //
-    //
-    // vec
-    // (!vec.is_empty()).then_some(vec)
-    // }
-
-    // pub fn elastic_collision_no_rotation<F: Fn(&mut T), O: Fn(&mut T)>(
-    // &mut self,
-    // self_alter_meta: F,
-    // other: &mut Self,
-    // other_alter_meta: O,
-    // ) -> bool {
-    // if let Some(mut vec) = self.detect_collision(&self_alter_meta, other,
-    // &other_alter_meta) { TODO: do stuff
-    // find the best place to work out the collision.
-    // const SMALL_TIMESTEP: f32 = 0.00005;
+    // const SMALL_TIMESTEP: f32 = 1.0 / 120.0;
     // let other_push =
     // Pose::new_from_translation(-other.velocity.scale(SMALL_TIMESTEP));
     // let self_push =
@@ -96,17 +72,14 @@ impl<T> SimpleEntity<T> {
     // self.pose.push_change(self_push);
     // other.pose.push_change(other_push);
     //
-    // while let Some(new_vec) =
-    // self.detect_collision(&self_alter_meta, other, &other_alter_meta)
-    // {
+    // while let Some(new_vec) = self.collides((), other, (), |_, _, _, _| {}) {
     // vec = new_vec;
     //
     // self.pose.push_change(self_push);
     // other.pose.push_change(other_push);
     // }
     //
-    // let (lhs_manyvec, rhs_manyvec): (Vec<Vec<_>>, Vec<Vec<_>>) =
-    // vec.into_iter().unzip();
+    // let (lhs_manyvec, rhs_manyvec): (Vec<&_>, Vec<&_>) = vec.into_iter().unzip();
     //
     // let lhs = lhs_manyvec.into_iter().flatten();
     // let rhs = rhs_manyvec.into_iter().flatten();
@@ -122,25 +95,17 @@ impl<T> SimpleEntity<T> {
     // `average` = direction of force (in which direction?)
     //
     // elastic collision
-    // let self_change = 2.0 * other.mass.0 / (other.mass.0 + self.mass.0)
+    // let self_change = 2.0 * other.mass.0 / (other.mass.0 + self.mass.0);
     // average.v().dot(other.velocity - self.velocity);
     //
-    // let other_change = 2.0 * self.mass.0 / (other.mass.0 + self.mass.0)
+    // let other_change = 2.0 * self.mass.0 / (other.mass.0 + self.mass.0);
     // average.v().dot(self.velocity - other.velocity);
     //
     // self.velocity += average.v() * self_change;
     // other.velocity += average.v() * other_change;
     //
-    // true
-    // } else {
-    // false
+    // todo!()
     // }
-    // }
-
-    pub fn update(&mut self, timestep: f32) {
-        let delta_pose = Pose::new_from_translation(self.velocity.scale(timestep));
-        self.pose.push_change(delta_pose);
-    }
 }
 
 pub fn get_average_normal<I: IntoIterator<Item = [SimpleVertex; 3]>>(input: I) -> UnitVector<3> {

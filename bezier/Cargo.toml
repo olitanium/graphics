@@ -8,3 +8,6 @@ edition = "2024"
 linear_algebra = {path = "../linear_algebra"}
 array_vec = {path = "../array_vec"}
 utils = {path = "../utils"}
+
+[lints]
+workspace = true

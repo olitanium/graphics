@@ -1,3 +1,9 @@
+//! Module for error boilerplate. I would like to spin this off into a
+//! `proc_macro`.
+
+/// Creates the error boilerplate to allow an enum or struct which defines
+/// `Debug` to define a `Display` impl and derive `Error`. It also defined
+/// `From<!>` for better inference.
 #[macro_export]
 macro_rules! error_boilerplate {
     ($pth:path) => {

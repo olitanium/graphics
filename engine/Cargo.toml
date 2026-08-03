@@ -13,3 +13,6 @@ quaternion = {path = "../quaternion"}
 dual_number = {path = "../dual_number"}
 bezier = {path = "../bezier"}
 triangle_intersection = {path = "../triangle_intersection"}
+
+[lints]
+workspace = true

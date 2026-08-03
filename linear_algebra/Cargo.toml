@@ -9,5 +9,4 @@ fixed_point = {path = "../fixed_point"}
 array_vec = {path = "../array_vec"}
 
 [lints]
-
 workspace = true
