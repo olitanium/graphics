@@ -12,11 +12,11 @@ fn invoke_and_print() {
 
     y[(2, 1)] = 3.0;
 
-    assert!(y[(2, 1)] == 3.0);
+    assert_eq!(y[(2, 1)], 3.0);
 
     let larger = y.truncate::<5, 3>();
 
-    println!("{:?}", larger);
+    eprintln!("{larger:?}");
 }
 
 #[test]

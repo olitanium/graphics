@@ -1,3 +1,5 @@
+use std::ops;
+
 #[expect(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
@@ -53,17 +55,40 @@ impl uf8 {
     to_float!(to_f64, f64, u64);
 }
 
-impl core::ops::Mul for uf8 {
+const impl ops::Mul for uf8 {
     type Output = Self;
 
+    #[inline]
     fn mul(self, rhs: Self) -> Self::Output {
         let (_, inner) = self.inner.carrying_mul(rhs.inner, 0);
-        Self::Output { inner }
+        Self { inner }
+    }
+}
+
+const impl ops::Add for uf8 {
+    type Output = Self;
+
+    #[inline]
+    /// Add is saturating for clamped floats.
+    fn add(self, rhs: Self) -> Self::Output {
+        let inner = self.inner.saturating_add(rhs.inner);
+        Self { inner }
+    }
+}
+
+const impl ops::Sub for uf8 {
+    type Output = Self;
+
+    #[inline]
+    /// Sub is saturating for clamped floats.
+    fn sub(self, rhs: Self) -> Self::Output {
+        let inner = self.inner.saturating_sub(rhs.inner);
+        Self { inner }
     }
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
     #[test]
     fn half_times_half() {
@@ -87,7 +112,7 @@ mod test {
         let third = uf8::from_f32(0.33).unwrap();
         let float = third.to_f32();
 
-        assert!((float - (0.33)).abs() < 0.1);
+        assert!((float - (0.33)).abs() < 0.00001);
     }
 
     #[test]
@@ -99,18 +124,18 @@ mod test {
     fn plus_one() {
         let one = uf8::from_f32(1.0).unwrap();
 
-        let nineninenine = uf8::from_f32(0.99999999).unwrap();
+        let nineninenine = uf8::from_f32(0.999_999).unwrap();
 
-        assert_eq!(nineninenine, one)
+        assert_eq!(nineninenine, one);
     }
 
     #[test]
     fn rapid_round_trip() {
-        let start = 0.6171875;
+        let start = 0.617_187_5;
         let value = uf8::from_f64(start).unwrap();
 
         let rapid_float = value.to_f64();
 
-        assert!((start - rapid_float).abs() <= 1.0 / (u8::MAX as f64))
+        assert!((start - rapid_float).abs() <= 1.0 / f64::from(u8::MAX));
     }
 }

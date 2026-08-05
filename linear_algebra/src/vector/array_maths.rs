@@ -1,19 +1,15 @@
-use std::marker::Destruct;
+use core::marker::Destruct;
+use core::mem;
 use core::ops::{Add, Mul, Sub};
 
+use array_vec::ArrayVec;
+
+/// Macro to generate trivially simple element wise operations.
 macro_rules! elem_wise {
     ($trait:ident:: $fn:ident, $token:tt) => {
         #[inline]
         pub const fn $fn<const N: usize, T>(mut lhs: [T; N], rhs: [T; N]) -> [T; N] where T: [const] $trait<Output = T> + [const] Clone + [const] Destruct {
             //core::array::from_fn(|index| core::ops::$trait::$fn(lhs[index], rhs[index]))
-
-            /*let mut array = lhs;
-            let mut index = 0;
-
-            while index < N {
-                array[index] = array[index] $token rhs[index];
-                index += 1;
-            }*/
 
             let mut index = 0;
             while let Some((lhs_value, rhs_value)) = Option::zip(lhs.get_mut(index), rhs.get(index)) {
@@ -26,32 +22,32 @@ macro_rules! elem_wise {
     };
 }
 
-pub const fn sum<
-    const N: usize,
-    T,
->(
-    v1: [T; N],
-) -> T where T: [const] Add<Output = T> + [const] Clone + [const] Destruct + [const] Default {
-    // if N > 0 {
-    // let mut output = v1[0];
-    //
-    // let mut index = 1;
-    // while index < N {
-    // output = output + v1[index];
+/// Sum the values in an array, without the `Sum` trait.
+pub const fn sum<const N: usize, T>(v1: [T; N]) -> T
+where
+    T: [const] Add<Output = T> + [const] Destruct + [const] Default,
+{
+    // let mut index = 0;
+    // let mut accum = T::default();
+    // while let Some(value) = v1.get(index) {
+    // accum = accum.clone() + value.clone();
     // index += 1;
     // }
     //
-    // output
-    // } else {
-    // T::default()
-    // }
+    // accum;
 
-    let mut index = 0;
+    let mut array = ArrayVec::from_array(v1);
     let mut accum = T::default();
-    while let Some(value) = v1.get(index) {
-        accum = accum.clone() + value.clone();
-        index += 1;
+    while let Some(value) = array.pop() {
+        accum = accum + value;
     }
+
+    #[expect(
+        clippy::mem_forget,
+        reason = "array empty, can be forgotten. required for const function. Using the \
+                  `ArrayVec` removes the need for the Clone bound"
+    )]
+    mem::forget(array);
 
     accum
 }
@@ -61,17 +57,14 @@ elem_wise!(Sub::sub, -);
 elem_wise!(Mul::mul, *);
 
 #[inline]
-pub const fn dot<
-    const N: usize,
-    T,
->(
-    v1: [T; N],
-    v2: [T; N],
-) -> T where T: [const] Add<Output = T>
+pub const fn dot<const N: usize, T>(v1: [T; N], v2: [T; N]) -> T
+where
+    T: [const] Add<Output = T>
         + [const] Mul<Output = T>
         + [const] Clone
         + [const] Default
-        + [const] Destruct {
+        + [const] Destruct,
+{
     sum(mul(v1, v2))
 }
 

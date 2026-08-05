@@ -4,6 +4,8 @@ use fixed_point::uf8;
 
 use crate::{UnitVector, Vector};
 
+/// An in-development representation of a `UnitVector` but with one fewer
+/// element and more compact form. For a 3 dimensional
 pub struct CompactUnitVector<const N: usize>([uf8; N - 1])
 where
     [(); N - 1]:;
@@ -79,7 +81,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_many() {
+    fn many() {
         for x in -10..10 {
             for y in -10..10 {
                 for z in -10..10 {

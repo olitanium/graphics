@@ -5,6 +5,5 @@ edition = "2024"
 
 [dependencies]
 
-
 [lints]
 workspace = true

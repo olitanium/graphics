@@ -1,4 +1,7 @@
 #![feature(signed_bigint_helpers)]
+#![feature(const_unsigned_bigint_helpers)]
+#![feature(const_ops)]
+#![feature(const_trait_impl)]
 
 mod sf8_mod;
 mod uf8_mod;

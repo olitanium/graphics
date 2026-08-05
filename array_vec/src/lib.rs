@@ -5,10 +5,10 @@
 #![feature(const_index)]
 
 use core::fmt::Debug;
-use std::marker::Destruct;
 use core::mem::{self, MaybeUninit};
 use core::ops::{Deref, DerefMut, Index, IndexMut};
 use core::ptr;
+use std::marker::Destruct;
 mod iterators;
 mod test;
 
@@ -137,7 +137,10 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
     }
 
-    pub fn map<U, F>(self, f: F) -> ArrayVec<U, N> where F: FnMut(T) -> U {
+    pub fn map<U, F>(self, f: F) -> ArrayVec<U, N>
+    where
+        F: FnMut(T) -> U,
+    {
         self.into_iter().map(f).collect()
     }
 
