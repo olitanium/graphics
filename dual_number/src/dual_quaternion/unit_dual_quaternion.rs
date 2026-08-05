@@ -25,7 +25,7 @@ impl UnitDualQuaternion {
     }
 
     #[must_use]
-    pub fn conjugate(self) -> Self {
+    pub const fn conjugate(self) -> Self {
         Self(self.0.quaternion_conjugate())
     }
 

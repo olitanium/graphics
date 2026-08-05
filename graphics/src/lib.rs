@@ -27,7 +27,6 @@ pub mod vertex_array;
 pub mod vertex_buffer;
 
 pub use colour;
-pub(crate) use environment::PrivateToken;
 pub use environment::{ApiState, Draw, DrawNothing, DrawOut, Environment, Event, Key, PollResult};
 pub use linear_algebra;
 pub use model::Model;

@@ -87,8 +87,8 @@ where
     BoundingBoxElement<V, DIMS, Bt>: BoundingBoxShaderProgram<DIMS>,
     [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
 {
-    fn draw(
-        self: Box<Self>,
+    fn draw_sized(
+        self,
         register: &mut FramebufferContext,
         marker: &mut ShaderProgramContext,
     ) -> DrawOut {
@@ -111,5 +111,14 @@ where
             .unwrap();
 
         DrawOut::OK
+    }
+
+    fn draw(
+        self: Box<Self>,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
+    ) -> DrawOut {
+        let inner = *self;
+        inner.draw_sized(fb_context, sp_context)
     }
 }

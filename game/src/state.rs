@@ -10,7 +10,7 @@ use engine::modelling::cubic::camera::Projection;
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
 use engine::modelling::{Bloom, SkyBox};
 use engine::types::TexDim;
-use engine::{ApiState, Event, PollResult};
+use engine::{ApiState, Draw, Event, PollResult};
 
 use crate::camera::GameCamera;
 use crate::morgan::Sun;
@@ -44,9 +44,16 @@ pub struct StateError;
 utils::error_boilerplate!(StateError);
 
 impl ApiState for State {
+    type DrawOutput<'a>
+        = Vec<Box<dyn Draw + 'a>>
+    where
+        Self: 'a;
     type Error = StateError;
 
-    fn poll<'a>(&'a mut self, events: Vec<Event<'a>>) -> PollResult<'a, Self::Error> {
+    fn poll<'a>(
+        &'a mut self,
+        events: Vec<Event<'a>>,
+    ) -> PollResult<Self::DrawOutput<'a>, Self::Error> {
         let mut frame_time = Duration::ZERO;
         let mut game_duration = Duration::ZERO;
         let mut keyboard = HashSet::new();

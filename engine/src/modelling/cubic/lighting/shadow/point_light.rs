@@ -191,8 +191,8 @@ impl<'a> PointLightIlluminatesGroup<'a> {
 }
 
 impl<'a> Draw for PointLightIlluminatesGroup<'a> {
-    fn draw(
-        self: Box<Self>,
+    fn draw_sized(
+        self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
     ) -> DrawOut {
@@ -201,5 +201,14 @@ impl<'a> Draw for PointLightIlluminatesGroup<'a> {
             .unwrap();
 
         DrawOut::OK
+    }
+
+    fn draw(
+        self: Box<Self>,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
+    ) -> DrawOut {
+        let inner = *self;
+        inner.draw_sized(fb_context, sp_context)
     }
 }

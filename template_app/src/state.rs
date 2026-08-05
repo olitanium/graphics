@@ -1,24 +1,23 @@
-use std::collections::HashSet;
-
-use engine::framebuffer::DefaultFramebuffer;
-use engine::modelling::cubic::{Camera, SimpleCubic};
-use engine::{ApiState, DrawNothing, Event, SimpleEntity};
+use engine::types::TexDim;
+use engine::{ApiState, Draw, DrawNothing, Event};
 
 pub struct State {}
 
 impl ApiState for State {
+    type DrawOutput<'a>
+        = DrawNothing
+    where
+        Self: 'a;
     type Error = ();
 
-    fn new(
-        initial_size: (engine::types::TexDim, engine::types::TexDim),
-    ) -> Result<Self, Self::Error> {
+    fn new(_initial_size: (TexDim, TexDim)) -> Result<Self, Self::Error> {
         Ok(Self {})
     }
 
     fn poll<'a>(
         &'a mut self,
         events: Vec<engine::Event<'a>>,
-    ) -> engine::PollResult<'a, Self::Error> {
+    ) -> engine::PollResult<Self::DrawOutput<'a>, Self::Error> {
         let mut opt_default = None;
         let mut frame_time = Default::default();
         let mut keys = Default::default();
@@ -35,6 +34,6 @@ impl ApiState for State {
             }
         }
 
-        engine::PollResult::Draw(DrawNothing::new())
+        engine::PollResult::Draw(DrawNothing)
     }
 }

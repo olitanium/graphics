@@ -66,8 +66,8 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
 impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: FnMut() -> ColourRGBA>
     Draw for Group<'a, 1, D, V, T, F>
 {
-    fn draw(
-        self: Box<Self>,
+    fn draw_sized(
+        self,
         register: &mut FramebufferContext,
         marker: &mut ShaderProgramContext,
     ) -> DrawOut {
@@ -90,5 +90,14 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
             .expect("calculated animation was created from given skeleton");
 
         DrawOut::OK
+    }
+
+    fn draw(
+        self: Box<Self>,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
+    ) -> DrawOut {
+        let inner = *self;
+        inner.draw_sized(fb_context, sp_context)
     }
 }

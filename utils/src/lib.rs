@@ -62,6 +62,7 @@ mod testbed;
 #[macro_export]
 macro_rules! builder {
     ($name:ident, $optname:ident : Option < $typ:ty >) => {
+        #[doc = concat!("set ", stringify!($name), " to a value")]
         pub fn $name(mut self, $name: $typ) -> Self {
             self.$name = Some($name);
             self

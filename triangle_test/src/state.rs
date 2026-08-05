@@ -12,6 +12,7 @@ use engine::types::TexDim;
 use engine::{
     ApiState,
     ColourRGBA,
+    Draw,
     Event,
     Key,
     PollResult,
@@ -28,6 +29,7 @@ pub struct State {
 }
 
 impl ApiState for State {
+    type DrawOutput<'a> = Box<dyn Draw + 'a>;
     type Error = ();
 
     fn new(
@@ -85,7 +87,7 @@ impl ApiState for State {
     fn poll<'a>(
         &'a mut self,
         events: Vec<engine::Event<'a>>,
-    ) -> engine::PollResult<'a, Self::Error> {
+    ) -> engine::PollResult<Self::DrawOutput<'a>, Self::Error> {
         let mut opt_default = None;
         let mut frame_time = Default::default();
         let mut keys = Default::default();

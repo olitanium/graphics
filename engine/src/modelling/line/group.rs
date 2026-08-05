@@ -1,8 +1,9 @@
+use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::linear_algebra::Matrix;
 use graphics::shader_program::Uniform;
 use graphics::texture::FlatTexture;
-use graphics::{Draw, DrawOut};
+use graphics::{Draw, DrawOut, ShaderProgramContext};
 
 use crate::modelling::TestLineVertex;
 use crate::modelling::cubic::Camera;
@@ -35,10 +36,10 @@ impl<'a, U: Uniform, const OUT: usize, F: FramebufferWithoutExtra<OUT>> Group<'a
 impl<'a, F: FramebufferWithoutExtra<1, Tex = FlatTexture>> Draw
     for Group<'a, TestLineVertex, 1, F>
 {
-    fn draw(
-        self: Box<Self>,
-        fb_context: &mut graphics::framebuffer::FramebufferContext,
-        shader_context: &mut graphics::ShaderProgramContext,
+    fn draw_sized(
+        self,
+        fb_context: &mut FramebufferContext,
+        shader_context: &mut ShaderProgramContext,
     ) -> DrawOut {
         let mut active_framebuffer = self.destination.bind(fb_context);
         let mut active_shader = opengl_shaders::line_test().use_program(shader_context);
@@ -52,5 +53,14 @@ impl<'a, F: FramebufferWithoutExtra<1, Tex = FlatTexture>> Draw
             .unwrap();
 
         DrawOut::OK
+    }
+
+    fn draw(
+        self: Box<Self>,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
+    ) -> DrawOut {
+        let inner = *self;
+        inner.draw_sized(fb_context, sp_context)
     }
 }

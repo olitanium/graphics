@@ -5,8 +5,8 @@ use crate::framebuffer::FramebufferContext;
 use crate::shader_program::ShaderProgramContext;
 use crate::types::Query;
 
-pub enum PollResult<'a, E> {
-    Draw(Box<dyn Draw + 'a>),
+pub enum PollResult<D: Draw, E> {
+    Draw(D),
     Error(E),
     Close,
     Restart,
@@ -18,11 +18,11 @@ pub enum PollResultResidual<E> {
     Restart,
 }
 
-impl<'a, E> Residual<Box<dyn Draw + 'a>> for PollResultResidual<E> {
-    type TryType = PollResult<'a, E>;
+impl<'a, E, D: Draw + 'a> Residual<D> for PollResultResidual<E> {
+    type TryType = PollResult<D, E>;
 }
 
-impl<E> FromResidual<Result<Infallible, E>> for PollResult<'_, E> {
+impl<E, D: Draw> FromResidual<Result<Infallible, E>> for PollResult<D, E> {
     fn from_residual(residual: Result<Infallible, E>) -> Self {
         match residual {
             Err(e) => Self::Error(e),
@@ -30,15 +30,15 @@ impl<E> FromResidual<Result<Infallible, E>> for PollResult<'_, E> {
     }
 }
 
-impl<E> FromResidual<Result<!, E>> for PollResult<'_, E> {
+impl<E, D: Draw> FromResidual<Result<!, E>> for PollResult<D, E> {
     fn from_residual(residual: Result<!, E>) -> Self {
         let e = residual.into_err();
         Self::Error(e)
     }
 }
 
-impl<'a, E> Try for PollResult<'a, E> {
-    type Output = Box<dyn Draw + 'a>;
+impl<E, D: Draw> Try for PollResult<D, E> {
+    type Output = D;
     type Residual = PollResultResidual<E>;
 
     fn branch(self) -> std::ops::ControlFlow<Self::Residual, Self::Output> {
@@ -55,7 +55,7 @@ impl<'a, E> Try for PollResult<'a, E> {
     }
 }
 
-impl<E> FromResidual<PollResultResidual<E>> for PollResult<'_, E> {
+impl<E, D: Draw> FromResidual<PollResultResidual<E>> for PollResult<D, E> {
     fn from_residual(residual: <Self as Try>::Residual) -> Self {
         match residual {
             PollResultResidual::Err(err) => Self::Error(err),
@@ -71,31 +71,93 @@ pub trait Draw {
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
     ) -> DrawOut;
+
+    fn draw_sized(
+        self,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
+    ) -> DrawOut
+    where
+        Self: Sized;
 }
 
-pub(crate) struct PrivateToken;
-
 #[must_use]
-pub enum DrawOut {
+enum DrawOutInner {
     Draw,
-    QueryOutput {
-        name: usize,
-        #[expect(private_interfaces)]
-        _token: PrivateToken,
-        query_object: Query,
-    },
-    MultiQueryOutput {
-        #[expect(private_interfaces)]
-        _token: PrivateToken,
-        values: Vec<(usize, Query)>,
-    },
+    QueryOutput { name: usize, query_object: Query },
+    MultiQueryOutput { values: Vec<(usize, Query)> },
+}
+
+pub struct DrawOut {
+    inner: DrawOutInner,
 }
 
 impl DrawOut {
-    pub const OK: Self = Self::Draw;
+    pub const OK: Self = Self {
+        inner: DrawOutInner::Draw,
+    };
+
+    pub(crate) fn make_query(name: usize, query_object: Query) -> Self {
+        Self {
+            inner: DrawOutInner::QueryOutput { name, query_object },
+        }
+    }
+
+    pub(crate) fn get_query(self) -> Option<Vec<(usize, Query)>> {
+        match self.inner {
+            DrawOutInner::Draw => None,
+            DrawOutInner::QueryOutput { name, query_object } => Some(vec![(name, query_object)]),
+            DrawOutInner::MultiQueryOutput { values } => Some(values),
+        }
+    }
 }
 
-impl<T: Draw + ?Sized> Draw for [Box<T>] {
+// impl<'a, T: Draw + ?Sized + 'a> Draw for Box<T> {
+// fn draw(
+// self: Box<Self>,
+// fb_context: &mut FramebufferContext,
+// sp_context: &mut ShaderProgramContext,
+// ) -> DrawOut {
+// let new_self = self as Box<dyn Draw>;
+// new_self.draw(fb_context, sp_context)
+// }
+//
+// fn draw_sized(
+// self,
+// fb_context: &mut FramebufferContext,
+// sp_context: &mut ShaderProgramContext,
+// ) -> DrawOut
+// where
+// Self: Sized,
+// {
+// self.draw(fb_context, sp_context)
+// }
+// }
+
+impl<'a> Draw for Box<dyn Draw + 'a> {
+    fn draw(
+        self: Box<Self>,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
+    ) -> DrawOut {
+        let inner = *self;
+        inner.draw(fb_context, sp_context)
+    }
+
+    fn draw_sized(
+        self,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
+    ) -> DrawOut
+    where
+        Self: Sized,
+    {
+        let inner = self as Box<dyn Draw>;
+        inner.draw(fb_context, sp_context)
+    }
+}
+
+impl<'a, T: Draw + 'a> Draw for [T] {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
@@ -103,13 +165,13 @@ impl<T: Draw + ?Sized> Draw for [Box<T>] {
     ) -> DrawOut {
         let mut outputs = Vec::new();
         for group in self {
-            match group.draw(fb_context, shader_marker) {
-                DrawOut::QueryOutput {
+            match group.draw_sized(fb_context, shader_marker).inner {
+                DrawOutInner::QueryOutput {
                     name, query_object, ..
                 } => {
                     outputs.push((name, query_object));
                 }
-                DrawOut::MultiQueryOutput { values, .. } => {
+                DrawOutInner::MultiQueryOutput { values, .. } => {
                     outputs.extend(values);
                 }
                 _ => {}
@@ -119,14 +181,14 @@ impl<T: Draw + ?Sized> Draw for [Box<T>] {
         if outputs.is_empty() {
             DrawOut::OK
         } else {
-            DrawOut::MultiQueryOutput {
-                _token: PrivateToken,
-                values: outputs,
+            DrawOut {
+                inner: DrawOutInner::MultiQueryOutput { values: outputs },
             }
         }
     }
 }
-impl<'a> Draw for Vec<Box<dyn Draw + 'a>> {
+
+impl<'a, T: Draw + 'a> Draw for Vec<T> {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
@@ -135,19 +197,38 @@ impl<'a> Draw for Vec<Box<dyn Draw + 'a>> {
         let slice = self.into_boxed_slice();
         slice.draw(fb_context, sp_context)
     }
+
+    fn draw_sized(
+        self,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
+    ) -> DrawOut
+    where
+        Self: Sized,
+    {
+        let slice = self.into_boxed_slice();
+        slice.draw(fb_context, sp_context)
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct DrawNothing;
 
 impl DrawNothing {
-    pub fn new() -> Box<Self> {
-        Box::new(DrawNothing)
+    pub fn new() -> Self {
+        DrawNothing
     }
 }
 
 impl Draw for DrawNothing {
     fn draw(self: Box<Self>, _: &mut FramebufferContext, _: &mut ShaderProgramContext) -> DrawOut {
+        DrawOut::OK
+    }
+
+    fn draw_sized(self, _: &mut FramebufferContext, _: &mut ShaderProgramContext) -> DrawOut
+    where
+        Self: Sized,
+    {
         DrawOut::OK
     }
 }

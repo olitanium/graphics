@@ -8,7 +8,6 @@ mod global_state;
 mod input;
 mod window;
 
-pub(crate) use draw::PrivateToken;
 pub use draw::{Draw, DrawNothing, DrawOut};
 use glfw::fail_on_errors;
 pub use global_state::ApiState;
@@ -195,31 +194,9 @@ impl<G: ApiState> Environment<G> {
                     PollResult::Error(err) => return Err(err),
                     PollResult::Draw(to_draw) => {
                         framebuffer_register.clear();
-                        query_outputs = match to_draw
-                            .draw(&mut framebuffer_register, &mut shader_program_marker)
-                        {
-                            DrawOut::Draw => None,
-                            DrawOut::QueryOutput {
-                                name, query_object, ..
-                            } => Some(vec![(name, query_object)]),
-                            DrawOut::MultiQueryOutput { _token, values } => Some(values),
-                        }
-                        // Begin rendering code
-                        // for drawable in to_draw {
-                        // let draw_out = drawable
-                        // .draw(&mut framebuffer_register, &mut
-                        // shader_program_marker); match
-                        // draw_out { DrawOut::Draw =>
-                        // {} DrawOut::QueryOutput {
-                        // name, query_object, ..
-                        // } => query_outputs
-                        // .get_or_insert_default()
-                        // .push((name, query_object)),
-                        // DrawOut::MultiQueryOutput { values, .. } => {
-                        // query_outputs.get_or_insert_default().extend(values)
-                        // }
-                        // }
-                        // }
+                        query_outputs = to_draw
+                            .draw_sized(&mut framebuffer_register, &mut shader_program_marker)
+                            .get_query();
                     }
                     PollResult::Restart => break,
                 }
@@ -230,7 +207,10 @@ impl<G: ApiState> Environment<G> {
         }
     }
 
-    fn poll(&mut self, queries: Option<Vec<(usize, Query)>>) -> PollResult<'_, G::Error> {
+    fn poll(
+        &mut self,
+        queries: Option<Vec<(usize, Query)>>,
+    ) -> PollResult<G::DrawOutput<'_>, G::Error> {
         let curr_time = Instant::now();
         let frametime = curr_time - *self.old_frame.get_or_insert(curr_time);
         self.old_frame = Some(curr_time);
@@ -264,7 +244,10 @@ impl<'env, G: ApiState> FrameIter<'env, G> {
 }
 
 impl<G: ApiState> FrameIter<'_, G> {
-    pub fn next(&mut self, queries: Option<Vec<(usize, Query)>>) -> PollResult<'_, G::Error> {
+    pub fn next(
+        &mut self,
+        queries: Option<Vec<(usize, Query)>>,
+    ) -> PollResult<G::DrawOutput<'_>, G::Error> {
         if !self.env.window.should_close() {
             // Poll for and process events
             self.env.glfw.poll_events();

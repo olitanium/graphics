@@ -48,8 +48,8 @@ impl<'a, const OUT: usize, O, X: FramebufferWithDepth<OUT>> Group<'a, OUT, O, X>
 }
 
 impl<'a, const OUT: usize, O, D: FramebufferWithDepth<OUT>> Draw for Group<'a, OUT, O, D> {
-    fn draw(
-        self: Box<Self>,
+    fn draw_sized(
+        self,
         register: &mut FramebufferContext,
         marker: &mut ShaderProgramContext,
     ) -> DrawOut {
@@ -70,5 +70,14 @@ impl<'a, const OUT: usize, O, D: FramebufferWithDepth<OUT>> Draw for Group<'a, O
         active_shader.drawing_skybox(false);
 
         DrawOut::OK
+    }
+
+    fn draw(
+        self: Box<Self>,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
+    ) -> DrawOut {
+        let inner = *self;
+        inner.draw_sized(fb_context, sp_context)
     }
 }

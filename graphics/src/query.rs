@@ -31,17 +31,26 @@ impl<D: Draw + ?Sized> Draw for HasDrawnQuery<D> {
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
     ) -> DrawOut {
+        let inner = *self;
+        inner.draw_sized(fb_context, sp_context)
+    }
+
+    #[inline]
+    fn draw_sized(
+        self,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
+    ) -> DrawOut
+    where
+        Self: Sized,
+    {
         gl_call! {gl::BeginQuery(gl::ANY_SAMPLES_PASSED, self.query.as_primitive()); }
 
         _ = self.target.draw(fb_context, sp_context);
 
         gl_call! {gl::EndQuery(gl::ANY_SAMPLES_PASSED);}
 
-        DrawOut::QueryOutput {
-            _token: crate::PrivateToken,
-            query_object: self.query,
-            name: self.name,
-        }
+        DrawOut::make_query(self.name, self.query)
     }
 }
 

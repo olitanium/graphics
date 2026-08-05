@@ -15,6 +15,9 @@ members = [
     "fixed_point", "bezier"
 , "handle_vec", "triangle_intersection", "triangle_test", "get_or_extend", "partition", "template_app"]
 
+[workspace.lints.rust]
+missing_docs = "warn"
+
 [workspace.lints.clippy]
 pedantic = { level = "warn", priority = -1 }
 restriction = { level = "warn", priority = -1 }
@@ -34,3 +37,6 @@ default_numeric_fallback = "allow"
 shadow_reuse = "allow"
 missing_trait_methods = "allow"
 self_named_module_files = "allow"
+pub_with_shorthand = "allow"
+question_mark_used = "allow"
+separated_literal_suffix = "allow"

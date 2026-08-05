@@ -67,8 +67,8 @@ impl<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> Group<'a, X> {
 }
 
 impl<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> Draw for Group<'a, X> {
-    fn draw(
-        self: Box<Self>,
+    fn draw_sized(
+        self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
     ) -> DrawOut {
@@ -114,5 +114,14 @@ impl<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> Draw for Group<'a, X> {
 
         drop(active_shadow_shader);
         DrawOut::OK
+    }
+
+    fn draw(
+        self: Box<Self>,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
+    ) -> DrawOut {
+        let inner = *self;
+        inner.draw_sized(fb_context, sp_context)
     }
 }

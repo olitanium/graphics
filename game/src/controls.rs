@@ -4,7 +4,7 @@ use std::ops::{FromResidual, Residual, Try};
 use std::time::Duration;
 
 use engine::linear_algebra::Vector;
-use engine::{Key, PollResult};
+use engine::{ApiState, Key, PollResult};
 
 use crate::state::{State, StateError};
 
@@ -55,7 +55,9 @@ impl<T, E: Into<StateError>> FromResidual<Result<Infallible, E>> for ControlOutp
     }
 }
 
-impl FromResidual<ControlOutput<!>> for PollResult<'_, StateError> {
+impl FromResidual<ControlOutput<!>>
+    for PollResult<<State as ApiState>::DrawOutput<'_>, StateError>
+{
     fn from_residual(residual: ControlOutput<!>) -> Self {
         match residual {
             ControlOutput::Close => PollResult::Close,

@@ -54,8 +54,8 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
 impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
     for Group<'a, MAX, OUT, D>
 {
-    fn draw(
-        self: Box<Self>,
+    fn draw_sized(
+        self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
     ) -> DrawOut {
@@ -86,5 +86,14 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
                 .unwrap();
         }
         DrawOut::OK
+    }
+
+    fn draw(
+        self: Box<Self>,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
+    ) -> DrawOut {
+        let inner = *self;
+        inner.draw_sized(fb_context, sp_context)
     }
 }
