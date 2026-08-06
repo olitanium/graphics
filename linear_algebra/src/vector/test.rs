@@ -1,23 +1,4 @@
-use super::*;
-
-#[test]
-fn invoke_and_print() {
-    let _x = Matrix::from_row_major([
-        [1.0, 1.0, 1.0, 2.0],
-        [1.0, 1.0, 1.0, 2.0],
-        [1.0, 1.0, 1.0, 2.0],
-    ]);
-
-    let mut y = Matrix::from_row_major([[1.0, 1.0], [1.0, 1.0], [1.0, 1.0], [1.0, 2.0]]);
-
-    y[(2, 1)] = 3.0;
-
-    assert_eq!(y[(2, 1)], 3.0);
-
-    let larger = y.truncate::<5, 3>();
-
-    eprintln!("{larger:?}");
-}
+use crate::Vector;
 
 #[test]
 fn reflect() {
@@ -34,7 +15,7 @@ fn flip() {
     assert_eq!(
         Vector::new([1.0, 1.0, 1.0]),
         Vector::new([-1.0, -1.0, -1.0]).flip()
-    )
+    );
 }
 
 #[test]
@@ -42,7 +23,7 @@ fn scale() {
     assert_eq!(
         Vector::new([1.0, 1.0, 1.0]),
         Vector::new([0.5, 0.5, 0.5]).scale(2.0)
-    )
+    );
 }
 
 #[test]
@@ -69,5 +50,5 @@ fn as_ref_test() {
 
     let vector_x = Vector::new(x);
 
-    assert_eq!(AsRef::<Vector<_>>::as_ref(&x), &vector_x)
+    assert_eq!(AsRef::<Vector<_>>::as_ref(&x), &vector_x);
 }

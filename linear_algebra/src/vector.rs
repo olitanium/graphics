@@ -1,18 +1,19 @@
 mod array_maths;
 
-use core::array;
-use core::ops::{Index, IndexMut};
 use core::iter::Sum;
-use std::marker::Destruct;
-use core::mem;
-use core::ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use core::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign};
 use core::slice::SliceIndex;
+use core::{array, mem};
+use std::marker::Destruct;
 
 use super::matrix::Matrix;
 use crate::vector::array_maths::mul;
 
 mod unit_vector;
 pub use unit_vector::UnitVector;
+
+#[cfg(test)]
+mod test;
 
 mod compact_unit;
 pub use compact_unit::CompactUnitVector;
@@ -152,10 +153,10 @@ impl<const N: usize, T> Vector<N, T> {
         N
     }
 
-    pub const fn get<I>(
-        &self,
-        index: I,
-    ) -> Option<&<I as SliceIndex<[T]>>::Output> where I: [const] SliceIndex<[T]> {
+    pub const fn get<I>(&self, index: I) -> Option<&<I as SliceIndex<[T]>>::Output>
+    where
+        I: [const] SliceIndex<[T]>,
+    {
         self.0.get(index)
     }
 
@@ -492,7 +493,10 @@ impl<const N: usize, T> Sum<Vector<N, T>> for Option<Vector<N, T>>
 where
     Vector<N, T>: Add<Output = Vector<N, T>>,
 {
-    fn sum<I>(iter: I) -> Self where I: Iterator<Item = Vector<N, T>> {
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = Vector<N, T>>,
+    {
         iter.reduce(Add::add)
     }
 }
@@ -502,7 +506,10 @@ where
     Option<Self>: Sum<Self>,
     Self: Default,
 {
-    fn sum<I>(iter: I) -> Self where I: Iterator<Item = Self> {
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = Self>,
+    {
         Option::<Self>::sum(iter).unwrap_or_default()
     }
 }

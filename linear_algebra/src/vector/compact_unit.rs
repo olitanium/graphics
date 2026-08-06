@@ -5,7 +5,8 @@ use fixed_point::uf8;
 use crate::{UnitVector, Vector};
 
 /// An in-development representation of a `UnitVector` but with one fewer
-/// element and more compact form. For a 3 dimensional
+/// element and more compact form. For a 3 dimensional `UnitVector` this type
+/// will use 2 dimensions.
 pub struct CompactUnitVector<const N: usize>([uf8; N - 1])
 where
     [(); N - 1]:;

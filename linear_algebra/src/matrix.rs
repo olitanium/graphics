@@ -1,3 +1,5 @@
+//! module for defining and storing matrix
+
 use core::fmt::Debug;
 use core::iter;
 use core::ops::{self, Index, IndexMut};
@@ -7,6 +9,28 @@ use multi_zip::MultiZip;
 
 use crate::vector::Vector;
 
+#[cfg(test)]
+mod test;
+
+/// Matrix object in column major.
+///
+/// Features constructors to create new from row or column major, but column
+/// major constructor is a no-op.
+///
+/// Comparable with other Matrices, this type offers matrix-like operations such
+/// as multiplication and element-wise operataions.
+///
+/// # Example
+///
+/// ```rust
+/// use linear_algebra::Matrix;
+/// let one = Matrix::from_col_major([[1.0, 2.0], [3.0, 4.0]]);
+/// let half = Matrix::from_row_major([[0.5, 1.0], [1.5, 2.0]]);
+///
+/// let two_half = 2.0 * half;
+///
+/// assert_eq!(one, two_half);
+/// ```
 #[repr(transparent)]
 #[derive(Clone, Copy)]
 pub struct Matrix<const R: usize, const C: usize>([[f32; R]; C]); // Col-Major!!!!!
@@ -138,7 +162,6 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
         MultiZip::new(x)
     }
 
-    #[expect(clippy::missing_panics_doc)]
     #[inline]
     pub fn row_major(&self) -> [f32; C * R] {
         let x = self
@@ -205,19 +228,12 @@ impl<const R: usize, const S: usize, const C: usize> ops::Mul<Matrix<S, C>> for 
 
     #[inline]
     fn mul(self, rhs: Matrix<S, C>) -> Self::Output {
-        Self::Output::from_col_major(
-            rhs.col_iter()
-                .map(|b_col| {
-                    self.row_iter()
-                        .map(|val| Vector::new(val).dot(Vector::new(b_col)))
-                        .collect::<ArrayVec<_, R>>()
-                        .try_into_array()
-                        .expect("correct number of components R")
-                })
-                .collect::<ArrayVec<_, C>>()
-                .try_into_array()
-                .expect("enough components C"),
-        )
+        let self_transpose = self.transpose();
+        Self::Output::from_col_major(rhs.into_inner().map(|b_col| {
+            self_transpose
+                .into_inner()
+                .map(|val| Vector::new(val).dot(Vector::new(b_col)))
+        }))
     }
 }
 
@@ -252,8 +268,10 @@ impl_ops!(Add::add);
 impl_ops!(Sub::sub);
 
 impl<const R: usize, const C: usize> Index<(usize, usize)> for Matrix<R, C> {
-    type Output = <Vector<R, f32> as Index<usize>>::Output;
+    type Output = f32;
 
+    /// # Panics
+    /// Will panic is the index is put of bounds.
     #[inline]
     fn index(&self, index: (usize, usize)) -> &Self::Output {
         let (row, col) = index;
@@ -263,6 +281,8 @@ impl<const R: usize, const C: usize> Index<(usize, usize)> for Matrix<R, C> {
 }
 
 impl<const R: usize, const C: usize> IndexMut<(usize, usize)> for Matrix<R, C> {
+    /// # Panics
+    /// Will panic is the index is put of bounds.
     #[inline]
     fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
         let (row, col) = index;
@@ -279,7 +299,9 @@ impl<const R: usize> From<Vector<R, f32>> for Matrix<R, 1> {
 }
 
 impl Matrix<2, 2> {
+    /// Calculate the determinant of the matrix.
     #[must_use]
+    #[inline]
     pub const fn determinant(&self) -> f32 {
         let [[a, c], [b, d]] = self.0;
 
@@ -288,6 +310,8 @@ impl Matrix<2, 2> {
 }
 
 impl Matrix<3, 3> {
+    /// Calculate the determinant of the matrix.
+    #[inline]
     #[must_use]
     pub const fn determinant(&self) -> f32 {
         let [[a, d, g], [b, e, h], [c, f, i]] = self.into_inner();
@@ -297,15 +321,11 @@ impl Matrix<3, 3> {
 }
 
 impl Matrix<4, 4> {
+    /// Create a matrix to scale a 3 dimensional homogeneous vector (i.e. a
+    /// `Vector<4>` where `x[3] == 1.0`).
     #[must_use]
+    #[inline]
     pub const fn transform_scale(sx: f32, sy: f32, sz: f32) -> Self {
-        // let mut matrix = Self::zeros();
-        // matrix[(0, 0)] = sx;
-        // matrix[(1, 1)] = sy;
-        // matrix[(2, 2)] = sz;
-        // matrix[(3, 3)] = 1.0;
-        // matrix
-
         Self::from_col_major([
             [sx, 0.0, 0.0, 0.0],
             [0.0, sy, 0.0, 0.0],
@@ -314,18 +334,33 @@ impl Matrix<4, 4> {
         ])
     }
 
+    /// Create a matrix to translate a 3 dimensional homogeneous vector (i.e. a
+    /// `Vector<4>` where `x[3] == 1.0`).
+    #[inline]
     #[must_use]
     pub const fn transform_translate(vec: Vector<3, f32>) -> Self {
-        let mut matrix = Self::identity();
-        let [_, _, _, [x, y, z, _]] = matrix.inner_mut();
-        let [vecx, vecy, vecz] = vec.into_inner();
-        *x = vecx;
-        *y = vecy;
-        *z = vecz;
+        // let mut matrix = Self::identity();
+        // let &mut [_, _, _, [ref mut x, ref mut y, ref mut z, _]] =
+        // matrix.inner_mut(); let [vecx, vecy, vecz] = vec.into_inner();
+        // x = vecx;
+        // y = vecy;
+        // z = vecz;
+        //
+        // matrix
 
-        matrix
+        let [x, y, z] = vec.into_inner();
+        Self::from_col_major([
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [x, y, z, 1.0],
+        ])
     }
 
+    /// Create a matrix to transform a 3 dimensional homogeneous vector (i.e. a
+    /// `Vector<4>` where `x[3] == 1.0`) into a perspective cube, with maximums
+    /// at +/- 1.0 on x[0], x[1] and x[2], and the
+    #[inline]
     #[must_use]
     pub fn transform_perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Self {
         let tan_fov = (fov * 0.5).tan();

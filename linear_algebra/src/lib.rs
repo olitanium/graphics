@@ -1,4 +1,7 @@
-#![expect(incomplete_features)]
+//! A comprehensive linear algrbra crate with `Vectors`, new type
+//! `UnitVectors` guaranteed to have magnitude 1.0, and `Matrix`es.
+
+#![expect(incomplete_features, reason = "Nightly features used")]
 #![feature(generic_const_exprs)]
 #![feature(const_clone)]
 #![feature(const_default)]
@@ -14,9 +17,6 @@
 
 mod matrix;
 mod vector;
-
-#[cfg(test)]
-mod test;
 
 pub use matrix::Matrix;
 pub use vector::{CompactUnitVector, UnitVector, Vector};
