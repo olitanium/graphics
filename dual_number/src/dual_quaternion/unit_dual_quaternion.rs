@@ -30,7 +30,7 @@ impl UnitDualQuaternion {
     }
 
     #[must_use]
-    pub fn inverse(self) -> Self {
+    pub const fn inverse(self) -> Self {
         self.conjugate()
     }
 

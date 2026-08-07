@@ -1,4 +1,46 @@
+use core::ops::Add;
+use core::sync::atomic::{AtomicUsize, Ordering};
+
 use crate::Vector;
+use crate::vector::array_maths;
+
+#[test]
+fn drop_check_array_manipulation() {
+    static HAS_DROPPED: AtomicUsize = AtomicUsize::new(0);
+
+    struct DropCheck;
+
+    impl Drop for DropCheck {
+        fn drop(&mut self) {
+            HAS_DROPPED.fetch_add(1, Ordering::Relaxed);
+        }
+    }
+
+    impl Add for DropCheck {
+        type Output = Self;
+
+        fn add(self, _: Self) -> Self::Output {
+            self
+        }
+    }
+
+    // On add, DropCheck only drops the second one. This means that after the add
+    // has occurred there will be one drop, and after the output is dropped there
+    // will be two drops.
+
+    let first = [const { DropCheck }; 3];
+    let second = [const { DropCheck }; 3];
+
+    assert_eq!(HAS_DROPPED.load(Ordering::Relaxed), 0);
+
+    let sum = array_maths::add(first, second);
+
+    assert_eq!(HAS_DROPPED.load(Ordering::Relaxed), 3);
+
+    drop(sum);
+
+    assert_eq!(HAS_DROPPED.load(Ordering::Relaxed), 6);
+}
 
 #[test]
 fn reflect() {
@@ -14,7 +56,7 @@ fn reflect() {
 fn flip() {
     assert_eq!(
         Vector::new([1.0, 1.0, 1.0]),
-        Vector::new([-1.0, -1.0, -1.0]).flip()
+        -Vector::new([-1.0, -1.0, -1.0])
     );
 }
 

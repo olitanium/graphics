@@ -5,6 +5,8 @@ use core::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAs
 use core::slice::SliceIndex;
 use core::{array, mem};
 use std::marker::Destruct;
+use std::mem::MaybeUninit;
+use std::ptr;
 
 use super::matrix::Matrix;
 use crate::vector::array_maths::mul;
@@ -136,7 +138,7 @@ impl<const N: usize, T> Vector<N, T> {
     #[inline]
     pub const fn into_inner(self) -> [T; N]
     where
-        T: [const] Destruct, // TODO: shouldn't be needed because it is destructured
+        Self: [const] Destruct, // TODO: shouldn't be needed because it is destructured
     {
         let Self(out) = self;
         out
@@ -146,11 +148,6 @@ impl<const N: usize, T> Vector<N, T> {
     #[inline]
     pub const fn inner(&self) -> &[T; N] {
         &self.0
-    }
-
-    #[expect(clippy::len_without_is_empty)]
-    pub const fn len(&self) -> usize {
-        N
     }
 
     pub const fn get<I>(&self, index: I) -> Option<&<I as SliceIndex<[T]>>::Output>
@@ -173,7 +170,12 @@ impl<const N: usize, T> Vector<N, T> {
 
     #[must_use]
     #[inline]
-    pub fn map(self, op: impl Fn(T) -> T) -> Self {
+    pub const fn map<F>(self, op: F) -> Self
+    where
+        // from `array::map`
+        T: [const] Destruct,
+        F: [const] FnMut(T) -> T + [const] Destruct,
+    {
         let array = self.into_inner().map(op);
         Self::new(array)
     }
@@ -195,55 +197,28 @@ impl<const N: usize, T> Vector<N, T> {
     #[must_use]
     pub const fn dot(self, rhs: Self) -> T
     where
-        T: [const] Add<Output = T> + [const] Mul<Output = T> + [const] Clone + [const] Default,
+        T: [const] Add<Output = T> + [const] Mul<Output = T> + [const] Default,
         T: [const] Destruct, // TODO: remove because `into_inner` is TODO remove
     {
-        array_maths::dot(self.into_inner(), rhs.into_inner())
+        array_maths::dot(self.into_inner(), rhs.into_inner()).unwrap_or_default()
+    }
+
+    /// Scale a vector by a given scalar.
+    #[inline]
+    #[must_use]
+    pub const fn scale<U>(self, scalar: U) -> Self
+    where
+        T: [const] Mul<U, Output = T>,
+        // TODO: remove when `Vector::into_inner` no longer needs it
+        T: [const] Destruct,
+        U: [const] Clone + [const] Destruct,
+    {
+        let lhs = array::from_fn(const |_| scalar.clone());
+        let arr = array_maths::mul(self.into_inner(), lhs);
+        Self::new(arr)
     }
 
     #[inline]
-    #[must_use]
-    pub const fn scale(mut self, scalar: T) -> Self
-    where
-        T: [const] Mul<Output = T> + [const] Clone + [const] Destruct,
-    {
-        // CONST-HACK
-        // self.map(|elem| scalar * elem)
-
-        let mut index = 0;
-
-        while let Some(value) = self.0.get_mut(index) {
-            *value = value.clone() * scalar.clone();
-
-            index += 1;
-        }
-
-        self
-    }
-
-    pub const fn flip(mut self) -> Self
-    where
-        T: [const] Neg<Output = T>,
-        T: [const] Clone,
-        T: [const] Destruct,
-    {
-        let mut index = 0;
-        // while index < N {
-        // self.0[index] = -self.0[index];
-        //
-        // index += 1;
-        // }
-
-        while let Some(value) = self.0.get_mut(index) {
-            let temp = -value.clone();
-            *value = temp;
-
-            index += 1;
-        }
-
-        self
-    }
-
     #[must_use]
     pub const fn elem_wise_mul(self, other: Self) -> Self
     where
@@ -269,6 +244,7 @@ impl Vector<3, f32> {
         Self::new(out)
     }
 
+    #[inline]
     #[must_use]
     pub const fn homogeneous(self) -> Vector<4, f32> {
         let [this0, this1, this2] = self.into_inner();
@@ -276,6 +252,7 @@ impl Vector<3, f32> {
     }
 }
 
+/// convenience macro to impl `ops` traits.
 macro_rules! impl_ops {
     ($trait:ident:: $fn:ident) => {
         use self::array_maths::$fn;
@@ -327,6 +304,7 @@ const impl<const N: usize, T> AddAssign for Vector<N, T>
 where
     Self: [const] Add<Output = Self> + [const] Clone + [const] Destruct,
 {
+    #[inline]
     fn add_assign(&mut self, rhs: Self) {
         *self = self.clone() + rhs;
     }
@@ -336,6 +314,7 @@ const impl<const N: usize, T> SubAssign for Vector<N, T>
 where
     Self: [const] Sub<Output = Self> + [const] Clone + [const] Destruct,
 {
+    #[inline]
     fn sub_assign(&mut self, rhs: Self) {
         *self = self.clone() - rhs;
     }
@@ -347,6 +326,7 @@ where
 {
     type Output = Self;
 
+    #[inline]
     fn mul(self, rhs: T) -> Self::Output {
         self.scale(rhs)
     }
@@ -356,6 +336,7 @@ const impl<const N: usize, T> MulAssign<T> for Vector<N, T>
 where
     Self: [const] Destruct + [const] Mul<T, Output = Self> + [const] Clone,
 {
+    #[inline]
     fn mul_assign(&mut self, rhs: T) {
         *self = self.clone() * rhs;
     }
@@ -364,12 +345,13 @@ where
 const impl<const N: usize> Mul<Vector<N, f32>> for f32 {
     type Output = Vector<N, f32>;
 
+    #[inline]
     fn mul(self, rhs: Vector<N, f32>) -> Self::Output {
         rhs * self
     }
 }
 
-impl<const R: usize> From<Matrix<R, 1>> for Vector<R, f32> {
+const impl<const R: usize> From<Matrix<R, 1>> for Vector<R, f32> {
     #[inline]
     fn from(value: Matrix<R, 1>) -> Self {
         let [arr] = value.into_inner();
@@ -377,14 +359,17 @@ impl<const R: usize> From<Matrix<R, 1>> for Vector<R, f32> {
     }
 }
 
-impl<const N: usize> From<[f32; N]> for Vector<N, f32> {
+const impl<const N: usize> From<[f32; N]> for Vector<N, f32> {
     #[inline]
     fn from(value: [f32; N]) -> Self {
         Self::new(value)
     }
 }
 
-impl<const N: usize, T> From<Vector<N, T>> for [T; N] {
+const impl<const N: usize, T> From<Vector<N, T>> for [T; N]
+where
+    T: [const] Destruct,
+{
     #[inline]
     fn from(value: Vector<N, T>) -> Self {
         value.into_inner()
@@ -484,8 +469,16 @@ where
     type Output = Self;
 
     #[inline]
-    fn neg(self) -> Self::Output {
-        self.flip()
+    fn neg(mut self) -> Self::Output {
+        let mut index = 0;
+        while let Some(value) = self.0.get_mut(index) {
+            let temp = -value.clone();
+            *value = temp;
+
+            index += 1;
+        }
+
+        self
     }
 }
 
@@ -493,6 +486,7 @@ impl<const N: usize, T> Sum<Vector<N, T>> for Option<Vector<N, T>>
 where
     Vector<N, T>: Add<Output = Vector<N, T>>,
 {
+    #[inline]
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = Vector<N, T>>,
@@ -506,6 +500,7 @@ where
     Option<Self>: Sum<Self>,
     Self: Default,
 {
+    #[inline]
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -515,8 +510,10 @@ where
 }
 
 impl<const N: usize, T> AsRef<Vector<N, T>> for [T; N] {
+    #[inline]
     fn as_ref(&self) -> &Vector<N, T> {
-        // transmute reference
-        unsafe { mem::transmute(self) }
+        // SAFETY: reinterpret the reference as an array, this is similar to how it's
+        // done in `array::from_ref`
+        unsafe { &*ptr::from_ref(self).cast() }
     }
 }

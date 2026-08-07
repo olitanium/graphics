@@ -4,6 +4,8 @@
 //! It stops iterating once the first iterator in its collection has stopped.
 //! The remainder of the iterators, in the order that they were added can be
 //! retreived with `into_inner`.
+use std::marker::Destruct;
+
 use array_vec::ArrayVec;
 
 /// See module docs.
@@ -44,9 +46,10 @@ impl<T: Iterator, const N: usize> MultiZip<T, N> {
     /// Create a new `MultiZip` iterator. The length of the input array
     /// determines the length of the outputs.
     #[inline]
-    pub fn new<I>(iters: [I; N]) -> Self
+    pub const fn new<I>(iters: [I; N]) -> Self
     where
-        I: IntoIterator<IntoIter = T>,
+        I: [const] IntoIterator<IntoIter = T> + [const] Destruct,
+        T: [const] Destruct,
     {
         Self(iters.map(IntoIterator::into_iter))
     }

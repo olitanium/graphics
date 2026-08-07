@@ -1,6 +1,6 @@
 use core::array;
-use std::marker::Destruct;
 use core::ops::{Index, Neg};
+use std::marker::Destruct;
 
 use crate::Vector;
 
@@ -17,26 +17,35 @@ where
     }
 }
 
-impl<const N: usize> UnitVector<N, f32> {
-    const fn const_default() -> Self {
-        let mut out = [0.0; N];
-        if let Some(x) = out.get_mut(0) {
-            *x = 1.0;
-        }
-        Self::new_unchecked(out)
-    }
-}
+// impl<const N: usize> UnitVector<N, f32> {
+// const fn const_default() -> Self {
+// let mut out = [0.0; N];j
+// if let Some(x) = out.get_mut(0) {
+// x = 1.0;
+// }
+// Self::new_unchecked(out)
+// }
+// }
 
 const impl<const N: usize> Default for UnitVector<N, f32> {
     fn default() -> Self {
-        const { Self::const_default() }
+        Self::X
     }
 }
 
-impl UnitVector<3, f32> {
-    pub const X: Self = Self::new_unchecked([1.0, 0.0, 0.0]);
-    pub const Y: Self = Self::new_unchecked([0.0, 1.0, 0.0]);
-    pub const Z: Self = Self::new_unchecked([0.0, 0.0, 1.0]);
+impl<const N: usize> UnitVector<N, f32> {
+    pub const X: Self = Self::make_single(0);
+    pub const Y: Self = Self::make_single(1);
+    pub const Z: Self = Self::make_single(2);
+
+    const fn make_single(index: usize) -> Self {
+        let mut arr = [0.0; _];
+        if let Some(refval) = arr.get_mut(index) {
+            *refval = 1.0;
+        }
+
+        Self::new_unchecked(arr)
+    }
 }
 
 impl<const N: usize, T> UnitVector<N, T> {

@@ -3,6 +3,9 @@
 #![feature(maybe_uninit_uninit_array_transpose)]
 #![feature(const_destruct)]
 #![feature(const_index)]
+#![feature(const_array)]
+#![feature(const_option_ops)]
+#![feature(const_try)]
 
 use core::fmt::Debug;
 use core::mem::{self, MaybeUninit};
@@ -15,6 +18,9 @@ mod test;
 pub use iterators::{IntoIter, Iter, IterMut};
 
 mod initmacro;
+
+mod pop_front;
+pub use pop_front::ArrayVecPopFront;
 
 pub struct ArrayVec<T, const N: usize> {
     len: usize,

@@ -1,5 +1,8 @@
+use std::collections::HashSet;
+use std::time::Duration;
+
 use engine::types::TexDim;
-use engine::{ApiState, Draw, DrawNothing, Event};
+use engine::{ApiState, DrawNothing, Event};
 
 pub struct State {}
 
@@ -19,17 +22,14 @@ impl ApiState for State {
         events: Vec<engine::Event<'a>>,
     ) -> engine::PollResult<Self::DrawOutput<'a>, Self::Error> {
         let mut opt_default = None;
-        let mut frame_time = Default::default();
-        let mut keys = Default::default();
+        let mut frame_time = Duration::default();
+        let mut keys = HashSet::default();
 
         for event in events {
             match event {
                 Event::FrameTime(in_ft) => frame_time = in_ft,
                 Event::WindowBuffer(in_buff) => opt_default = Some(in_buff),
-                Event::Keyboard {
-                    keys: in_keys,
-                    buffer: _,
-                } => keys = in_keys,
+                Event::Keyboard { keys: in_keys, .. } => keys = in_keys,
                 _ => {}
             }
         }

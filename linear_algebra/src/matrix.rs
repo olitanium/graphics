@@ -1,4 +1,4 @@
-//! module for defining and storing matrix
+//! module for defining and storing matrix and methods.
 
 use core::fmt::Debug;
 use core::iter;
@@ -15,10 +15,10 @@ mod test;
 /// Matrix object in column major.
 ///
 /// Features constructors to create new from row or column major, but column
-/// major constructor is a no-op.
+/// major constructor does no work and is preferred.
 ///
-/// Comparable with other Matrices, this type offers matrix-like operations such
-/// as multiplication and element-wise operataions.
+/// This type offers matrix-like operations such as multiplication and
+/// element-wise operataions.
 ///
 /// # Example
 ///
@@ -36,6 +36,7 @@ mod test;
 pub struct Matrix<const R: usize, const C: usize>([[f32; R]; C]); // Col-Major!!!!!
 
 impl<const R: usize, const C: usize> PartialEq for Matrix<R, C> {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         iter::zip(self.0, other.0).all(|(arr1, arr2)| {
             let ref_vec: &Vector<R> = arr1.as_ref();
@@ -45,7 +46,7 @@ impl<const R: usize, const C: usize> PartialEq for Matrix<R, C> {
     }
 }
 
-impl<const R: usize, const C: usize> Default for Matrix<R, C> {
+const impl<const R: usize, const C: usize> Default for Matrix<R, C> {
     #[inline]
     fn default() -> Self {
         Self::identity()
@@ -53,6 +54,7 @@ impl<const R: usize, const C: usize> Default for Matrix<R, C> {
 }
 
 impl<const R: usize, const C: usize> Debug for Matrix<R, C> {
+    #[inline]
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         for row in self.row_iter() {
             writeln!(f, "{row:?}")?;
@@ -62,12 +64,25 @@ impl<const R: usize, const C: usize> Debug for Matrix<R, C> {
 }
 
 impl<const R: usize, const C: usize> Matrix<R, C> {
+    /// Create `Matrix` from column major data. The matrix is stored as column
+    /// major, so this does no processing and just moves the value in.
+    ///
+    /// The column major nature of the constructor means that visually the
+    /// `Matrix`, when written as arrays in code, will look transposed.
     #[inline]
     #[must_use]
     pub const fn from_col_major(input: [[f32; R]; C]) -> Self {
         Self(input)
     }
 
+    /// Create `Matrix` from row major data. The matrix is stored as
+    /// column-major so this will transpose the given input, requiring some
+    /// processing.
+    ///
+    /// The row-major nature of this constructor means that visually the
+    /// `Matrix`, when written as arrays in code, will look correct.
+    ///
+    /// Avoid using this function with literals until the function is `const`.
     #[inline]
     #[must_use]
     pub fn from_row_major(input: [[f32; C]; R]) -> Self {
@@ -191,8 +206,9 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     #[inline]
     #[must_use]
     pub fn transpose(self) -> Matrix<C, R> {
-        let matrix_as_vec = self.row_iter().collect::<ArrayVec<[f32; C], R>>();
-        let array = matrix_as_vec
+        let array = self
+            .row_iter()
+            .collect::<ArrayVec<[f32; C], R>>()
             .try_into_array()
             .expect("RC matrix has as many elements as CR");
         Matrix::from_col_major(array)
@@ -238,6 +254,7 @@ impl<const R: usize, const S: usize, const C: usize> ops::Mul<Matrix<S, C>> for 
 }
 
 impl<const R: usize> ops::MulAssign for Matrix<R, R> {
+    #[inline]
     fn mul_assign(&mut self, rhs: Self) {
         *self = *self * rhs;
     }

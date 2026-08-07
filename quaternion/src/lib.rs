@@ -1,3 +1,4 @@
+#![feature(const_ops)]
 #![feature(const_trait_impl)]
 
 use core::ops;
@@ -77,7 +78,7 @@ impl Quaternion {
 
     #[must_use]
     pub const fn conjugate(mut self) -> Self {
-        self.vector = self.vector.flip();
+        self.vector = -self.vector;
         self
     }
 

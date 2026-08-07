@@ -1,10 +1,13 @@
+//! Floating point types which are limited to `-1..1` or `0..1`.
+
 #![feature(signed_bigint_helpers)]
 #![feature(const_unsigned_bigint_helpers)]
 #![feature(const_ops)]
 #![feature(const_trait_impl)]
+#![feature(const_convert)]
 
-mod sf8_mod;
-mod uf8_mod;
+mod sf;
+mod uf;
 
-pub use sf8_mod::sf8;
-pub use uf8_mod::uf8;
+pub use sf::{SignedUnitf8, SignedUnitf16};
+pub use uf::{Unitf8, Unitf16};
