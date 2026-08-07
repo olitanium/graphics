@@ -1,9 +1,9 @@
-use core::array;
-use core::ops::{Index, Neg};
+use core::{array, ops};
 use std::marker::Destruct;
 
 use crate::Vector;
 
+/// `UnitVector` with magnitude equal to 1.0.
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug)]
 pub struct UnitVector<const N: usize, T = f32>(pub(crate) Vector<N, T>);
@@ -12,32 +12,28 @@ impl<const N: usize, T> PartialEq for UnitVector<N, T>
 where
     Vector<N, T>: PartialEq,
 {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         self.0 == other.0
     }
 }
 
-// impl<const N: usize> UnitVector<N, f32> {
-// const fn const_default() -> Self {
-// let mut out = [0.0; N];j
-// if let Some(x) = out.get_mut(0) {
-// x = 1.0;
-// }
-// Self::new_unchecked(out)
-// }
-// }
-
 const impl<const N: usize> Default for UnitVector<N, f32> {
+    #[inline]
     fn default() -> Self {
         Self::X
     }
 }
 
 impl<const N: usize> UnitVector<N, f32> {
+    /// `UnitVector([1.0, 0.0, 0.0, ...])` as long as asked for.
     pub const X: Self = Self::make_single(0);
+    /// `UnitVector([0.0, 1.0, 0.0, ...])` as long as asked for.
     pub const Y: Self = Self::make_single(1);
+    /// `UnitVector([0.0, 0.0, 1.0, ...])` as long as asked for.
     pub const Z: Self = Self::make_single(2);
 
+    /// Convenience method for creating above const `X`, `Y`, `Z`.
     const fn make_single(index: usize) -> Self {
         let mut arr = [0.0; _];
         if let Some(refval) = arr.get_mut(index) {
@@ -49,7 +45,10 @@ impl<const N: usize> UnitVector<N, f32> {
 }
 
 impl<const N: usize, T> UnitVector<N, T> {
-    #[inline(always)]
+    /// Unwrap the `UnitVector` into it's inner `Vector`. Most vector operations
+    /// happen with the `Vector` type.
+    #[must_use]
+    #[inline]
     pub const fn v(self) -> Vector<N, T>
     where
         Self: [const] Destruct,
@@ -58,33 +57,37 @@ impl<const N: usize, T> UnitVector<N, T> {
         out
     }
 
-    #[inline(always)]
+    /// Get a reference to the inner `Vector`.
+    #[inline]
     pub const fn v_ref(&self) -> &Vector<N, T> {
         &self.0
     }
 
+    /// Create a new `UnitVector` without checking the magnitude.
+    #[inline]
     pub const fn new_unchecked(input: [T; N]) -> Self {
         Self(Vector(input))
     }
 
+    /// Skip the `Vector` and go straight to the inner array.
+    #[inline]
     pub const fn into_inner(self) -> [T; N]
     where
-        T: [const] Destruct,
+        Vector<N, T>: [const] Destruct,
     {
         self.0.into_inner()
     }
 }
 
-impl<const N: usize, T> core::ops::Neg for UnitVector<N, T>
+impl<const N: usize, T> ops::Neg for UnitVector<N, T>
 where
-    Vector<N, T>: Neg<Output = Vector<N, T>>,
+    Vector<N, T>: ops::Neg<Output = Vector<N, T>>,
 {
     type Output = Self;
 
-    fn neg(mut self) -> Self::Output {
-        self.0 = -self.0;
-
-        self
+    #[inline]
+    fn neg(self) -> Self::Output {
+        Self(-self.0)
     }
 }
 
@@ -98,7 +101,7 @@ impl<const N: usize, T> From<UnitVector<N, T>> for Vector<N, T> {
 impl<const N: usize, T> From<UnitVector<N, T>> for [T; N] {
     #[inline]
     fn from(value: UnitVector<N, T>) -> Self {
-        value.v().into()
+        value.v().into_inner()
     }
 }
 
@@ -116,11 +119,11 @@ impl<const N: usize, T> AsRef<[T]> for UnitVector<N, T> {
     }
 }
 
-impl<const N: usize, T, I> Index<I> for UnitVector<N, T>
+impl<const N: usize, T, I> ops::Index<I> for UnitVector<N, T>
 where
-    [T]: Index<I>,
+    [T]: ops::Index<I>,
 {
-    type Output = <[T] as Index<I>>::Output;
+    type Output = <[T] as ops::Index<I>>::Output;
 
     #[inline]
     fn index(&self, index: I) -> &Self::Output {
@@ -137,9 +140,3 @@ impl<const N: usize, T> IntoIterator for UnitVector<N, T> {
         self.0.into_inner().into_iter()
     }
 }
-
-// impl<const N: usize, T> Sum<UnitVector<N>> for Vector<N> {
-// fn sum<I: Iterator<Item = UnitVector<N>>>(iter: I) -> Self {
-// iter.map(|x| x.v()).sum()
-// }
-// }

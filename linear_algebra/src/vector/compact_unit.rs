@@ -1,13 +1,14 @@
 use core::{array, f32, iter};
 
-use fixed_point::Unitf8;
-
 use crate::{UnitVector, Vector};
+
+/// The inner type, currently hoisted as an alias for quickly swapping out.
+type InnerType = fixed_point::Unitf16;
 
 /// An in-development representation of a `UnitVector` but with one fewer
 /// element and more compact form. For a 3 dimensional `UnitVector` this type
 /// will use 2 dimensions.
-pub struct CompactUnitVector<const N: usize>([Unitf8; N - 1])
+pub struct CompactUnitVector<const N: usize>([InnerType; N - 1])
 where
     [(); N - 1]:;
 
@@ -16,15 +17,19 @@ where
     [(); N - 1]:,
 {
     /// Normalize a `Vector<N>` and return a `CompactUnitVector<N>` if possible.
+    ///
+    /// Returns None if the `Vector` is a zero-vector.
     #[must_use]
     #[inline]
     pub fn try_normalize(vec: Vector<N, f32>) -> Option<Self> {
         vec.try_normalize().map(Self::from_unit_vector)
     }
 
+    /// Convert a `UnitVector` into a `CompactUnitVector`.
     #[must_use]
     #[inline]
     pub fn from_unit_vector(uvec: UnitVector<N>) -> Self {
+        #[inline]
         fn inner<const N: usize>(unit_vec: [f32; N]) -> Option<CompactUnitVector<N>>
         where
             [(); N - 1]:,
@@ -60,12 +65,12 @@ where
             // angels[N-2] (the last element) is out of 2 Pi, so needs to be halved here so
             *out_of_one.last_mut()? *= 0.5;
 
-            let out = out_of_one.map(Unitf8::from_f32).transpose()?;
+            let out = out_of_one.map(InnerType::from_f32).transpose()?;
 
             Some(CompactUnitVector(out))
         }
 
-        inner(uvec.v().into_inner()).unwrap_or_else(|| Self([Unitf8::default(); _]))
+        inner(uvec.v().into_inner()).unwrap_or_else(|| Self([InnerType::default(); _]))
     }
 
     /// recover a `UnitVector` which has N components, from this `CompactUnit`.

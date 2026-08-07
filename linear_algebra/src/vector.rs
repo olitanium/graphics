@@ -1,3 +1,5 @@
+//! Module for defining the `Vector` type.
+
 mod array_maths;
 
 use core::iter::Sum;
@@ -198,7 +200,8 @@ impl<const N: usize, T> Vector<N, T> {
     pub const fn dot(self, rhs: Self) -> T
     where
         T: [const] Add<Output = T> + [const] Mul<Output = T> + [const] Default,
-        T: [const] Destruct, // TODO: remove because `into_inner` is TODO remove
+        Self: [const] Destruct,
+        T: [const] Destruct,
     {
         array_maths::dot(self.into_inner(), rhs.into_inner()).unwrap_or_default()
     }

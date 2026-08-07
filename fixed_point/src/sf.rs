@@ -129,7 +129,6 @@ mod test {
         let third = SignedUnitf16::from_f32(-0.33).unwrap();
         let float = third.to_f32();
 
-        dbg!(float);
         assert!((float - (-0.33)).abs() < 0.1);
     }
 

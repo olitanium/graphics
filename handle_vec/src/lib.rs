@@ -32,7 +32,10 @@ pub struct HeapHandle<'a, T> {
 
 impl<'a, T> Heap<'a, T> {
     #[expect(clippy::new_ret_no_self)]
-    pub fn new<F>(func: F) where F: for<'b> FnOnce(Heap<'b, T>) {
+    pub fn new<F>(func: F)
+    where
+        F: for<'b> FnOnce(Heap<'b, T>),
+    {
         let value = Self::default();
         func(value);
     }
@@ -40,7 +43,9 @@ impl<'a, T> Heap<'a, T> {
     pub fn push(&mut self, item: T) -> HeapHandle<'a, T> {
         let new_position = self.data.len();
         self.data.push(item);
-        let index = if let Some(&index) = self.id.get(new_position) { index } else {
+        let index = if let Some(&index) = self.id.get(new_position) {
+            index
+        } else {
             self.id.push(new_position);
             self.data_index.push(new_position);
             new_position

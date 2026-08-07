@@ -52,7 +52,10 @@ impl ColourRGBA {
         &self.0
     }
 
-    pub fn map_colour<F>(self, op: F) -> Self where F: FnMut(f32) -> f32 {
+    pub fn map_colour<F>(self, op: F) -> Self
+    where
+        F: FnMut(f32) -> f32,
+    {
         let [r, g, b, a] = self.as_array();
         let [nr, ng, nb] = [r, g, b].map(op);
         Self::new([nr, ng, nb, a])
@@ -109,7 +112,10 @@ impl ColourRGB {
         ColourRGBA::new([self.0[0], self.0[1], self.0[2], alpha])
     }
 
-    pub fn map<F>(&self, f: F) -> Self where F: Fn(f32) -> f32 {
+    pub fn map<F>(&self, f: F) -> Self
+    where
+        F: Fn(f32) -> f32,
+    {
         Self(self.as_array().map(f))
     }
 }

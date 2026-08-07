@@ -231,6 +231,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
         Matrix::from_col_major(array)
     }
 
+    /// Map each element of the matrix wit
     #[must_use]
     #[inline]
     pub fn map(mut self, op: impl Fn(f32) -> f32) -> Self {
@@ -260,6 +261,7 @@ impl<const R: usize> ops::MulAssign for Matrix<R, R> {
     }
 }
 
+/// Convenience macro for implelementing `core::ops`.
 macro_rules! impl_ops {
     ($trait:ident:: $fn:ident) => {
         impl<const R: usize, const C: usize> core::ops::$trait for Matrix<R, C> {
@@ -299,7 +301,7 @@ impl<const R: usize, const C: usize> Index<(usize, usize)> for Matrix<R, C> {
 
 impl<const R: usize, const C: usize> IndexMut<(usize, usize)> for Matrix<R, C> {
     /// # Panics
-    /// Will panic is the index is put of bounds.
+    /// Will panic is the index is out of bounds.
     #[inline]
     fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
         let (row, col) = index;
@@ -330,10 +332,26 @@ impl Matrix<3, 3> {
     /// Calculate the determinant of the matrix.
     #[inline]
     #[must_use]
+    #[expect(
+        clippy::many_single_char_names,
+        reason = "alphabetical order by row major"
+    )]
     pub const fn determinant(&self) -> f32 {
-        let [[a, d, g], [b, e, h], [c, f, i]] = self.into_inner();
+        #[rustfmt::skip]
+        let [
+            [a, d, g],
+            [b, e, h],
+            [c, f, i],
+        ] = self.into_inner();
 
-        a * e * i + b * f * g + c * d * h - c * e * g - b * d * i - a * f * h
+        #[rustfmt::skip]
+        a * e
+            * i
+            + b * f * g
+            + c * d * h
+            - c * e * g
+            - b * d * i
+            - a * f * h
     }
 }
 
@@ -376,7 +394,7 @@ impl Matrix<4, 4> {
 
     /// Create a matrix to transform a 3 dimensional homogeneous vector (i.e. a
     /// `Vector<4>` where `x[3] == 1.0`) into a perspective cube, with maximums
-    /// at +/- 1.0 on x[0], x[1] and x[2], and the
+    /// at +/- 1.0 on `x[0]`, `x[1]` and `x[2]`.
     #[inline]
     #[must_use]
     pub fn transform_perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Self {
@@ -389,6 +407,9 @@ impl Matrix<4, 4> {
         ])
     }
 
+    /// Create a matrix to embed a vector within a given width, height, near and
+    /// far into a cube +/- 1.0 on x, y.
+    #[inline]
     #[must_use]
     pub const fn transform_orthogonal(width: f32, height: f32, near: f32, far: f32) -> Self {
         Self::from_col_major([

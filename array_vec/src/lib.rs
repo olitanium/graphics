@@ -1,3 +1,7 @@
+//! A fixed capacity, variable length array, efficient for small collections
+//! which don't need to be allocated.
+
+#![no_std]
 #![feature(maybe_uninit_array_assume_init)]
 #![feature(const_trait_impl)]
 #![feature(maybe_uninit_uninit_array_transpose)]
@@ -6,13 +10,17 @@
 #![feature(const_array)]
 #![feature(const_option_ops)]
 #![feature(const_try)]
+#![feature(const_drop_in_place)]
 
 use core::fmt::Debug;
+use core::marker::Destruct;
 use core::mem::{self, MaybeUninit};
 use core::ops::{Deref, DerefMut, Index, IndexMut};
-use core::ptr;
-use std::marker::Destruct;
+use core::{iter, ptr};
+
 mod iterators;
+
+#[cfg(test)]
 mod test;
 
 pub use iterators::{IntoIter, Iter, IterMut};
@@ -32,6 +40,7 @@ struct LengthError<const N: usize>;
 
 impl<T, const N: usize> ArrayVec<T, N> {
     #[must_use]
+    #[inline]
     pub const fn new() -> Self {
         Self {
             len: 0,
@@ -39,10 +48,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
     }
 
-    pub const fn capacity(&self) -> usize {
-        N
-    }
-
+    #[inline]
     pub const fn from_array(array: [T; N]) -> Self {
         Self {
             len: N,
@@ -50,52 +56,66 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
     }
 
-    pub const fn push_within_capacity(&mut self, elem: T) -> Result<(), T>
+    pub fn push_within_capacity_with<F>(&mut self, mut func: F) -> Result<&mut T, ()>
     where
-        T: [const] Destruct,
+        F: FnMut() -> T,
     {
         if self.len >= N {
-            return Err(elem);
+            return Err(());
         }
 
-        self.push_lossy(elem);
-
-        Ok(())
+        self.push(func()).map_err(|_| ())
     }
 
-    pub const fn push_lossy(&mut self, elem: T)
-    where
-        T: [const] Destruct,
+    /// Push a value, returning a mutable reference if successful, or the
+    /// original value if unsuccessful
+    pub const fn push(&mut self, elem: T) -> Result<&mut T, T>
+where
+        //T: [const] Destruct,
     {
         if let Some(dest) = self.array.get_mut(self.len) {
             *dest = MaybeUninit::new(elem);
             self.len += 1;
+            // SAFETY: just filled above
+            unsafe { Ok(dest.assume_init_mut()) }
+        } else {
+            Err(elem)
         }
+
+        // self.array.get_mut(self.len).map_or_else(const || Err(elem), const
+        // |dest| { dest = MaybeUninit::new(elem);
+        // self.len += 1;
+        // SAFETY: just filled above
+        // unsafe { Ok(dest.assume_init_mut()) }
+        // })
     }
 
     pub const fn const_collect<const M: usize>(array: [T; M]) -> Self
     where
         T: [const] Destruct,
     {
-        assert!(M <= N);
-        let mut this = Self::new();
-        let mut array = MaybeUninit::transpose(MaybeUninit::new(array));
-        let mut index = 0;
-        loop {
-            if index == M {
-                break;
-            }
-            let value = mem::replace(&mut array[index], MaybeUninit::uninit());
-            this.push_lossy(unsafe { value.assume_init() });
-            index += 1;
-        }
-        this
+        // assert!(M <= N);
+        // let mut this = Self::new();
+        // let mut array = MaybeUninit::new(array).transpose();
+        // let mut index = 0;
+        // loop {
+        // if index == M {
+        // break;
+        // }
+        // let value = mem::replace(&mut array[index], MaybeUninit::uninit());
+        // this.push_or_lose(unsafe { value.assume_init() });
+        // index += 1;
+        // }
+        // this
+        let array = ArrayVecPopFront::new(array);
+        let mut out = Self::new();
+
+        array.collect_into_other(&mut out);
+        out
     }
 
-    pub fn push(&mut self, elem: T) {
-        self.push_within_capacity(elem)
-            .map_err(|_| LengthError::<N>)
-            .unwrap();
+    pub fn push_or_panic(&mut self, elem: T) {
+        self.push(elem).map_err(|_| LengthError::<N>).unwrap();
     }
 
     pub const fn pop(&mut self) -> Option<T> {
@@ -130,17 +150,36 @@ impl<T, const N: usize> ArrayVec<T, N> {
         (len, array)
     }
 
-    pub fn try_into_array(self) -> Result<[T; N], TryFromErr> {
+    pub fn try_into_array(self) -> Result<[T; N], TryFromErr<T, N>> {
         let (len, array) = self.into_raw_parts();
 
         if len == N {
             Ok(unsafe { MaybeUninit::array_assume_init(array) })
         } else {
             Err(TryFromErr {
-                array_size: N,
-                stack_vec_size: len,
+                array: ArrayVec { len, array },
             })
         }
+    }
+
+    pub fn into_array_with<F>(mut self, mut gaps: F) -> [T; N]
+    where
+        F: FnMut() -> T,
+    {
+        while self.push_within_capacity_with(&mut gaps).is_ok() {}
+
+        // SAFETY: while loop above will only terminate when full.
+        unsafe { self.try_into_array().unwrap_unchecked() }
+    }
+
+    pub fn into_array_with_new_len<const M: usize, F>(self, gaps: F) -> [T; M]
+    where
+        F: FnMut() -> T,
+    {
+        let out: ArrayVec<_, _> = self.into_iter().chain(iter::repeat_with(gaps)).collect();
+        // SAFETY: iter above has unlimited length, so the array_vec will always be
+        // full.
+        unsafe { out.try_into_array().unwrap_unchecked() }
     }
 
     pub fn map<U, F>(self, f: F) -> ArrayVec<U, N>
@@ -179,16 +218,13 @@ impl<T, const N: usize> Default for ArrayVec<T, N> {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct TryFromErr {
-    #[expect(dead_code)]
-    array_size: usize,
-    #[expect(dead_code)]
-    stack_vec_size: usize,
+#[derive(Debug)]
+pub struct TryFromErr<T, const N: usize> {
+    pub array: ArrayVec<T, N>,
 }
 
 impl<T, const N: usize> TryFrom<ArrayVec<T, N>> for [T; N] {
-    type Error = TryFromErr;
+    type Error = TryFromErr<T, N>;
 
     fn try_from(value: ArrayVec<T, N>) -> Result<Self, Self::Error> {
         value.try_into_array()
@@ -208,7 +244,10 @@ impl<T, const N: usize, const M: usize> TryFrom<[T; M]> for ArrayVec<T, N> {
     }
 }
 
-impl<T, const N: usize> Drop for ArrayVec<T, N> {
+const impl<T, const N: usize> Drop for ArrayVec<T, N>
+where
+    T: [const] Destruct,
+{
     fn drop(&mut self) {
         unsafe {
             ptr::drop_in_place(self.as_mut_slice());

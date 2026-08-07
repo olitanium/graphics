@@ -1,14 +1,16 @@
+use core::sync::atomic::{AtomicUsize, Ordering};
+
 #[test]
 fn pop_push() {
     use crate::ArrayVec;
 
     let mut vec: ArrayVec<_, 10> = ArrayVec::new();
-    vec.push(10_u32);
+    vec.push(10_u32).unwrap();
     assert_eq!(vec.pop(), Some(10_u32));
     for elem in 0..10 {
-        vec.push(elem);
+        vec.push(elem).unwrap();
     }
-    assert_eq!(vec.push_within_capacity(11), Err(11));
+    assert_eq!(vec.push(11), Err(11));
 
     for elem in (0..10).rev() {
         assert_eq!(vec.pop(), Some(elem));
@@ -42,25 +44,22 @@ fn rev() {
 }
 
 #[test]
-fn test_drop() {
-    use std::ops::AddAssign;
-    use std::sync::Mutex;
-
+fn tdrop() {
     use crate::{ArrayVec, arrvec};
 
     struct DropStruct(usize);
 
-    static DROPCOUNT: Mutex<usize> = Mutex::new(0);
+    static DROPCOUNT: AtomicUsize = AtomicUsize::new(0);
     impl Drop for DropStruct {
         fn drop(&mut self) {
-            DROPCOUNT.lock().unwrap().add_assign(self.0);
+            DROPCOUNT.fetch_add(self.0, Ordering::Relaxed);
         }
     }
     let vec: ArrayVec<_, 5> = arrvec![DropStruct(1), DropStruct(2), DropStruct(3)];
 
     drop(vec);
 
-    assert_eq!(*DROPCOUNT.lock().unwrap(), 6)
+    assert_eq!(DROPCOUNT.load(Ordering::Relaxed), 6);
 }
 
 #[test]
@@ -88,6 +87,5 @@ fn init_macro() {
     // compile fail
     // const ARRAY: ArrayVec<u32, 1> = arrvec![1, 2];
 
-    let array: ArrayVec<u32, _> = arrvec![1,2,3, ; 5];
-    assert_eq!(array.capacity(), 5);
+    let _array: ArrayVec<u32, 5> = arrvec![1,2,3, ; 5];
 }

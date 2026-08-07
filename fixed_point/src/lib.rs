@@ -1,5 +1,6 @@
 //! Floating point types which are limited to `-1..1` or `0..1`.
 
+#![no_std]
 #![feature(signed_bigint_helpers)]
 #![feature(const_unsigned_bigint_helpers)]
 #![feature(const_ops)]

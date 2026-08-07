@@ -4,7 +4,7 @@
 //! It stops iterating once the first iterator in its collection has stopped.
 //! The remainder of the iterators, in the order that they were added can be
 //! retreived with `into_inner`.
-use std::marker::Destruct;
+use core::marker::Destruct;
 
 use array_vec::ArrayVec;
 

@@ -1,6 +1,7 @@
 //! Test triangles (as arrays of `linear_algebra::Vector<DIMS>`) for
 //! intersection.
-#![deny(missing_docs)]
+#![no_std]
+#![warn(missing_docs)]
 
 use linear_algebra::Matrix;
 pub use linear_algebra::Vector;

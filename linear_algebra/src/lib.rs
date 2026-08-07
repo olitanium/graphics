@@ -16,13 +16,10 @@
 #![feature(const_try)]
 #![feature(const_array)]
 #![feature(const_closures)]
-#![expect(
-    internal_features,
-    reason = "transmute_unchecked needed to remove some Clone bounds on array_maths"
-)]
-#![feature(core_intrinsics)]
 #![feature(maybe_uninit_array_assume_init)]
 #![feature(option_array_transpose)]
+#![feature(stmt_expr_attributes)]
+#![feature(maybe_uninit_uninit_array_transpose)]
 
 mod matrix;
 mod vector;

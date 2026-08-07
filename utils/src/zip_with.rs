@@ -10,7 +10,7 @@ use core::{array, iter};
 ///
 /// assert_eq!(x.zip_with(y, |a, b| a + b), [5, 7, 9])
 /// ```
-pub trait ArrayZipWith<const N: usize> {
+pub const trait ArrayZipWith<const N: usize> {
     /// The type of the element of the array.
     type Element;
     /// Zip two arrays together and map with the given closure.

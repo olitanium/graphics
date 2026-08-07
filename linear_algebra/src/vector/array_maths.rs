@@ -1,7 +1,9 @@
+//! Module for performing array maths.
+
 use core::marker::Destruct;
+use core::mem;
 use core::mem::MaybeUninit;
 use core::ops::{Add, Mul, Sub};
-use core::{intrinsics, mem, ptr};
 
 use array_vec::ArrayVec;
 
@@ -12,23 +14,17 @@ macro_rules! elem_wise {
         pub const fn $fn<const N: usize, T, U>(lhs: [T; N], rhs: [U; N]) -> [T; N] where T: [const] $trait<U, Output = T> {
             //core::array::from_fn(|index| core::ops::$trait::$fn(lhs[index], rhs[index])) // could literally be this
 
-            // SAFETY: being assumed init exactly once in the body of the loop
-            // unchecked transmute valid, as featured in `array::into_iter`
-            let mut lhs: [MaybeUninit<T>; N] = unsafe { intrinsics::transmute_unchecked(lhs) };
-            // SAFETY: being assumed init exactly once in the body of the loop
-            // unchecked transmute valid, as featured in `array::into_iter`
-            let rhs: [MaybeUninit<U>; N] = unsafe { intrinsics::transmute_unchecked(rhs) };
+            let mut lhs: [MaybeUninit<T>; N] = MaybeUninit::new(lhs).transpose();
+            let rhs: [MaybeUninit<U>; N] = MaybeUninit::new(rhs).transpose();
 
             let mut index = 0;
             while let Some((lhs_value_ref, rhs_value)) = Option::zip(lhs.get_mut(index), rhs.get(index)) {
-                // SAFETY: this is the only time that this reference will be read from, and the value will be init because it was init when input.
-                let lhs_value_maybeuninit = unsafe { ptr::read(lhs_value_ref) };
+                let lhs_value_maybeuninit = mem::replace(lhs_value_ref, MaybeUninit::zeroed());
                 // SAFETY: The value will be init because it was init when input and has been unwritten.
                 let lhs_value = unsafe { lhs_value_maybeuninit.assume_init() };
                 // SAFETY: this is the only time that this reference will be read from, and the value will be init because it was init when input.
-                let rhs_value_maybeuninit = unsafe { ptr::read(rhs_value) };
                 // SAFETY: The value will be init because it was init when input and has been unwritten.
-                let rhs_value = unsafe { rhs_value_maybeuninit.assume_init() };
+                let rhs_value = unsafe { rhs_value.assume_init_read() };
 
                 lhs_value_ref.write(lhs_value $token rhs_value);
                 index += 1;
@@ -39,7 +35,6 @@ macro_rules! elem_wise {
         }
     };
 }
-
 /// Sum the values in an array, without the `Sum` trait.
 pub const fn sum<const N: usize, T>(v1: [T; N]) -> Option<T>
 where
@@ -55,7 +50,7 @@ where
     // accum;
 
     let mut array = ArrayVec::from_array(v1);
-    let out = if let Some(mut accum) = array.pop() {
+    if let Some(mut accum) = array.pop() {
         while let Some(value) = array.pop() {
             accum = accum + value;
         }
@@ -63,15 +58,7 @@ where
         Some(accum)
     } else {
         None
-    };
-
-    #[expect(
-        clippy::mem_forget,
-        reason = "array empty, can be forgotten. required for const function. Using the \
-                  `ArrayVec` removes the need for the Clone bound"
-    )]
-    mem::forget(array);
-    out
+    }
 }
 
 elem_wise!(Add::add, +);
@@ -126,6 +113,12 @@ pub const fn eq<const N: usize>(v1: [f32; N], v2: [f32; N]) -> bool {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    #[expect(clippy::float_cmp, reason = "integer literals")]
+    fn add() {
+        assert_eq!(super::add([1.0, 2.0], [4.0, 8.0]), [5.0, 10.0]);
+    }
 
     #[test]
     fn arr_sum() {

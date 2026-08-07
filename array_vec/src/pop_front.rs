@@ -2,6 +2,8 @@ use core::marker::Destruct;
 use core::mem::MaybeUninit;
 use core::{mem, ptr};
 
+use crate::ArrayVec;
+
 pub struct ArrayVecPopFront<T, const N: usize> {
     value: [MaybeUninit<T>; N],
     front: usize,
@@ -40,12 +42,28 @@ impl<T, const N: usize> ArrayVecPopFront<T, N> {
         let front = self.value.get_mut(self.front)?;
         let init = mem::replace(front, MaybeUninit::zeroed());
         self.front += 1;
-        // SAFETY: `self.front` points elsewhere, and cannot
+        // SAFETY: `self.front` points elsewhere, and cannot be used to ever read from
+        // this zeroed memory again
         Some(unsafe { init.assume_init() })
+    }
+
+    pub const fn collect_into_other<const M: usize>(mut self, other: &mut ArrayVec<T, M>)
+    where
+        T: [const] Destruct,
+    {
+        while let Some(value) = self.pop_front() {
+            match other.push(value) {
+                Ok(_) => continue,
+                Err(_) => return,
+            }
+        }
     }
 }
 
-impl<T, const N: usize> Drop for ArrayVecPopFront<T, N> {
+const impl<T, const N: usize> Drop for ArrayVecPopFront<T, N>
+where
+    T: [const] Destruct,
+{
     #[inline]
     fn drop(&mut self) {
         // SAFETY: values never read from again

@@ -1,3 +1,4 @@
+/// Macro for creating an `ArrayVec` without needing to push each element.
 #[macro_export]
 macro_rules! arrvec {
     ($($elem:expr),* $(,)?) => {

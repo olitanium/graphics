@@ -9,12 +9,16 @@ pub use iter::Iter;
 pub use iter_mut::IterMut;
 
 impl<T, const N: usize> FromIterator<T> for ArrayVec<T, N> {
-    fn from_iter<I>(iter: I) -> Self where I: IntoIterator<Item = T> {
+    #[inline]
+    fn from_iter<I>(iter: I) -> Self
+    where
+        I: IntoIterator<Item = T>,
+    {
         let mut out = Self::new();
 
         for elem in iter {
-            match out.push_within_capacity(elem) {
-                Ok(()) => {}
+            match out.push(elem) {
+                Ok(_) => {}
                 Err(_) => return out,
             }
         }
