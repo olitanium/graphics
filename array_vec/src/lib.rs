@@ -11,6 +11,7 @@
 #![feature(const_option_ops)]
 #![feature(const_try)]
 #![feature(const_drop_in_place)]
+#![feature(const_iter)]
 
 use core::fmt::Debug;
 use core::marker::Destruct;
@@ -56,7 +57,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
     }
 
-    pub fn push_within_capacity_with<F>(&mut self, mut func: F) -> Result<&mut T, ()>
+    pub fn push_with<F>(&mut self, mut func: F) -> Result<&mut T, ()>
     where
         F: FnMut() -> T,
     {
@@ -64,11 +65,11 @@ impl<T, const N: usize> ArrayVec<T, N> {
             return Err(());
         }
 
-        self.push(func()).map_err(|_| ())
+        self.push(func()).map_err(|_err| ())
     }
 
     /// Push a value, returning a mutable reference if successful, or the
-    /// original value if unsuccessful
+    /// original value if unsuccessful.
     pub const fn push(&mut self, elem: T) -> Result<&mut T, T>
 where
         //T: [const] Destruct,
@@ -143,10 +144,14 @@ where
         unsafe { self.array[..self.len].assume_init_mut() }
     }
 
-    fn into_raw_parts(mut self) -> (usize, [MaybeUninit<T>; N]) {
+    const fn into_raw_parts(mut self) -> (usize, [MaybeUninit<T>; N]) {
         let len = mem::replace(&mut self.len, 0);
-        let uninit_array = [const { MaybeUninit::uninit() }; N];
-        let array = mem::replace(&mut self.array, uninit_array);
+        let array = mem::replace(&mut self.array, [const { MaybeUninit::uninit() }; N]);
+        #[expect(
+            clippy::mem_forget,
+            reason = "each component has been extracted, so the array must not be allowed to drop"
+        )]
+        mem::forget(self);
         (len, array)
     }
 
@@ -166,7 +171,7 @@ where
     where
         F: FnMut() -> T,
     {
-        while self.push_within_capacity_with(&mut gaps).is_ok() {}
+        while self.push_with(&mut gaps).is_ok() {}
 
         // SAFETY: while loop above will only terminate when full.
         unsafe { self.try_into_array().unwrap_unchecked() }
@@ -187,6 +192,10 @@ where
         F: FnMut(T) -> U,
     {
         self.into_iter().map(f).collect()
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
     }
 
     pub fn iter(&self) -> <&Self as IntoIterator>::IntoIter {

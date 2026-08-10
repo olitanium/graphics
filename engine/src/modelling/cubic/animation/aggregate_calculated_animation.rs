@@ -1,17 +1,18 @@
+use geometry::{Pose, Transform};
 use utils::error_boilerplate;
 
 use crate::entity::AggregateModelIndex;
 use crate::modelling::Skeleton;
 use crate::modelling::cubic::SkeletonBoneIndex;
-use crate::modelling::cubic::geometry::animation::{AnimationUnit, Parent, PoseAndInverseBindPose};
-use crate::modelling::cubic::geometry::{
+use crate::modelling::cubic::animation::{
+    AnimationUnit,
     CalcAnimUnitIndex,
     CalculatedAnimation,
-    Pose,
+    Parent,
+    PoseAndInverseBindPose,
     SignaturesDoNotMatchError,
     SkeletalAnimation,
 };
-use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
 pub struct AggregateCalcAnim {

@@ -16,11 +16,10 @@ pub mod modelling;
 pub mod opengl_shaders;
 pub use array_vec;
 pub use entity::SimpleEntity;
+pub use geometry;
 pub use graphics::colour::{ColourRGB, ColourRGBA};
 pub use graphics::framebuffer::Builder as FrameBufferBuilder;
 pub use graphics::{types, *};
 pub use russimp::scene::PostProcess;
-mod transform;
-pub use transform::{Transform, TransformBy};
 
 pub type VecDraw = Vec<Box<dyn Draw>>;

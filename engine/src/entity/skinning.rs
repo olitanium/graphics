@@ -5,7 +5,7 @@ use graphics::linear_algebra::Vector;
 
 use crate::entity::{EntityInner, Mass, ToAggregateEntity};
 use crate::modelling::cubic::SkinningCubic;
-use crate::modelling::cubic::geometry::Pose;
+use geometry::Pose;
 use crate::modelling::{Collision, SkeletalVertex, SkeletonBb};
 
 #[derive(Debug, Clone)]

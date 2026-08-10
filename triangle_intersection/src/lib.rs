@@ -212,3 +212,7 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
         }
     }
 }
+
+pub fn intersect2(one: Triangle<2>, two: Triangle<2>) -> bool {
+    todo!()
+}

@@ -1,7 +1,7 @@
 use graphics::linear_algebra::{UnitVector, Vector};
 
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::{Orientation, Pose};
+use geometry::{Orientation, Pose};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ManualPose {
@@ -93,7 +93,7 @@ impl ManualPose {
             } => up
                 .v()
                 .cross(orientation.view_forward().v().cross(up.v()))
-                .normalize(),
+                .normalize_or_panic(),
             Self::Flexible { orientation, .. } => orientation.view_forward(),
         }
     }

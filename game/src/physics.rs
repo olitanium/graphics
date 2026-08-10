@@ -1,7 +1,7 @@
 use std::time::Duration;
 
+use engine::geometry::{Orientation, Pose};
 use engine::linear_algebra::{UnitVector, Vector};
-use engine::modelling::cubic::geometry::{Orientation, Pose};
 
 use crate::state::State;
 

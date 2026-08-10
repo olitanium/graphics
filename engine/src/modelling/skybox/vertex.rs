@@ -1,10 +1,9 @@
+use geometry::{Pose, TransformBy};
 use graphics::linear_algebra::Vector;
 use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
 
-use crate::TransformBy;
 use crate::modelling::advanced_vertex::{ExtendedVertex, IncompleteVertex};
-use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{CubicVertex, SimpleVertex};
 
 #[derive(Debug, Clone, Copy)]

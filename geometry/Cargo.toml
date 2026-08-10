@@ -1,0 +1,13 @@
+[package]
+name = "geometry"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+linear_algebra = {path = "../linear_algebra"}
+quaternion = {path = "../quaternion"}
+dual_number = {path = "../dual_number"}
+
+
+[lints]
+workspace = true

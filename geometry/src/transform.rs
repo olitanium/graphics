@@ -1,6 +1,6 @@
-use graphics::linear_algebra::{UnitVector, Vector};
+use linear_algebra::{UnitVector, Vector};
 
-use crate::modelling::cubic::geometry::Pose;
+use crate::Pose;
 
 pub trait TransformBy<By: ?Sized>: Sized {
     /// TransformBy takes an object, say a vector, and a transformation, say a
@@ -29,7 +29,7 @@ impl TransformBy<Pose> for UnitVector<3> {
     fn transform_by(&self, pose: &Pose) -> Self {
         let orientation = pose.orientation();
         let vector = orientation.act_on(self.v());
-        vector.normalize()
+        vector.normalize_or_panic()
     }
 }
 
@@ -48,6 +48,12 @@ impl<T: TransformBy<U> + Clone, U> TransformBy<Option<U>> for T {
         } else {
             self.clone()
         }
+    }
+}
+
+impl<V: TransformBy<Pose>, const N: usize> TransformBy<Pose> for [V; N] {
+    fn transform_by(&self, operator: &Pose) -> Self {
+        self.each_ref().map(|vertex| vertex.transform_by(operator))
     }
 }
 

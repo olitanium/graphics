@@ -1,9 +1,7 @@
 use array_vec::ArrayVec;
+use geometry::{Pose, TransformBy};
 use graphics::linear_algebra::{UnitVector, Vector};
 use utils::builder;
-
-use crate::TransformBy;
-use crate::modelling::cubic::geometry::Pose;
 
 #[derive(Debug, Clone, Default)]
 #[non_exhaustive]
@@ -27,11 +25,11 @@ impl TransformBy<Pose> for IncompleteVertex<3> {
     }
 }
 
-impl TransformBy<Pose> for [IncompleteVertex<3>; 3] {
-    fn transform_by(&self, operator: &Pose) -> Self {
-        self.clone().map(|ver| ver.transform_by(operator))
-    }
-}
+// impl TransformBy<Pose> for [IncompleteVertex<3>; 3] {
+// fn transform_by(&self, operator: &Pose) -> Self {
+// self.clone().map(|ver| ver.transform_by(operator))
+// }
+// }
 
 impl<const N: usize> IncompleteVertex<N> {
     builder!(normal, opt_normal: Option<UnitVector<3>>);

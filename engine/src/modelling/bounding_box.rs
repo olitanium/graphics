@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 use std::sync::LazyLock;
 
+use geometry::{Pose, Transform};
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
@@ -27,9 +28,7 @@ pub use collision::Collision;
 use crate::modelling::advanced_vertex::ExtendedVertex;
 // pub use crate::modelling::bounding_box::collision::TempModelTransform;
 use crate::modelling::bounding_box::element::DrawRecursiveError;
-use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{CubicVertex, SimpleVertex, SkeletonCubic, Volume};
-use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
 pub struct BoundingBox<V: ExtendedVertex<DIMS>, const DIMS: usize, T>
@@ -344,10 +343,10 @@ mod test {
 
     #[test]
     fn test_overlap() {
+        use geometry::NoTransform;
         use graphics::linear_algebra::Vector;
 
         use crate::modelling::bounding_box::BoundingBoxElement;
-        use crate::transform::NoTransform;
 
         let bounding_box = BoundingBoxElement::<Vector<2>, _, ()> {
             upper_bound: Vector::new([1.0, 1.0]),

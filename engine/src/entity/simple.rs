@@ -3,7 +3,7 @@ use graphics::vertex::Vertex;
 
 use crate::entity::{EntityInner, Mass, ToAggregateEntity};
 use crate::modelling::cubic::SimpleCubic;
-use crate::modelling::cubic::geometry::Pose;
+use geometry::Pose;
 use crate::modelling::{BoundingBox, Collision, SimpleVertex, SkeletonCubic, Volume};
 
 #[derive(Debug)]
@@ -133,7 +133,7 @@ pub fn get_average_normal<I: IntoIterator<Item = [SimpleVertex; 3]>>(input: I) -
         .flatten()
         .map(|vert| vert.normal.v())
         .sum::<Vector<3>>()
-        .normalize()
+        .normalize_or_panic()
 }
 
 impl<TThis> Collision for SimpleEntity<TThis> {

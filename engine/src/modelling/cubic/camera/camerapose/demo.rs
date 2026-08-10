@@ -1,7 +1,7 @@
 use graphics::linear_algebra::{UnitVector, Vector};
 
 use super::CameraPose;
-use crate::modelling::cubic::geometry::{Orientation, Pose};
+use geometry::{Orientation, Pose};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Demo;

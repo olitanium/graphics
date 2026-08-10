@@ -7,6 +7,7 @@ use crate::ArrayVec;
 pub struct ArrayVecPopFront<T, const N: usize> {
     value: [MaybeUninit<T>; N],
     front: usize,
+    end: usize,
 }
 
 impl<T, const N: usize> ArrayVecPopFront<T, N> {
@@ -17,20 +18,24 @@ impl<T, const N: usize> ArrayVecPopFront<T, N> {
         T: [const] Destruct,
     {
         let value = val.map(MaybeUninit::new);
-        Self { value, front: 0 }
+        Self {
+            value,
+            front: 0,
+            end: N,
+        }
     }
 
     #[must_use]
     #[inline]
     pub const fn as_slice(&self) -> &[T] {
         // SAFETY: `front` gives guaranteed front of the array.
-        unsafe { self.value[self.front..].assume_init_ref() }
+        unsafe { self.value[self.front..self.end].assume_init_ref() }
     }
 
     #[must_use]
     #[inline]
     pub const fn as_mut_slice(&mut self) -> &mut [T] {
-        let slice = self.value.get_mut(self.front..).unwrap_or_default();
+        let slice = self.value.get_mut(self.front..self.end).unwrap_or_default();
         // SAFETY: `front` gives guaranteed front of the array. If front overhangs,
         // returns an empty slice
         unsafe { slice.assume_init_mut() }
@@ -39,11 +44,28 @@ impl<T, const N: usize> ArrayVecPopFront<T, N> {
     #[inline]
     #[must_use]
     pub const fn pop_front(&mut self) -> Option<T> {
+        if self.front >= self.end {
+            return None;
+        }
         let front = self.value.get_mut(self.front)?;
         let init = mem::replace(front, MaybeUninit::zeroed());
         self.front += 1;
         // SAFETY: `self.front` points elsewhere, and cannot be used to ever read from
-        // this zeroed memory again
+        // the now zeroed memory again
+        Some(unsafe { init.assume_init() })
+    }
+
+    #[inline]
+    pub const fn pop(&mut self) -> Option<T> {
+        if self.front >= self.end {
+            return None;
+        }
+        let end = self.value.get_mut(self.end)?;
+        let init = mem::replace(end, MaybeUninit::zeroed());
+        self.end -= 1;
+
+        // SAFETY: `self.end` points elsewhere, and cannot be used to ever read from
+        // the now zeroed memory again
         Some(unsafe { init.assume_init() })
     }
 
@@ -56,6 +78,15 @@ impl<T, const N: usize> ArrayVecPopFront<T, N> {
                 Ok(_) => continue,
                 Err(_) => return,
             }
+        }
+    }
+
+    pub const fn from_array_vec(array: ArrayVec<T, N>) -> Self {
+        let (len, value) = array.into_raw_parts();
+        Self {
+            value,
+            front: 0,
+            end: len,
         }
     }
 }

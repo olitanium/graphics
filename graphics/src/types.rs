@@ -119,7 +119,7 @@ impl Debug for GLError {
     }
 }
 
-#[allow(non_camel_case_types)]
+#[expect(non_camel_case_types, reason = "gl crate convention")]
 #[derive(Debug, Clone, Copy)]
 pub enum VertexAttrType {
     #[doc(hidden)]
@@ -137,17 +137,17 @@ impl VertexAttrType {
     }
 }
 
-pub trait VertexAttr: Copy {
+pub const trait VertexAttr: Copy {
     fn attr(val: u8) -> VertexAttrType;
 }
 
-impl VertexAttr for gl::types::GLfloat {
+const impl VertexAttr for gl::types::GLfloat {
     fn attr(val: u8) -> VertexAttrType {
         VertexAttrType::GLfloat(val)
     }
 }
 
-impl VertexAttr for gl::types::GLint {
+const impl VertexAttr for gl::types::GLint {
     fn attr(val: u8) -> VertexAttrType {
         VertexAttrType::GLint(val)
     }

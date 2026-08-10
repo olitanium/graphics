@@ -8,14 +8,23 @@ pub use import::{ImportError, ParseMaterialError};
 mod skeleton;
 pub use skeleton::{Bone, Skeleton, SkeletonBoneIndex, SkeletonBuilder};
 
-pub mod camera;
-pub use camera::{Builder as CameraBuilder, Camera};
+mod camera;
+pub use camera::{
+    Builder as CameraBuilder,
+    Camera,
+    CameraPose,
+    ManualPose as ManualCameraPose,
+    Projection as CameraProjection,
+};
 
-pub mod geometry;
+// pub mod geometry;
 
 pub mod lighting;
 
 pub mod material;
+
+mod animation;
+pub use animation::*;
 
 mod skeleton_cubic;
 pub use skeleton_cubic::{

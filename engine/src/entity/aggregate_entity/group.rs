@@ -9,10 +9,8 @@ use graphics::{Draw, DrawOut};
 
 use crate::entity::{AggregateEntity, CalculateAnimationError, EntityInner};
 use crate::modelling::CubicVertex;
-use crate::modelling::cubic::Camera;
-use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::AggregateCalcAnim;
 use crate::modelling::cubic::lighting::simple::ListLights;
+use crate::modelling::cubic::{AggregateCalcAnim, Camera, CameraPose};
 
 pub struct Group<
     'a,

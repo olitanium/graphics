@@ -2,6 +2,7 @@ use std::fmt::Debug;
 use std::path::Path;
 use std::rc::Rc;
 
+use geometry::Pose;
 use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
@@ -12,8 +13,7 @@ use utils::error_boilerplate;
 use super::material::Material;
 use super::{Mesh, Skeleton, import};
 use crate::entity::EntityInner;
-use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose};
-use crate::modelling::cubic::mesh;
+use crate::modelling::cubic::{CalculatedAnimation, mesh};
 use crate::modelling::{BoundingBox, SimpleVertex};
 
 mod group;

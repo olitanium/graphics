@@ -6,7 +6,7 @@ use graphics::texture::FlatTexture;
 use graphics::{Draw, DrawOut};
 
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::Pose;
+use geometry::Pose;
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::cubic::{Camera, SimpleCubic};
 

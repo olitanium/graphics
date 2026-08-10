@@ -1,5 +1,6 @@
 use std::iter;
 
+use geometry::{Orientation, Pose};
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::attachments::WithDepth;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
@@ -10,8 +11,8 @@ use graphics::texture::{FlatTexture, Magnification, Texture, WrapType};
 use graphics::types::TexDim;
 use graphics::{Model, ShaderProgramContext};
 
+use crate::modelling::cubic::CalculatedAnimation;
 use crate::modelling::cubic::camera::{self, Camera};
-use crate::modelling::cubic::geometry::{CalculatedAnimation, Orientation, Pose};
 use crate::modelling::cubic::lighting::shadow::{GenDepthError, ShadowBindError};
 use crate::modelling::cubic::lighting::simple::SpotLight;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;

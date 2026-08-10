@@ -1,12 +1,11 @@
 use std::rc::Rc;
 
 use engine::entity::Mass;
+use engine::geometry::Pose;
 use engine::linear_algebra::{UnitVector, Vector};
-use engine::modelling::cubic::camera::ManualPose;
-use engine::modelling::cubic::geometry::Pose;
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{Camera, MeshBuilder, SimpleCubic, camera};
+use engine::modelling::cubic::{Camera, CameraBuilder, ManualCameraPose, MeshBuilder, SimpleCubic};
 use engine::modelling::{Collision, IncompleteVertex, SimpleCubicGroup};
 use engine::types::TexDim;
 use engine::{
@@ -36,9 +35,9 @@ impl ApiState for State {
         initial_size: (engine::types::TexDim, engine::types::TexDim),
     ) -> Result<Self, Self::Error> {
         let aspect = TexDim::aspect_ratio(initial_size.0, initial_size.1);
-        let camera = camera::builder()
-            .perspective(90f32.to_radians(), aspect, 0.1, 10.0)
-            .pose(ManualPose::new_fixed_forward_up(
+        let camera = CameraBuilder::new()
+            .perspective(90_f32.to_radians(), aspect, 0.1, 10.0)
+            .pose(ManualCameraPose::new_fixed_forward_up(
                 Vector::new([0.0, 0.0, 2.0]),
                 -UnitVector::Z,
                 UnitVector::Y,

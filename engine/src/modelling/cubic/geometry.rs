@@ -1,7 +1,4 @@
 mod animation;
-mod lerp;
-mod orientation;
-mod pose;
 
 pub use animation::{
     AggregateCalcAnim,
@@ -18,6 +15,3 @@ pub use animation::{
     SignaturesDoNotMatchError,
 };
 pub(crate) use animation::{CalcAnimUnitIndex, process_vec_noaggregate};
-pub use lerp::Lerp;
-pub use orientation::Orientation;
-pub use pose::{Pose, PoseSclerp};

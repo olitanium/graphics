@@ -6,10 +6,9 @@ use graphics::texture::FlatTexture;
 use graphics::{Draw, DrawOut};
 
 use crate::modelling::SkeletonCubic;
-use crate::modelling::cubic::Camera;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::{CalculatedAnimation, SignaturesDoNotMatchError};
 use crate::modelling::cubic::lighting::simple::ListLights;
+use crate::modelling::cubic::{CalculatedAnimation, Camera, SignaturesDoNotMatchError};
 
 #[derive(Debug)]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {

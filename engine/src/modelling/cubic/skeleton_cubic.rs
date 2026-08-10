@@ -1,6 +1,7 @@
 use std::fmt::Debug;
 use std::rc::Rc;
 
+use geometry::Pose;
 use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
@@ -11,9 +12,8 @@ use utils::error_boilerplate;
 use super::material::Material;
 use super::{Mesh, Skeleton};
 use crate::entity::EntityInner;
-use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose, SkeletalAnimation};
 use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
-use crate::modelling::cubic::{SimpleCubic, mesh};
+use crate::modelling::cubic::{CalculatedAnimation, SimpleCubic, SkeletalAnimation, mesh};
 use crate::modelling::{SimpleVertex, SkeletonBb, test_models};
 
 mod group;

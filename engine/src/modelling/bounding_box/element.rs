@@ -2,6 +2,7 @@ use std::array;
 use std::cell::RefCell;
 use std::marker::PhantomData;
 
+use geometry::Transform;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
@@ -14,7 +15,6 @@ use utils::error_boilerplate;
 
 use crate::modelling::bounding_box::active_element::InnerChildrenOrMeta;
 use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
-use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
 pub(crate) enum ChildrenOrMeta<T> {

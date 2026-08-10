@@ -5,8 +5,7 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::{Draw, DrawOut};
 
 use super::SkyBox;
-use crate::modelling::cubic::Camera;
-use crate::modelling::cubic::camera::CameraPose;
+use crate::modelling::cubic::{Camera, CameraPose};
 
 #[derive(Debug)]
 pub struct Group<'a, const OUT: usize, O, D: FramebufferWithDepth<OUT>> {

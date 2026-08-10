@@ -1,3 +1,4 @@
+use geometry::Transform;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
@@ -7,10 +8,8 @@ use graphics::vertex::Vertex;
 use graphics::{Draw, DrawOut, ShaderProgramContext};
 
 use crate::modelling::bounding_box::BoundingBoxShaderProgram;
-use crate::modelling::cubic::Camera;
-use crate::modelling::cubic::camera::CameraPose;
+use crate::modelling::cubic::{Camera, CameraPose};
 use crate::modelling::{BoundingBox, BoundingBoxElement, ExtendedVertex, Volume};
-use crate::transform::Transform;
 
 #[derive(Debug)]
 pub struct Group<

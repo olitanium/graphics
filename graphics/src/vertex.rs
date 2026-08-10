@@ -36,11 +36,11 @@ impl<T: VertexAttr> Vertex for T {
     type const ELEMENT_COUNT: usize = 1;
 
     fn offsets() -> [usize; Self::ELEMENT_COUNT] {
-        [0]
+        [0; Self::ELEMENT_COUNT]
     }
 
     fn types_of() -> [VertexAttrType; Self::ELEMENT_COUNT] {
-        [T::attr(1)]
+        [T::attr(1); Self::ELEMENT_COUNT]
     }
 }
 

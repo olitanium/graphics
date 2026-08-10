@@ -3,14 +3,19 @@ use std::rc::Rc;
 use std::sync::LazyLock;
 
 use array_vec::arrvec;
+use geometry::{Orientation, Pose, TransformBy};
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::vertex_array::VertexArray;
 
-use crate::TransformBy;
 use crate::modelling::advanced_vertex::IncompleteVertex;
-use crate::modelling::cubic::geometry::{BoneAnimation, Orientation, Pose, SkeletalAnimation};
 use crate::modelling::cubic::material::Material;
-use crate::modelling::cubic::{MeshBuilder, SkeletonBoneIndex, SkinningCubic};
+use crate::modelling::cubic::{
+    BoneAnimation,
+    MeshBuilder,
+    SkeletalAnimation,
+    SkeletonBoneIndex,
+    SkinningCubic,
+};
 use crate::modelling::quad::QuadVertex;
 use crate::modelling::{Bone, ExtendedVertex, Skeleton, SkeletonCubic};
 
@@ -219,7 +224,7 @@ pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletonBoneIndex, Skeleta
             .push(
                 Pose::new_from_orientation_translation(
                     Orientation::new_forward_up(
-                        Vector::new([0.25, 0.0, 1.0]).normalize(),
+                        Vector::new([0.25, 0.0, 1.0]).normalize_or_panic(),
                         UnitVector::Y,
                     ),
                     Vector::new([0.0, 0.0, 1.0]),
@@ -231,7 +236,7 @@ pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletonBoneIndex, Skeleta
             .push(
                 Pose::new_from_orientation_translation(
                     Orientation::new_forward_up(
-                        Vector::new([-0.25, 0.0, 1.0]).normalize(),
+                        Vector::new([-0.25, 0.0, 1.0]).normalize_or_panic(),
                         UnitVector::Y,
                     ),
                     Vector::new([0.0, 0.0, 1.0]),

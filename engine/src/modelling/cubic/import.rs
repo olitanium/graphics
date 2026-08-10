@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
+use geometry::{Pose, Transform, TransformBy};
 use graphics::linear_algebra::{Matrix, UnitVector, Vector};
 use graphics::texture::{FlatTexture, Image, NewImageError, TextureHasBuilder};
 use graphics::types::ElementArrayElem;
@@ -12,12 +13,9 @@ use russimp::scene::{PostProcess, Scene};
 use utils::error_boilerplate;
 
 use super::material::Material;
-use crate::TransformBy;
 use crate::modelling::Bone;
 use crate::modelling::advanced_vertex::IncompleteVertex;
-use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::cubic::mesh::MeshBuilder;
-use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
 #[non_exhaustive]

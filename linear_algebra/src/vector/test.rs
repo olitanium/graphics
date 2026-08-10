@@ -45,7 +45,7 @@ fn drop_check_array_manipulation() {
 #[test]
 fn reflect() {
     let vector = Vector::new([1.0, 1.0, -0.5]);
-    let normal = Vector::new([0.0, 0.0, 1.0]).normalize();
+    let normal = Vector::new([0.0, 0.0, 1.0]).normalize_or_panic();
 
     let reflected = vector.reflect(normal);
 

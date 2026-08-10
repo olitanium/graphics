@@ -1,9 +1,8 @@
 #![expect(incomplete_features, reason = "Nightly used")]
 #![feature(debug_closure_helpers)]
-#![feature(string_from_utf8_lossy_owned)]
 #![feature(generic_const_exprs)]
 #![feature(type_changing_struct_update)]
-#![feature(lazy_type_alias)]
+#![feature(checked_type_aliases)]
 #![feature(inherent_associated_types)]
 #![feature(never_type)]
 #![feature(option_array_transpose)]
@@ -13,6 +12,7 @@
 #![feature(unwrap_infallible)]
 #![feature(min_generic_const_args)]
 #![feature(array_try_map)]
+#![feature(const_trait_impl)]
 
 mod environment;
 pub mod shader_program;

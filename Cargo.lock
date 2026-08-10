@@ -398,6 +398,7 @@ dependencies = [
  "array_vec",
  "bezier",
  "dual_number",
+ "geometry",
  "graphics",
  "infinite_window",
  "partition",
@@ -583,6 +584,15 @@ version = "0.1.0"
 dependencies = [
  "engine",
  "utils",
+]
+
+[[package]]
+name = "geometry"
+version = "0.1.0"
+dependencies = [
+ "dual_number",
+ "linear_algebra",
+ "quaternion",
 ]
 
 [[package]]

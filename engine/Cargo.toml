@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-russimp = { version =  "3" }#, features = ["static-link"]}
+russimp = { version =  "3" }
 graphics = { path = "../graphics" }
 utils = {path = "../utils" }
 infinite_window = {path = "../infinite_window" }
@@ -14,6 +14,7 @@ dual_number = {path = "../dual_number"}
 bezier = {path = "../bezier"}
 triangle_intersection = {path = "../triangle_intersection"}
 partition = {path = "../partition"}
+geometry = {path = "../geometry"}
 
 [lints]
 workspace = true

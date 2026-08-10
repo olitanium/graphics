@@ -12,8 +12,18 @@ members = [
     "multi_zip",
     "infinite_window",
     "localrc",
-    "fixed_point", "bezier"
-, "handle_vec", "triangle_intersection", "triangle_test", "get_or_extend", "partition", "template_app"]
+    "fixed_point", 
+    "bezier",
+    "handle_vec",
+    "triangle_intersection",
+    "triangle_test",
+    "get_or_extend",
+    "partition",
+    "template_app"
+, "geometry"]
+default_members = ["game"]
+
+
 
 [workspace.lints.rust]
 missing_docs = "warn"

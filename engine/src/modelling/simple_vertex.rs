@@ -1,15 +1,13 @@
 use std::cell::LazyCell;
 use std::mem;
 
+use geometry::{Pose, Transform, TransformBy};
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
 
-use crate::TransformBy;
 use crate::modelling::advanced_vertex::{ExtendedVertex, IncompleteVertex};
-use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{CubicVertex, VertexHasTangent};
-use crate::transform::Transform;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct SimpleVertex {

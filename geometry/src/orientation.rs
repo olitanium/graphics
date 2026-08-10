@@ -1,4 +1,4 @@
-use graphics::linear_algebra::{Matrix, UnitVector, Vector};
+use linear_algebra::{Matrix, UnitVector, Vector};
 use quaternion::{Quaternion, UnitQuaternion};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
@@ -35,8 +35,8 @@ impl Orientation {
     }
 
     pub fn new_forward_up(forward: UnitVector<3>, global_up: UnitVector<3>) -> Self {
-        let left = global_up.v().cross(forward.v()).normalize();
-        let view_up = forward.v().cross(left.v()).normalize();
+        let left = global_up.v().cross(forward.v()).normalize_or_panic();
+        let view_up = forward.v().cross(left.v()).normalize_or_panic();
 
         let matrix = Matrix::from_col_major([
             left.into_inner(),    // left = x
@@ -61,7 +61,7 @@ impl Orientation {
             2.0 * (y * z - w * x),
             1.0 - 2.0 * (x * x + y * y),
         ])
-        .normalize() // z
+        .normalize_or_panic() // z
     }
 
     pub fn view_up(&self) -> UnitVector<3> {
@@ -73,7 +73,7 @@ impl Orientation {
             1.0 - 2.0 * (x * x + z * z),
             2.0 * (y * z + w * x),
         ])
-        .normalize() // z
+        .normalize_or_panic() // z
     }
 
     pub fn view_left(&self) -> UnitVector<3> {
@@ -85,7 +85,7 @@ impl Orientation {
             2.0 * (x * y + w * z),
             2.0 * (x * z - w * y),
         ])
-        .normalize() // z
+        .normalize_or_panic() // z
     }
 
     pub fn look_left(&mut self, angle: f32) {
@@ -94,7 +94,8 @@ impl Orientation {
     }
 
     pub fn look_up(&mut self, angle: f32) {
-        let effect = Quaternion::axis_angle(angle, Vector::new([-1.0, 0.0, 0.0]).normalize());
+        let effect =
+            Quaternion::axis_angle(angle, Vector::new([-1.0, 0.0, 0.0]).normalize_or_panic());
         self.quaternion = (self.quaternion.q() * effect.q()).normalize();
     }
 
@@ -115,7 +116,7 @@ impl Orientation {
     where
         Self: Sized,
     {
-        let forward = (to - from).normalize();
+        let forward = (to - from).normalize_or_panic();
         Self::new_forward_up(forward, global_up)
     }
 
@@ -148,7 +149,7 @@ mod test {
         let orient = Orientation::new_from_to(
             Vector::from([0.0, 0.0, 0.0]),
             Vector::from([1.0, 1.0, 1.0]),
-            Vector::from([0.0, 1.0, 0.0]).normalize(),
+            Vector::from([0.0, 1.0, 0.0]).normalize_or_panic(),
         );
         println!("matrix: {:?}", orient.as_matrix());
 
@@ -164,24 +165,24 @@ mod test {
 
         let tests = [
             (
-                Vector::new([0.0, 0.0, 1.0]).normalize(),
-                Vector::new([0.0, 1.0, 0.0]).normalize(),
+                Vector::new([0.0, 0.0, 1.0]).normalize_or_panic(),
+                Vector::new([0.0, 1.0, 0.0]).normalize_or_panic(),
             ),
             (
-                Vector::new([1.0, 0.0, 0.0]).normalize(),
-                Vector::new([0.0, 1.0, 0.0]).normalize(),
+                Vector::new([1.0, 0.0, 0.0]).normalize_or_panic(),
+                Vector::new([0.0, 1.0, 0.0]).normalize_or_panic(),
             ),
             (
-                Vector::new([0.0, 1.0, 0.0]).normalize(),
-                Vector::new([0.1, 0.0, 0.0]).normalize(),
+                Vector::new([0.0, 1.0, 0.0]).normalize_or_panic(),
+                Vector::new([0.1, 0.0, 0.0]).normalize_or_panic(),
             ),
             (
-                Vector::new([0.0, 1.0, 0.0]).normalize(),
-                Vector::new([0.0, 0.0, 1.0]).normalize(),
+                Vector::new([0.0, 1.0, 0.0]).normalize_or_panic(),
+                Vector::new([0.0, 0.0, 1.0]).normalize_or_panic(),
             ),
             (
-                Vector::new([0.0, 0.0, 1.0]).normalize(),
-                Vector::new([1.0, 0.0, 0.0]).normalize(),
+                Vector::new([0.0, 0.0, 1.0]).normalize_or_panic(),
+                Vector::new([1.0, 0.0, 0.0]).normalize_or_panic(),
             ),
         ];
 
@@ -191,10 +192,13 @@ mod test {
             let should_be_up = orientation.act_on(Vector::new([0.0, 1.0, 0.0]));
             let should_be_direction = orientation.act_on(Vector::new([0.0, 0.0, 1.0]));
 
-            assert!(is_similar_enough(up.v(), should_be_up.normalize().v()));
+            assert!(is_similar_enough(
+                up.v(),
+                should_be_up.normalize_or_panic().v()
+            ));
             assert!(is_similar_enough(
                 direction.v(),
-                should_be_direction.normalize().v()
+                should_be_direction.normalize_or_panic().v()
             ));
         }
     }

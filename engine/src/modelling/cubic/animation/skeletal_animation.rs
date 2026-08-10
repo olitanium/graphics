@@ -3,7 +3,7 @@ use std::num::NonZeroUsize;
 
 use utils::new;
 
-use crate::modelling::cubic::geometry::BoneAnimation;
+use crate::modelling::cubic::animation::BoneAnimation;
 use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
 
 #[derive(Debug, Default)]

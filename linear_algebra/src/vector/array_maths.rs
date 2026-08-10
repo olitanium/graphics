@@ -49,16 +49,26 @@ where
     //
     // accum;
 
+    // let mut array = ArrayVec::from_array(v1);
+    // if let Some(mut accum) = array.pop() {
+    // while let Some(value) = array.pop() {
+    // accum = accum + value;
+    // }
+    //
+    // Some(accum)
+    // } else {
+    // None
+    // }
+
     let mut array = ArrayVec::from_array(v1);
-    if let Some(mut accum) = array.pop() {
+    let out = array.pop().map(const |mut accum| {
         while let Some(value) = array.pop() {
             accum = accum + value;
         }
-
-        Some(accum)
-    } else {
-        None
-    }
+        accum
+    });
+    mem::forget(array);
+    out
 }
 
 elem_wise!(Add::add, +);

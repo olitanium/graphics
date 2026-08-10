@@ -1,9 +1,10 @@
+//! Module to define the Unit Vector, where the magnitude is equal to `1.0`.
 use core::{array, ops};
 use std::marker::Destruct;
 
 use crate::Vector;
 
-/// `UnitVector` with magnitude equal to 1.0.
+/// `UnitVector` with magnitude equal to `1.0`.
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug)]
 pub struct UnitVector<const N: usize, T = f32>(pub(crate) Vector<N, T>);
@@ -27,21 +28,19 @@ const impl<const N: usize> Default for UnitVector<N, f32> {
 
 impl<const N: usize> UnitVector<N, f32> {
     /// `UnitVector([1.0, 0.0, 0.0, ...])` as long as asked for.
-    pub const X: Self = Self::make_single(0);
+    pub const X: Self = Self(Vector::X);
+}
+
+impl UnitVector<2> {
     /// `UnitVector([0.0, 1.0, 0.0, ...])` as long as asked for.
-    pub const Y: Self = Self::make_single(1);
+    pub const Y2: Self = Self(Vector::Y);
+}
+
+impl UnitVector<3> {
+    /// `UnitVector([0.0, 1.0, 0.0, ...])` as long as asked for.
+    pub const Y: Self = Self(Vector::Y);
     /// `UnitVector([0.0, 0.0, 1.0, ...])` as long as asked for.
-    pub const Z: Self = Self::make_single(2);
-
-    /// Convenience method for creating above const `X`, `Y`, `Z`.
-    const fn make_single(index: usize) -> Self {
-        let mut arr = [0.0; _];
-        if let Some(refval) = arr.get_mut(index) {
-            *refval = 1.0;
-        }
-
-        Self::new_unchecked(arr)
-    }
+    pub const Z: Self = Self(Vector::Z);
 }
 
 impl<const N: usize, T> UnitVector<N, T> {

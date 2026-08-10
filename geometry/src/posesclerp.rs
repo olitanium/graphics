@@ -1,6 +1,6 @@
 use dual_number::Sclerp;
 
-use crate::modelling::cubic::geometry::Pose;
+use crate::Pose;
 
 #[derive(Debug)]
 pub struct PoseSclerp {

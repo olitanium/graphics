@@ -1,14 +1,8 @@
 use dual_number::{DualNumber, DualQuaternion, UnitDualQuaternion};
-use graphics::linear_algebra::Matrix;
+use linear_algebra::{Matrix, Vector};
 use quaternion::Quaternion;
 
-mod posesclerp;
-use graphics::linear_algebra::Vector;
-pub use posesclerp::PoseSclerp;
-
-use super::Orientation;
-use crate::modelling::cubic::camera::CameraPose;
-use crate::transform::Transform;
+use crate::{Orientation, Transform as _};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Pose {
@@ -106,19 +100,12 @@ impl Pose {
     }
 }
 
-impl CameraPose for Pose {
-    type Hint = ();
-
-    fn get_pose(&self, _: &Self::Hint) -> Pose {
-        *self
-    }
-}
-
 #[cfg(test)]
 mod test {
-    use graphics::linear_algebra::UnitVector;
+    use linear_algebra::UnitVector;
 
     use super::*;
+    use crate::Transform;
 
     #[test]
     fn test_matrix() {

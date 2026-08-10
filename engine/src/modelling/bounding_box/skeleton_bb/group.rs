@@ -1,3 +1,4 @@
+use geometry::Pose;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
@@ -6,11 +7,10 @@ use graphics::texture::FlatTexture;
 use graphics::{Draw, DrawOut, ShaderProgramContext};
 
 use crate::modelling::bounding_box::BoundingBoxShaderProgram;
-use crate::modelling::cubic::Camera;
-use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::{
+use crate::modelling::cubic::{
     CalculatedAnimation,
-    Pose,
+    Camera,
+    CameraPose,
     SignaturesDoNotMatchError,
     SkeletalAnimation,
 };

@@ -2,7 +2,7 @@ pub mod demo;
 
 use graphics::linear_algebra::Vector;
 
-use crate::modelling::cubic::geometry::{Orientation, Pose};
+use geometry::{Orientation, Pose};
 
 pub trait CameraPose {
     type Hint;
@@ -15,5 +15,13 @@ pub trait CameraPose {
 
     fn get_orientation(&self, hint: &Self::Hint) -> Orientation {
         self.get_pose(hint).orientation()
+    }
+}
+
+impl CameraPose for Pose {
+    type Hint = ();
+
+    fn get_pose(&self, _: &Self::Hint) -> Pose {
+        *self
     }
 }

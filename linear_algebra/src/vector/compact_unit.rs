@@ -1,3 +1,5 @@
+//! Module to define a compact `UnitVector` which is embedded in one fewer
+//! dimension and with smaller data types.
 use core::{array, f32, iter};
 
 use crate::{UnitVector, Vector};

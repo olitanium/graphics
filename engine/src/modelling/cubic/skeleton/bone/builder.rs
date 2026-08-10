@@ -1,10 +1,9 @@
+use geometry::{Pose, Transform};
 use utils::builder;
 
 use super::Bone;
 use crate::modelling::SkeletonBuilder;
-use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::cubic::skeleton::{GetBone, SkeletonBoneIndex};
-use crate::transform::Transform;
 
 #[derive(Debug)]
 pub struct Builder<'a> {

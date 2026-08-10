@@ -2,24 +2,24 @@ use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use std::{iter, mem};
 
+use geometry::Pose;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
 use graphics::{ActiveShaderProgram, Model};
 use utils::error_boilerplate;
 
-use crate::modelling::cubic::SkeletonBoneIndex;
-use crate::modelling::cubic::geometry::{
+use crate::modelling::cubic::lighting::simple::ListLights;
+use crate::modelling::cubic::{
     AggregateCalcAnim,
     BuildFixingBoneError,
     CalcAnimUnitIndex,
     CalculatedAnimation,
-    Pose,
     PushAnimationError,
     SignaturesDoNotMatchError,
     SkeletalAnimation,
+    SkeletonBoneIndex,
 };
-use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::{Collision, CubicVertex, Skeleton};
 
 mod group;

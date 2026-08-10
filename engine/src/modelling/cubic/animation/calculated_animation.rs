@@ -1,11 +1,10 @@
+use geometry::{Pose, Transform, TransformBy};
 use utils::error_boilerplate;
 
-use crate::TransformBy;
 use crate::entity::EntityInner;
-use crate::modelling::cubic::geometry::{Pose, SkeletalAnimation};
+use crate::modelling::cubic::SkeletalAnimation;
 use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
 use crate::modelling::{CubicVertex, Skeleton};
-use crate::transform::Transform;
 
 #[derive(Debug, Clone)]
 pub struct CalculatedAnimation {

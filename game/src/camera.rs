@@ -5,8 +5,7 @@ use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
-use engine::modelling::cubic::camera::ManualPose;
-use engine::modelling::cubic::{self, camera};
+use engine::modelling::cubic::{self, Camera, CameraBuilder, ManualCameraPose};
 
 pub struct GameCamera {
     pub move_lock: bool,
@@ -19,8 +18,8 @@ impl GameCamera {
     pub fn new(hdr_fb: &Framebuffer<3, WithDepth>) -> Self {
         const START_LOC: Vector<3> = Vector::new([0.0, 0.5, 1.0]);
 
-        let camera = camera::builder()
-            .pose(ManualPose::new_fixed_up_from_to(
+        let camera = CameraBuilder::new()
+            .pose(ManualCameraPose::new_fixed_up_from_to(
                 START_LOC,
                 Vector::ZERO,
                 UnitVector::Y,

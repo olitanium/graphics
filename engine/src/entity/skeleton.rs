@@ -1,9 +1,10 @@
+use geometry::Pose;
 use graphics::linear_algebra::Vector;
 use graphics::vertex::Vertex;
 
 use crate::SimpleEntity;
 use crate::entity::{Mass, ToAggregateEntity};
-use crate::modelling::cubic::geometry::{CalculatedAnimation, Pose};
+use crate::modelling::cubic::CalculatedAnimation;
 use crate::modelling::{Collision, SimpleVertex, SkeletonBb, SkeletonCubic, Volume};
 
 #[derive(Debug)]

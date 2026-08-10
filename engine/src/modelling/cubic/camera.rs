@@ -12,7 +12,7 @@ pub use manual_pose::ManualPose;
 pub mod camerapose;
 pub use camerapose::CameraPose;
 
-use crate::modelling::cubic::geometry::Orientation;
+use geometry::Orientation;
 
 #[derive(Clone, Debug)]
 pub struct Camera<P: CameraPose = ManualPose> {

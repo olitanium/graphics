@@ -4,9 +4,9 @@ use graphics::shader_program::CullFace;
 use utils::{builder, new};
 
 use super::{Skeleton, SkeletonCubic};
-use crate::TransformBy;
+use geometry::TransformBy;
 use crate::modelling::cubic::BoneAndMesh;
-use crate::modelling::cubic::geometry::Pose;
+use geometry::Pose;
 use crate::modelling::cubic::material::Material;
 use crate::modelling::cubic::mesh::MeshBuilder;
 use crate::modelling::cubic::simple_cubic::TransformType;

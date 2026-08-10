@@ -1,3 +1,4 @@
+use geometry::Pose;
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
@@ -5,14 +6,13 @@ use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
 use graphics::{Draw, DrawOut};
 
-use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::geometry::{
+use crate::modelling::cubic::animation::{
     CalculatedAnimation,
-    Pose,
     SignaturesDoNotMatchError,
     SkeletalAnimation,
     process_vec_noaggregate,
 };
+use crate::modelling::cubic::camera::CameraPose;
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::cubic::{Camera, SkinningCubic};
 

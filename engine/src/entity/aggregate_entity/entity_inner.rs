@@ -5,7 +5,7 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
 use graphics::{ActiveShaderProgram, Model};
 
-use crate::modelling::cubic::geometry::CalculatedAnimation;
+use crate::modelling::cubic::CalculatedAnimation;
 use crate::modelling::{Collision, CubicVertex, Skeleton};
 
 pub trait EntityInner: Sized + Model

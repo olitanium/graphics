@@ -12,10 +12,9 @@ use graphics::texture::Texture;
 use utils::error_boilerplate;
 
 use super::{ShadowFarLight, ShadowPointLight, ShadowSpotLight};
-use crate::modelling::cubic::geometry::CalculatedAnimation;
 use crate::modelling::cubic::lighting::shadow::ShadowBindError;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
-use crate::modelling::cubic::skeleton_cubic;
+use crate::modelling::cubic::{CalculatedAnimation, skeleton_cubic};
 use crate::modelling::{SkeletonCubic, VertexHasTangent};
 
 #[derive(Debug, Default)]

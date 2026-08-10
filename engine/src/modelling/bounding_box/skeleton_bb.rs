@@ -9,8 +9,7 @@ use utils::error_boilerplate;
 
 // use crate::modelling::bounding_box::collision::TempModelTransform;
 use crate::modelling::bounding_box::element::DrawRecursiveError;
-use crate::modelling::cubic::SkeletonBoneIndex;
-use crate::modelling::cubic::geometry::{CalculatedAnimation, GetAnimationError};
+use crate::modelling::cubic::{CalculatedAnimation, GetAnimationError, SkeletonBoneIndex};
 use crate::modelling::{BoundingBox, Collision, CubicVertex, Skeleton};
 
 mod group;
@@ -197,7 +196,7 @@ impl<V: CubicVertex, T> From<BoundingBox<V, 3, T>> for SkeletonBb<V, T> {
 }
 
 // impl<'a> TempModelTransform for (&'a Skeleton, &'a CalculatedAnimation) {
-// fn get_root_pose(&self) -> crate::modelling::cubic::geometry::Pose {
+// fn get_root_pose(&self) -> geometry::Pose {
 // self.1.root()
 // }
 // }

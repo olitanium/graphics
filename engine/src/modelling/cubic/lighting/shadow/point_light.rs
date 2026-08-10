@@ -1,5 +1,6 @@
 use std::iter;
 
+use geometry::{Orientation, Pose};
 use graphics::framebuffer::attachments::CubeWithDepth;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::framebuffer::{Builder, Framebuffer, FramebufferContext};
@@ -9,11 +10,10 @@ use graphics::texture::{CubeMap, Texture};
 use graphics::types::TexDim;
 use graphics::{Draw, DrawOut, Model, ShaderProgramContext};
 
-use crate::modelling::cubic::camera;
-use crate::modelling::cubic::geometry::{CalculatedAnimation, Orientation, Pose};
 use crate::modelling::cubic::lighting::ShadowLightCompatible;
 use crate::modelling::cubic::lighting::shadow::{GenDepthError, ShadowBindError};
 use crate::modelling::cubic::lighting::simple::PointLight;
+use crate::modelling::cubic::{CalculatedAnimation, camera};
 use crate::modelling::{SkeletonCubic, VertexHasTangent};
 use crate::opengl_shaders;
 

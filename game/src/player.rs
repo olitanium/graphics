@@ -2,10 +2,10 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use engine::entity::{Mass, SkeletonEntity};
+use engine::geometry::Pose;
 use engine::linear_algebra::Vector;
-use engine::modelling::cubic::SimpleCubic;
-use engine::modelling::cubic::geometry::{CalculatedAnimation, Pose};
 use engine::modelling::cubic::material::Material;
+use engine::modelling::cubic::{CalculatedAnimation, SimpleCubic};
 use engine::modelling::{Collision, SkeletonCubic};
 use engine::{ColourRGBA, Key, SimpleEntity};
 

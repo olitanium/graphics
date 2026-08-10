@@ -4,8 +4,8 @@ use graphics::shader_program::CullFace;
 use utils::{builder, new};
 
 use super::SimpleCubic;
-use crate::TransformBy;
-use crate::modelling::cubic::geometry::Pose;
+use geometry::TransformBy;
+use geometry::Pose;
 use crate::modelling::cubic::material::Material;
 use crate::modelling::cubic::mesh::MeshBuilder;
 use crate::modelling::test_models;

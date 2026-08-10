@@ -8,12 +8,14 @@ use graphics::{ActiveShaderProgram, Model};
 use utils::error_boilerplate;
 
 use crate::entity::EntityInner;
-use crate::modelling::cubic::geometry::{
+use crate::modelling::cubic::{
     CalculatedAnimation,
+    Mesh,
+    MeshDrawError,
     SignaturesDoNotMatchError,
     SkeletalAnimation,
+    SkeletonBoneIndex,
 };
-use crate::modelling::cubic::{Mesh, MeshDrawError, SkeletonBoneIndex};
 use crate::modelling::{SkeletalVertex, Skeleton, SkeletonBb, test_models};
 
 mod group;

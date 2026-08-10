@@ -6,7 +6,7 @@ use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::Vector;
-use engine::modelling::cubic::camera::Projection;
+use engine::modelling::cubic::CameraProjection;
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
 use engine::modelling::{Bloom, SkyBox};
 use engine::types::TexDim;
@@ -70,7 +70,7 @@ impl ApiState for State {
                 Event::WindowResize(_size) => {
                     // self.hdr_fb.resize(size);
                     // self.bloom.resize(size);
-                    self.game_camera.camera.projection = Projection::Perspective {
+                    self.game_camera.camera.projection = CameraProjection::Perspective {
                         fov: const { (90.0_f32).to_radians() },
                         aspect: self.hdr_fb.aspect_ratio(),
                         near: 0.1,

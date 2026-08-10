@@ -5,10 +5,8 @@ mod array_maths;
 use core::iter::Sum;
 use core::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign};
 use core::slice::SliceIndex;
-use core::{array, mem};
+use core::{array, ptr};
 use std::marker::Destruct;
-use std::mem::MaybeUninit;
-use std::ptr;
 
 use super::matrix::Matrix;
 use crate::vector::array_maths::mul;
@@ -30,18 +28,21 @@ const impl<const N: usize, T> Clone for Vector<N, T>
 where
     [T; N]: [const] Clone,
 {
+    #[inline]
     fn clone(&self) -> Self {
         Self::new(self.0.clone())
     }
 }
 
 const impl<const N: usize> Default for Vector<N, f32> {
+    #[inline]
     fn default() -> Self {
         Self::ZERO
     }
 }
 
 const impl<const N: usize> PartialEq for Vector<N, f32> {
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         array_maths::eq(self.into_inner(), other.into_inner())
     }
@@ -53,6 +54,7 @@ impl<const N: usize> Vector<N, f32> {
     pub const Z: Self = Self::make_single_vec(2);
     pub const ZERO: Self = Self::new([0.0; N]);
 
+    #[inline]
     const fn make_single_vec(position: usize) -> Self {
         let mut vec = Self::ZERO;
         let Some(inner) = vec.inner_mut().get_mut(position) else {
@@ -62,46 +64,56 @@ impl<const N: usize> Vector<N, f32> {
         vec
     }
 
-    /// # Safety
-    ///
-    /// The vector must be have a magnitude of 1.0, or this may break future
-    /// optimisations
+    /// Shortcut the normalisation process and assert that the given vector's
+    /// magnitude is `1.0`. The vector must be have a magnitude of `1.0`, or
+    /// this may break future optimisations.
     #[must_use]
     #[inline]
     pub const fn new_normal_unchecked(input: [f32; N]) -> UnitVector<N, f32> {
         UnitVector::new_unchecked(input)
     }
 
+    /// Check whether each of the vector's components are on or very close to
+    /// zero.
     #[inline]
     #[must_use]
     pub const fn is_zero(self) -> bool {
         array_maths::is_zero(self.into_inner())
     }
 
+    /// Find the length of the vector.
+    #[inline]
     #[must_use]
     pub fn magnitude(self) -> f32 {
         self.magnitude_sq().sqrt()
     }
 
     /// # Panics
+    ///
+    /// Panics when the vector is the Zero vector.
     #[must_use]
     #[inline]
-    pub fn normalize(self) -> UnitVector<N, f32> {
+    #[deprecated = "use the `try` method and handle the error"]
+    pub fn normalize_or_panic(self) -> UnitVector<N, f32> {
         let Some(vec) = self.try_normalize() else {
-            panic!("tried normalizing a zero vector");
+            #[expect(clippy::panic, reason = "deprecated function, being phased out")]
+            (panic!("tried normalizing a zero vector"))
         };
         vec
     }
 
+    /// Try to normalize a vector, returning `None` if the vector is zero.
     #[must_use]
+    #[inline]
     pub fn try_normalize(self) -> Option<UnitVector<N, f32>> {
         let one_len = 1.0 / self.magnitude();
         one_len
             .is_finite()
-            .then(|| Self::new_normal_unchecked(self.0.map(|x| x * one_len)))
+            .then(|| UnitVector::new_unchecked(self.0.map(|x| x * one_len)))
     }
 
     #[must_use]
+    #[inline]
     pub const fn truncate<const M: usize>(self) -> Vector<M, f32> {
         // CONST-HACK
         // let array = array::from_fn(|index|
@@ -170,6 +182,7 @@ impl<const N: usize, T> Vector<N, T> {
         self.inner_mut().iter_mut()
     }
 
+    /// Perform an elementwise function to each in the vector.
     #[must_use]
     #[inline]
     pub const fn map<F>(self, op: F) -> Self
@@ -182,14 +195,15 @@ impl<const N: usize, T> Vector<N, T> {
         Self::new(array)
     }
 
+    /// Find the square of the magnitude of the vector. This is more performant
+    /// that using `Vector::magnitude` followed by squaring.
+    #[must_use]
+    #[inline]
     pub const fn magnitude_sq(self) -> T
     where
-        T: [const] Clone
-            + [const] Add<Output = T>
-            + [const] Mul<Output = T>
-            + [const] Default
-            + Copy
-            + [const] Destruct,
+        T: [const] Add<Output = T> + [const] Mul<Output = T> + [const] Default + [const] Destruct,
+        // fixme Should only be clone, but [f32; 3] does not impl [const] Clone yet
+        Self: Copy,
     {
         let temp = self;
         self.dot(temp)

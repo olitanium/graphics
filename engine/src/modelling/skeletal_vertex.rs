@@ -1,13 +1,12 @@
 use std::array;
 use std::mem::offset_of;
 
+use geometry::{Pose, TransformBy};
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
 
-use crate::TransformBy;
 use crate::modelling::advanced_vertex::IncompleteVertex;
-use crate::modelling::cubic::geometry::Pose;
 use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex};
 
 #[derive(Debug, Clone, Copy)]
@@ -48,13 +47,15 @@ impl ExtendedVertex<3> for SkeletalVertex {
         self.position
     }
 
+    #[inline]
     fn from_incomplete_triangle(mut triangle: [IncompleteVertex<3>; 3]) -> Option<[Self; 3]> {
         let weights = triangle.each_mut().map(|vert| {
             let weight = vert.weights.take();
 
-            weight.map_or([(0, 1.0), (0, 0.0), (0, 0.0), (0, 0.0)], |mut vec| {
-                while vec.push_within_capacity((0, 0.0)).is_ok() {}
-                vec.try_into_array().expect("filled above")
+            weight.map_or([(0, 1.0), (0, 0.0), (0, 0.0), (0, 0.0)], |vec| {
+                // while vec.push((0, 0.0)).is_ok() {}
+                // vec.try_into_array().expect("filled above")
+                vec.into_array_with(|| (0, 0.0))
             })
         });
 

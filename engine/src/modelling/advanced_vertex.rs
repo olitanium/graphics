@@ -5,9 +5,9 @@ pub use incomplete::IncompleteVertex;
 
 mod impls;
 
-use crate::TransformBy;
+use geometry::{Pose, TransformBy};
+
 use crate::modelling::SimpleVertex;
-use crate::modelling::cubic::geometry::Pose;
 
 pub trait ExtendedVertex<const N: usize>: Vertex {
     fn position(&self) -> Vector<N>;
@@ -19,12 +19,6 @@ pub trait CubicVertex: ExtendedVertex<3> + TransformBy<Pose> {}
 pub trait VertexHasTangent: CubicVertex {
     fn normal(self) -> UnitVector<3>;
     fn into_simplevertex(self) -> SimpleVertex;
-}
-
-impl<V: CubicVertex> TransformBy<Pose> for [V; 3] {
-    fn transform_by(&self, operator: &Pose) -> Self {
-        self.map(|vertex| vertex.transform_by(operator))
-    }
 }
 
 impl ExtendedVertex<0> for NoVertex {

@@ -1,14 +1,13 @@
 use std::array;
 use std::cell::RefMut;
 
+use geometry::{Transform, TransformBy};
 use graphics::linear_algebra::Vector;
 
 use super::element::ChildrenOrMeta;
-use crate::TransformBy;
 use crate::modelling::BoundingBox;
 use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::bounding_box::BoundingBoxElement;
-use crate::transform::Transform;
 
 pub(crate) enum InnerChildrenOrMeta<'a, V: ExtendedVertex<DIMS>, const DIMS: usize, T> {
     Meta(RefMut<'a, T>),
