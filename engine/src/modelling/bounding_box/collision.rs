@@ -1,4 +1,5 @@
 use geometry::Pose;
+
 use crate::modelling::{BoundingBox, CubicVertex};
 
 pub trait Collision {

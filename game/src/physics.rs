@@ -11,7 +11,8 @@ impl State {
         let new_sun_pos = Vector::new([-float_time.cos().sin(), 1.0, -float_time.cos().cos()]);
 
         self.sun.inner.pose = Pose::new_from_orientation_translation(
-            Orientation::new_from_to(new_sun_pos, self.player.root().translation(), UnitVector::Y),
+            Orientation::new_from_to(new_sun_pos, self.player.root().translation(), UnitVector::Y)
+                .expect("sun never below player"),
             new_sun_pos,
         );
         self.sun.light.set_position(new_sun_pos);

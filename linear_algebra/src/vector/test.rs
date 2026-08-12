@@ -1,8 +1,8 @@
 use core::ops::Add;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
-use crate::Vector;
 use crate::vector::array_maths;
+use crate::{Vector, unit_vector};
 
 #[test]
 fn drop_check_array_manipulation() {
@@ -93,4 +93,10 @@ fn as_ref_test() {
     let vector_x = Vector::new(x);
 
     assert_eq!(AsRef::<Vector<_>>::as_ref(&x), &vector_x);
+}
+
+#[test]
+fn unit() {
+    // let bad = unit_vector![0.0];
+    let _x = unit_vector![1.0, 0.0];
 }

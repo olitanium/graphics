@@ -1,9 +1,9 @@
+use geometry::Pose;
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::vertex::Vertex;
 
 use crate::entity::{EntityInner, Mass, ToAggregateEntity};
 use crate::modelling::cubic::SimpleCubic;
-use geometry::Pose;
 use crate::modelling::{BoundingBox, Collision, SimpleVertex, SkeletonCubic, Volume};
 
 #[derive(Debug)]
@@ -11,7 +11,7 @@ pub struct SimpleEntity<T> {
     pub model: SimpleCubic,
     pub pose: Pose,
     pub mass: Mass,
-    pub(crate) bounding_box: Option<BoundingBox<SimpleVertex, 3, T>>,
+    pub bounding_box: Option<BoundingBox<SimpleVertex, 3, T>>,
     pub velocity: Vector<3>,
 }
 

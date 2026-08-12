@@ -1,11 +1,11 @@
 use std::{convert, iter};
 
+use geometry::Pose;
 use graphics::PollResult::Close;
 use graphics::linear_algebra::Vector;
 
 use crate::entity::{EntityInner, Mass, ToAggregateEntity};
 use crate::modelling::cubic::SkinningCubic;
-use geometry::Pose;
 use crate::modelling::{Collision, SkeletalVertex, SkeletonBb};
 
 #[derive(Debug, Clone)]

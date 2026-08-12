@@ -53,6 +53,7 @@ semicolon_outside_block = "allow"
 type_repetition_in_bounds = "allow"
 field_scoped_visibility_modifiers = "allow"
 as_conversions = "allow"
+pattern_type_mismatch = "allow"
 
 # not sure
 items_after_statements = "allow"

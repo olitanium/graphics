@@ -1,11 +1,14 @@
+use std::cell::RefCell;
 use std::fmt::Debug;
+use std::marker::PhantomData;
+use std::mem;
 use std::sync::LazyLock;
 
 use geometry::{Pose, Transform};
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
-use graphics::linear_algebra::Vector;
+use graphics::linear_algebra::{Vector, vector};
 use graphics::texture::FlatTexture;
 use graphics::vertex_array::VertexArray;
 use graphics::{ActiveShaderProgram, Model, ShaderProgram};
@@ -26,6 +29,7 @@ pub mod collision;
 pub use collision::Collision;
 
 use crate::modelling::advanced_vertex::ExtendedVertex;
+use crate::modelling::bounding_box::element::ChildrenOrMeta;
 // pub use crate::modelling::bounding_box::collision::TempModelTransform;
 use crate::modelling::bounding_box::element::DrawRecursiveError;
 use crate::modelling::{CubicVertex, SimpleVertex, SkeletonCubic, Volume};
@@ -107,6 +111,33 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T>
     pub fn encloses_point(&self, point: Vector<DIMS>) -> bool {
         self.root_element().encloses_point_and_children(self, point)
     }
+
+    pub fn temp_make_really_big(self) -> Self {
+        let Self {
+            triangles,
+            mut inner,
+        } = self;
+        let current = mem::replace(
+            &mut inner.first_mut().unwrap().children_or_meta,
+            ChildrenOrMeta::Children([0, 0]),
+        );
+        let ChildrenOrMeta::Meta(refcell) = current else {
+            panic!("no meta")
+        };
+        let new_inner = BoundingBoxElement {
+            lower_bound: vector![-1000.0; DIMS],
+            upper_bound: vector![1000.0; DIMS],
+            children_or_meta: ChildrenOrMeta::Meta(refcell),
+            start_index: 0,
+            len: triangles.len(),
+            triangles: PhantomData,
+        };
+
+        Self {
+            triangles,
+            inner: vec![new_inner],
+        }
+    }
 }
 
 impl<V: ExtendedVertex<3>, T> BoundingBox<V, 3, T> {
@@ -126,7 +157,8 @@ impl<V: ExtendedVertex<3>, T> BoundingBox<V, 3, T> {
         mut alter_meta: F,
     ) -> Option<Vec<(&'a [V; 3], &'b [V2; 3])>>
 where {
-        let output = BoundingBoxElement::overlaps_bounding_box_and_children(
+        let mut output = Vec::new();
+        BoundingBoxElement::overlaps_bounding_box_and_children(
             lhs.root_element(),
             lhs,
             &lhs_pose,
@@ -134,6 +166,7 @@ where {
             rhs,
             &rhs_pose,
             &mut alter_meta,
+            &mut output,
         );
 
         if output.is_empty() {

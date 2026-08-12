@@ -4,7 +4,7 @@ use std::sync::LazyLock;
 
 use array_vec::arrvec;
 use geometry::{Orientation, Pose, TransformBy};
-use graphics::linear_algebra::{UnitVector, Vector};
+use graphics::linear_algebra::{UnitVector, Vector, unit_vector};
 use graphics::vertex_array::VertexArray;
 
 use crate::modelling::advanced_vertex::IncompleteVertex;
@@ -224,9 +224,12 @@ pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletonBoneIndex, Skeleta
             .push(
                 Pose::new_from_orientation_translation(
                     Orientation::new_forward_up(
-                        Vector::new([0.25, 0.0, 1.0]).normalize_or_panic(),
+                        unit_vector![0.25, 0.0, 1.0],
+                        // .try_normalize()
+                        // .expect("Vector literal not Zero"),
                         UnitVector::Y,
-                    ),
+                    )
+                    .expect("literals not the same"),
                     Vector::new([0.0, 0.0, 1.0]),
                 ),
                 1.0,
@@ -235,10 +238,8 @@ pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletonBoneIndex, Skeleta
         animation
             .push(
                 Pose::new_from_orientation_translation(
-                    Orientation::new_forward_up(
-                        Vector::new([-0.25, 0.0, 1.0]).normalize_or_panic(),
-                        UnitVector::Y,
-                    ),
+                    Orientation::new_forward_up(unit_vector![-0.25, 0.0, 1.0], UnitVector::Y)
+                        .expect("literals not the same"),
                     Vector::new([0.0, 0.0, 1.0]),
                 ),
                 1.0,

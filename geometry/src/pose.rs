@@ -110,20 +110,12 @@ mod test {
     #[test]
     fn test_matrix() {
         let first_pose = Pose::new_from_orientation_translation(
-            Orientation::new_from_to(
-                [0.0, 0.0, 0.0].into(),
-                [0.0, 0.0, 1.0].into(),
-                UnitVector::Y,
-            ),
+            Orientation::new_from_to(Vector::ZERO, Vector::Z, UnitVector::Y).unwrap(),
             Vector::new([1.0, 1.0, 1.0]),
         );
 
         let second_pose = Pose::new_from_orientation_translation(
-            Orientation::new_from_to(
-                [0.0, 0.0, 0.0].into(),
-                [1.0, 0.0, 0.0].into(),
-                UnitVector::Y,
-            ),
+            Orientation::new_from_to(Vector::ZERO, Vector::X, UnitVector::Y).unwrap(),
             Vector::new([0.0, 0.5, 0.5]),
         );
 

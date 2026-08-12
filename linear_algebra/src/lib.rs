@@ -20,7 +20,6 @@
 #![feature(option_array_transpose)]
 #![feature(stmt_expr_attributes)]
 #![feature(maybe_uninit_uninit_array_transpose)]
-#![feature(const_iter)]
 
 mod matrix;
 mod vector;

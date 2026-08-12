@@ -49,35 +49,17 @@ impl ShadowPointLight {
         // (FORWARD, UP)
         // TODO: Check that the shadows are correct for all six directions.
         [
-            (
-                UnitVector::new_unchecked([1.0, 0.0, 0.0]),
-                UnitVector::new_unchecked([0.0, -1.0, 0.0]),
-            ),
-            (
-                UnitVector::new_unchecked([-1.0, 0.0, 0.0]),
-                UnitVector::new_unchecked([0.0, -1.0, 0.0]),
-            ),
-            (
-                UnitVector::new_unchecked([0.0, 1.0, 0.0]),
-                UnitVector::new_unchecked([0.0, 0.0, 1.0]),
-            ),
-            (
-                UnitVector::new_unchecked([0.0, -1.0, 0.0]),
-                UnitVector::new_unchecked([0.0, 0.0, -1.0]),
-            ),
-            (
-                UnitVector::new_unchecked([0.0, 0.0, 1.0]),
-                UnitVector::new_unchecked([0.0, -1.0, 0.0]),
-            ),
-            (
-                UnitVector::new_unchecked([0.0, 0.0, -1.0]),
-                UnitVector::new_unchecked([0.0, -1.0, 0.0]),
-            ),
+            (UnitVector::X, UnitVector::Y),
+            (-UnitVector::X, -UnitVector::Y),
+            (UnitVector::Y, UnitVector::Z),
+            (-UnitVector::Y, -UnitVector::Z),
+            (UnitVector::Z, -UnitVector::Y),
+            (-UnitVector::Z, -UnitVector::Y),
         ]
         .map(|(forward, up)| {
             camera::builder()
                 .pose(Pose::new_from_orientation_translation(
-                    Orientation::new_forward_up(forward, up),
+                    Orientation::new_forward_up(forward, up).expect("vector pairs different"),
                     self.light.position,
                 ))
                 .perspective((90.0_f32).to_radians(), 1.0, NEAR_PLANE, far_plane)

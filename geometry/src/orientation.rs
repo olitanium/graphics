@@ -34,9 +34,9 @@ impl Orientation {
         Orientation::from_quaternion(unit_quaternion)
     }
 
-    pub fn new_forward_up(forward: UnitVector<3>, global_up: UnitVector<3>) -> Self {
-        let left = global_up.v().cross(forward.v()).normalize_or_panic();
-        let view_up = forward.v().cross(left.v()).normalize_or_panic();
+    pub fn new_forward_up(forward: UnitVector<3>, global_up: UnitVector<3>) -> Option<Self> {
+        let left = global_up.v().cross(forward.v()).try_normalize()?;
+        let view_up = forward.v().cross(left.v()).try_normalize()?;
 
         let matrix = Matrix::from_col_major([
             left.into_inner(),    // left = x
@@ -44,7 +44,20 @@ impl Orientation {
             forward.into_inner(), // forward = z
         ]);
 
-        Self::from_matrix(matrix)
+        Some(Self::from_matrix(matrix))
+    }
+
+    pub fn new_forward_up_try_two(
+        forward: UnitVector<3>,
+        global_up: UnitVector<3>,
+        up_two: UnitVector<3>,
+    ) -> Self {
+        // should never fail because the `Self::new_forward_up` only fails when forward
+        // == up;
+        Self::new_forward_up(forward, global_up)
+            .or_else(|| Self::new_forward_up(forward, up_two))
+            // Should never get default
+            .unwrap_or_default()
     }
 
     pub fn from_matrix(matrix: Matrix<3, 3>) -> Self {
@@ -112,11 +125,11 @@ impl Orientation {
         self.quaternion = (self.quaternion.q() * rotation.q()).normalize()
     }
 
-    pub fn new_from_to(from: Vector<3>, to: Vector<3>, global_up: UnitVector<3>) -> Self
+    pub fn new_from_to(from: Vector<3>, to: Vector<3>, global_up: UnitVector<3>) -> Option<Self>
     where
         Self: Sized,
     {
-        let forward = (to - from).normalize_or_panic();
+        let forward = (to - from).try_normalize()?;
         Self::new_forward_up(forward, global_up)
     }
 
@@ -146,11 +159,9 @@ mod test {
 
     #[test]
     fn get_values() {
-        let orient = Orientation::new_from_to(
-            Vector::from([0.0, 0.0, 0.0]),
-            Vector::from([1.0, 1.0, 1.0]),
-            Vector::from([0.0, 1.0, 0.0]).normalize_or_panic(),
-        );
+        let orient =
+            Orientation::new_from_to(Vector::ZERO, Vector::from([1.0, 1.0, 1.0]), UnitVector::Y)
+                .unwrap();
         println!("matrix: {:?}", orient.as_matrix());
 
         println!("orientation: {:?}", orient.into_quaternion());
@@ -164,42 +175,21 @@ mod test {
         }
 
         let tests = [
-            (
-                Vector::new([0.0, 0.0, 1.0]).normalize_or_panic(),
-                Vector::new([0.0, 1.0, 0.0]).normalize_or_panic(),
-            ),
-            (
-                Vector::new([1.0, 0.0, 0.0]).normalize_or_panic(),
-                Vector::new([0.0, 1.0, 0.0]).normalize_or_panic(),
-            ),
-            (
-                Vector::new([0.0, 1.0, 0.0]).normalize_or_panic(),
-                Vector::new([0.1, 0.0, 0.0]).normalize_or_panic(),
-            ),
-            (
-                Vector::new([0.0, 1.0, 0.0]).normalize_or_panic(),
-                Vector::new([0.0, 0.0, 1.0]).normalize_or_panic(),
-            ),
-            (
-                Vector::new([0.0, 0.0, 1.0]).normalize_or_panic(),
-                Vector::new([1.0, 0.0, 0.0]).normalize_or_panic(),
-            ),
+            (UnitVector::Z, UnitVector::Y),
+            (UnitVector::X, UnitVector::Y),
+            (UnitVector::Y, UnitVector::X),
+            (UnitVector::Y, UnitVector::Z),
+            (UnitVector::Z, UnitVector::X),
         ];
 
         for (up, direction) in tests {
-            let orientation = Orientation::new_forward_up(direction, up);
+            let orientation = Orientation::new_forward_up(direction, up).unwrap();
 
             let should_be_up = orientation.act_on(Vector::new([0.0, 1.0, 0.0]));
             let should_be_direction = orientation.act_on(Vector::new([0.0, 0.0, 1.0]));
 
-            assert!(is_similar_enough(
-                up.v(),
-                should_be_up.normalize_or_panic().v()
-            ));
-            assert!(is_similar_enough(
-                direction.v(),
-                should_be_direction.normalize_or_panic().v()
-            ));
+            assert!(is_similar_enough(up.v(), should_be_up));
+            assert!(is_similar_enough(direction.v(), should_be_direction));
         }
     }
 }

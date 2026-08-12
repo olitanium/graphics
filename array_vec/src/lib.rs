@@ -12,6 +12,9 @@
 #![feature(const_try)]
 #![feature(const_drop_in_place)]
 #![feature(const_iter)]
+#![feature(const_closures)]
+#![feature(const_result_trait_fn)]
+#![feature(const_result_unwrap_unchecked)]
 
 use core::fmt::Debug;
 use core::marker::Destruct;
@@ -57,23 +60,24 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
     }
 
-    pub fn push_with<F>(&mut self, mut func: F) -> Result<&mut T, ()>
+    pub const fn push_with<F>(&mut self, mut func: F) -> Result<&mut T, ()>
     where
-        F: FnMut() -> T,
+        F: [const] FnMut() -> T + [const] Destruct,
     {
-        if self.len >= N {
-            return Err(());
+        if let Some(dest) = self.array.get_mut(self.len) {
+            *dest = MaybeUninit::new(func());
+            self.len += 1;
+            // SAFETY: just filled above
+            unsafe { Ok(dest.assume_init_mut()) }
+        } else {
+            Err(())
         }
-
-        self.push(func()).map_err(|_err| ())
     }
 
     /// Push a value, returning a mutable reference if successful, or the
     /// original value if unsuccessful.
-    pub const fn push(&mut self, elem: T) -> Result<&mut T, T>
-where
-        //T: [const] Destruct,
-    {
+    #[inline]
+    pub const fn push(&mut self, elem: T) -> Result<&mut T, T> {
         if let Some(dest) = self.array.get_mut(self.len) {
             *dest = MaybeUninit::new(elem);
             self.len += 1;
@@ -82,13 +86,6 @@ where
         } else {
             Err(elem)
         }
-
-        // self.array.get_mut(self.len).map_or_else(const || Err(elem), const
-        // |dest| { dest = MaybeUninit::new(elem);
-        // self.len += 1;
-        // SAFETY: just filled above
-        // unsafe { Ok(dest.assume_init_mut()) }
-        // })
     }
 
     pub const fn const_collect<const M: usize>(array: [T; M]) -> Self
@@ -155,7 +152,7 @@ where
         (len, array)
     }
 
-    pub fn try_into_array(self) -> Result<[T; N], TryFromErr<T, N>> {
+    pub const fn try_into_array(self) -> Result<[T; N], TryFromErr<T, N>> {
         let (len, array) = self.into_raw_parts();
 
         if len == N {
@@ -167,9 +164,9 @@ where
         }
     }
 
-    pub fn into_array_with<F>(mut self, mut gaps: F) -> [T; N]
+    pub const fn into_array_with<F>(mut self, mut gaps: F) -> [T; N]
     where
-        F: FnMut() -> T,
+        F: [const] FnMut() -> T + [const] Destruct,
     {
         while self.push_with(&mut gaps).is_ok() {}
 
@@ -177,6 +174,7 @@ where
         unsafe { self.try_into_array().unwrap_unchecked() }
     }
 
+    #[inline]
     pub fn into_array_with_new_len<const M: usize, F>(self, gaps: F) -> [T; M]
     where
         F: FnMut() -> T,

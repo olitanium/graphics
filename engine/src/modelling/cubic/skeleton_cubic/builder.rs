@@ -1,12 +1,11 @@
 use std::rc::Rc;
 
+use geometry::{Pose, TransformBy};
 use graphics::shader_program::CullFace;
 use utils::{builder, new};
 
 use super::{Skeleton, SkeletonCubic};
-use geometry::TransformBy;
 use crate::modelling::cubic::BoneAndMesh;
-use geometry::Pose;
 use crate::modelling::cubic::material::Material;
 use crate::modelling::cubic::mesh::MeshBuilder;
 use crate::modelling::cubic::simple_cubic::TransformType;

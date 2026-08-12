@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 triangle_intersection = {path = "../triangle_intersection"}
 engine = {path = "../engine"}
+utils = {path = "../utils"}
 
 [lints]
 workspace = true

@@ -50,16 +50,22 @@ impl ShadowFarLight {
 
         let vector_from_target = self.light.direction.v().scale(FAR_PLANE / 2.0);
 
-        let [x, _, z] = vector_from_target.into_inner();
-        let global_up = if x.abs() < 0.01 && z.abs() < 0.01 {
-            UnitVector::X
-        } else {
-            UnitVector::Y
-        };
+        // let [x, _, z] = vector_from_target.into_inner();
+        // let global_up = if x.abs() < 0.01 && z.abs() < 0.01 {
+        // UnitVector::X
+        // } else {
+        // UnitVector::Y
+        // };
+
+        // TODO: (TEST)
 
         camera::builder()
             .pose(Pose::new_from_orientation_translation(
-                Orientation::new_forward_up(self.light.direction, global_up),
+                Orientation::new_forward_up_try_two(
+                    self.light.direction,
+                    UnitVector::X,
+                    UnitVector::Z,
+                ),
                 target - vector_from_target,
             ))
             .orthographic(LIGHT_PLANE_WIDTH, LIGHT_PLANE_WIDTH, NEAR_PLANE, FAR_PLANE)

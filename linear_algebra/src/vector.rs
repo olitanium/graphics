@@ -20,6 +20,8 @@ mod test;
 mod compact_unit;
 pub use compact_unit::CompactUnitVector;
 
+/// Cartesian vector, comprised of the orthonormal x, y, z, ... (depending on N)
+/// basis.
 #[repr(transparent)]
 #[derive(Copy, Debug)]
 pub struct Vector<const N: usize, T = f32>(pub(crate) [T; N]);
@@ -48,13 +50,30 @@ const impl<const N: usize> PartialEq for Vector<N, f32> {
     }
 }
 
+/// Convenience macro to write new vectors, rather than having to write
+/// `Vector::new([...])`.
+#[macro_export]
+macro_rules! vector {
+    ($($num:literal),+) => {
+        Vector::new([$($num,)+])
+    };
+    ($num:literal; $len:expr) => {
+        Vector::new([$num; $len])
+    };
+}
+
 impl<const N: usize> Vector<N, f32> {
+    /// The first component `1.0`, others `0.0`.
     pub const X: Self = Self::make_single_vec(0);
+    /// The second component `1.0`, others `0.0`.
     pub const Y: Self = Self::make_single_vec(1);
+    /// The third component `1.0`, others `0.0`.
     pub const Z: Self = Self::make_single_vec(2);
+    /// all components `0.0`.
     pub const ZERO: Self = Self::new([0.0; N]);
 
     #[inline]
+    /// Helper function to create above constants.
     const fn make_single_vec(position: usize) -> Self {
         let mut vec = Self::ZERO;
         let Some(inner) = vec.inner_mut().get_mut(position) else {
@@ -66,7 +85,7 @@ impl<const N: usize> Vector<N, f32> {
 
     /// Shortcut the normalisation process and assert that the given vector's
     /// magnitude is `1.0`. The vector must be have a magnitude of `1.0`, or
-    /// this may break future optimisations.
+    /// this will break future optimisations.
     #[must_use]
     #[inline]
     pub const fn new_normal_unchecked(input: [f32; N]) -> UnitVector<N, f32> {
@@ -112,25 +131,26 @@ impl<const N: usize> Vector<N, f32> {
             .then(|| UnitVector::new_unchecked(self.0.map(|x| x * one_len)))
     }
 
+    // pub const fn truncate_with<F, const M: usize>(self, f: F) -> Vector<M, f32>
+    // where
+    // F: [const] FnMut() -> f32,
+    // {
+    // let array_vec = ArrayVec::from_array(self.0);
+    //
+    // let new_arr = array_vec.into_array_with_new_len(f); Vector::new(new_arr)
+    // }
+
+    /// Change the size of the vector, filling in the gaps with `0.0`.
     #[must_use]
     #[inline]
     pub const fn truncate<const M: usize>(self) -> Vector<M, f32> {
-        // CONST-HACK
-        // let array = array::from_fn(|index|
-        // self.0.get(index).copied().unwrap_or(0.0)); Vector::new(array)
-
-        let mut array = [0.0; _];
-
-        let mut index = 0;
-        while let (Some(value), Some(dest)) = (self.0.get(index).copied(), array.get_mut(index)) {
-            *dest = value;
-            index += 1;
-        }
-
+        let array = array::from_fn(const |index| self.0.get(index).copied().unwrap_or(0.0));
         Vector::new(array)
     }
 
+    /// Refelct the incoming ray `self` about a normal.
     #[must_use]
+    #[inline]
     pub const fn reflect(self, normal: UnitVector<N, f32>) -> Self
     where
         Self: [const] Clone,
@@ -142,12 +162,14 @@ impl<const N: usize> Vector<N, f32> {
 }
 
 impl<const N: usize, T> Vector<N, T> {
+    /// Create a new vector with a length given by the array input.
     #[must_use]
     #[inline]
     pub const fn new(input: [T; N]) -> Self {
         Self(input)
     }
 
+    /// Destructure the vector and return the inner array, of length `N`.
     #[must_use]
     #[inline]
     pub const fn into_inner(self) -> [T; N]
@@ -158,12 +180,17 @@ impl<const N: usize, T> Vector<N, T> {
         out
     }
 
+    /// Get a reference to the inner array.
     #[must_use]
     #[inline]
     pub const fn inner(&self) -> &[T; N] {
         &self.0
     }
 
+    /// Safely get a particular index into the vector, returning None if out of
+    /// bounds.
+    #[inline]
+    #[must_use]
     pub const fn get<I>(&self, index: I) -> Option<&<I as SliceIndex<[T]>>::Output>
     where
         I: [const] SliceIndex<[T]>,
@@ -171,12 +198,14 @@ impl<const N: usize, T> Vector<N, T> {
         self.0.get(index)
     }
 
+    /// Get a mutable reference to the inner array.
     #[must_use]
     #[inline]
     pub const fn inner_mut(&mut self) -> &mut [T; N] {
         &mut self.0
     }
 
+    /// Get a mutable iterator to the inner array.
     #[inline]
     pub const fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
         self.inner_mut().iter_mut()
@@ -209,6 +238,13 @@ impl<const N: usize, T> Vector<N, T> {
         self.dot(temp)
     }
 
+    /// Perform the scalar (inner) product of two vectors.
+    /// There are several interpretations of the inner product:
+    ///
+    /// - The sum of the elementwise product of two vectors
+    /// - The length of the projection of one vector onto the other, scaled by
+    ///   the length of the other.
+    /// - others...
     #[inline]
     #[must_use]
     pub const fn dot(self, rhs: Self) -> T
@@ -235,6 +271,8 @@ impl<const N: usize, T> Vector<N, T> {
         Self::new(arr)
     }
 
+    /// Multiply each element of the vector with it's corresponding element in
+    /// the other.
     #[inline]
     #[must_use]
     pub const fn elem_wise_mul(self, other: Self) -> Self
@@ -248,6 +286,9 @@ impl<const N: usize, T> Vector<N, T> {
 }
 
 impl Vector<3, f32> {
+    /// Perform the vector (outer) product. This method yields a vector
+    /// perpendicular to both, with a magnitude scaled by how perpendular the
+    /// vectors are.
     #[inline]
     #[must_use]
     pub const fn cross(self, rhs: Self) -> Self {
@@ -261,6 +302,8 @@ impl Vector<3, f32> {
         Self::new(out)
     }
 
+    /// Returns the original vector with a trailing `1.0`, for use in
+    /// homogeneous contexts.
     #[inline]
     #[must_use]
     pub const fn homogeneous(self) -> Vector<4, f32> {

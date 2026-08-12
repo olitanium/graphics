@@ -9,6 +9,7 @@
 #![feature(inherent_associated_types)]
 #![feature(generic_const_items)]
 #![feature(const_trait_impl)]
+#![feature(iter_collect_into)]
 
 pub mod eng_state;
 pub mod entity;

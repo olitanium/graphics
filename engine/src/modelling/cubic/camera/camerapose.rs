@@ -1,8 +1,7 @@
 pub mod demo;
 
-use graphics::linear_algebra::Vector;
-
 use geometry::{Orientation, Pose};
+use graphics::linear_algebra::Vector;
 
 pub trait CameraPose {
     type Hint;

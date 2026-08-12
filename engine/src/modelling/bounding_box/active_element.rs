@@ -131,10 +131,12 @@ impl<V: ExtendedVertex<3>, T> BoundingBoxElement<V, 3, T> {
         other_boundingbox: &'b BoundingBox<V2, 3, U>,
         other_transform: &P2,
         alter_meta: &mut F,
-    ) -> Vec<(&'a [V; 3], &'b [V2; 3])>
-//where
-        //Vector<DIMS>: ExtendedVertex<DIMS>,
-        //[(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
+        accumulator: &mut Vec<(&'a [V; 3], &'b [V2; 3])>,
+    )
+    // -> Vec<(&'a [V; 3], &'b [V2; 3])>)
+    // where
+    // Vector<DIMS>: ExtendedVertex<DIMS>,
+    //[(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
     {
         let is_overlap = this.overlaps_bounding_box_single(this_transform, other, other_transform);
 
@@ -153,8 +155,8 @@ impl<V: ExtendedVertex<3>, T> BoundingBoxElement<V, 3, T> {
                     (thisright, otherright),
                 ]
                 .into_iter()
-                .flat_map(|(new_this, new_other)| {
-                    BoundingBoxElement::overlaps_bounding_box_and_children(
+                .for_each(|(new_this, new_other)| {
+                    Self::overlaps_bounding_box_and_children(
                         new_this,
                         this_boundingbox,
                         this_transform,
@@ -162,16 +164,16 @@ impl<V: ExtendedVertex<3>, T> BoundingBoxElement<V, 3, T> {
                         other_boundingbox,
                         other_transform,
                         alter_meta,
+                        accumulator,
                     )
-                })
-                .collect(),
+                }),
                 (
                     InnerChildrenOrMeta::Meta(_),
                     InnerChildrenOrMeta::Children([otherleft, otherright]),
                 ) => [(this, otherleft), (this, otherright)]
                     .into_iter()
-                    .flat_map(|(new_this, new_other)| {
-                        BoundingBoxElement::overlaps_bounding_box_and_children(
+                    .for_each(|(new_this, new_other)| {
+                        Self::overlaps_bounding_box_and_children(
                             new_this,
                             this_boundingbox,
                             this_transform,
@@ -179,16 +181,16 @@ impl<V: ExtendedVertex<3>, T> BoundingBoxElement<V, 3, T> {
                             other_boundingbox,
                             other_transform,
                             alter_meta,
+                            accumulator,
                         )
-                    })
-                    .collect(),
+                    }),
                 (
                     InnerChildrenOrMeta::Children([thisleft, thisright]),
                     InnerChildrenOrMeta::Meta(_),
                 ) => [(thisleft, other), (thisright, other)]
                     .into_iter()
-                    .flat_map(|(new_this, new_other)| {
-                        BoundingBoxElement::overlaps_bounding_box_and_children(
+                    .for_each(|(new_this, new_other)| {
+                        Self::overlaps_bounding_box_and_children(
                             new_this,
                             this_boundingbox,
                             this_transform,
@@ -196,9 +198,9 @@ impl<V: ExtendedVertex<3>, T> BoundingBoxElement<V, 3, T> {
                             other_boundingbox,
                             other_transform,
                             alter_meta,
+                            accumulator,
                         )
-                    })
-                    .collect(),
+                    }),
                 (InnerChildrenOrMeta::Meta(mut lhs), InnerChildrenOrMeta::Meta(mut rhs)) => {
                     alter_meta(&mut *lhs, &mut *rhs);
 
@@ -226,11 +228,9 @@ impl<V: ExtendedVertex<3>, T> BoundingBoxElement<V, 3, T> {
                                     .then_some((tri, other))
                             })
                         })
-                        .collect()
+                        .collect_into(accumulator);
                 }
             }
-        } else {
-            Vec::new()
         }
     }
 }

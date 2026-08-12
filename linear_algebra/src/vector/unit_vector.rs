@@ -9,6 +9,18 @@ use crate::Vector;
 #[derive(Clone, Copy, Debug)]
 pub struct UnitVector<const N: usize, T = f32>(pub(crate) Vector<N, T>);
 
+#[macro_export]
+macro_rules! unit_vector {
+    ($($(0.0)?),*) => {
+        compile_error!("cannot have zero UnitVector literal")
+    };
+
+    ($($num:literal),+) => {
+        // SAFETY: checked above for zero vector
+        unsafe { $crate::Vector::new([$($num),*]).try_normalize().unwrap_unchecked() }
+    }
+}
+
 impl<const N: usize, T> PartialEq for UnitVector<N, T>
 where
     Vector<N, T>: PartialEq,

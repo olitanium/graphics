@@ -1,7 +1,7 @@
+use geometry::{Orientation, Pose};
 use graphics::linear_algebra::{UnitVector, Vector};
 
 use crate::modelling::cubic::camera::CameraPose;
-use geometry::{Orientation, Pose};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ManualPose {
@@ -104,50 +104,58 @@ impl ManualPose {
         }
     }
 
-    pub fn new_fixed_up_from_to(position: Vector<3>, to: Vector<3>, up: UnitVector<3>) -> Self {
-        let orientation = Orientation::new_from_to(position, to, up);
+    pub fn new_fixed_up_from_to(
+        position: Vector<3>,
+        to: Vector<3>,
+        up: UnitVector<3>,
+    ) -> Option<Self> {
+        let orientation = Orientation::new_from_to(position, to, up)?;
 
-        Self::FixedUp {
+        Some(Self::FixedUp {
             position,
             up,
             orientation,
-        }
+        })
     }
 
     pub fn new_fixed_forward_up(
         position: Vector<3>,
         forward: UnitVector<3>,
         up: UnitVector<3>,
-    ) -> Self {
-        let orientation = Orientation::new_forward_up(forward, up);
+    ) -> Option<Self> {
+        let orientation = Orientation::new_forward_up(forward, up)?;
 
-        Self::FixedUp {
+        Some(Self::FixedUp {
             position,
             up,
             orientation,
-        }
+        })
     }
 
-    pub fn new_flexible_from_to(position: Vector<3>, to: Vector<3>, up: UnitVector<3>) -> Self {
-        let orientation = Orientation::new_from_to(position, to, up);
+    pub fn new_flexible_from_to(
+        position: Vector<3>,
+        to: Vector<3>,
+        up: UnitVector<3>,
+    ) -> Option<Self> {
+        let orientation = Orientation::new_from_to(position, to, up)?;
 
-        Self::Flexible {
+        Some(Self::Flexible {
             position,
             orientation,
-        }
+        })
     }
 
     pub fn new_flexible_forward_up(
         position: Vector<3>,
         forward: UnitVector<3>,
         up: UnitVector<3>,
-    ) -> Self {
-        let orientation = Orientation::new_forward_up(forward, up);
+    ) -> Option<Self> {
+        let orientation = Orientation::new_forward_up(forward, up)?;
 
-        Self::Flexible {
+        Some(Self::Flexible {
             position,
             orientation,
-        }
+        })
     }
 
     pub const fn set_orientation(&mut self, orientation: Orientation) {

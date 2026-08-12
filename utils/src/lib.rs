@@ -1,6 +1,5 @@
 //! A utility crate. Modules in this crate really ought to be spun off into
 //! smaller manageable crates.
-#![no_std]
 #![warn(missing_docs)]
 #![feature(const_trait_impl)]
 #![feature(const_ops)]
@@ -13,7 +12,9 @@ mod zip_with;
 pub use zip_with::ArrayZipWith;
 
 /// Testbed is a module for trying out MVP ideas before fleshing out.
-pub mod testbed;
+pub mod addassign;
+
+pub mod hash_match;
 
 /// A small macro to make the `Builder` pattern easier to implement.
 /// # Example

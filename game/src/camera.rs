@@ -19,11 +19,10 @@ impl GameCamera {
         const START_LOC: Vector<3> = Vector::new([0.0, 0.5, 1.0]);
 
         let camera = CameraBuilder::new()
-            .pose(ManualCameraPose::new_fixed_up_from_to(
-                START_LOC,
-                Vector::ZERO,
-                UnitVector::Y,
-            ))
+            .pose(
+                ManualCameraPose::new_fixed_up_from_to(START_LOC, Vector::ZERO, UnitVector::Y)
+                    .unwrap(),
+            )
             .perspective(90.0, hdr_fb.aspect_ratio(), 0.01, 100.0)
             .build();
         let sensitivity = 0.01;

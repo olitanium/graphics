@@ -11,7 +11,6 @@ pub use manual_pose::ManualPose;
 
 pub mod camerapose;
 pub use camerapose::CameraPose;
-
 use geometry::Orientation;
 
 #[derive(Clone, Debug)]

@@ -1,6 +1,5 @@
-use infinite_window::InfiniteWindowIter;
-
 use geometry::{Pose, PoseSclerp};
+use infinite_window::InfiniteWindowIter;
 
 #[derive(Debug, Clone)]
 pub struct BoneAnimation {

@@ -1,9 +1,9 @@
 use std::rc::Rc;
 
+use geometry::TransformBy;
 use graphics::vertex_array::VertexArray;
 use utils::{builder, new};
 
-use geometry::TransformBy;
 use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::cubic::Mesh;
 use crate::modelling::cubic::material::Material;

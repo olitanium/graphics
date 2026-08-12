@@ -2363,6 +2363,7 @@ dependencies = [
 name = "triangle_intersection"
 version = "0.1.0"
 dependencies = [
+ "geometry",
  "linear_algebra",
 ]
 
@@ -2372,6 +2373,7 @@ version = "0.1.0"
 dependencies = [
  "engine",
  "triangle_intersection",
+ "utils",
 ]
 
 [[package]]

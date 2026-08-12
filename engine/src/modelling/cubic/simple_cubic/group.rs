@@ -1,3 +1,4 @@
+use geometry::Pose;
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
@@ -6,7 +7,6 @@ use graphics::texture::FlatTexture;
 use graphics::{Draw, DrawOut};
 
 use crate::modelling::cubic::camera::CameraPose;
-use geometry::Pose;
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::cubic::{Camera, SimpleCubic};
 

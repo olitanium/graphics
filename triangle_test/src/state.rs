@@ -6,7 +6,7 @@ use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::cubic::material::Material;
 use engine::modelling::cubic::{Camera, CameraBuilder, ManualCameraPose, MeshBuilder, SimpleCubic};
-use engine::modelling::{Collision, IncompleteVertex, SimpleCubicGroup};
+use engine::modelling::{BoundingBox, Collision, IncompleteVertex, SimpleCubicGroup};
 use engine::types::TexDim;
 use engine::{
     ApiState,
@@ -19,6 +19,7 @@ use engine::{
     opengl_shaders,
     shader_program,
 };
+use utils::hash_matches;
 
 pub struct State {
     triangle_one: SimpleEntity<()>,
@@ -37,15 +38,18 @@ impl ApiState for State {
         let aspect = TexDim::aspect_ratio(initial_size.0, initial_size.1);
         let camera = CameraBuilder::new()
             .perspective(90_f32.to_radians(), aspect, 0.1, 10.0)
-            .pose(ManualCameraPose::new_fixed_forward_up(
-                Vector::new([0.0, 0.0, 2.0]),
-                -UnitVector::Z,
-                UnitVector::Y,
-            ))
+            .pose(
+                ManualCameraPose::new_fixed_forward_up(
+                    Vector::new([0.0, 0.0, 2.0]),
+                    -UnitVector::Z,
+                    UnitVector::Y,
+                )
+                .expect("literals are okay"),
+            )
             .build();
 
         let triangle_one = {
-            let triangle_one_vertices = [-Vector::X + Vector::Y + Vector::Z, -Vector::X, Vector::Y]
+            let triangle_one_vertices = [-Vector::X + Vector::Y, -Vector::X, Vector::Y]
                 .map(|vec| IncompleteVertex::new(vec).texture(vec.truncate()));
 
             let mut triangle_one_cubic =
@@ -57,7 +61,11 @@ impl ApiState for State {
 
             let triangle_one_model = triangle_one_cubic.build();
 
-            SimpleEntity::from_simple_cubic(triangle_one_model, 1, Mass(1.0), |_| ())
+            let mut out = SimpleEntity::from_simple_cubic(triangle_one_model, 1, Mass(1.0), |_| ());
+
+            out.bounding_box = out.bounding_box.map(|bbox| bbox.temp_make_really_big());
+
+            out
         };
 
         let triangle_two = {
@@ -73,13 +81,17 @@ impl ApiState for State {
 
             let triangle_one_model = triangle_two_cubic.build();
 
-            SimpleEntity::from_simple_cubic(triangle_one_model, 1, Mass(1.0), |_| ())
+            let mut out = SimpleEntity::from_simple_cubic(triangle_one_model, 1, Mass(1.0), |_| ());
+
+            out.bounding_box = out.bounding_box.map(|bbox| bbox.temp_make_really_big());
+
+            out
         };
 
         Ok(Self {
-            camera,
             triangle_one,
             triangle_two,
+            camera,
         })
     }
 
@@ -109,17 +121,14 @@ impl ApiState for State {
                 .push_change(Pose::new_from_translation(Vector::new(translation)));
         }
 
-        for key in keys {
-            match key {
-                Key::Escape => return PollResult::Close,
-                Key::W => move_triangle_two(self, [0.0, frame_time, 0.0]),
-                Key::S => move_triangle_two(self, [0.0, -frame_time, 0.0]),
-                Key::A => move_triangle_two(self, [-frame_time, 0.0, 0.0]),
-                Key::D => move_triangle_two(self, [frame_time, 0.0, 0.0]),
-                Key::Space => move_triangle_two(self, [0.0, 0.0, frame_time]),
-                Key::LeftShift => move_triangle_two(self, [0.0, 0.0, -frame_time]),
-                _ => {}
-            }
+        hash_matches! {keys:
+            &Key::Escape => return PollResult::Close,
+            &Key::W => move_triangle_two(self, [0.0, frame_time, 0.0]),
+            &Key::S => move_triangle_two(self, [0.0, -frame_time, 0.0]),
+            &Key::A => move_triangle_two(self, [-frame_time, 0.0, 0.0]),
+            &Key::D => move_triangle_two(self, [frame_time, 0.0, 0.0]),
+            &Key::Space => move_triangle_two(self, [0.0, 0.0, frame_time]),
+            &Key::LeftShift => move_triangle_two(self, [0.0, 0.0, -frame_time]),
         }
 
         let test_collision =
@@ -130,12 +139,10 @@ impl ApiState for State {
             self.triangle_one
                 .model
                 .temp_set_all_material(Rc::new(Material::from_colour(ColourRGBA::GREEN)));
-            eprintln!("yes");
         } else {
             self.triangle_one
                 .model
                 .temp_set_all_material(Rc::new(Material::from_colour(ColourRGBA::RED)));
-            eprintln!("no");
         }
 
         if let Some(default_fb) = opt_default {
