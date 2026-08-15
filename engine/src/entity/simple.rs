@@ -2,27 +2,24 @@ use geometry::Pose;
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::vertex::Vertex;
 
-use crate::entity::{EntityInner, Mass, ToAggregateEntity};
+use crate::entity::{EntityInner, Mass, SimplePhysics, ToAggregateEntity};
+use crate::modelling::bounding_box::no_alter_meta;
 use crate::modelling::cubic::SimpleCubic;
 use crate::modelling::{BoundingBox, Collision, SimpleVertex, SkeletonCubic, Volume};
 
 #[derive(Debug)]
 pub struct SimpleEntity<T> {
     pub model: SimpleCubic,
-    pub pose: Pose,
-    pub mass: Mass,
     pub bounding_box: Option<BoundingBox<SimpleVertex, 3, T>>,
-    pub velocity: Vector<3>,
+    pub physics: SimplePhysics,
 }
 
 impl<T> Default for SimpleEntity<T> {
     fn default() -> Self {
         Self {
-            mass: Default::default(),
-            pose: Default::default(),
             model: Default::default(),
             bounding_box: Default::default(),
-            velocity: Default::default(),
+            physics: Default::default(),
         }
     }
 }
@@ -36,16 +33,19 @@ impl<T> SimpleEntity<T> {
     ) -> Self {
         let bounding_box = model.make_bounding_box(depth, init);
 
+        let mut physics = SimplePhysics::default();
+        physics.set_mass(mass);
+
         Self {
             model,
-            mass,
             bounding_box,
+            physics,
             ..Self::default()
         }
     }
 
     pub const fn temp_as_simplecubic_and_anim(&self) -> (&SimpleCubic, Pose) {
-        (&self.model, self.pose)
+        (&self.model, *self.physics.pose())
     }
 }
 
@@ -56,6 +56,22 @@ impl<T> SimpleEntity<T> {
         [(); <Vector<3> as Vertex>::ELEMENT_COUNT]:,
     {
         self.bounding_box.as_ref()
+    }
+
+    pub fn move_collide_stop<B: Collision>(
+        &self,
+        other: &B,
+        other_transform: B::Transform<'_>,
+    ) -> bool {
+        let Some(collides) = self.collides((), other, other_transform, no_alter_meta::<Self, B>)
+        else {
+            return false;
+        };
+
+        // find the best position for the entity to be in.
+        // utils::binary_search::binary_search(, upper, make_midpoint, test, count)
+
+        todo!()
     }
 
     // pub fn elastic_collision_no_rotation(&mut self, other: &mut Self) -> bool {
@@ -109,25 +125,6 @@ impl<T> SimpleEntity<T> {
 }
 
 pub fn get_average_normal<I: IntoIterator<Item = [SimpleVertex; 3]>>(input: I) -> UnitVector<3> {
-    // input
-    // .into_iter()
-    // .map(|triangle| {
-    // triangle
-    // .into_iter()
-    // .map(|vertex| vertex.normal.v())
-    // .sum::<Vector<3>>()
-    // .normalize()
-    // .v()
-    // })
-    // .sum::<Vector<3>>()
-    // .normalize()
-
-    // input
-    // .into_iter()
-    // .flat_map(|triangle| triangle.into_iter().map(|vertex| vertex.normal.v()))
-    // .sum::<Vector<3>>()
-    // .normalize();
-
     input
         .into_iter()
         .flatten()
@@ -149,7 +146,7 @@ impl<TThis> Collision for SimpleEntity<TThis> {
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
         &'a self,
-        _: Self::Transform<'_>,
+        (): Self::Transform<'_>,
         target: &'b T,
         target_transform: T::Transform<'_>,
         alter_meta: F,
@@ -157,9 +154,13 @@ impl<TThis> Collision for SimpleEntity<TThis> {
     where
         for<'c> T::Transform<'c>: Clone,
     {
-        self.bounding_box
-            .as_ref()?
-            .collides(self.pose, target, target_transform, alter_meta)
+        eprintln!("{:#?}", self.physics.pose());
+        self.bounding_box.as_ref()?.collides(
+            *self.physics.pose(),
+            target,
+            target_transform,
+            alter_meta,
+        )
     }
 }
 

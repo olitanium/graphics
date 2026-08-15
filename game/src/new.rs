@@ -53,7 +53,7 @@ impl State {
                 ))
                 .build(),
             0,
-            Mass(f32::INFINITY),
+            Mass::new_inverse(0.0),
             |_| (),
         );
 
@@ -67,7 +67,7 @@ impl State {
                 ])))
                 .build(),
             0,
-            Mass(f32::INFINITY),
+            Mass::new_inverse(0.0),
             |_| (),
         );
 
@@ -81,7 +81,7 @@ impl State {
                 .emission(FlatTexture::monochrome(morgan_colour))
                 .build(),
         ));
-        let sun = SimpleEntity::from_simple_cubic(morgan, 20, Mass(1.0), |_| ());
+        let sun = SimpleEntity::from_simple_cubic(morgan, 20, Mass::new_inverse(1.0), |_| ());
 
         let light_attenuation_array = [0.0, 0.0, 1.0];
 
@@ -120,8 +120,8 @@ impl State {
 
             sun,
             sun_duplicate_light,
-            origin_cube: origin_cube.into(),
-            small_cube: small_cube.into(),
+            origin_cube,
+            small_cube,
             player,
 
             toggle_m: true,

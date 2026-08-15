@@ -5,7 +5,7 @@ use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
-use engine::modelling::cubic::{self, Camera, CameraBuilder, ManualCameraPose};
+use engine::modelling::cubic::{self, CameraBuilder, ManualCameraPose};
 
 pub struct GameCamera {
     pub move_lock: bool,

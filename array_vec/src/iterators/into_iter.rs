@@ -1,4 +1,3 @@
-use core::mem::MaybeUninit;
 
 use crate::{ArrayVec, ArrayVecPopFront};
 

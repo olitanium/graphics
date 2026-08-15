@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use geometry::Transform;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::FramebufferContext;

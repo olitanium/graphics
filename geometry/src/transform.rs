@@ -3,17 +3,17 @@ use linear_algebra::{UnitVector, Vector};
 use crate::Pose;
 
 pub trait TransformBy<By: ?Sized>: Sized {
-    /// TransformBy takes an object, say a vector, and a transformation, say a
+    /// `TransformBy` takes an object, say a vector, and a transformation, say a
     /// matrix. The output is the result of applying the transformation to
     /// the object.
     ///
     /// In this sense, the operators are backwards in comparison to matrix
-    /// multiplication, as vec.transform_by(matrix) is equal to matrix *
+    /// multiplication, as `vec.transform_by(matrix)` is equal to matrix *
     /// vec.
     ///
     /// A seperate trait `Transform<Target>` which takes `Target` and returns
     /// `Target` exists, and there is a blanket impl for all types which
-    /// implement TransformBy
+    /// implement `TransformBy`
     fn transform_by(&self, operator: &By) -> Self;
 }
 
@@ -33,8 +33,8 @@ impl TransformBy<Pose> for UnitVector<3> {
     }
 }
 
-impl TransformBy<Pose> for Pose {
-    fn transform_by(&self, pose: &Pose) -> Self {
+impl TransformBy<Self> for Pose {
+    fn transform_by(&self, pose: &Self) -> Self {
         let dual_quaternion = (pose.dual_quaternion.u() * self.dual_quaternion.u()).normalize();
 
         Self { dual_quaternion }
@@ -62,7 +62,7 @@ impl<V: TransformBy<Pose>, const N: usize> TransformBy<Pose> for [V; N] {
 /// The operation order is reminiscent of matrix multiplication, in so far as
 /// `matrix.transform(vec) == matrix * vec`
 ///
-/// Do not implement this trait, instead implement transform_by, where private
+/// Do not implement this trait, instead implement `transform_by`, where private
 /// members of the output type can be accessed. A blanket transform exists
 pub trait Transform<T> {
     fn transform(&self, input: &T) -> T;

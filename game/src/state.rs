@@ -10,7 +10,7 @@ use engine::modelling::cubic::CameraProjection;
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
 use engine::modelling::{Bloom, SkyBox};
 use engine::types::TexDim;
-use engine::{ApiState, Draw, Event, PollResult};
+use engine::{ApiState, Draw, Event, PollResult, SimpleEntity};
 
 use crate::camera::GameCamera;
 use crate::morgan::Sun;
@@ -28,8 +28,8 @@ pub struct State {
 
     pub sun: Sun,
     pub sun_duplicate_light: ShadowPointLight,
-    pub origin_cube: SkeletonEntity<()>,
-    pub small_cube: SkeletonEntity<()>,
+    pub origin_cube: SimpleEntity<()>,
+    pub small_cube: SimpleEntity<()>,
     pub player: Player,
 
     pub skybox: SkyBox,

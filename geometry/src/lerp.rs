@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul};
+use core::ops::{Add, Mul};
 
 #[derive(Debug, Copy, Clone)]
 pub struct Lerp<T> {

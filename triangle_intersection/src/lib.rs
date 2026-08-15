@@ -56,6 +56,7 @@ macro_rules! permute {
 pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
     /// calculate a three dimensional determinant as features in [here](https://inria.hal.science/inria-00072100/document).
     #[inline]
+    #[must_use]
     fn three_dimension_determinant(a: Vector<3>, b: Vector<3>, c: Vector<3>, d: Vector<3>) -> f32 {
         let [xa, ya, za] = a.into_inner();
         let [xb, yb, zb] = b.into_inner();
@@ -70,11 +71,14 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
     }
 
     #[inline]
+    #[must_use]
     fn make_determinants(one: Triangle<3>, two: Triangle<3>) -> [f32; 3] {
         let [p2, q2, r2] = two;
         one.map(|elem| three_dimension_determinant(p2, q2, r2, elem))
     }
 
+    #[must_use]
+    #[inline]
     fn make_determinants_signorzero(one: Triangle<3>, two: Triangle<3>) -> [SignOrZero; 3] {
         make_determinants(one, two).map(SignOrZero::new)
     }
@@ -83,9 +87,11 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
         None,
         Coplanar,
         Success(Triangle<3>, Triangle<3>),
+        MaybeIntersecting,
     }
 
     #[inline]
+    #[must_use]
     const fn swap_qr(triangle: Triangle<3>) -> Triangle<3> {
         let [p, q, r] = triangle;
 
@@ -97,13 +103,13 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
         clippy::match_same_arms,
         reason = "better clarity on what each combination does"
     )]
+    #[must_use]
     fn determiant_crossing(one: Triangle<3>, two: Triangle<3>) -> CrossType {
         use SignOrZero as S;
         match make_determinants_signorzero(one, two) {
             [S::Zero, S::Zero, S::Zero] => CrossType::Coplanar,
-            [S::Positive, S::Positive, S::Positive] | [S::Negative, S::Negative, S::Negative] => {
-                CrossType::None
-            }
+            [S::Positive, S::Positive, S::Positive] => CrossType::None,
+            [S::Negative, S::Negative, S::Negative] => CrossType::MaybeIntersecting,
             // Only one vertex is in positive, this must be rotated around and the other triangle
             // kept as is
             [S::Positive, S::Negative | S::Zero, S::Negative | S::Zero] => {
@@ -165,11 +171,18 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
     let smart_determinants_crossing = {
         match determiant_crossing(one, two) {
             nope @ (CrossType::None | CrossType::Coplanar) => nope,
-            CrossType::Success(new_one, new_two) => {
-                make_determinants_signorzero(new_one, new_two);
-                match determiant_crossing(new_two, new_one) {
-                    nope @ (CrossType::None | CrossType::Coplanar) => nope,
-                    CrossType::Success(output1, output2) => CrossType::Success(output1, output2),
+            CrossType::Success(new_one, new_two) => match determiant_crossing(new_two, new_one) {
+                nope @ (CrossType::None | CrossType::Coplanar | CrossType::MaybeIntersecting) => {
+                    nope
+                }
+                CrossType::Success(output1, output2) => CrossType::Success(output1, output2),
+            },
+            CrossType::MaybeIntersecting => {
+                match determiant_crossing(two, one) {
+                    CrossType::MaybeIntersecting => CrossType::Coplanar,
+                    CrossType::None => CrossType::None,
+                    // I don't expect these to come up
+                    CrossType::Coplanar | CrossType::Success(..) => CrossType::None,
                 }
             }
         }
@@ -237,6 +250,7 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
             three_dimension_determinant(p1, q1, p2, q2) <= 0.0
                 && three_dimension_determinant(p1, r1, r2, p2) <= 0.0
         }
+        CrossType::MaybeIntersecting => true,
     }
 }
 

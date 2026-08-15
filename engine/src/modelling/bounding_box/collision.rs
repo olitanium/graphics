@@ -4,7 +4,7 @@ use crate::modelling::{BoundingBox, CubicVertex};
 
 pub trait Collision {
     type Vertex;
-    type Transform<'a>;
+    type Transform<'a>: Clone;
     type Meta;
     type FuncInputs;
 
@@ -48,9 +48,18 @@ pub trait Collision {
         target: &'b T,
         target_transform: T::Transform<'_>,
         alter_meta: F,
-    ) -> Option<Vec<(&'a [Self::Vertex; 3], &'b [T::Vertex; 3])>>
-    where
-        for<'c> T::Transform<'c>: Clone;
+    ) -> Option<Vec<(&'a [Self::Vertex; 3], &'b [T::Vertex; 3])>>;
+}
+
+/// Convenience function to annotate that the bounding box metadata is not
+/// altered
+#[inline]
+pub fn no_alter_meta<A: Collision, B: Collision>(
+    _: A::FuncInputs,
+    _: &mut A::Meta,
+    _: B::FuncInputs,
+    _: &mut B::Meta,
+) {
 }
 
 // TODO: deref collision

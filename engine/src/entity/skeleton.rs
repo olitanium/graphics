@@ -117,10 +117,8 @@ impl<T> From<SimpleEntity<T>> for SkeletonEntity<T> {
     fn from(value: SimpleEntity<T>) -> Self {
         let SimpleEntity {
             model,
-            pose,
-            mass,
             bounding_box,
-            velocity,
+            physics,
         } = value;
 
         let model = model.into();
@@ -128,10 +126,10 @@ impl<T> From<SimpleEntity<T>> for SkeletonEntity<T> {
 
         SkeletonEntity {
             model,
-            pose,
-            mass,
+            pose: *physics.pose(),
+            mass: *physics.mass(),
             bounding_box,
-            velocity,
+            velocity: *physics.velocity(),
         }
     }
 }

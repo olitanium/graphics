@@ -1,12 +1,12 @@
 use std::rc::Rc;
 
 use engine::entity::Mass;
-use engine::geometry::Pose;
+use engine::geometry::{Orientation, Pose};
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::cubic::material::Material;
 use engine::modelling::cubic::{Camera, CameraBuilder, ManualCameraPose, MeshBuilder, SimpleCubic};
-use engine::modelling::{BoundingBox, Collision, IncompleteVertex, SimpleCubicGroup};
+use engine::modelling::{Collision, IncompleteVertex, SimpleCubicGroup};
 use engine::types::TexDim;
 use engine::{
     ApiState,
@@ -61,7 +61,12 @@ impl ApiState for State {
 
             let triangle_one_model = triangle_one_cubic.build();
 
-            let mut out = SimpleEntity::from_simple_cubic(triangle_one_model, 1, Mass(1.0), |_| ());
+            let mut out = SimpleEntity::from_simple_cubic(
+                triangle_one_model,
+                1,
+                Mass::new_inverse(1.0),
+                |_| (),
+            );
 
             out.bounding_box = out.bounding_box.map(|bbox| bbox.temp_make_really_big());
 
@@ -81,7 +86,12 @@ impl ApiState for State {
 
             let triangle_one_model = triangle_two_cubic.build();
 
-            let mut out = SimpleEntity::from_simple_cubic(triangle_one_model, 1, Mass(1.0), |_| ());
+            let mut out = SimpleEntity::from_simple_cubic(
+                triangle_one_model,
+                1,
+                Mass::new_inverse(1.0),
+                |_| (),
+            );
 
             out.bounding_box = out.bounding_box.map(|bbox| bbox.temp_make_really_big());
 
@@ -115,10 +125,22 @@ impl ApiState for State {
         let frame_time = frame_time.as_secs_f32();
 
         fn move_triangle_two(state: &mut State, translation: [f32; 3]) {
+            let mut old_pose = *state.triangle_two.physics.pose();
+            old_pose.push_change(Pose::new_from_translation(Vector::new(translation)));
             state
                 .triangle_two
-                .pose
-                .push_change(Pose::new_from_translation(Vector::new(translation)));
+                .physics
+                .set_pose_velocity(old_pose, Vector::ZERO);
+        }
+
+        fn rotate_triangle_two(state: &mut State, rotation: Orientation) {
+            let mut old_pose = *state.triangle_two.physics.pose();
+            old_pose.push_change(Pose::new_from_orientation(rotation));
+            // old_pose.push_change(Pose::new_from_orientation(rotation));
+            state
+                .triangle_two
+                .physics
+                .set_pose_velocity(old_pose, Vector::ZERO);
         }
 
         hash_matches! {keys:
@@ -127,6 +149,7 @@ impl ApiState for State {
             &Key::S => move_triangle_two(self, [0.0, -frame_time, 0.0]),
             &Key::A => move_triangle_two(self, [-frame_time, 0.0, 0.0]),
             &Key::D => move_triangle_two(self, [frame_time, 0.0, 0.0]),
+            &Key::E => rotate_triangle_two(self, Orientation::new_forward_up(Vector::new([frame_time, 0.0, 1.0]).normalize_or_panic(), UnitVector::Y).unwrap()),
             &Key::Space => move_triangle_two(self, [0.0, 0.0, frame_time]),
             &Key::LeftShift => move_triangle_two(self, [0.0, 0.0, -frame_time]),
         }

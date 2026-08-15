@@ -1,7 +1,6 @@
-use std::{convert, iter};
+use std::iter;
 
 use geometry::Pose;
-use graphics::PollResult::Close;
 use graphics::linear_algebra::Vector;
 
 use crate::entity::{EntityInner, Mass, ToAggregateEntity};

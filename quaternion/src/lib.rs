@@ -1,3 +1,5 @@
+//! Quaternions are an extension to the complex numbers.
+
 #![feature(const_ops)]
 #![feature(const_trait_impl)]
 

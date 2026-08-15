@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::mem;
@@ -26,7 +25,7 @@ mod skeleton_bb;
 pub use skeleton_bb::{DrawError as SkeletonBbDrawError, SkeletonBb, SkeletonBbGroup};
 
 pub mod collision;
-pub use collision::Collision;
+pub use collision::{Collision, no_alter_meta};
 
 use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::bounding_box::element::ChildrenOrMeta;

@@ -1,5 +1,6 @@
 use std::array;
 use std::cell::RefCell;
+use std::fmt::Debug;
 use std::marker::PhantomData;
 
 use geometry::Transform;

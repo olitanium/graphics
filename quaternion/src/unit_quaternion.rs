@@ -1,3 +1,5 @@
+//! `UnitQuaternions` are `Quaternion`s with unit magnitude.
+
 use core::ops;
 
 use linear_algebra::Matrix;
@@ -19,21 +21,29 @@ impl UnitQuaternion {
         Self(quaternion)
     }
 
+    /// Access the inner quaternion. Most operations are performed on the
+    /// `Quaternion` rather than the `UnitQuaternion`.
     #[must_use]
+    #[inline]
     pub const fn q(self) -> Quaternion {
         self.0
     }
 
+    /// Get the inverse of the `UnitQuaternion`, which for UQs is also a
+    /// `UnitQuaternion`.
     #[must_use]
+    #[inline]
     pub const fn inverse(self) -> Self {
         Self(self.0.conjugate())
     }
 
-    /// #Safety
-    /// matrix must be a pure rotation matrix.
+    /// # Important!
+    ///
+    /// Matrix must be a pure rotation matrix.
+    /// courtesy of [this](http://marc-b-reynolds.github.io/quaternions/2017/08/08/QuatRotMatrix.html).
     #[must_use]
+    #[inline]
     pub fn from_matrix(mat: Matrix<3, 3>) -> Self {
-        // courtesy of http://marc-b-reynolds.github.io/quaternions/2017/08/08/QuatRotMatrix.html
         #[rustfmt::ignore]
         let [m00, m10, m20, m01, m11, m21, m02, m12, m22] = mat.col_major();
 
@@ -80,6 +90,7 @@ impl UnitQuaternion {
 }
 
 impl Default for UnitQuaternion {
+    #[inline]
     fn default() -> Self {
         Self(Quaternion::IDENTITY)
     }
@@ -88,6 +99,7 @@ impl Default for UnitQuaternion {
 impl ops::Neg for UnitQuaternion {
     type Output = Self;
 
+    #[inline]
     fn neg(self) -> Self::Output {
         let neg_inner = -self.0;
         Self(neg_inner)

@@ -46,11 +46,13 @@ impl Slerp {
         }
     }
 
+    /// Use the interpolation to get a `UnitQuaternion` (representing an
+    /// orientation).
     #[must_use]
     #[inline]
     pub fn get(self, time: f32) -> UnitQuaternion {
         if self.from == self.to {
-            self.from.normalize();
+            return self.from.normalize();
         }
 
         let tmp = time * self.omega;

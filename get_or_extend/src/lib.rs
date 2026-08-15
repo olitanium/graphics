@@ -7,8 +7,12 @@ mod test;
 /// A trait for safely accessing an out of bounds index by increasing the
 /// container to the desired size.
 pub trait GetAtOrExtend {
+    /// The type stored inside the container.
     type Out;
 
+    /// Get a particular index, or slowly fill out the container with `new`
+    /// until `index` is reached. Returning a mutable reference to the element
+    /// at `index`.
     fn get_at_or_extend<F>(&mut self, index: usize, new: F) -> &mut Self::Out
     where
         F: FnMut() -> Self::Out;

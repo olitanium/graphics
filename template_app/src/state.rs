@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::time::Duration;
+use core::time::Duration;
 
 use engine::types::TexDim;
 use engine::{ApiState, DrawNothing, Event};

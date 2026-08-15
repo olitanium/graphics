@@ -23,10 +23,12 @@ impl Pose {
         }),
     };
 
+    #[must_use]
     pub const fn new_from_dual(dual_quaternion: UnitDualQuaternion) -> Self {
         Self { dual_quaternion }
     }
 
+    #[must_use]
     pub fn new_from_orientation_translation(
         orientation: Orientation,
         translation: Vector<3>,
@@ -39,14 +41,17 @@ impl Pose {
         }
     }
 
+    #[must_use]
     pub fn new_from_orientation(orientation: Orientation) -> Self {
         Self::new_from_orientation_translation(orientation, Vector::ZERO)
     }
 
+    #[must_use]
     pub fn new_from_translation(translation: Vector<3>) -> Self {
         Self::new_from_orientation_translation(Orientation::IDENTITY, translation)
     }
 
+    #[must_use]
     pub fn new_from_matrix(matrix: Matrix<4, 4>) -> Self {
         let [_, _, _, translation] = matrix.into_inner();
         let translation = Vector::new(translation).truncate();
@@ -55,15 +60,18 @@ impl Pose {
         Self::new_from_orientation_translation(Orientation::from_matrix(orientation), translation)
     }
 
+    #[must_use]
     pub const fn into_inner(self) -> UnitDualQuaternion {
         self.dual_quaternion
     }
 
-    pub fn inverse(mut self) -> Self {
+    #[must_use]
+    pub const fn inverse(mut self) -> Self {
         self.dual_quaternion = self.dual_quaternion.inverse();
         self
     }
 
+    #[must_use]
     pub fn translation(self) -> Vector<3> {
         let dual = self.dual_quaternion.u();
         let qd = dual.real;
@@ -75,16 +83,19 @@ impl Pose {
         -minus_new
     }
 
+    #[must_use]
     pub fn orientation(self) -> Orientation {
         let new = self.dual_quaternion.u().real.normalize();
 
         Orientation::from_quaternion(new)
     }
 
+    #[must_use]
     pub fn as_transformation_matrix(self) -> Matrix<4, 4> {
         Matrix::transform_translate(self.translation()) * self.orientation().as_matrix()
     }
 
+    #[must_use]
     pub const fn as_matrix_for_shader(self) -> Matrix<4, 2> {
         let DualNumber { real, dual } = self.into_inner().u();
         let [real0, real1, real2] = real.vector().into_inner();

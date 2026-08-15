@@ -9,14 +9,17 @@ pub struct Orientation {
 impl Orientation {
     pub const IDENTITY: Self = Self::from_quaternion(UnitQuaternion::IDENTITY);
 
+    #[must_use]
     pub const fn into_quaternion(self) -> UnitQuaternion {
         self.quaternion
     }
 
+    #[must_use]
     pub const fn from_quaternion(quaternion: UnitQuaternion) -> Self {
         Self { quaternion }
     }
 
+    #[must_use]
     pub fn act_on(self, vector: Vector<3>) -> Vector<3> {
         let vec_as_quarternion = Quaternion::from_vector(vector);
         let output_quaternion =
@@ -24,16 +27,19 @@ impl Orientation {
         output_quaternion.vector()
     }
 
-    pub fn combine(self, after: Orientation) -> Orientation {
+    #[must_use]
+    pub fn combine(self, after: Self) -> Self {
         let new_quaternion = (after.quaternion.q() * self.quaternion.q()).normalize();
-        Orientation::from_quaternion(new_quaternion)
+        Self::from_quaternion(new_quaternion)
     }
 
-    pub fn axis_angle(direction: UnitVector<3>, angle: f32) -> Orientation {
+    #[must_use]
+    pub fn axis_angle(direction: UnitVector<3>, angle: f32) -> Self {
         let unit_quaternion = Quaternion::axis_angle(angle, direction);
-        Orientation::from_quaternion(unit_quaternion)
+        Self::from_quaternion(unit_quaternion)
     }
 
+    #[must_use]
     pub fn new_forward_up(forward: UnitVector<3>, global_up: UnitVector<3>) -> Option<Self> {
         let left = global_up.v().cross(forward.v()).try_normalize()?;
         let view_up = forward.v().cross(left.v()).try_normalize()?;
@@ -47,6 +53,7 @@ impl Orientation {
         Some(Self::from_matrix(matrix))
     }
 
+    #[must_use]
     pub fn new_forward_up_try_two(
         forward: UnitVector<3>,
         global_up: UnitVector<3>,
@@ -60,43 +67,47 @@ impl Orientation {
             .unwrap_or_default()
     }
 
+    #[must_use]
     pub fn from_matrix(matrix: Matrix<3, 3>) -> Self {
         let quaternion = UnitQuaternion::from_matrix(matrix);
         Self { quaternion }
     }
 
+    #[must_use]
     pub fn view_forward(&self) -> UnitVector<3> {
         let w = self.quaternion.q().scalar();
         let [x, y, z] = self.quaternion.q().vector().into_inner();
 
         Vector::new([
-            2.0 * (x * z + w * y),
-            2.0 * (y * z - w * x),
-            1.0 - 2.0 * (x * x + y * y),
+            2.0 * w.mul_add(y, x * z),
+            2.0 * w.mul_add(-x, y * z),
+            2.0f32.mul_add(-y.mul_add(y, x * x), 1.0),
         ])
         .normalize_or_panic() // z
     }
 
+    #[must_use]
     pub fn view_up(&self) -> UnitVector<3> {
         let w = self.quaternion.q().scalar();
         let [x, y, z] = self.quaternion.q().vector().into_inner();
 
         Vector::new([
-            2.0 * (x * y - w * z),
-            1.0 - 2.0 * (x * x + z * z),
-            2.0 * (y * z + w * x),
+            2.0 * w.mul_add(-z, x * y),
+            2.0f32.mul_add(-z.mul_add(z, x * x), 1.0),
+            2.0 * w.mul_add(x, y * z),
         ])
         .normalize_or_panic() // z
     }
 
+    #[must_use]
     pub fn view_left(&self) -> UnitVector<3> {
         let w = self.quaternion.q().scalar();
         let [x, y, z] = self.quaternion.q().vector().into_inner();
 
         Vector::new([
-            1.0 - 2.0 * (y * y + z * z),
-            2.0 * (x * y + w * z),
-            2.0 * (x * z - w * y),
+            2.0f32.mul_add(-z.mul_add(z, y * y), 1.0),
+            2.0 * w.mul_add(z, x * y),
+            2.0 * w.mul_add(-y, x * z),
         ])
         .normalize_or_panic() // z
     }
@@ -119,12 +130,13 @@ impl Orientation {
 
     pub fn reverse_direction(&mut self) {
         let rotation = Quaternion::axis_angle(
-            std::f32::consts::PI,
+            core::f32::consts::PI,
             UnitVector::new_unchecked([0.0, 1.0, 0.0]),
         );
-        self.quaternion = (self.quaternion.q() * rotation.q()).normalize()
+        self.quaternion = (self.quaternion.q() * rotation.q()).normalize();
     }
 
+    #[must_use]
     pub fn new_from_to(from: Vector<3>, to: Vector<3>, global_up: UnitVector<3>) -> Option<Self>
     where
         Self: Sized,
@@ -133,6 +145,7 @@ impl Orientation {
         Self::new_forward_up(forward, global_up)
     }
 
+    #[must_use]
     pub fn as_matrix(&self) -> Matrix<4, 4> {
         // forward
         // up

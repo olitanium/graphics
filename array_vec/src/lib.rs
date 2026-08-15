@@ -12,8 +12,6 @@
 #![feature(const_try)]
 #![feature(const_drop_in_place)]
 #![feature(const_iter)]
-#![feature(const_closures)]
-#![feature(const_result_trait_fn)]
 #![feature(const_result_unwrap_unchecked)]
 
 use core::fmt::Debug;
@@ -159,7 +157,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
             Ok(unsafe { MaybeUninit::array_assume_init(array) })
         } else {
             Err(TryFromErr {
-                array: ArrayVec { len, array },
+                array: Self { len, array },
             })
         }
     }
@@ -192,7 +190,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
         self.into_iter().map(f).collect()
     }
 
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.len
     }
 

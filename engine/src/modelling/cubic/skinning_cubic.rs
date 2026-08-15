@@ -1,5 +1,5 @@
 use std::fmt::Debug;
-use std::{convert, iter};
+use std::iter;
 
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;

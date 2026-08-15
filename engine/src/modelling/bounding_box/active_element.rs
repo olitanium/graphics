@@ -1,5 +1,6 @@
 use std::array;
 use std::cell::RefMut;
+use std::fmt::Debug;
 
 use geometry::{Transform, TransformBy};
 use graphics::linear_algebra::Vector;
@@ -21,7 +22,6 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
     ) -> (Vector<DIMS>, Vector<DIMS>) {
         let all_vertices: Vec<_> =
             permutations(self.lower_bound.into_inner(), self.upper_bound.into_inner())
-                .into_iter()
                 .map(|arr| {
                     let vec = Vector::new(arr);
                     pose.transform(&vec)
@@ -31,14 +31,25 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
         const EXPECT_MESSAGE: &str = "all_vertices.len() != 0  due to permutations returning many \
                                       results as DIMS != 0. Vector<DIMS>: Volume<DIMS>";
 
-        let upper_bounds =
-            array::from_fn(|index| all_vertices.iter().map(|vec| vec[index]).reduce(f32::max))
-                .transpose()
-                .expect(EXPECT_MESSAGE);
-        let lower_bounds =
-            array::from_fn(|index| all_vertices.iter().map(|vec| vec[index]).reduce(f32::min))
-                .transpose()
-                .expect(EXPECT_MESSAGE);
+        let upper_bounds = array::from_fn(|index| {
+            all_vertices
+                .iter()
+                .map(|vec| vec.get(index).copied())
+                .reduce(|lhs, rhs| Option::zip(lhs, rhs).map(|(a, b)| f32::max(a, b)))
+                .flatten()
+        })
+        .transpose()
+        .expect(EXPECT_MESSAGE);
+
+        let lower_bounds = array::from_fn(|index| {
+            all_vertices
+                .iter()
+                .map(|vec| vec.get(index).copied())
+                .reduce(|lhs, rhs| Option::zip(lhs, rhs).map(|(a, b)| f32::min(a, b)))
+                .flatten()
+        })
+        .transpose()
+        .expect(EXPECT_MESSAGE);
 
         (Vector::new(lower_bounds), Vector::new(upper_bounds))
     }
@@ -269,8 +280,8 @@ fn line_overlap(
         two_ub,
     }: TestBoxVertex,
 ) -> bool {
-    assert!(one_ub >= one_lb);
-    assert!(two_ub >= two_lb);
+    assert!(one_ub >= one_lb, "{one_ub} >= {one_lb}");
+    assert!(two_ub >= two_lb, "{two_ub} >= {two_lb}");
 
     let fail = (one_ub < two_lb) || (two_ub < one_lb);
     !fail
@@ -279,20 +290,18 @@ fn line_overlap(
 pub fn permutations<T: Clone, const DIMS: usize>(
     input_vec_1: [T; DIMS],
     input_vec_2: [T; DIMS],
-) -> Vec<[T; DIMS]> {
-    (0..(1_usize << DIMS))
-        .map(|bin| {
-            array::from_fn(|index| {
-                let mask = 1 << index;
-                let first = (bin & mask) != 0;
-                if first {
-                    input_vec_1[index].clone()
-                } else {
-                    input_vec_2[index].clone()
-                }
-            })
+) -> impl Iterator<Item = [T; DIMS]> {
+    (0..(1_usize << DIMS)).map(move |bin| {
+        array::from_fn(|index| {
+            let mask = 1 << index;
+            let first = (bin & mask) != 0;
+            if first {
+                input_vec_1[index].clone()
+            } else {
+                input_vec_2[index].clone()
+            }
         })
-        .collect()
+    })
 }
 mod test {
 
@@ -318,7 +327,7 @@ mod test {
         let vec2 = [0, 0, 0];
 
         assert_eq!(
-            permutations(vec1, vec2),
+            permutations(vec1, vec2).collect::<Vec<_>>(),
             vec![
                 [0, 0, 0],
                 [1, 0, 0],

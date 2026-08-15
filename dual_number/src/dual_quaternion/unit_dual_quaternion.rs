@@ -12,10 +12,11 @@ impl UnitDualQuaternion {
 
         let factor = DualNumber {
             real: u,
-            dual: t * u * u * u * 0.5,
+            dual: -t * u * u * u * 0.5,
         };
 
         let normalized = dual_quaternion * factor;
+
         Self(normalized)
     }
 
