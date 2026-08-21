@@ -78,7 +78,7 @@ impl State {
     ) -> ControlOutput<()> {
         let frame_time = frame_time.as_secs_f32();
 
-        if keyboard.contains(&Key::LeftControl) && keyboard.contains(&Key::Num0) {
+        if keyboard.contains(&Key::LeftControl) {
             return ControlOutput::Restart;
         }
         if keyboard.contains(&Key::Escape) {

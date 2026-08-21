@@ -23,8 +23,8 @@ pub trait Collision {
         mut alter_meta: F,
     ) -> Option<
         Vec<(
-            &'a [Self::Vertex; 3],
-            &'b [<BoundingBox<V, 3, T> as Collision>::Vertex; 3],
+            [Self::Vertex; 3],
+            [<BoundingBox<V, 3, T> as Collision>::Vertex; 3],
         )>,
     > {
         self.collides(
@@ -40,7 +40,7 @@ pub trait Collision {
     fn collides<
         'a,
         'b,
-        T: Collision,
+        T: Collision + ?Sized,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
         &'a self,
@@ -48,13 +48,13 @@ pub trait Collision {
         target: &'b T,
         target_transform: T::Transform<'_>,
         alter_meta: F,
-    ) -> Option<Vec<(&'a [Self::Vertex; 3], &'b [T::Vertex; 3])>>;
+    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>;
 }
 
 /// Convenience function to annotate that the bounding box metadata is not
 /// altered
 #[inline]
-pub fn no_alter_meta<A: Collision, B: Collision>(
+pub fn no_alter_meta<A: Collision + ?Sized, B: Collision + ?Sized>(
     _: A::FuncInputs,
     _: &mut A::Meta,
     _: B::FuncInputs,

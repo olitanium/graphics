@@ -45,8 +45,8 @@ pub use bounding_box::{
     // TempModelTransform,
 };
 
-mod advanced_vertex;
-pub use advanced_vertex::{CubicVertex, ExtendedVertex, IncompleteVertex, VertexHasTangent};
+mod extended_vertex;
+pub use extended_vertex::{CubicVertex, ExtendedVertex, IncompleteVertex, VertexHasTangent};
 
 mod volumes;
 pub use volumes::Volume;

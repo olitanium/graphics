@@ -15,7 +15,7 @@ pub use slerp::Slerp;
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Quaternion {
     real: f32,
-    vector: Vector<3>,
+    vector: Vector<3, f32>,
 }
 
 impl PartialEq for Quaternion {
@@ -37,7 +37,7 @@ impl Quaternion {
     }
 
     #[must_use]
-    pub const fn from_scalar_vec(scalar: f32, vector: Vector<3>) -> Self {
+    pub const fn from_scalar_vec(scalar: f32, vector: Vector<3, f32>) -> Self {
         Self {
             real: scalar,
             vector,
@@ -60,7 +60,7 @@ impl Quaternion {
     }
 
     #[must_use]
-    pub const fn vector(self) -> Vector<3> {
+    pub const fn vector(self) -> Vector<3, f32> {
         self.vector
     }
 
@@ -70,7 +70,7 @@ impl Quaternion {
     }
 
     #[must_use]
-    pub fn axis_angle(angle: f32, axis: UnitVector<3>) -> UnitQuaternion {
+    pub fn axis_angle(angle: f32, axis: UnitVector<3, f32>) -> UnitQuaternion {
         let sin = (angle / 2.0).sin();
         let cos = (angle / 2.0).cos();
         let vector = axis.v().scale(sin);
@@ -85,7 +85,7 @@ impl Quaternion {
     }
 
     #[must_use]
-    pub const fn from_vector(vector: Vector<3>) -> Self {
+    pub const fn from_vector(vector: Vector<3, f32>) -> Self {
         Self { real: 0.0, vector }
     }
 

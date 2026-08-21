@@ -21,10 +21,7 @@ impl<V: Vertex> Default for Builder<V> {
     }
 }
 
-impl<V: Vertex> Builder<V>
-where
-    [(); V::ELEMENT_COUNT]:,
-{
+impl<V: Vertex> Builder<V> {
     new!();
 
     builder!(vertices: Vec<V>);

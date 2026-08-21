@@ -1,16 +1,6 @@
-use engine::array_vec::arrvec;
 use engine::framebuffer::DefaultFramebuffer;
-use engine::modelling::cubic::lighting::shadow::{PointLightIlluminatesGroup, ShadowListLights};
+use engine::modelling::SimpleCubicGroup;
 use engine::modelling::cubic::lighting::simple::ListLights;
-use engine::modelling::{
-    BloomGroup,
-    FramebufferQuad,
-    ScreenQuadGroup,
-    ShadowGroup,
-    SimpleCubicGroup,
-    SkyBoxGroup,
-};
-use engine::query::HasDrawnQuery;
 use engine::{Draw, PollResult, VecDraw, opengl_shaders};
 
 use crate::state::{State, StateError};

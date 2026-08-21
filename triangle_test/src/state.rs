@@ -125,22 +125,16 @@ impl ApiState for State {
         let frame_time = frame_time.as_secs_f32();
 
         fn move_triangle_two(state: &mut State, translation: [f32; 3]) {
-            let mut old_pose = *state.triangle_two.physics.pose();
+            let mut old_pose = state.triangle_two.physics.pose;
             old_pose.push_change(Pose::new_from_translation(Vector::new(translation)));
-            state
-                .triangle_two
-                .physics
-                .set_pose_velocity(old_pose, Vector::ZERO);
+            state.triangle_two.physics.pose = old_pose;
         }
 
         fn rotate_triangle_two(state: &mut State, rotation: Orientation) {
-            let mut old_pose = *state.triangle_two.physics.pose();
-            old_pose.push_change(Pose::new_from_orientation(rotation));
-            // old_pose.push_change(Pose::new_from_orientation(rotation));
-            state
-                .triangle_two
-                .physics
-                .set_pose_velocity(old_pose, Vector::ZERO);
+            let old_pose = state.triangle_two.physics.pose;
+            let mut new_pose = Pose::new_from_orientation(rotation);
+            new_pose.push_change(old_pose);
+            state.triangle_two.physics.pose = new_pose;
         }
 
         hash_matches! {keys:
@@ -149,7 +143,7 @@ impl ApiState for State {
             &Key::S => move_triangle_two(self, [0.0, -frame_time, 0.0]),
             &Key::A => move_triangle_two(self, [-frame_time, 0.0, 0.0]),
             &Key::D => move_triangle_two(self, [frame_time, 0.0, 0.0]),
-            &Key::E => rotate_triangle_two(self, Orientation::new_forward_up(Vector::new([frame_time, 0.0, 1.0]).normalize_or_panic(), UnitVector::Y).unwrap()),
+            &Key::E => rotate_triangle_two(self, Orientation::new_forward_up(Vector::new([frame_time, 0.0, 1.0]).try_normalize().unwrap_or_default(), UnitVector::Y).unwrap_or_default()),
             &Key::Space => move_triangle_two(self, [0.0, 0.0, frame_time]),
             &Key::LeftShift => move_triangle_two(self, [0.0, 0.0, -frame_time]),
         }

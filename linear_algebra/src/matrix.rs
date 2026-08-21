@@ -7,6 +7,7 @@ use core::ops::{self, Index, IndexMut};
 use array_vec::ArrayVec;
 use multi_zip::MultiZip;
 
+use crate::VectorPreferredFloat;
 use crate::vector::Vector;
 
 #[cfg(test)]
@@ -33,7 +34,7 @@ mod test;
 /// ```
 #[repr(transparent)]
 #[derive(Clone, Copy)]
-pub struct Matrix<const R: usize, const C: usize>([[f32; R]; C]); // Col-Major!!!!!
+pub struct Matrix<const R: usize, const C: usize>([[VectorPreferredFloat; R]; C]); // Col-Major!!!!!
 
 impl<const R: usize, const C: usize> PartialEq for Matrix<R, C> {
     #[inline]
@@ -71,7 +72,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     /// `Matrix`, when written as arrays in code, will look transposed.
     #[inline]
     #[must_use]
-    pub const fn from_col_major(input: [[f32; R]; C]) -> Self {
+    pub const fn from_col_major(input: [[VectorPreferredFloat; R]; C]) -> Self {
         Self(input)
     }
 
@@ -85,7 +86,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     /// Avoid using this function with literals until the function is `const`.
     #[inline]
     #[must_use]
-    pub fn from_row_major(input: [[f32; C]; R]) -> Self {
+    pub fn from_row_major(input: [[VectorPreferredFloat; C]; R]) -> Self {
         Matrix::from_col_major(input).transpose()
     }
 
@@ -94,7 +95,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     /// constants
     #[inline]
     #[must_use]
-    pub fn new_from_slice(input: &[[f32; R]]) -> Option<Self> {
+    pub fn new_from_slice(input: &[[VectorPreferredFloat; R]]) -> Option<Self> {
         Some(Self(input.try_into().ok()?))
     }
 
@@ -106,86 +107,84 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
 
     #[inline]
     #[must_use]
-    pub const fn into_inner(self) -> [[f32; R]; C] {
+    pub const fn into_inner(self) -> [[VectorPreferredFloat; R]; C] {
         self.0
     }
 
     #[inline]
     #[must_use]
-    pub const fn inner(&self) -> &[[f32; R]; C] {
+    pub const fn inner(&self) -> &[[VectorPreferredFloat; R]; C] {
         &self.0
     }
 
     #[inline]
-    pub const fn inner_mut(&mut self) -> &mut [[f32; R]; C] {
+    pub const fn inner_mut(&mut self) -> &mut [[VectorPreferredFloat; R]; C] {
         &mut self.0
     }
 
     #[must_use]
-    pub const fn col_flattened(&self) -> &[f32] {
+    pub const fn col_flattened(&self) -> &[VectorPreferredFloat] {
         self.0.as_flattened()
     }
 
-    pub const fn col_flattened_mut(&mut self) -> &mut [f32] {
+    pub const fn col_flattened_mut(&mut self) -> &mut [VectorPreferredFloat] {
         self.0.as_flattened_mut()
     }
 
     #[inline]
-    pub fn col_iter(&self) -> impl Iterator<Item = [f32; R]> + '_ {
+    pub fn col_iter(&self) -> impl Iterator<Item = [VectorPreferredFloat; R]> + '_ {
         self.inner().iter().copied()
     }
 
     #[inline]
-    pub fn col_iter_mut(&mut self) -> impl Iterator<Item = &mut [f32; R]> {
+    pub fn col_iter_mut(&mut self) -> impl Iterator<Item = &mut [VectorPreferredFloat; R]> {
         self.inner_mut().iter_mut()
     }
 
     #[expect(clippy::missing_panics_doc)]
     #[inline]
-    pub fn col_major(&self) -> [f32; C * R] {
-        let x = self
-            .col_iter()
-            .flat_map(IntoIterator::into_iter)
-            .collect::<Box<_>>();
-        x.as_ref()
-            .try_into()
-            .expect("Number of entries is permitted by compile time constants")
+    pub fn col_major(&self) -> [VectorPreferredFloat; C * R] {
+        let mut x = ArrayVec::new();
+        self.col_flattened()
+            .into_iter()
+            .copied()
+            .collect_into(&mut x);
+        x.into_array_with(|| 0.0)
     }
 
-    pub const fn col(&self, index: usize) -> Option<Vector<R, f32>> {
+    pub const fn col(&self, index: usize) -> Option<Vector<R, VectorPreferredFloat>> {
         self.0.get(index).copied().map(Vector::new)
     }
 
-    pub const fn col_mut(&mut self, index: usize) -> Option<&mut [f32; R]> {
+    pub const fn col_mut(&mut self, index: usize) -> Option<&mut [VectorPreferredFloat; R]> {
         self.0.get_mut(index)
     }
 
     #[must_use]
-    pub const fn get(&self, (row, col): (usize, usize)) -> Option<f32> {
+    pub const fn get(&self, (row, col): (usize, usize)) -> Option<VectorPreferredFloat> {
         let vec = self.col(col)?;
         vec.get(row).copied()
     }
 
-    pub const fn get_mut(&mut self, (row, col): (usize, usize)) -> Option<&mut f32> {
+    pub const fn get_mut(
+        &mut self,
+        (row, col): (usize, usize),
+    ) -> Option<&mut VectorPreferredFloat> {
         let vec = self.col_mut(col)?;
         vec.get_mut(row)
     }
 
     #[inline]
-    pub fn row_iter(&self) -> impl Iterator<Item = [f32; C]> {
+    pub fn row_iter(&self) -> impl Iterator<Item = [VectorPreferredFloat; C]> {
         let x = self.into_inner();
         MultiZip::new(x)
     }
 
     #[inline]
-    pub fn row_major(&self) -> [f32; C * R] {
-        let x = self
-            .row_iter()
-            .flat_map(IntoIterator::into_iter)
-            .collect::<Box<_>>();
-        x.as_ref()
-            .try_into()
-            .expect("Number of entries does not change when transposing")
+    pub fn row_major(&self) -> [VectorPreferredFloat; C * R] {
+        let mut x = ArrayVec::new();
+        self.row_iter().flatten().collect_into(&mut x);
+        x.into_array_with(|| 0.0)
     }
 
     #[inline]
@@ -208,7 +207,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     pub fn transpose(self) -> Matrix<C, R> {
         let array = self
             .row_iter()
-            .collect::<ArrayVec<[f32; C], R>>()
+            .collect::<ArrayVec<[VectorPreferredFloat; C], R>>()
             .try_into_array()
             .expect("RC matrix has as many elements as CR");
         Matrix::from_col_major(array)
@@ -234,7 +233,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     /// Map each element of the matrix wit
     #[must_use]
     #[inline]
-    pub fn map(mut self, op: impl Fn(f32) -> f32) -> Self {
+    pub fn map(mut self, op: impl Fn(VectorPreferredFloat) -> VectorPreferredFloat) -> Self {
         let x = self.inner_mut().map(|vec| vec.map(&op));
         Self::from_col_major(x)
     }
@@ -287,7 +286,7 @@ impl_ops!(Add::add);
 impl_ops!(Sub::sub);
 
 impl<const R: usize, const C: usize> Index<(usize, usize)> for Matrix<R, C> {
-    type Output = f32;
+    type Output = VectorPreferredFloat;
 
     /// # Panics
     /// Will panic is the index is put of bounds.
@@ -310,9 +309,9 @@ impl<const R: usize, const C: usize> IndexMut<(usize, usize)> for Matrix<R, C> {
     }
 }
 
-impl<const R: usize> From<Vector<R, f32>> for Matrix<R, 1> {
+impl<const R: usize> From<Vector<R, VectorPreferredFloat>> for Matrix<R, 1> {
     #[inline]
-    fn from(value: Vector<R, f32>) -> Self {
+    fn from(value: Vector<R, VectorPreferredFloat>) -> Self {
         Self::from_col_major([value.into_inner()])
     }
 }
@@ -321,7 +320,7 @@ impl Matrix<2, 2> {
     /// Calculate the determinant of the matrix.
     #[must_use]
     #[inline]
-    pub const fn determinant(&self) -> f32 {
+    pub const fn determinant(&self) -> VectorPreferredFloat {
         let [[a, c], [b, d]] = self.0;
 
         a * d - b * c
@@ -336,7 +335,7 @@ impl Matrix<3, 3> {
         clippy::many_single_char_names,
         reason = "alphabetical order by row major"
     )]
-    pub const fn determinant(&self) -> f32 {
+    pub const fn determinant(&self) -> VectorPreferredFloat {
         #[rustfmt::skip]
         let [
             [a, d, g],
@@ -360,7 +359,11 @@ impl Matrix<4, 4> {
     /// `Vector<4>` where `x[3] == 1.0`).
     #[must_use]
     #[inline]
-    pub const fn transform_scale(sx: f32, sy: f32, sz: f32) -> Self {
+    pub const fn transform_scale(
+        sx: VectorPreferredFloat,
+        sy: VectorPreferredFloat,
+        sz: VectorPreferredFloat,
+    ) -> Self {
         Self::from_col_major([
             [sx, 0.0, 0.0, 0.0],
             [0.0, sy, 0.0, 0.0],
@@ -373,7 +376,7 @@ impl Matrix<4, 4> {
     /// `Vector<4>` where `x[3] == 1.0`).
     #[inline]
     #[must_use]
-    pub const fn transform_translate(vec: Vector<3, f32>) -> Self {
+    pub const fn transform_translate(vec: Vector<3, VectorPreferredFloat>) -> Self {
         // let mut matrix = Self::identity();
         // let &mut [_, _, _, [ref mut x, ref mut y, ref mut z, _]] =
         // matrix.inner_mut(); let [vecx, vecy, vecz] = vec.into_inner();
@@ -397,7 +400,12 @@ impl Matrix<4, 4> {
     /// at +/- 1.0 on `x[0]`, `x[1]` and `x[2]`.
     #[inline]
     #[must_use]
-    pub fn transform_perspective(fov: f32, aspect: f32, near: f32, far: f32) -> Self {
+    pub fn transform_perspective(
+        fov: VectorPreferredFloat,
+        aspect: VectorPreferredFloat,
+        near: VectorPreferredFloat,
+        far: VectorPreferredFloat,
+    ) -> Self {
         let tan_fov = (fov * 0.5).tan();
         Self::from_col_major([
             [1.0 / (tan_fov * aspect), 0.0, 0.0, 0.0],
@@ -411,7 +419,12 @@ impl Matrix<4, 4> {
     /// far into a cube +/- 1.0 on x, y.
     #[inline]
     #[must_use]
-    pub const fn transform_orthogonal(width: f32, height: f32, near: f32, far: f32) -> Self {
+    pub const fn transform_orthogonal(
+        width: VectorPreferredFloat,
+        height: VectorPreferredFloat,
+        near: VectorPreferredFloat,
+        far: VectorPreferredFloat,
+    ) -> Self {
         Self::from_col_major([
             [2.0 / width, 0.0, 0.0, 0.0],
             [0.0, 2.0 / height, 0.0, 0.0],

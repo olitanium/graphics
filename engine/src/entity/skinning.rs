@@ -86,7 +86,7 @@ impl<TThis> Collision for SkinningEntity<TThis> {
     fn collides<
         'a,
         'b,
-        T: Collision,
+        T: Collision + ?Sized,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
         &'a self,
@@ -94,10 +94,7 @@ impl<TThis> Collision for SkinningEntity<TThis> {
         target: &'b T,
         target_transform: T::Transform<'_>,
         alter_meta: F,
-    ) -> Option<Vec<(&'a [Self::Vertex; 3], &'b [T::Vertex; 3])>>
-    where
-        for<'c> T::Transform<'c>: Clone,
-    {
+    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>> {
         // let Some(bbox) = &self.bounding_box else {
         // return None;
         // };

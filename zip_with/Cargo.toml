@@ -1,0 +1,10 @@
+[package]
+name = "zip_with"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+array_vec = {path = "../array_vec"}
+
+[lints]
+workspace = true

@@ -119,7 +119,6 @@ impl Debug for GLError {
     }
 }
 
-#[expect(non_camel_case_types, reason = "gl crate convention")]
 #[derive(Debug, Clone, Copy)]
 pub enum VertexAttrType {
     #[doc(hidden)]

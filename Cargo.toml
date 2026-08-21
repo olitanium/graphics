@@ -20,7 +20,7 @@ members = [
     "get_or_extend",
     "partition",
     "template_app"
-, "geometry"]
+, "geometry", "zip_with"]
 default_members = ["game"]
 
 

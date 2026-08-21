@@ -7,7 +7,6 @@ use geometry::{Orientation, Pose, TransformBy};
 use graphics::linear_algebra::{UnitVector, Vector, unit_vector};
 use graphics::vertex_array::VertexArray;
 
-use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::cubic::material::Material;
 use crate::modelling::cubic::{
     BoneAnimation,
@@ -16,6 +15,7 @@ use crate::modelling::cubic::{
     SkeletonBoneIndex,
     SkinningCubic,
 };
+use crate::modelling::extended_vertex::IncompleteVertex;
 use crate::modelling::quad::QuadVertex;
 use crate::modelling::{Bone, ExtendedVertex, Skeleton, SkeletonCubic};
 

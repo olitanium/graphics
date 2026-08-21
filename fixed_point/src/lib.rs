@@ -6,9 +6,12 @@
 #![feature(const_ops)]
 #![feature(const_trait_impl)]
 #![feature(const_convert)]
+#![feature(never_type)]
 
+mod error;
 mod sf;
 mod uf;
 
+pub use error::TryFromError;
 pub use sf::{SignedUnitf8, SignedUnitf16};
 pub use uf::{Unitf8, Unitf16};

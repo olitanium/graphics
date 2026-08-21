@@ -50,7 +50,8 @@ impl ShadowSpotLight {
                     self.light.direction,
                     UnitVector::Y,
                     UnitVector::Z,
-                ),
+                )
+                .expect("both versions of `up` are different, this will never fail"),
                 self.light.position,
             ))
             .perspective(self.light.cos_outer_cut_off, 1.0, 0.1, 20.0)

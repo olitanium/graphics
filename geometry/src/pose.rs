@@ -106,8 +106,9 @@ impl Pose {
         ])
     }
 
-    pub fn push_change(&mut self, pose: Self) {
+    pub fn push_change(&mut self, pose: Self) -> &Self {
         *self = pose.transform(self);
+        self
     }
 }
 

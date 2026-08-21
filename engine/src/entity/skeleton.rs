@@ -1,11 +1,10 @@
 use geometry::Pose;
 use graphics::linear_algebra::Vector;
-use graphics::vertex::Vertex;
 
 use crate::SimpleEntity;
 use crate::entity::{Mass, ToAggregateEntity};
 use crate::modelling::cubic::CalculatedAnimation;
-use crate::modelling::{Collision, SimpleVertex, SkeletonBb, SkeletonCubic, Volume};
+use crate::modelling::{Collision, SimpleVertex, SkeletonBb, SkeletonCubic};
 
 #[derive(Debug)]
 pub struct SkeletonEntity<T> {
@@ -61,11 +60,7 @@ pub fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
 }
 
 impl<T> SkeletonEntity<T> {
-    pub const fn bounding_box(&self) -> Option<&SkeletonBb<SimpleVertex, T>>
-    where
-        Vector<3>: Volume<3>,
-        [(); <Vector<3> as Vertex>::ELEMENT_COUNT]:,
-    {
+    pub const fn bounding_box(&self) -> Option<&SkeletonBb<SimpleVertex, T>> {
         self.bounding_box.as_ref()
     }
 
@@ -89,7 +84,7 @@ impl<TThis> Collision for SkeletonEntity<TThis> {
     fn collides<
         'a,
         'b,
-        T: Collision,
+        T: Collision + ?Sized,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
         &'a self,
@@ -97,7 +92,7 @@ impl<TThis> Collision for SkeletonEntity<TThis> {
         target: &'b T,
         target_transform: T::Transform<'_>,
         alter_meta: F,
-    ) -> Option<Vec<(&'a [Self::Vertex; 3], &'b [T::Vertex; 3])>>
+    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>
     where
         for<'c> T::Transform<'c>: Clone,
     {
@@ -126,10 +121,10 @@ impl<T> From<SimpleEntity<T>> for SkeletonEntity<T> {
 
         SkeletonEntity {
             model,
-            pose: *physics.pose(),
-            mass: *physics.mass(),
+            pose: physics.pose,
+            mass: physics.mass,
             bounding_box,
-            velocity: *physics.velocity(),
+            velocity: physics.velocity,
         }
     }
 }

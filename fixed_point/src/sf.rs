@@ -4,18 +4,22 @@ use core::ops;
 /// Convenience macro for implemeting `from` various floating point numbers.
 macro_rules! fromfloat {
     ($name:ident, $type:ty, $inner:ty) => {
-        #[doc = concat!("convert into ", stringify!($type))]
+        #[doc = concat!("convert from ", stringify!($type))]
         #[inline]
-        pub const fn $name(float: $type) -> Option<Self> {
+        pub const fn $name(float: $type) -> Result<Self, $crate::TryFromError<$type>> {
             // quick and dirty version here.
             // float 0.999... == i8::MAX which is 0111 1111;
             // float should be multiplied by the MAX value + 1,
-            if float < -1.0 || float > 1.0 {
-                return None;
+            if float < -1.0 {
+                Err($crate::TryFromError::Low(float))
+            } else if float > 1.0 {
+                Err($crate::TryFromError::High(float))
+            } else {
+                #[expect(clippy::cast_possible_truncation, reason = "intended behaviour")]
+                let inner =
+                    (float * const { <$type>::from(<$inner>::MIN.cast_unsigned()) }) as $inner;
+                Ok(Self { inner })
             }
-            #[expect(clippy::cast_possible_truncation, reason = "intended behaviour")]
-            let inner = (float * const { <$type>::from(<$inner>::MIN.cast_unsigned()) }) as $inner;
-            Some(Self { inner })
         }
     };
 }
@@ -59,6 +63,34 @@ macro_rules! make_sf {
             tofloat!(to_f32, $other, f32);
 
             tofloat!(to_f64, $other, f64);
+        }
+
+        const impl From<$name> for f32 {
+            fn from(value: $name) -> Self {
+                value.to_f32()
+            }
+        }
+
+        const impl From<$name> for f64 {
+            fn from(value: $name) -> Self {
+                value.to_f64()
+            }
+        }
+
+        const impl TryFrom<f32> for $name {
+            type Error = $crate::TryFromError<f32>;
+
+            fn try_from(value: f32) -> Result<Self, Self::Error> {
+                Self::from_f32(value)
+            }
+        }
+
+        const impl TryFrom<f64> for $name {
+            type Error = $crate::TryFromError<f64>;
+
+            fn try_from(value: f64) -> Result<Self, Self::Error> {
+                Self::from_f64(value)
+            }
         }
 
         impl ops::Mul for $name {

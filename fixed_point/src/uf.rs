@@ -4,19 +4,21 @@ use core::ops;
 /// Convenience macro for implemeting `from` various floating point numbers.
 macro_rules! from_float {
     ($name:ident, $type:ty, $self_inner:ty) => {
-        #[doc = concat!("convert into ", stringify!($type))]
+        #[doc = concat!("convert from ", stringify!($type))]
         #[inline]
-        pub const fn $name(float: $type) -> Option<Self> {
+        pub const fn $name(float: $type) -> Result<Self, $crate::TryFromError<$type>> {
             // quick and dirty version here.
             // float 0.999... == u8::MAX which is 1111 1111;
-            if float < 0.0 || float > 1.0 {
-                return None;
+            if float < 0.0 {
+                Err($crate::TryFromError::Low(float))
+            } else if float > 1.0 {
+                Err($crate::TryFromError::High(float))
+            } else {
+                #[expect(clippy::cast_possible_truncation, reason = "intended behaviour")]
+                #[expect(clippy::cast_sign_loss, reason = "intended behaviour")]
+                let inner = (float * const { <$self_inner>::MAX as $type + 1.0 }) as $self_inner;
+                Ok(Self { inner })
             }
-
-            #[expect(clippy::cast_possible_truncation, reason = "intended behaviour")]
-            #[expect(clippy::cast_sign_loss, reason = "intended behaviour")]
-            let inner = (float * const { <$self_inner>::MAX as $type + 1.0 }) as $self_inner;
-            Some(Self { inner })
         }
     };
 }
@@ -69,6 +71,34 @@ macro_rules! make_uf {
             }
         }
 
+        const impl From<$name> for f32 {
+            fn from(value: $name) -> Self {
+                value.to_f32()
+            }
+        }
+
+        const impl From<$name> for f64 {
+            fn from(value: $name) -> Self {
+                value.to_f64()
+            }
+        }
+
+        const impl TryFrom<f32> for $name {
+            type Error = $crate::TryFromError<f32>;
+
+            fn try_from(value: f32) -> Result<Self, Self::Error> {
+                Self::from_f32(value)
+            }
+        }
+
+        const impl TryFrom<f64> for $name {
+            type Error = $crate::TryFromError<f64>;
+
+            fn try_from(value: f64) -> Result<Self, Self::Error> {
+                Self::from_f64(value)
+            }
+        }
+
         const impl ops::Mul for $name {
             type Output = Self;
 
@@ -114,7 +144,7 @@ mod tests {
     fn half_times_half() {
         let half = Unitf8::from_f32(0.5).unwrap();
 
-        let quarter = const { Unitf8::from_f32(0.25).unwrap() };
+        let quarter = Unitf8::from_f32(0.25).unwrap();
 
         assert_eq!(half * half, quarter);
     }
@@ -137,7 +167,7 @@ mod tests {
 
     #[test]
     fn minus_one() {
-        assert!(Unitf8::from_f32(-1.0).is_none());
+        Unitf8::from_f32(-1.0).unwrap_err();
     }
 
     #[test]

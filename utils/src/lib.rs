@@ -8,8 +8,6 @@ mod error;
 mod ref_or_owned;
 
 pub use ref_or_owned::RefOwned;
-mod zip_with;
-pub use zip_with::ArrayZipWith;
 
 /// Testbed is a module for trying out MVP ideas before fleshing out.
 pub mod addassign;

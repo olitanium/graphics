@@ -511,7 +511,7 @@ where
     fn collides<
         'a,
         'b,
-        Other: Collision,
+        Other: Collision + ?Sized,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, Other::FuncInputs, &mut Other::Meta),
     >(
         &'a self,
@@ -519,7 +519,7 @@ where
         target: &'b Other,
         target_transform: Other::Transform<'_>,
         mut alter_meta: F,
-    ) -> Option<Vec<(&'a [Self::Vertex; 3], &'b [Other::Vertex; 3])>>
+    ) -> Option<Vec<([Self::Vertex; 3], [Other::Vertex; 3])>>
     where
         for<'c> Other::Transform<'c>: Clone,
     {

@@ -13,6 +13,7 @@
 #![feature(const_drop_in_place)]
 #![feature(const_iter)]
 #![feature(const_result_unwrap_unchecked)]
+#![feature(const_closures)]
 
 use core::fmt::Debug;
 use core::marker::Destruct;
@@ -32,6 +33,7 @@ mod initmacro;
 mod pop_front;
 pub use pop_front::ArrayVecPopFront;
 
+mod test_zip_with;
 pub struct ArrayVec<T, const N: usize> {
     len: usize,
     array: [MaybeUninit<T>; N],
@@ -39,6 +41,12 @@ pub struct ArrayVec<T, const N: usize> {
 
 #[derive(Debug)]
 struct LengthError<const N: usize>;
+
+#[derive(Debug)]
+pub enum TryPushError {
+    ReturnedNone,
+    NoSpace,
+}
 
 impl<T, const N: usize> ArrayVec<T, N> {
     #[must_use]
@@ -55,6 +63,25 @@ impl<T, const N: usize> ArrayVec<T, N> {
         Self {
             len: N,
             array: MaybeUninit::new(array).transpose(),
+        }
+    }
+
+    pub const fn try_push_with<F>(&mut self, mut func: F) -> Result<&mut T, TryPushError>
+    where
+        Option<T>: [const] Destruct,
+        F: [const] FnMut() -> Option<T> + [const] Destruct,
+    {
+        if let Some(dest) = self.array.get_mut(self.len) {
+            let out = match func() {
+                Some(val) => val,
+                None => return Err(TryPushError::ReturnedNone),
+            };
+            *dest = MaybeUninit::new(out);
+            self.len += 1;
+            // SAFETY: just filled above
+            unsafe { Ok(dest.assume_init_mut()) }
+        } else {
+            Err(TryPushError::NoSpace)
         }
     }
 
@@ -90,19 +117,6 @@ impl<T, const N: usize> ArrayVec<T, N> {
     where
         T: [const] Destruct,
     {
-        // assert!(M <= N);
-        // let mut this = Self::new();
-        // let mut array = MaybeUninit::new(array).transpose();
-        // let mut index = 0;
-        // loop {
-        // if index == M {
-        // break;
-        // }
-        // let value = mem::replace(&mut array[index], MaybeUninit::uninit());
-        // this.push_or_lose(unsafe { value.assume_init() });
-        // index += 1;
-        // }
-        // this
         let array = ArrayVecPopFront::new(array);
         let mut out = Self::new();
 

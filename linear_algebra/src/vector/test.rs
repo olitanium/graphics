@@ -2,7 +2,7 @@ use core::ops::Add;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::vector::array_maths;
-use crate::{Vector, unit_vector};
+use crate::{Vector, VectorPreferredFloat, unit_vector};
 
 #[test]
 fn drop_check_array_manipulation() {
@@ -45,7 +45,7 @@ fn drop_check_array_manipulation() {
 #[test]
 fn reflect() {
     let vector = Vector::new([1.0, 1.0, -0.5]);
-    let normal = Vector::new([0.0, 0.0, 1.0]).normalize_or_panic();
+    let normal = Vector::new([0.0, 0.0, 1.0]).try_normalize().unwrap();
 
     let reflected = vector.reflect(normal);
 
@@ -79,8 +79,8 @@ fn eq() {
 fn truncate() {
     let vec1 = Vector::new([1.0, 2.0, 3.0]);
 
-    let vec2: Vector<4, f32> = vec1.truncate();
-    let vec3: Vector<2, f32> = vec1.truncate();
+    let vec2: Vector<4, VectorPreferredFloat> = vec1.truncate();
+    let vec3: Vector<2, VectorPreferredFloat> = vec1.truncate();
 
     assert_eq!(vec2, Vector::new([1.0, 2.0, 3.0, 0.0]));
     assert_eq!(vec3, Vector::new([1.0, 2.0]));
@@ -88,7 +88,7 @@ fn truncate() {
 
 #[test]
 fn as_ref_test() {
-    let x = [1.0, 2.0, 3.0_f32];
+    let x = [1.0, 2.0, 3.0];
 
     let vector_x = Vector::new(x);
 

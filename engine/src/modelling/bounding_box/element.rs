@@ -3,6 +3,7 @@ use std::cell::RefCell;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
+use active_element::InnerChildrenOrMeta;
 use geometry::Transform;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
@@ -13,9 +14,11 @@ use graphics::vertex::Vertex;
 use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
 use graphics::{ActiveShaderProgram, Model};
 use utils::error_boilerplate;
+use zip_with::ArrayZipWith;
 
-use crate::modelling::bounding_box::active_element::InnerChildrenOrMeta;
 use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
+
+mod active_element;
 
 #[derive(Debug, Clone)]
 pub(crate) enum ChildrenOrMeta<T> {
@@ -35,13 +38,13 @@ pub struct BoundingBoxElement<V: ExtendedVertex<DIMS>, const DIMS: usize, T> {
     pub(crate) children_or_meta: ChildrenOrMeta<T>,
 }
 
-fn make_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
-    vectors: &[(Vector<DIMS>, [V; 3])],
-) -> Option<(Vector<DIMS>, Vector<DIMS>)> {
-    let iter = vectors
-        .iter()
-        .flat_map(|(_, vec)| vec.iter())
-        .map(|vert| vert.position());
+fn make_bound_inner<'a, const DIMS: usize, V, I>(iter: I) -> Option<(Vector<DIMS>, Vector<DIMS>)>
+where
+    I: IntoIterator<Item = &'a V>,
+    I::IntoIter: Clone,
+    V: ExtendedVertex<DIMS> + 'a,
+{
+    let iter = iter.into_iter().map(V::position);
 
     let lower_bound = iter.clone().reduce(|array1, array2| {
         Vector::new(array::from_fn(|index| {
@@ -49,7 +52,16 @@ fn make_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
         }))
     })?;
 
-    let upper_bound = iter.clone().reduce(|array1, array2| {
+    let lower_bounds_new = iter
+        .clone()
+        .map(|x| x.into_inner())
+        .reduce(|vec1, vec2| vec1.zip_with(vec2, |lhs, rhs| f32::min(lhs, rhs)))
+        .expect("DIMS > 0");
+
+    // TODO: if pass, implement lower_bounds_new for UB and replace
+    assert_eq!(lower_bound, Vector::new(lower_bounds_new));
+
+    let upper_bound = iter.reduce(|array1, array2| {
         Vector::new(array::from_fn(|index| {
             f32::max(array1[index], array2[index])
         }))
@@ -58,6 +70,14 @@ fn make_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
     assert!(core::iter::zip(upper_bound, lower_bound).all(|(x, y)| x >= y));
 
     Some((lower_bound, upper_bound))
+}
+
+fn make_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
+    vectors: &[(Vector<DIMS>, [V; 3])],
+) -> Option<(Vector<DIMS>, Vector<DIMS>)> {
+    let iter = vectors.iter().flat_map(|(_, vec)| vec.iter());
+
+    make_bound_inner(iter)
 }
 
 impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T> {
@@ -171,7 +191,6 @@ error_boilerplate!(<'a> DrawRecursiveError<'a>);
 impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T>
 where
     Vector<DIMS>: Volume<DIMS>,
-    [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
 {
     pub fn draw_recursive<
         'a,

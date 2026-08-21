@@ -14,7 +14,7 @@ use utils::error_boilerplate;
 
 use super::material::Material;
 use crate::modelling::Bone;
-use crate::modelling::advanced_vertex::IncompleteVertex;
+use crate::modelling::extended_vertex::IncompleteVertex;
 use crate::modelling::cubic::mesh::MeshBuilder;
 
 #[derive(Debug, Clone)]

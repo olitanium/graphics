@@ -16,7 +16,7 @@ mod prep_draw;
 mod state;
 
 fn main() {
-    Environment::<state::State>::new((4, 5), (2000, 1000), "Window", true)
+    Environment::<state::State>::new((4, 5), (2000, 1000), "Window", false)
         .unwrap()
         .run()
         .unwrap();

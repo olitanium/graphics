@@ -1,8 +1,8 @@
 //! Module to define a compact `UnitVector` which is embedded in one fewer
 //! dimension and with smaller data types.
-use core::{array, f32, iter};
+use core::{array, iter};
 
-use crate::{UnitVector, Vector};
+use crate::{UnitVector, Vector, VectorPreferredFloat};
 
 /// The inner type, currently hoisted as an alias for quickly swapping out.
 type InnerType = fixed_point::Unitf16;
@@ -23,16 +23,18 @@ where
     /// Returns None if the `Vector` is a zero-vector.
     #[must_use]
     #[inline]
-    pub fn try_normalize(vec: Vector<N, f32>) -> Option<Self> {
+    pub fn try_normalize(vec: Vector<N, VectorPreferredFloat>) -> Option<Self> {
         vec.try_normalize().map(Self::from_unit_vector)
     }
 
     /// Convert a `UnitVector` into a `CompactUnitVector`.
     #[must_use]
     #[inline]
-    pub fn from_unit_vector(uvec: UnitVector<N>) -> Self {
+    pub fn from_unit_vector(uvec: UnitVector<N, VectorPreferredFloat>) -> Self {
         #[inline]
-        fn inner<const N: usize>(unit_vec: [f32; N]) -> Option<CompactUnitVector<N>>
+        fn inner<const N: usize>(
+            unit_vec: [VectorPreferredFloat; N],
+        ) -> Option<CompactUnitVector<N>>
         where
             [(); N - 1]:,
         {
@@ -42,7 +44,7 @@ where
             });
 
             let mut angles = array::from_fn(|index| {
-                let elt = f32::atan2(
+                let elt = VectorPreferredFloat::atan2(
                     partial_sum_sq.next().unwrap_or(0.0),
                     unit_vec.get(index).copied().unwrap_or(0.0),
                 );
@@ -56,18 +58,20 @@ where
 
             let mut out_of_one = angles.map(|angle| {
                 let angle = if angle < 0.0 {
-                    angle + f32::consts::TAU
+                    angle + core::f64::consts::TAU as VectorPreferredFloat
                 } else {
                     angle
                 };
 
-                angle * f32::consts::FRAC_1_PI
+                angle * const { core::f64::consts::FRAC_1_PI as VectorPreferredFloat }
             });
 
             // angels[N-2] (the last element) is out of 2 Pi, so needs to be halved here so
             *out_of_one.last_mut()? *= 0.5;
 
-            let out = out_of_one.map(InnerType::from_f32).transpose()?;
+            let out = out_of_one
+                .map(|val| InnerType::try_from(val).ok())
+                .transpose()?;
 
             Some(CompactUnitVector(out))
         }
@@ -78,8 +82,10 @@ where
     /// recover a `UnitVector` which has N components, from this `CompactUnit`.
     #[must_use]
     #[inline]
-    pub fn unit(self) -> UnitVector<N, f32> {
-        let mut as_float = self.0.map(|x| x.to_f32() * f32::consts::PI);
+    pub fn unit(self) -> UnitVector<N, VectorPreferredFloat> {
+        let mut as_float = self.0.map(|x| {
+            VectorPreferredFloat::from(x) * const { core::f64::consts::PI as VectorPreferredFloat }
+        });
         let Some(as_float_last) = as_float.last_mut() else {
             return UnitVector::X;
         };
@@ -122,7 +128,7 @@ mod test {
                         for t in -10..10_i8 {
                             let input =
                                 //Vector::new([x as f32, y as f32, z as f32, s as f32, t as f32]);
-                                Vector::new([x,y,z,s,t].map(f32::from));
+                                Vector::new([x,y,z,s,t].map(VectorPreferredFloat::from));
 
                             let Some(normal_usual) = input.try_normalize() else {
                                 continue;
@@ -141,7 +147,7 @@ mod test {
                             let diff_vec = normal_usual - normal_roundtrip;
 
                             for diff in diff_vec {
-                                max = cmp::max_by(max, diff, f32::total_cmp);
+                                max = cmp::max_by(max, diff, VectorPreferredFloat::total_cmp);
                             }
                         }
                     }

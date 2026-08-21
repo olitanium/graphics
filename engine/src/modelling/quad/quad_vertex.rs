@@ -5,7 +5,7 @@ use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
 
 use crate::modelling::ExtendedVertex;
-use crate::modelling::advanced_vertex::IncompleteVertex;
+use crate::modelling::extended_vertex::IncompleteVertex;
 
 #[derive(Debug, Clone, Copy)]
 pub struct QuadVertex {

@@ -1,6 +1,4 @@
 #![feature(never_type)]
-#![allow(incomplete_features)]
-#![feature(generic_const_exprs)]
 
 use core::fmt::{Debug, Display};
 

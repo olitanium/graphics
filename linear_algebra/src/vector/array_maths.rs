@@ -7,12 +7,15 @@ use core::ops::{Add, Mul, Sub};
 
 use array_vec::ArrayVec;
 
+use crate::VectorPreferredFloat;
+
 /// Macro to generate trivially simple element wise operations.
 macro_rules! elem_wise {
     ($trait:ident:: $fn:ident, $token:tt) => {
         #[inline]
         pub const fn $fn<const N: usize, T, U>(lhs: [T; N], rhs: [U; N]) -> [T; N] where T: [const] $trait<U, Output = T> {
-            //core::array::from_fn(|index| core::ops::$trait::$fn(lhs[index], rhs[index])) // could literally be this
+            //use utils::ArrayZipWith;
+            //lhs.zip_with(rhs, core::ops::$trait::$fn) // cannot be used YET since not const
 
             let mut lhs: [MaybeUninit<T>; N] = MaybeUninit::new(lhs).transpose();
             let rhs: [MaybeUninit<U>; N] = MaybeUninit::new(rhs).transpose();
@@ -89,8 +92,8 @@ where
 
 /// Check whether all components of the vector are zero (or very close).
 #[inline]
-pub const fn is_zero<const N: usize>(v1: [f32; N]) -> bool {
-    const PRECISION_PER_DIMENSION: f32 = 0.001;
+pub const fn is_zero<const N: usize>(v1: [VectorPreferredFloat; N]) -> bool {
+    const PRECISION_PER_DIMENSION: VectorPreferredFloat = 0.001;
     let mut index = 0;
     while let Some(&value) = v1.get(index) {
         if value.abs() > PRECISION_PER_DIMENSION {
@@ -103,11 +106,11 @@ pub const fn is_zero<const N: usize>(v1: [f32; N]) -> bool {
 }
 
 /// Check whether all components are element-wise equal.
-pub const fn eq<const N: usize>(v1: [f32; N], v2: [f32; N]) -> bool {
-    // let diff = sub(v1, v2);
-    // is_zero(diff)
-
-    const PRECISION_PER_DIMENSION: f32 = 0.001;
+pub const fn eq<const N: usize>(
+    v1: [VectorPreferredFloat; N],
+    v2: [VectorPreferredFloat; N],
+) -> bool {
+    const PRECISION_PER_DIMENSION: VectorPreferredFloat = 0.001;
     let mut index = 0;
     while let (Some(&value), Some(&value2)) = (v1.get(index), v2.get(index)) {
         if (value - value2).abs() > PRECISION_PER_DIMENSION {

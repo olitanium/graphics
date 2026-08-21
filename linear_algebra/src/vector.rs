@@ -2,13 +2,15 @@
 
 mod array_maths;
 
+use core::cmp::Ordering;
 use core::iter::Sum;
+use core::marker::Destruct;
 use core::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign};
 use core::slice::SliceIndex;
-use core::{array, ptr};
-use std::marker::Destruct;
+use core::{array, iter, ptr};
 
 use super::matrix::Matrix;
+use crate::VectorPreferredFloat;
 use crate::vector::array_maths::mul;
 
 mod unit_vector;
@@ -24,7 +26,7 @@ pub use compact_unit::CompactUnitVector;
 /// basis.
 #[repr(transparent)]
 #[derive(Copy, Debug)]
-pub struct Vector<const N: usize, T = f32>(pub(crate) [T; N]);
+pub struct Vector<const N: usize, T = VectorPreferredFloat>(pub(crate) [T; N]);
 
 const impl<const N: usize, T> Clone for Vector<N, T>
 where
@@ -36,17 +38,41 @@ where
     }
 }
 
-const impl<const N: usize> Default for Vector<N, f32> {
+const impl<const N: usize, T> Default for Vector<N, T>
+where
+    T: const Default,
+{
+    // Would love to do as a #[derive()]
     #[inline]
     fn default() -> Self {
-        Self::ZERO
+        Vector::new([const { T::default() }; N])
     }
 }
 
-const impl<const N: usize> PartialEq for Vector<N, f32> {
+const impl<const N: usize> PartialEq for Vector<N, VectorPreferredFloat> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
         array_maths::eq(self.into_inner(), other.into_inner())
+    }
+}
+
+impl<const N: usize> Eq for Vector<N, VectorPreferredFloat> {}
+
+impl<const N: usize> PartialOrd for Vector<N, VectorPreferredFloat> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<const N: usize> Ord for Vector<N, VectorPreferredFloat> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        for (a, b) in iter::zip(self.iter(), other.iter()) {
+            match a.total_cmp(b) {
+                a @ Ordering::Greater | a @ Ordering::Less => return a,
+                Ordering::Equal => continue,
+            }
+        }
+        Ordering::Equal
     }
 }
 
@@ -62,7 +88,91 @@ macro_rules! vector {
     };
 }
 
-impl<const N: usize> Vector<N, f32> {
+macro_rules! vector_elem {
+    (0) => {
+        pub const fn x(self) -> T
+        where
+            Self: [const] Destruct,
+        {
+            let [x, ..] = self.0;
+            x
+        }
+
+        pub const fn x_mut(&mut self) -> &mut T {
+            let [x, ..] = &mut self.0;
+            x
+        }
+    };
+    (1) => {
+        pub const fn y(self) -> T
+        where
+            Self: [const] Destruct,
+        {
+            let [_, x, ..] = self.0;
+            x
+        }
+
+        pub const fn y_mut(&mut self) -> &mut T {
+            let [_, x, ..] = &mut self.0;
+            x
+        }
+    };
+    (2) => {
+        pub const fn z(self) -> T
+        where
+            Self: [const] Destruct,
+        {
+            let [_, _, x, ..] = self.0;
+            x
+        }
+
+        pub const fn z_mut(&mut self) -> &mut T {
+            let [_, _, x, ..] = &mut self.0;
+            x
+        }
+    };
+    (3) => {
+        pub const fn w(self) -> T
+        where
+            Self: [const] Destruct,
+        {
+            let [_, _, _, x, ..] = self.0;
+            x
+        }
+
+        pub const fn w_mut(&mut self) -> &mut T {
+            let [_, _, _, x, ..] = &mut self.0;
+            x
+        }
+    };
+}
+
+impl<T> Vector<1, T> {
+    vector_elem!(0);
+}
+impl<T> Vector<2, T> {
+    vector_elem!(0);
+
+    vector_elem!(1);
+}
+impl<T> Vector<3, T> {
+    vector_elem!(0);
+
+    vector_elem!(1);
+
+    vector_elem!(2);
+}
+impl<T> Vector<4, T> {
+    vector_elem!(0);
+
+    vector_elem!(1);
+
+    vector_elem!(2);
+
+    vector_elem!(3);
+}
+
+impl<const N: usize> Vector<N, VectorPreferredFloat> {
     /// The first component `1.0`, others `0.0`.
     pub const X: Self = Self::make_single_vec(0);
     /// The second component `1.0`, others `0.0`.
@@ -88,7 +198,9 @@ impl<const N: usize> Vector<N, f32> {
     /// this will break future optimisations.
     #[must_use]
     #[inline]
-    pub const fn new_normal_unchecked(input: [f32; N]) -> UnitVector<N, f32> {
+    pub const fn new_normal_unchecked(
+        input: [VectorPreferredFloat; N],
+    ) -> UnitVector<N, VectorPreferredFloat> {
         UnitVector::new_unchecked(input)
     }
 
@@ -103,7 +215,7 @@ impl<const N: usize> Vector<N, f32> {
     /// Find the length of the vector.
     #[inline]
     #[must_use]
-    pub fn magnitude(self) -> f32 {
+    pub fn magnitude(self) -> VectorPreferredFloat {
         self.magnitude_sq().sqrt()
     }
 
@@ -113,7 +225,7 @@ impl<const N: usize> Vector<N, f32> {
     #[must_use]
     #[inline]
     #[deprecated = "use the `try` method and handle the error"]
-    pub fn normalize_or_panic(self) -> UnitVector<N, f32> {
+    pub fn normalize_or_panic(self) -> UnitVector<N, VectorPreferredFloat> {
         let Some(vec) = self.try_normalize() else {
             #[expect(clippy::panic, reason = "deprecated function, being phased out")]
             (panic!("tried normalizing a zero vector"))
@@ -124,7 +236,7 @@ impl<const N: usize> Vector<N, f32> {
     /// Try to normalize a vector, returning `None` if the vector is zero.
     #[must_use]
     #[inline]
-    pub fn try_normalize(self) -> Option<UnitVector<N, f32>> {
+    pub fn try_normalize(self) -> Option<UnitVector<N, VectorPreferredFloat>> {
         let one_len = 1.0 / self.magnitude();
         one_len
             .is_finite()
@@ -143,7 +255,7 @@ impl<const N: usize> Vector<N, f32> {
     /// Change the size of the vector, filling in the gaps with `0.0`.
     #[must_use]
     #[inline]
-    pub const fn truncate<const M: usize>(self) -> Vector<M, f32> {
+    pub const fn truncate<const M: usize>(self) -> Vector<M, VectorPreferredFloat> {
         let array = array::from_fn(const |index| self.0.get(index).copied().unwrap_or(0.0));
         Vector::new(array)
     }
@@ -151,7 +263,7 @@ impl<const N: usize> Vector<N, f32> {
     /// Refelct the incoming ray `self` about a normal.
     #[must_use]
     #[inline]
-    pub const fn reflect(self, normal: UnitVector<N, f32>) -> Self
+    pub const fn reflect(self, normal: UnitVector<N, VectorPreferredFloat>) -> Self
     where
         Self: [const] Clone,
     {
@@ -209,6 +321,11 @@ impl<const N: usize, T> Vector<N, T> {
     #[inline]
     pub const fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
         self.inner_mut().iter_mut()
+    }
+
+    /// Get an iterator to the inner array.
+    pub const fn iter(&self) -> impl Iterator<Item = &T> {
+        self.inner().iter()
     }
 
     /// Perform an elementwise function to each in the vector.
@@ -285,7 +402,7 @@ impl<const N: usize, T> Vector<N, T> {
     }
 }
 
-impl Vector<3, f32> {
+impl Vector<3, VectorPreferredFloat> {
     /// Perform the vector (outer) product. This method yields a vector
     /// perpendicular to both, with a magnitude scaled by how perpendular the
     /// vectors are.
@@ -306,7 +423,7 @@ impl Vector<3, f32> {
     /// homogeneous contexts.
     #[inline]
     #[must_use]
-    pub const fn homogeneous(self) -> Vector<4, f32> {
+    pub const fn homogeneous(self) -> Vector<4, VectorPreferredFloat> {
         let [this0, this1, this2] = self.into_inner();
         Vector::new([this0, this1, this2, 1.0])
     }
@@ -402,16 +519,19 @@ where
     }
 }
 
-const impl<const N: usize> Mul<Vector<N, f32>> for f32 {
-    type Output = Vector<N, f32>;
+const impl<const N: usize, T> Mul<Vector<N, T>> for f32
+where
+    Vector<N, T>: [const] Mul<f32>,
+{
+    type Output = <Vector<N, T> as Mul<f32>>::Output;
 
     #[inline]
-    fn mul(self, rhs: Vector<N, f32>) -> Self::Output {
+    fn mul(self, rhs: Vector<N, T>) -> Self::Output {
         rhs * self
     }
 }
 
-const impl<const R: usize> From<Matrix<R, 1>> for Vector<R, f32> {
+const impl<const R: usize> From<Matrix<R, 1>> for Vector<R, VectorPreferredFloat> {
     #[inline]
     fn from(value: Matrix<R, 1>) -> Self {
         let [arr] = value.into_inner();

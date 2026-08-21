@@ -1,13 +1,13 @@
 //! Module to define the Unit Vector, where the magnitude is equal to `1.0`.
+use core::marker::Destruct;
 use core::{array, ops};
-use std::marker::Destruct;
 
-use crate::Vector;
+use crate::{Vector, VectorPreferredFloat};
 
 /// `UnitVector` with magnitude equal to `1.0`.
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug)]
-pub struct UnitVector<const N: usize, T = f32>(pub(crate) Vector<N, T>);
+pub struct UnitVector<const N: usize, T = VectorPreferredFloat>(pub(crate) Vector<N, T>);
 
 #[macro_export]
 macro_rules! unit_vector {
@@ -31,24 +31,24 @@ where
     }
 }
 
-const impl<const N: usize> Default for UnitVector<N, f32> {
+const impl<const N: usize> Default for UnitVector<N, VectorPreferredFloat> {
     #[inline]
     fn default() -> Self {
         Self::X
     }
 }
 
-impl<const N: usize> UnitVector<N, f32> {
+impl<const N: usize> UnitVector<N, VectorPreferredFloat> {
     /// `UnitVector([1.0, 0.0, 0.0, ...])` as long as asked for.
     pub const X: Self = Self(Vector::X);
 }
 
-impl UnitVector<2> {
+impl UnitVector<2, VectorPreferredFloat> {
     /// `UnitVector([0.0, 1.0, 0.0, ...])` as long as asked for.
     pub const Y2: Self = Self(Vector::Y);
 }
 
-impl UnitVector<3> {
+impl UnitVector<3, VectorPreferredFloat> {
     /// `UnitVector([0.0, 1.0, 0.0, ...])` as long as asked for.
     pub const Y: Self = Self(Vector::Y);
     /// `UnitVector([0.0, 0.0, 1.0, ...])` as long as asked for.

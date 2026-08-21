@@ -6,7 +6,7 @@ use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
 
-use crate::modelling::advanced_vertex::IncompleteVertex;
+use crate::modelling::extended_vertex::IncompleteVertex;
 use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex};
 
 #[derive(Debug, Clone, Copy)]

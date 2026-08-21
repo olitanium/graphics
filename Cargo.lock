@@ -61,6 +61,9 @@ dependencies = [
 [[package]]
 name = "array_vec"
 version = "0.1.0"
+dependencies = [
+ "utils",
+]
 
 [[package]]
 name = "arrayvec"
@@ -406,6 +409,7 @@ dependencies = [
  "russimp",
  "triangle_intersection",
  "utils",
+ "zip_with",
 ]
 
 [[package]]
@@ -489,6 +493,9 @@ dependencies = [
 [[package]]
 name = "fixed_point"
 version = "0.1.0"
+dependencies = [
+ "utils",
+]
 
 [[package]]
 name = "flate2"
@@ -1141,6 +1148,7 @@ dependencies = [
  "array_vec",
  "fixed_point",
  "multi_zip",
+ "utils",
 ]
 
 [[package]]
@@ -2972,6 +2980,13 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.104",
+]
+
+[[package]]
+name = "zip_with"
+version = "0.1.0"
+dependencies = [
+ "array_vec",
 ]
 
 [[package]]

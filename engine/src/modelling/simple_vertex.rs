@@ -6,7 +6,7 @@ use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
 
-use crate::modelling::advanced_vertex::{ExtendedVertex, IncompleteVertex};
+use crate::modelling::extended_vertex::{ExtendedVertex, IncompleteVertex};
 use crate::modelling::{CubicVertex, VertexHasTangent};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -38,18 +38,6 @@ impl Vertex for SimpleVertex {
         let [vec2] = Vector::<2>::types_of();
         let [unitvec] = UnitVector::<3>::types_of();
         [vec3, vec2, unitvec, unitvec]
-    }
-}
-
-impl CubicVertex for SimpleVertex {}
-
-impl VertexHasTangent for SimpleVertex {
-    fn into_simplevertex(self) -> SimpleVertex {
-        self
-    }
-
-    fn normal(self) -> UnitVector<3> {
-        self.normal
     }
 }
 
@@ -109,5 +97,21 @@ impl ExtendedVertex<3> for SimpleVertex {
                 })
             },
         )
+    }
+}
+
+impl CubicVertex for SimpleVertex {
+    fn triangle_normal(triangle: &[Self; 3]) -> UnitVector<3> {
+        Self::triangle_normal_tangent(triangle)
+    }
+}
+
+impl VertexHasTangent for SimpleVertex {
+    fn into_simplevertex(self) -> SimpleVertex {
+        self
+    }
+
+    fn normal(&self) -> UnitVector<3> {
+        self.normal
     }
 }

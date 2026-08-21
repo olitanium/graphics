@@ -16,8 +16,6 @@ mod element;
 pub use element::BoundingBoxElement;
 use graphics::vertex::Vertex;
 
-mod active_element;
-
 mod group;
 pub use group::Group as BoundingBoxGroup;
 
@@ -27,27 +25,19 @@ pub use skeleton_bb::{DrawError as SkeletonBbDrawError, SkeletonBb, SkeletonBbGr
 pub mod collision;
 pub use collision::{Collision, no_alter_meta};
 
-use crate::modelling::advanced_vertex::ExtendedVertex;
 use crate::modelling::bounding_box::element::ChildrenOrMeta;
 // pub use crate::modelling::bounding_box::collision::TempModelTransform;
 use crate::modelling::bounding_box::element::DrawRecursiveError;
+use crate::modelling::extended_vertex::ExtendedVertex;
 use crate::modelling::{CubicVertex, SimpleVertex, SkeletonCubic, Volume};
 
 #[derive(Debug, Clone)]
-pub struct BoundingBox<V: ExtendedVertex<DIMS>, const DIMS: usize, T>
-// where
-// Vector<DIMS>: ExtendedVertex<DIMS>,
-//[(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
-{
+pub struct BoundingBox<V: ExtendedVertex<DIMS>, const DIMS: usize, T> {
     triangles: Vec<(Vector<DIMS>, [V; 3])>,
     inner: Vec<BoundingBoxElement<V, DIMS, T>>,
 }
 
-impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T>
-// where
-// Vector<DIMS>: ExtendedVertex<DIMS>,
-//[(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
-{
+impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T> {
     fn get(&self, index: usize) -> &BoundingBoxElement<V, DIMS, T> {
         &self.inner[index]
     }
@@ -146,15 +136,15 @@ impl<V: ExtendedVertex<3>, T> BoundingBox<V, 3, T> {
         V2: ExtendedVertex<3>,
         U,
         F: FnMut(&mut T, &mut U),
-        P: Transform<Vector<3>>,
-        P2: Transform<Vector<3>>,
+        P: Transform<V> + Transform<Vector<3>>,
+        P2: Transform<V2> + Transform<Vector<3>>,
     >(
         lhs: &'a Self,
         lhs_pose: P,
         rhs: &'b BoundingBox<V2, 3, U>,
         rhs_pose: P2,
         mut alter_meta: F,
-    ) -> Option<Vec<(&'a [V; 3], &'b [V2; 3])>>
+    ) -> Option<Vec<([V; 3], [V2; 3])>>
 where {
         let mut output = Vec::new();
         BoundingBoxElement::overlaps_bounding_box_and_children(
@@ -191,7 +181,6 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T>
 where
     BoundingBoxElement<V, DIMS, T>: BoundingBoxShaderProgram<DIMS>,
     Vector<DIMS>: Volume<DIMS>,
-    [(); <Vector<DIMS> as Vertex>::ELEMENT_COUNT]:,
 {
     pub(crate) fn draw<
         'a,
@@ -256,8 +245,8 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, 3, TThis> {
         mut alter_meta: F,
     ) -> Option<
         Vec<(
-            &'a [Self::Vertex; 3],
-            &'b [<BoundingBox<V, 3, U> as Collision>::Vertex; 3],
+            [Self::Vertex; 3],
+            [<BoundingBox<V, 3, U> as Collision>::Vertex; 3],
         )>,
     > {
         Self::detect_collision(self, transform, target, target_transform, |x, y| {
@@ -268,7 +257,7 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, 3, TThis> {
     fn collides<
         'a,
         'b,
-        T: Collision,
+        T: Collision + ?Sized,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
     >(
         &'a self,
@@ -276,7 +265,7 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, 3, TThis> {
         target: &'b T,
         target_transform: T::Transform<'_>,
         mut alter_meta: F,
-    ) -> Option<Vec<(&'a [Self::Vertex; 3], &'b [T::Vertex; 3])>> {
+    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>> {
         target
             .collides_with_cubic_primitive(
                 target_transform,
@@ -355,8 +344,6 @@ mod test {
 
         let bound =
             BoundingBox::new_from_vec_indexes(coords.to_vec(), &triangles, 0, |_| ()).unwrap();
-
-        println!("{bound:#?}");
 
         let good_point = Vector::new([0.5, 0.5]);
         let good_point2 = Vector::new([1.0, 0.5]);

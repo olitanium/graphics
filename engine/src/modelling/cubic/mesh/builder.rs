@@ -4,10 +4,10 @@ use geometry::TransformBy;
 use graphics::vertex_array::VertexArray;
 use utils::{builder, new};
 
-use crate::modelling::advanced_vertex::IncompleteVertex;
 use crate::modelling::cubic::Mesh;
 use crate::modelling::cubic::material::Material;
 use crate::modelling::cubic::simple_cubic::TransformType;
+use crate::modelling::extended_vertex::IncompleteVertex;
 use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex};
 
 #[derive(Debug, Clone, Default)]
@@ -57,10 +57,7 @@ impl Builder {
         }));
     }
 
-    pub fn build<V: CubicVertex>(mut self) -> Mesh<V>
-    where
-        [(); V::ELEMENT_COUNT]:,
-    {
+    pub fn build<V: CubicVertex>(mut self) -> Mesh<V> {
         for transform in self.transforms.iter() {
             match transform {
                 TransformType::ByPose(pose) => {

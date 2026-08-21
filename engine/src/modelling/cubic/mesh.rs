@@ -38,10 +38,7 @@ pub enum DrawError<'a> {
 }
 error_boilerplate!(<'a> DrawError<'a>);
 
-impl<V: CubicVertex> Mesh<V>
-where
-    [(); V::ELEMENT_COUNT]:,
-{
+impl<V: CubicVertex> Mesh<V> {
     pub(crate) fn draw<
         'a,
         'b,

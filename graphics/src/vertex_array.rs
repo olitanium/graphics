@@ -35,19 +35,7 @@ impl<B> Drop for GenVertexArray<B> {
     }
 }
 
-// impl<V: Vertex> Default for GenVertexArray<V>
-// where
-// [(); V::ELEMENT_COUNT]:,
-// {
-// fn default() -> Self {
-// Self::empty()
-// }
-// }
-
-impl<V: Vertex> GenVertexArray<VertexBuffer<V>>
-where
-    [(); V::ELEMENT_COUNT]:,
-{
+impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
     #[must_use = "builders must be built to obtain their relevant type"]
     pub fn builder() -> Builder<V> {
         Builder::new()
@@ -165,10 +153,7 @@ pub enum VertexArrayDrawError<'a> {
 }
 error_boilerplate!(<'a> VertexArrayDrawError<'a>);
 
-impl<V: Vertex> GenVertexArray<VertexBuffer<V>>
-where
-    [(); V::ELEMENT_COUNT]:,
-{
+impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
     /// # Errors
     ///
     /// Errors when the active shader program is not correctly configured for

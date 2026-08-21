@@ -65,7 +65,8 @@ impl ShadowFarLight {
                     self.light.direction,
                     UnitVector::X,
                     UnitVector::Z,
-                ),
+                )
+                .expect("both up variables are different so this is guaranteed to succeed."),
                 target - vector_from_target,
             ))
             .orthographic(LIGHT_PLANE_WIDTH, LIGHT_PLANE_WIDTH, NEAR_PLANE, FAR_PLANE)

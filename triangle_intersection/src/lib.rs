@@ -108,8 +108,8 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
         use SignOrZero as S;
         match make_determinants_signorzero(one, two) {
             [S::Zero, S::Zero, S::Zero] => CrossType::Coplanar,
-            [S::Positive, S::Positive, S::Positive] => CrossType::None,
-            [S::Negative, S::Negative, S::Negative] => CrossType::MaybeIntersecting,
+            [S::Positive, S::Positive, S::Positive] => CrossType::MaybeIntersecting,
+            [S::Negative, S::Negative, S::Negative] => CrossType::None,
             // Only one vertex is in positive, this must be rotated around and the other triangle
             // kept as is
             [S::Positive, S::Negative | S::Zero, S::Negative | S::Zero] => {
@@ -179,9 +179,10 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
             },
             CrossType::MaybeIntersecting => {
                 match determiant_crossing(two, one) {
-                    CrossType::MaybeIntersecting => CrossType::Coplanar,
+                    CrossType::MaybeIntersecting => CrossType::MaybeIntersecting,
                     CrossType::None => CrossType::None,
-                    // I don't expect these to come up
+                    // I don't expect these to come up because we've already asserted that they are
+                    // not coplanar or intersecting
                     CrossType::Coplanar | CrossType::Success(..) => CrossType::None,
                 }
             }
@@ -190,33 +191,8 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
 
     match smart_determinants_crossing {
         CrossType::None => false,
-        CrossType::Coplanar => {
-            // TODO: colinear triangles
-            let [a, b, c] = one;
-            let Some(normal) = (b - a).cross(c - a).try_normalize() else {
-                // if ab and ac are parallel, then the vector is just a line and is not handled
-                // yet
-                return false;
-            };
-            // Should not fail because new_forward_up only returns None when Up == forward,
-            // so providing two tries is enough.
-            let Some(orientation) = Orientation::new_forward_up(normal, UnitVector::Y)
-                .or_else(|| Orientation::new_forward_up(normal, UnitVector::X))
-            else {
-                return false;
-            };
-
-            let transform = Pose::new_from_orientation_translation(orientation, a);
-            let inverse_transform = transform.inverse();
-
-            let new_one = one.transform_by(&inverse_transform);
-            let new_two = two.transform_by(&inverse_transform);
-
-            let new_one_trunc = new_one.map(Vector::truncate);
-            let new_two_trunc = new_two.map(Vector::truncate);
-
-            intersect2(new_one_trunc, new_two_trunc)
-        }
+        CrossType::Coplanar => embed_three_to_two(one, two)
+            .is_some_and(|(new_one_trunc, new_two_trunc)| intersect2(new_one_trunc, new_two_trunc)),
         CrossType::Success(new_one, new_two) => {
             // TODO: intersecting planes and/or triangles
             use SignOrZero as S;
@@ -250,8 +226,43 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
             three_dimension_determinant(p1, q1, p2, q2) <= 0.0
                 && three_dimension_determinant(p1, r1, r2, p2) <= 0.0
         }
-        CrossType::MaybeIntersecting => true,
+        CrossType::MaybeIntersecting => {
+            let one_way = || {
+                embed_three_to_two(one, two).is_some_and(|(new_one_trunc, new_two_trunc)| {
+                    intersect2(new_one_trunc, new_two_trunc)
+                })
+            };
+
+            let two_way = || {
+                embed_three_to_two(two, one).is_some_and(|(new_two_trunc, new_one_trunc)| {
+                    intersect2(new_two_trunc, new_one_trunc)
+                })
+            };
+
+            one_way() && two_way()
+        }
     }
+}
+
+fn embed_three_to_two(one: Triangle<3>, two: Triangle<3>) -> Option<(Triangle<2>, Triangle<2>)> {
+    let [a, b, c] = one;
+    // if ab and ac are parallel, then the vector is just a line and is not handled
+    // yet
+    let normal = (b - a).cross(c - a).try_normalize()?;
+
+    // Should not fail because `X` != `Y`
+    let orientation = Orientation::new_forward_up_try_two(normal, UnitVector::Y, UnitVector::X)?;
+
+    let transform = Pose::new_from_orientation_translation(orientation, a);
+    let inverse_transform = transform.inverse();
+
+    let new_one = one.transform_by(&inverse_transform);
+    let new_two = two.transform_by(&inverse_transform);
+
+    let new_one_trunc = new_one.map(Vector::truncate);
+    let new_two_trunc = new_two.map(Vector::truncate);
+
+    Some((new_one_trunc, new_two_trunc))
 }
 
 #[inline]

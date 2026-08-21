@@ -1,6 +1,6 @@
 use graphics::linear_algebra::Vector;
 
-use crate::modelling::advanced_vertex::IncompleteVertex;
+use crate::modelling::extended_vertex::IncompleteVertex;
 use crate::modelling::{ExtendedVertex, test_models};
 
 pub trait Volume<const N: usize>: ExtendedVertex<N> {
