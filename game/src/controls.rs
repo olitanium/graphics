@@ -110,8 +110,12 @@ impl State {
             .controls(&keyboard, string, mouse_delta, frame_time);
 
         if !self.game_camera.move_lock {
-            self.player
-                .controls(&keyboard, frame_time, &self.small_cube, &self.origin_cube);
+            self.player.controls(
+                &keyboard,
+                frame_time,
+                &mut self.small_cube,
+                &mut self.origin_cube,
+            );
         }
 
         ControlOutput::Data(())

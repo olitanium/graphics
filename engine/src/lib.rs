@@ -5,6 +5,7 @@
 #![feature(never_type)]
 #![feature(option_array_transpose)]
 #![feature(min_generic_const_args)]
+#![feature(macroless_generic_const_args)]
 #![feature(iter_map_windows)]
 #![feature(inherent_associated_types)]
 #![feature(const_trait_impl)]

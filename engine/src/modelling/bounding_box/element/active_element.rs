@@ -175,9 +175,7 @@ impl<V: ExtendedVertex<3>, T> BoundingBoxElement<V, 3, T> {
         other_transform: &P2,
         alter_meta: &mut F,
         accumulator: &mut Vec<([V; 3], [V2; 3])>,
-    )
-    // -> Vec<(&'a [V; 3], &'b [V2; 3])>)
-    {
+    ) {
         let is_overlap = this.overlaps_bounding_box_single(this_transform, other, other_transform);
 
         if is_overlap {

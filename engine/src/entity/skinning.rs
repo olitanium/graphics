@@ -1,19 +1,17 @@
 use std::iter;
 
-use geometry::Pose;
 use graphics::linear_algebra::Vector;
 
-use crate::entity::{EntityInner, Mass, ToAggregateEntity};
+use crate::entity::physics::Physics;
+use crate::entity::{EntityInner, Mass, SimplePhysics, ToAggregateEntity};
 use crate::modelling::cubic::SkinningCubic;
 use crate::modelling::{Collision, SkeletalVertex, SkeletonBb};
 
 #[derive(Debug, Clone)]
 pub struct SkinningEntity<T> {
     pub model: SkinningCubic,
-    pub pose: Pose,
-    pub mass: Mass,
     pub(crate) bounding_box: Option<SkeletonBb<SkeletalVertex, T>>,
-    pub velocity: Vector<3>,
+    pub physics: SimplePhysics,
 }
 
 // TODO: investigate whether this can be derived. There's a problem re: the `T`
@@ -21,10 +19,8 @@ impl<T> Default for SkinningEntity<T> {
     fn default() -> Self {
         Self {
             model: Default::default(),
-            pose: Default::default(),
-            mass: Default::default(),
             bounding_box: Default::default(),
-            velocity: Default::default(),
+            physics: Default::default(),
         }
     }
 }
@@ -38,10 +34,13 @@ impl<T> SkinningEntity<T> {
     ) -> Option<Self> {
         let bounding_box = make_bounding_box(&model, depth, init);
 
+        let mut physics = SimplePhysics::default();
+        physics.mass = mass;
+
         Some(Self {
             model,
-            mass,
             bounding_box,
+            physics,
             ..Self::default()
         })
     }
@@ -69,11 +68,6 @@ pub fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [SkeletalVertex; 3])]) -> T>(
 impl<T> SkinningEntity<T> {
     pub const fn bounding_box(&self) -> Option<&SkeletonBb<SkeletalVertex, T>> {
         self.bounding_box.as_ref()
-    }
-
-    pub fn update(&mut self, timestep: f32) {
-        let delta_pose = Pose::new_from_translation(self.velocity.scale(timestep));
-        self.pose.push_change(delta_pose);
     }
 }
 
@@ -118,5 +112,11 @@ impl<T> ToAggregateEntity<T, SkinningCubic> for SkinningEntity<T> {
         } = self;
 
         (model, bounding_box)
+    }
+}
+
+impl<T> Physics for SkinningEntity<T> {
+    fn physics(&mut self) -> Option<&mut SimplePhysics> {
+        Some(&mut self.physics)
     }
 }

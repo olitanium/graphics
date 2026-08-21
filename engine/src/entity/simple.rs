@@ -45,12 +45,14 @@ impl<T> SimpleEntity<T> {
         }
     }
 
+    #[inline]
     pub const fn temp_as_simplecubic_and_anim(&self) -> (&SimpleCubic, Pose) {
         (&self.model, self.physics.pose)
     }
 }
 
 impl<T> SimpleEntity<T> {
+    #[inline]
     pub const fn bounding_box(&self) -> Option<&BoundingBox<SimpleVertex, 3, T>>
     where
         Vector<3>: Volume<3>,
@@ -58,6 +60,7 @@ impl<T> SimpleEntity<T> {
         self.bounding_box.as_ref()
     }
 
+    #[inline]
     pub fn move_collide_repel<B: Physics>(
         &mut self,
         other: &mut B,

@@ -1,28 +1,24 @@
-use geometry::Pose;
 use graphics::linear_algebra::Vector;
 
 use crate::SimpleEntity;
-use crate::entity::{Mass, ToAggregateEntity};
+use crate::entity::physics::Physics;
+use crate::entity::{Mass, SimplePhysics, ToAggregateEntity};
 use crate::modelling::cubic::CalculatedAnimation;
 use crate::modelling::{Collision, SimpleVertex, SkeletonBb, SkeletonCubic};
 
 #[derive(Debug)]
 pub struct SkeletonEntity<T> {
     pub model: SkeletonCubic,
-    pub pose: Pose,
-    pub mass: Mass,
     pub(crate) bounding_box: Option<SkeletonBb<SimpleVertex, T>>,
-    pub velocity: Vector<3>,
+    pub physics: SimplePhysics,
 }
 
 impl<T> Default for SkeletonEntity<T> {
     fn default() -> Self {
         Self {
-            mass: Default::default(),
-            pose: Default::default(),
             model: Default::default(),
             bounding_box: Default::default(),
-            velocity: Default::default(),
+            physics: Default::default(),
         }
     }
 }
@@ -36,9 +32,12 @@ impl<T> SkeletonEntity<T> {
     ) -> Option<Self> {
         let bounding_box = make_bounding_box(&model, depth, init);
 
+        let mut physics = SimplePhysics::default();
+        physics.mass = mass;
+
         Some(Self {
             model,
-            mass,
+            physics,
             bounding_box,
             ..Self::default()
         })
@@ -64,13 +63,8 @@ impl<T> SkeletonEntity<T> {
         self.bounding_box.as_ref()
     }
 
-    pub fn update(&mut self, timestep: f32) {
-        let delta_pose = Pose::new_from_translation(self.velocity.scale(timestep));
-        self.pose.push_change(delta_pose);
-    }
-
     pub fn get_pair_model_bind_pose(&self) -> (&SkeletonCubic, CalculatedAnimation) {
-        let animation = CalculatedAnimation::bind_pose(&self.model, self.pose);
+        let animation = CalculatedAnimation::bind_pose(&self.model, self.physics.pose);
         (&self.model, animation)
     }
 }
@@ -121,10 +115,8 @@ impl<T> From<SimpleEntity<T>> for SkeletonEntity<T> {
 
         SkeletonEntity {
             model,
-            pose: physics.pose,
-            mass: physics.mass,
             bounding_box,
-            velocity: physics.velocity,
+            physics,
         }
     }
 }
@@ -143,5 +135,11 @@ impl<T> ToAggregateEntity<T, SkeletonCubic> for SkeletonEntity<T> {
         } = self;
 
         (model, bounding_box)
+    }
+}
+
+impl<T> Physics for SkeletonEntity<T> {
+    fn physics(&mut self) -> Option<&mut SimplePhysics> {
+        Some(&mut self.physics)
     }
 }

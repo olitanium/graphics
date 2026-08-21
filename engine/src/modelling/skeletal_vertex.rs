@@ -72,17 +72,17 @@ impl ExtendedVertex<3> for SkeletalVertex {
     }
 }
 
-impl TransformBy<Pose> for SkeletalVertex {
-    fn transform_by(&self, operator: &Pose) -> Self {
-        Self {
-            position: self.position.transform_by(operator),
-            normal: self.normal.transform_by(operator),
-            texture: self.texture,
-            tangent: self.tangent.transform_by(operator),
-            bone_indices: self.bone_indices,
-            bone_weights: self.bone_weights,
-        }
-    }
-}
+// impl TransformBy<Pose> for SkeletalVertex {
+// fn transform_by(&self, operator: &Pose) -> Self {
+// Self {
+// position: self.position.transform_by(operator),
+// normal: self.normal.transform_by(operator),
+// texture: self.texture,
+// tangent: self.tangent.transform_by(operator),
+// bone_indices: self.bone_indices,
+// bone_weights: self.bone_weights,
+// }
+// }
+// }
 
 impl CubicVertex for SkeletalVertex {}

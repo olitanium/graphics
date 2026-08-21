@@ -6,16 +6,21 @@ pub use incomplete::IncompleteVertex;
 
 mod impls;
 
-use geometry::{Pose, TransformBy};
+use geometry::{Pose, Transform, TransformBy};
 
 use crate::modelling::SimpleVertex;
 
-pub trait ExtendedVertex<const N: usize>: Vertex {
-    fn position(&self) -> Vector<N>;
-    fn from_incomplete_triangle(triangle: [IncompleteVertex<N>; 3]) -> Option<[Self; 3]>;
+pub trait ExtendedVertex: Vertex {
+    type const LEN: usize;
+    type PreferredTransform: Transform<Self>;
+
+    fn position(&self) -> Vector<{ Self::LEN }>;
+    fn from_incomplete_triangle(
+        triangle: [IncompleteVertex<{ Self::LEN }>; 3],
+    ) -> Option<[Self; 3]>;
 }
 
-pub trait CubicVertex: ExtendedVertex<3> + TransformBy<Pose> {
+pub trait CubicVertex: ExtendedVertex<LEN = 3> {
     #[inline]
     fn triangle_normal(triangle: &[Self; 3]) -> UnitVector<3> {
         let [posa, posb, posc] = triangle.each_ref().map(|vert| vert.position());

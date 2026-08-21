@@ -32,9 +32,9 @@ use crate::modelling::extended_vertex::ExtendedVertex;
 use crate::modelling::{CubicVertex, SimpleVertex, SkeletonCubic, Volume};
 
 #[derive(Debug, Clone)]
-pub struct BoundingBox<V: ExtendedVertex<DIMS>, const DIMS: usize, T> {
-    triangles: Vec<(Vector<DIMS>, [V; 3])>,
-    inner: Vec<BoundingBoxElement<V, DIMS, T>>,
+pub struct BoundingBox<V: ExtendedVertex, T> {
+    triangles: Vec<(Vector<{ V::LEN }>, [V; 3])>,
+    inner: Vec<BoundingBoxElement<V, T>>,
 }
 
 impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T> {
@@ -129,11 +129,11 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T> {
     }
 }
 
-impl<V: ExtendedVertex<3>, T> BoundingBox<V, 3, T> {
+impl<V: ExtendedVertex<LEN = 3>, T> BoundingBox<V, 3, T> {
     fn detect_collision<
         'a,
         'b,
-        V2: ExtendedVertex<3>,
+        V2: ExtendedVertex<LEN = 3>,
         U,
         F: FnMut(&mut T, &mut U),
         P: Transform<V> + Transform<Vector<3>>,
@@ -166,7 +166,7 @@ where {
     }
 }
 
-impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T> {
+impl<V: ExtendedVertex, T> BoundingBox<V, DIMS, T> {
     pub fn triangles<'a>(
         &'a self,
         element: &'a BoundingBoxElement<V, DIMS, T>,

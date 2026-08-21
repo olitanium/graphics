@@ -27,22 +27,22 @@ pub(crate) enum ChildrenOrMeta<T> {
 }
 
 #[derive(Debug, Clone)]
-pub struct BoundingBoxElement<V: ExtendedVertex<DIMS>, const DIMS: usize, T> {
-    pub(crate) lower_bound: Vector<DIMS>,
-    pub(crate) upper_bound: Vector<DIMS>,
+pub struct BoundingBoxElement<V: ExtendedVertex, T> {
+    pub(crate) lower_bound: Vector<{ V::LEN }>,
+    pub(crate) upper_bound: Vector<{ V::LEN }>,
 
-    pub(crate) triangles: PhantomData<Vec<(Vector<DIMS>, [V; 3])>>,
+    pub(crate) triangles: PhantomData<Vec<(Vector<{ V::LEN }>, [V; 3])>>,
     pub(crate) start_index: usize,
     pub(crate) len: usize,
 
     pub(crate) children_or_meta: ChildrenOrMeta<T>,
 }
 
-fn make_bound_inner<'a, const DIMS: usize, V, I>(iter: I) -> Option<(Vector<DIMS>, Vector<DIMS>)>
+fn make_bound_inner<'a, V, I>(iter: I) -> Option<(Vector<{ V::LEN }>, Vector<{ V::LEN }>)>
 where
     I: IntoIterator<Item = &'a V>,
     I::IntoIter: Clone,
-    V: ExtendedVertex<DIMS> + 'a,
+    V: ExtendedVertex + 'a,
 {
     let iter = iter.into_iter().map(V::position);
 
@@ -72,9 +72,9 @@ where
     Some((lower_bound, upper_bound))
 }
 
-fn make_bound<V: ExtendedVertex<DIMS>, const DIMS: usize>(
-    vectors: &[(Vector<DIMS>, [V; 3])],
-) -> Option<(Vector<DIMS>, Vector<DIMS>)> {
+fn make_bound<V: ExtendedVertex>(
+    vectors: &[(Vector<{ V::LEN }>, [V; 3])],
+) -> Option<(Vector<{ V::LEN }>, Vector<{ V::LEN }>)> {
     let iter = vectors.iter().flat_map(|(_, vec)| vec.iter());
 
     make_bound_inner(iter)

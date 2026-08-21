@@ -8,7 +8,7 @@ use crate::entity::Mass;
 use crate::modelling::bounding_box::no_alter_meta;
 use crate::modelling::{Collision, CubicVertex};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct SimplePhysics {
     pub pose: Pose,
     pub velocity: Vector<3>,
