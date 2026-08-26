@@ -6,13 +6,13 @@ pub use incomplete::IncompleteVertex;
 
 mod impls;
 
-use geometry::{Pose, Transform, TransformBy};
+use geometry::{NoTransform, Transform};
 
 use crate::modelling::SimpleVertex;
 
 pub trait ExtendedVertex: Vertex {
     type const LEN: usize;
-    type PreferredTransform: Transform<Self>;
+    type PreferredTransform<'a>: Transform<Self>;
 
     fn position(&self) -> Vector<{ Self::LEN }>;
     fn from_incomplete_triangle(
@@ -46,7 +46,11 @@ pub trait VertexHasTangent: CubicVertex {
     fn into_simplevertex(self) -> SimpleVertex;
 }
 
-impl ExtendedVertex<0> for NoVertex {
+impl ExtendedVertex for NoVertex {
+    type PreferredTransform<'a> = NoTransform;
+
+    type const LEN: usize = 0;
+
     fn position(&self) -> Vector<0> {
         Vector::ZERO
     }

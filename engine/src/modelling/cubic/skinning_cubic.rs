@@ -3,7 +3,7 @@ use std::iter;
 
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
-use graphics::shader_program::CullFace;
+use graphics::shader_program::{CullFace, ShaderSetUniformError};
 use graphics::{ActiveShaderProgram, Model};
 use utils::error_boilerplate;
 
@@ -54,6 +54,10 @@ impl SkinningCubic {
 pub enum DrawError<'a> {
     SignaturesDoNotMatch(SignaturesDoNotMatchError),
     Mesh(MeshDrawError<'a>),
+    SetUniform {
+        mat: ShaderSetUniformError<'a>,
+        quat: ShaderSetUniformError<'a>,
+    },
 }
 error_boilerplate!(<'a> DrawError<'a>);
 
@@ -75,13 +79,24 @@ impl SkinningCubic {
             .iter()
             .map(|pose| pose.as_transformation_matrix())
             .collect();
-        _ = active_shader.set_uniform("bones", matrices.as_slice());
+        let matrices_res = active_shader.set_uniform("bones", matrices.as_slice());
 
         let matrices_quat: Vec<_> = poses
             .iter()
             .map(|pose| pose.as_matrix_for_shader())
             .collect();
-        _ = active_shader.set_uniform("bones_quat", matrices_quat.as_slice());
+        let quat_res = active_shader.set_uniform("bones_quat", matrices_quat.as_slice());
+
+        match (matrices_res, quat_res) {
+            (Err(mat_err), Err(quat_err)) => {
+                return Err(DrawError::SetUniform {
+                    mat: mat_err,
+                    quat: quat_err,
+                });
+            }
+            _ => { //if one or both succeed, we're happy
+            }
+        }
 
         for mesh in &self.meshes {
             mesh.draw(active_shader, active_framebuffer)
@@ -120,6 +135,19 @@ impl EntityInner for SkinningCubic {
 
     fn skeleton(&self) -> &Skeleton {
         &self.skeleton
+    }
+
+    fn vertex_transform<'a, T>(
+        &'a self,
+        calc_anim: &'a CalculatedAnimation,
+    ) -> <Self::BoundingBox<T> as crate::modelling::Collision>::VertexTransform<'a> {
+    }
+
+    fn box_transform<'a, T>(
+        &'a self,
+        calc_anim: &'a CalculatedAnimation,
+    ) -> <Self::BoundingBox<T> as crate::modelling::Collision>::Transform<'a> {
+        (&self.skeleton, calc_anim)
     }
 
     fn draw<'a, 'b, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(

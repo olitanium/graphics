@@ -6,9 +6,21 @@ use graphics::linear_algebra::Vector;
 use graphics::{ActiveShaderProgram, Model};
 
 use crate::modelling::cubic::CalculatedAnimation;
-use crate::modelling::{Collision, CubicVertex, Skeleton};
+use crate::modelling::{Collision, CubicVertex, ExtendedVertex, Skeleton};
 
-pub trait EntityInner: Sized + Model
+pub trait ExtendedModel: Model
+where
+    Self::Vertex: ExtendedVertex,
+{
+}
+impl<T> ExtendedModel for T
+where
+    T: Model,
+    T::Vertex: ExtendedVertex,
+{
+}
+
+pub trait EntityInner: Sized + ExtendedModel
 where
     Self::Vertex: CubicVertex,
 {
@@ -24,6 +36,16 @@ where
     ) -> Option<Self::BoundingBox<T>>;
 
     fn skeleton(&self) -> &Skeleton;
+
+    fn box_transform<'a, T>(
+        &'a self,
+        calc_anim: &'a CalculatedAnimation,
+    ) -> <Self::BoundingBox<T> as Collision>::Transform<'a>;
+
+    fn vertex_transform<'a, T>(
+        &'a self,
+        calc_anim: &'a CalculatedAnimation,
+    ) -> <Self::BoundingBox<T> as Collision>::VertexTransform<'a>;
 
     fn draw<'a, 'b, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,

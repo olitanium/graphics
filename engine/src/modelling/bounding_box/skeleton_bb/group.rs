@@ -63,8 +63,13 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
     }
 }
 
-impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: FnMut() -> ColourRGBA>
-    Draw for Group<'a, 1, D, V, T, F>
+impl<
+    'a,
+    D: FramebufferWithDepth<1, Tex = FlatTexture>,
+    V: CubicVertex,
+    T: 'static,
+    F: FnMut() -> ColourRGBA,
+> Draw for Group<'a, 1, D, V, T, F>
 {
     fn draw_sized(
         self,
@@ -72,7 +77,7 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
         marker: &mut ShaderProgramContext,
     ) -> DrawOut {
         let mut active_framebuffer = self.framebuffer.bind(register);
-        let mut active_shader = BoundingBoxElement::<V, 3, T>::shader_program().use_program(marker);
+        let mut active_shader = BoundingBoxElement::<V, T>::shader_program().use_program(marker);
 
         active_shader
             .set_uniform("projtimesview", &self.look_at)

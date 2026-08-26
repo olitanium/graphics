@@ -14,7 +14,7 @@ use super::material::Material;
 use super::{Mesh, Skeleton, import};
 use crate::entity::EntityInner;
 use crate::modelling::cubic::{CalculatedAnimation, mesh};
-use crate::modelling::{BoundingBox, SimpleVertex};
+use crate::modelling::{BoundingBox, ExtendedVertex, SimpleVertex};
 
 mod group;
 pub use group::Group;
@@ -102,7 +102,7 @@ impl SimpleCubic {
 }
 
 impl EntityInner for SimpleCubic {
-    type BoundingBox<T> = BoundingBox<<SimpleCubic as Model>::Vertex, 3, T>;
+    type BoundingBox<T> = BoundingBox<<SimpleCubic as Model>::Vertex, T>;
     type DrawError<'a> = DrawError<'a>;
 
     fn make_bounding_box<
@@ -119,6 +119,20 @@ impl EntityInner for SimpleCubic {
 
     fn skeleton(&self) -> &Skeleton {
         Skeleton::just_root()
+    }
+
+    fn vertex_transform<'a, T>(
+        &'a self,
+        calc_anim: &'a CalculatedAnimation,
+    ) -> <Self::BoundingBox<T> as crate::modelling::Collision>::VertexTransform<'a> {
+        calc_anim.root()
+    }
+
+    fn box_transform<'a, T>(
+        &'a self,
+        calc_anim: &'a CalculatedAnimation,
+    ) -> <Self::BoundingBox<T> as crate::modelling::Collision>::Transform<'a> {
+        calc_anim.root()
     }
 
     fn draw<'a, 'b, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(

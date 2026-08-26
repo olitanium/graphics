@@ -17,19 +17,18 @@ use crate::modelling::{BoundingBox, BoundingBoxElement, ExtendedVertex, Volume};
 pub struct Group<
     'a,
     const OUT: usize,
-    const DIMS: usize,
     D: FramebufferWithDepth<OUT, Tex = FlatTexture>,
-    V: ExtendedVertex<DIMS>,
-    T: Transform<Vector<DIMS>>,
+    V: ExtendedVertex,
+    T: Transform<Vector<{ V::LEN }>>,
     Bt,
     F: FnMut() -> ColourRGBA,
 > where
-    BoundingBoxElement<V, DIMS, Bt>: BoundingBoxShaderProgram<DIMS>,
-    T: Transform<Vector<DIMS>>,
-    Vector<DIMS>: Volume<DIMS>,
+    BoundingBoxElement<V, Bt>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
+    T: Transform<Vector<{ V::LEN }>>,
+    Vector<{ V::LEN }>: Volume + Vertex,
 {
     framebuffer: &'a D,
-    bounding_box: &'a BoundingBox<V, DIMS, Bt>,
+    bounding_box: &'a BoundingBox<V, Bt>,
     transform: T,
     look_at: Matrix<4, 4>,
     level: usize,
@@ -38,21 +37,20 @@ pub struct Group<
 
 impl<
     'a,
-    const DIMS: usize,
     D: FramebufferWithDepth<1, Tex = FlatTexture>,
-    V: ExtendedVertex<DIMS>,
+    V: ExtendedVertex,
     Bt,
     T,
     F: FnMut() -> ColourRGBA,
-> Group<'a, 1, DIMS, D, V, T, Bt, F>
+> Group<'a, 1, D, V, T, Bt, F>
 where
-    BoundingBoxElement<V, DIMS, Bt>: BoundingBoxShaderProgram<DIMS>,
-    T: Transform<Vector<DIMS>>,
-    Vector<DIMS>: Volume<DIMS>,
+    BoundingBoxElement<V, Bt>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
+    T: Transform<Vector<{ V::LEN }>>,
+    Vector<{ V::LEN }>: Volume,
 {
     pub fn new<P: CameraPose>(
         framebuffer: &'a D,
-        bounding_box: &'a BoundingBox<V, DIMS, Bt>,
+        bounding_box: &'a BoundingBox<V, Bt>,
         transform: T,
         camera: &Camera<P>,
         hint: &P::Hint,
@@ -73,17 +71,16 @@ where
 
 impl<
     'a,
-    const DIMS: usize,
     D: FramebufferWithDepth<1, Tex = FlatTexture>,
-    V: ExtendedVertex<DIMS>,
+    V: ExtendedVertex,
     T,
     Bt,
     F: FnMut() -> ColourRGBA,
-> Draw for Group<'a, 1, DIMS, D, V, T, Bt, F>
+> Draw for Group<'a, 1, D, V, T, Bt, F>
 where
-    Vector<DIMS>: Volume<DIMS>,
-    T: Transform<Vector<DIMS>>,
-    BoundingBoxElement<V, DIMS, Bt>: BoundingBoxShaderProgram<DIMS>,
+    Vector<{ V::LEN }>: Volume,
+    T: Transform<Vector<{ V::LEN }>>,
+    BoundingBoxElement<V, Bt>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
 {
     fn draw_sized(
         self,
@@ -91,8 +88,7 @@ where
         marker: &mut ShaderProgramContext,
     ) -> DrawOut {
         let mut active_framebuffer = self.framebuffer.bind(register);
-        let mut active_shader =
-            BoundingBoxElement::<V, DIMS, Bt>::shader_program().use_program(marker);
+        let mut active_shader = BoundingBoxElement::<V, Bt>::shader_program().use_program(marker);
 
         active_shader
             .set_uniform("projtimesview", &self.look_at)

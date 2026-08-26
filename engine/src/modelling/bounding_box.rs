@@ -20,7 +20,12 @@ mod group;
 pub use group::Group as BoundingBoxGroup;
 
 mod skeleton_bb;
-pub use skeleton_bb::{DrawError as SkeletonBbDrawError, SkeletonBb, SkeletonBbGroup};
+pub use skeleton_bb::{
+    DrawError as SkeletonBbDrawError,
+    MakePreferredTransformFromSkeleton,
+    SkeletonBb,
+    SkeletonBbGroup,
+};
 
 pub mod collision;
 pub use collision::{Collision, no_alter_meta};
@@ -37,18 +42,18 @@ pub struct BoundingBox<V: ExtendedVertex, T> {
     inner: Vec<BoundingBoxElement<V, T>>,
 }
 
-impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T> {
-    fn get(&self, index: usize) -> &BoundingBoxElement<V, DIMS, T> {
+impl<V: ExtendedVertex, T> BoundingBox<V, T> {
+    fn get(&self, index: usize) -> &BoundingBoxElement<V, T> {
         &self.inner[index]
     }
 
-    fn root_element(&self) -> &BoundingBoxElement<V, DIMS, T> {
+    fn root_element(&self) -> &BoundingBoxElement<V, T> {
         self.inner
             .last()
             .expect("guaranteed at least one element, or the BB create function would return None")
     }
 
-    pub(crate) fn new_from_vec_indexes<F: FnMut(&[(Vector<DIMS>, [V; 3])]) -> T>(
+    pub(crate) fn new_from_vec_indexes<F: FnMut(&[(Vector<{ V::LEN }>, [V; 3])]) -> T>(
         vectors: Vec<V>,
         triangles: &[[usize; 3]],
         depth: usize,
@@ -64,7 +69,7 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T> {
 
     pub(crate) fn new_from_triangles<
         I: IntoIterator<Item = [V; 3]>,
-        F: FnMut(&[(Vector<DIMS>, [V; 3])]) -> T,
+        F: FnMut(&[(Vector<{ V::LEN }>, [V; 3])]) -> T,
     >(
         triangles: I,
         depth: usize,
@@ -97,52 +102,52 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T> {
         })
     }
 
-    pub fn encloses_point(&self, point: Vector<DIMS>) -> bool {
+    pub fn encloses_point(&self, point: Vector<{ V::LEN }>) -> bool {
         self.root_element().encloses_point_and_children(self, point)
     }
 
-    pub fn temp_make_really_big(self) -> Self {
-        let Self {
-            triangles,
-            mut inner,
-        } = self;
-        let current = mem::replace(
-            &mut inner.first_mut().unwrap().children_or_meta,
-            ChildrenOrMeta::Children([0, 0]),
-        );
-        let ChildrenOrMeta::Meta(refcell) = current else {
-            panic!("no meta")
-        };
-        let new_inner = BoundingBoxElement {
-            lower_bound: vector![-1000.0; DIMS],
-            upper_bound: vector![1000.0; DIMS],
-            children_or_meta: ChildrenOrMeta::Meta(refcell),
-            start_index: 0,
-            len: triangles.len(),
-            triangles: PhantomData,
-        };
-
-        Self {
-            triangles,
-            inner: vec![new_inner],
-        }
-    }
+    // pub fn temp_make_really_big(self) -> Self {
+    // let Self {
+    // triangles,
+    // mut inner,
+    // } = self;
+    // let current = mem::replace(
+    // &mut inner.first_mut().unwrap().children_or_meta,
+    // ChildrenOrMeta::Children([0, 0]),
+    // );
+    // let ChildrenOrMeta::Meta(refcell) = current else {
+    // panic!("no meta")
+    // };
+    // let new_inner = BoundingBoxElement {
+    // lower_bound: vector![-1000.0;{V::LEN}],
+    // upper_bound: vector![1000.0;{V::LEN}],
+    // children_or_meta: ChildrenOrMeta::Meta(refcell),
+    // start_index: 0,
+    // len: triangles.len(),
+    // triangles: PhantomData,
+    // };
+    //
+    // Self {
+    // triangles,
+    // inner: vec![new_inner],
+    // }
+    // }
 }
 
-impl<V: ExtendedVertex<LEN = 3>, T> BoundingBox<V, 3, T> {
+impl<V: ExtendedVertex<LEN = 3>, T> BoundingBox<V, T> {
     fn detect_collision<
-        'a,
-        'b,
         V2: ExtendedVertex<LEN = 3>,
         U,
-        F: FnMut(&mut T, &mut U),
-        P: Transform<V> + Transform<Vector<3>>,
-        P2: Transform<V2> + Transform<Vector<3>>,
+        F: FnMut(&mut T, &mut U) -> bool,
+        P: Transform<Vector<3>>,
+        P2: Transform<Vector<3>>,
     >(
-        lhs: &'a Self,
-        lhs_pose: P,
-        rhs: &'b BoundingBox<V2, 3, U>,
-        rhs_pose: P2,
+        lhs: &Self,
+        lhs_pose: &P,
+        lhs_vertex_transform: &<V as ExtendedVertex>::PreferredTransform<'_>,
+        rhs: &BoundingBox<V2, U>,
+        rhs_pose: &P2,
+        rhs_vertex_transform: &<V2 as ExtendedVertex>::PreferredTransform<'_>,
         mut alter_meta: F,
     ) -> Option<Vec<([V; 3], [V2; 3])>>
 where {
@@ -150,10 +155,12 @@ where {
         BoundingBoxElement::overlaps_bounding_box_and_children(
             lhs.root_element(),
             lhs,
-            &lhs_pose,
+            lhs_pose,
+            lhs_vertex_transform,
             rhs.root_element(),
             rhs,
-            &rhs_pose,
+            rhs_pose,
+            rhs_vertex_transform,
             &mut alter_meta,
             &mut output,
         );
@@ -166,25 +173,26 @@ where {
     }
 }
 
-impl<V: ExtendedVertex, T> BoundingBox<V, DIMS, T> {
-    pub fn triangles<'a>(
-        &'a self,
-        element: &'a BoundingBoxElement<V, DIMS, T>,
-    ) -> &'a [(Vector<DIMS>, [V; 3])] {
-        let lower_bound = element.start_index;
-        let upper_bound = element.start_index + element.len;
-        &self.triangles[lower_bound..upper_bound]
-    }
-}
+// impl<V: ExtendedVertex, T> BoundingBox<V, T> {
+// pub fn triangles<'a>(
+// &'a self,
+// element: &'a BoundingBoxElement<V, T>,
+// ) -> &'a [(Vector<{ V::LEN }>, [V; 3])] {
+// let lower_bound = element.start_index;
+// let upper_bound = element.start_index + element.len;
+// &self.triangles[lower_bound..upper_bound]
+// }
+// }
 
-impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBox<V, DIMS, T>
+impl<V: ExtendedVertex, T> BoundingBox<V, T>
 where
-    BoundingBoxElement<V, DIMS, T>: BoundingBoxShaderProgram<DIMS>,
-    Vector<DIMS>: Volume<DIMS>,
+    BoundingBoxElement<V, T>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
+    Vector<{ <BoundingBoxElement<V, T> as BoundingBoxShaderProgram>::DIMS }>: Vertex,
+    Vector<{ V::LEN }>: Volume,
 {
     pub(crate) fn draw<
         'a,
-        P: Transform<Vector<DIMS>>,
+        P: Transform<Vector<{ V::LEN }>>,
         D: FramebufferWithDepth<1, Tex = FlatTexture>,
         F: FnMut() -> ColourRGBA,
     >(
@@ -195,7 +203,7 @@ where
             'a,
             '_,
             '_,
-            VertexArray<Vector<DIMS>>,
+            VertexArray<Vector<{ V::LEN }>>,
             (),
             D::Tex,
             1,
@@ -214,7 +222,7 @@ where
     }
 }
 
-impl<T> BoundingBox<SimpleVertex, 3, T> {
+impl<T> BoundingBox<SimpleVertex, T> {
     pub fn from_cubic<F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
         model: &SkeletonCubic,
         depth: usize,
@@ -225,52 +233,61 @@ impl<T> BoundingBox<SimpleVertex, 3, T> {
     }
 }
 
-impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, 3, TThis> {
+impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, TThis> {
     type FuncInputs = ();
     type Meta = TThis;
     type Transform<'a> = Pose;
     type Vertex = VThis;
+    type VertexTransform<'a> = VThis::PreferredTransform<'a>;
 
     fn collides_with_cubic_primitive<
-        'a,
-        'b,
         V: CubicVertex,
-        U,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, &mut U),
+        T,
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, &mut T) -> bool,
     >(
-        &'a self,
-        transform: Self::Transform<'_>,
-        target: &'b BoundingBox<V, 3, U>,
-        target_transform: Pose,
+        &self,
+        self_transform: &Self::Transform<'_>,
+        self_vertex_transform: &Self::VertexTransform<'_>,
+        target: &BoundingBox<V, T>,
+        target_transform: &<BoundingBox<V, T> as Collision>::Transform<'_>,
+        target_vertex_transform: &<BoundingBox<V, T> as Collision>::VertexTransform<'_>,
         mut alter_meta: F,
     ) -> Option<
         Vec<(
             [Self::Vertex; 3],
-            [<BoundingBox<V, 3, U> as Collision>::Vertex; 3],
+            [<BoundingBox<V, T> as Collision>::Vertex; 3],
         )>,
     > {
-        Self::detect_collision(self, transform, target, target_transform, |x, y| {
-            alter_meta((), x, y)
-        })
+        Self::detect_collision(
+            self,
+            self_transform,
+            self_vertex_transform,
+            target,
+            target_transform,
+            target_vertex_transform,
+            |x, y| alter_meta((), x, y),
+        )
     }
 
     fn collides<
-        'a,
-        'b,
         T: Collision + ?Sized,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
     >(
-        &'a self,
-        self_transform: Self::Transform<'_>,
-        target: &'b T,
-        target_transform: T::Transform<'_>,
+        &self,
+        self_transform: &Self::Transform<'_>,
+        self_vertex_transform: &Self::VertexTransform<'_>,
+        target: &T,
+        target_transform: &T::Transform<'_>,
+        target_vertex_transform: &T::VertexTransform<'_>,
         mut alter_meta: F,
     ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>> {
         target
             .collides_with_cubic_primitive(
                 target_transform,
+                target_vertex_transform,
                 self,
                 self_transform,
+                self_vertex_transform,
                 |target_input, target_meta, self_meta| {
                     alter_meta((), self_meta, target_input, target_meta)
                 },
@@ -280,14 +297,18 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, 3, TThis> {
 }
 
 // Can I remove or change DIMS?
-pub trait BoundingBoxShaderProgram<const DIMS: usize>: Model + Sized
+pub trait BoundingBoxShaderProgram: Model + Sized
 where
-    Vector<DIMS>: Vertex,
+    Vector<{ Self::DIMS }>: Vertex,
 {
-    fn shader_program() -> &'static ShaderProgram<VertexArray<Vector<DIMS>>, (), 1, FlatTexture>;
+    type const DIMS: usize;
+    fn shader_program()
+    -> &'static ShaderProgram<VertexArray<Vector<{ Self::DIMS }>>, (), 1, FlatTexture>;
 }
 
-impl<V: ExtendedVertex<3>, T> BoundingBoxShaderProgram<3> for BoundingBoxElement<V, 3, T> {
+impl<V: ExtendedVertex<LEN = 3>, T: 'static> BoundingBoxShaderProgram for BoundingBoxElement<V, T> {
+    type const DIMS: usize = 3;
+
     fn shader_program() -> &'static ShaderProgram<VertexArray<Vector<3>>, (), 1, FlatTexture> {
         static SHADER_PROGRAM: LazyLock<ShaderProgram<VertexArray<Vector<3>>, (), 1, FlatTexture>> =
             LazyLock::new(|| {
@@ -304,27 +325,21 @@ impl<V: ExtendedVertex<3>, T> BoundingBoxShaderProgram<3> for BoundingBoxElement
     }
 }
 
-// impl TempModelTransform for Pose {
-// fn get_root_pose(&self) -> Pose {
-// self
-// }
-// }
-
 mod test {
     use graphics::linear_algebra::Vector;
 
     use crate::modelling::{BoundingBoxElement, ExtendedVertex};
 
     #[allow(dead_code)]
-    fn default<const DIMS: usize, V: ExtendedVertex<DIMS>, T: Default>()
-    -> BoundingBoxElement<V, DIMS, T> {
+    fn default<V: ExtendedVertex, T: Default>() -> BoundingBoxElement<V, T> {
         BoundingBoxElement {
             lower_bound: -Vector::X,
             upper_bound: Vector::X,
-            start_index: 0,
-            len: 0,
-            triangles: Default::default(),
-            children_or_meta: super::element::ChildrenOrMeta::Meta(Default::default()),
+            children_or_meta: super::element::ChildrenOrMeta::Meta {
+                meta: Default::default(),
+                triangle_len: 0,
+                triangle_start: 0,
+            },
         }
     }
 
@@ -367,16 +382,16 @@ mod test {
 
         use crate::modelling::bounding_box::BoundingBoxElement;
 
-        let bounding_box = BoundingBoxElement::<Vector<2>, _, ()> {
+        let bounding_box = BoundingBoxElement::<Vector<2>, ()> {
             upper_bound: Vector::new([1.0, 1.0]),
             lower_bound: Vector::new([-1.0, -1.0]),
-            ..default()
+            ..default::<Vector<2>, _>()
         };
 
-        let other_box = BoundingBoxElement::<Vector<2>, _, ()> {
+        let other_box = BoundingBoxElement::<Vector<2>, ()> {
             upper_bound: Vector::new([2.0, 0.5]),
             lower_bound: Vector::new([-2.0, -0.5]),
-            ..default()
+            ..default::<Vector<2>, _>()
         };
 
         assert!(bounding_box.overlaps_bounding_box_single(&NoTransform, &other_box, &NoTransform));

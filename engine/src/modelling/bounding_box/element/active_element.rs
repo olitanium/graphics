@@ -4,6 +4,7 @@ use std::{array, cmp};
 
 use geometry::{Transform, TransformBy};
 use graphics::linear_algebra::Vector;
+use multi_zip::MultiZip;
 use zip_with::ArrayZipWith;
 
 use super::ChildrenOrMeta;
@@ -12,16 +13,24 @@ use crate::modelling::bounding_box::BoundingBoxElement;
 use crate::modelling::bounding_box::element::{make_bound, make_bound_inner};
 use crate::modelling::extended_vertex::ExtendedVertex;
 
-pub(crate) enum InnerChildrenOrMeta<'a, V: ExtendedVertex<DIMS>, const DIMS: usize, T> {
-    Meta(RefMut<'a, T>),
-    Children([&'a BoundingBoxElement<V, DIMS, T>; 2]),
+// pub(crate) struct ActiveBoundingBoxElement<'a, V, const DIMS: usize, T> {
+// element: &'a BoundingBoxElement<V, DIMS, T>,
+// transform: &'a
+// }
+
+pub(crate) enum InnerChildrenOrMeta<'a, V: ExtendedVertex, T> {
+    Meta {
+        meta: RefMut<'a, T>,
+        triangles: &'a [(Vector<{ V::LEN }>, [V; 3])],
+    },
+    Children([&'a BoundingBoxElement<V, T>; 2]),
 }
 
-impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T> {
-    pub fn transform_by<P: Transform<Vector<DIMS>>>(
+impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
+    pub fn transform_by<P: Transform<Vector<{ V::LEN }>>>(
         &self,
         pose: &P,
-    ) -> (Vector<DIMS>, Vector<DIMS>) {
+    ) -> (Vector<{ V::LEN }>, Vector<{ V::LEN }>) {
         let all_vertices: Vec<_> =
             permutations(self.lower_bound.into_inner(), self.upper_bound.into_inner())
                 .map(|arr| {
@@ -43,6 +52,7 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
         .transpose()
         .expect(EXPECT_MESSAGE);
 
+        // TODO: replace when assertion success
         let lower_bounds_new = all_vertices
             .iter()
             .map(|x| x.into_inner())
@@ -63,46 +73,68 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
 
         (Vector::new(lower_bounds), Vector::new(upper_bounds))
     }
+}
 
+fn collides_with_upper_lower<const N: usize>(
+    self_upper_bound: Vector<N>,
+    self_lower_bound: Vector<N>,
+    other_lower_bound: Vector<N>,
+    other_upper_bound: Vector<N>,
+) -> bool {
+    MultiZip::new([
+        self_lower_bound,
+        self_upper_bound,
+        other_lower_bound,
+        other_upper_bound,
+    ])
+    .map(|[one_lb, one_ub, two_lb, two_ub]| TestBoxVertex {
+        one_lb,
+        one_ub,
+        two_lb,
+        two_ub,
+    })
+    .all(line_overlap)
+}
+
+impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
     pub fn overlaps_bounding_box_single<
         U,
-        V2: ExtendedVertex<DIMS>,
-        P: Transform<Vector<DIMS>>,
-        P2: Transform<Vector<DIMS>>,
+        V2: ExtendedVertex<LEN = { V::LEN }>,
+        P: Transform<Vector<{ V::LEN }>>,
+        P2: Transform<Vector<{ V2::LEN }>>,
     >(
         &self,
         self_transform: &P,
-        other: &BoundingBoxElement<V2, DIMS, U>,
+        other: &BoundingBoxElement<V2, U>,
         other_transform: &P2,
     ) -> bool {
-        // let self_lower_bound = self_transform.transform(&self.lower_bound);
-        // let self_upper_bound = self_transform.transform(&self.upper_bound);
-        // let other_lower_bound = other_transform.transform(&other.lower_bound);
-        // let other_upper_bound = other_transform.transform(&other.upper_bound);
-
         let (self_lower_bound, self_upper_bound) = self.transform_by(self_transform);
         let (other_lower_bound, other_upper_bound) = other.transform_by(other_transform);
 
-        let lines: [_; DIMS] = array::from_fn(|index| {
-            let one_lb = self_lower_bound[index];
-            let one_ub = self_upper_bound[index];
-            let two_lb = other_lower_bound[index];
-            let two_ub = other_upper_bound[index];
+        // let lines: [_; V::LEN] = array::from_fn(|index| {
+        // let one_lb = self_lower_bound[index];
+        // let one_ub = self_upper_bound[index];
+        // let two_lb = other_lower_bound[index];
+        // let two_ub = other_upper_bound[index];
+        //
+        // TestBoxVertex {
+        // one_lb,
+        // one_ub,
+        // two_lb,
+        // two_ub,
+        // }
+        // });
+        // .all(line_overlap)
 
-            TestBoxVertex {
-                one_lb,
-                one_ub,
-                two_lb,
-                two_ub,
-            }
-        });
-
-        // TODO: MultiZip self, and other.
-
-        lines.into_iter().all(line_overlap)
+        collides_with_upper_lower(
+            self_upper_bound,
+            self_lower_bound,
+            other_lower_bound,
+            other_upper_bound,
+        )
     }
 
-    pub fn encloses_point_single(&self, point: Vector<DIMS>) -> bool {
+    pub fn encloses_point_single(&self, point: Vector<{ V::LEN }>) -> bool {
         let offset_from_minimum = point - self.lower_bound; // if in, all positive
         let offset_from_maximum = self.upper_bound - point; // if in, all positive
 
@@ -112,8 +144,8 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
 
     pub fn encloses_point_and_children(
         &self,
-        bounding_box: &BoundingBox<V, DIMS, T>,
-        point: Vector<DIMS>,
+        bounding_box: &BoundingBox<V, T>,
+        point: Vector<{ V::LEN }>,
     ) -> bool {
         let is_in = self.encloses_point_single(point);
 
@@ -128,7 +160,7 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
     }
 }
 
-impl<V: ExtendedVertex<3>, T> BoundingBoxElement<V, 3, T> {
+impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
     pub fn intersects_triangle<P>(&self, transform: &P, triangle: &[Vector<3>; 3]) -> bool
     where
         P: Transform<Vector<3>>,
@@ -139,40 +171,47 @@ impl<V: ExtendedVertex<3>, T> BoundingBoxElement<V, 3, T> {
 
         let (self_lower_bound, self_upper_bound) = self.transform_by(transform);
 
-        let lines: [_; 3] = array::from_fn(|index| {
-            let one_lb = self_lower_bound[index];
-            let one_ub = self_upper_bound[index];
-            let two_lb = other_lower_bound[index];
-            let two_ub = other_upper_bound[index];
+        // let lines: [_; 3] = array::from_fn(|index| {
+        // let one_lb = self_lower_bound[index];
+        // let one_ub = self_upper_bound[index];
+        // let two_lb = other_lower_bound[index];
+        // let two_ub = other_upper_bound[index];
+        //
+        // TestBoxVertex {
+        // one_lb,
+        // one_ub,
+        // two_lb,
+        // two_ub,
+        // }
+        // });
+        //
+        // lines.into_iter().all(line_overlap)
 
-            TestBoxVertex {
-                one_lb,
-                one_ub,
-                two_lb,
-                two_ub,
-            }
-        });
-
-        // TODO: MultiZip self, and other.
-
-        lines.into_iter().all(line_overlap)
+        collides_with_upper_lower(
+            self_upper_bound,
+            self_lower_bound,
+            other_lower_bound,
+            other_upper_bound,
+        )
     }
 
     pub fn overlaps_bounding_box_and_children<
-        'a,
-        'b,
-        V2: ExtendedVertex<3>,
+        V2: ExtendedVertex<LEN = { V::LEN }>,
         U,
-        P: Transform<V> + Transform<Vector<3>>,
-        P2: Transform<V2> + Transform<Vector<3>>,
-        F: FnMut(&mut T, &mut U),
+        P: Transform<Vector<3>>,
+        VP: Transform<V>,
+        P2: Transform<Vector<3>>,
+        VP2: Transform<V2>,
+        F: FnMut(&mut T, &mut U) -> bool,
     >(
-        this: &'a Self,
-        this_boundingbox: &'a BoundingBox<V, 3, T>,
+        this: &Self,
+        this_boundingbox: &BoundingBox<V, T>,
         this_transform: &P,
-        other: &'b BoundingBoxElement<V2, 3, U>,
-        other_boundingbox: &'b BoundingBox<V2, 3, U>,
+        this_vertex_transform: &VP,
+        other: &BoundingBoxElement<V2, U>,
+        other_boundingbox: &BoundingBox<V2, U>,
         other_transform: &P2,
+        other_vertex_transform: &VP2,
         alter_meta: &mut F,
         accumulator: &mut Vec<([V; 3], [V2; 3])>,
     ) {
@@ -198,70 +237,84 @@ impl<V: ExtendedVertex<3>, T> BoundingBoxElement<V, 3, T> {
                         new_this,
                         this_boundingbox,
                         this_transform,
+                        this_vertex_transform,
                         new_other,
                         other_boundingbox,
                         other_transform,
+                        other_vertex_transform,
                         alter_meta,
                         accumulator,
                     )
                 }),
+                (_, InnerChildrenOrMeta::Children([otherleft, otherright])) => {
+                    [(this, otherleft), (this, otherright)]
+                        .into_iter()
+                        .for_each(|(new_this, new_other)| {
+                            Self::overlaps_bounding_box_and_children(
+                                new_this,
+                                this_boundingbox,
+                                this_transform,
+                                this_vertex_transform,
+                                new_other,
+                                other_boundingbox,
+                                other_transform,
+                                other_vertex_transform,
+                                alter_meta,
+                                accumulator,
+                            )
+                        })
+                }
+                (InnerChildrenOrMeta::Children([thisleft, thisright]), _) => {
+                    [(thisleft, other), (thisright, other)]
+                        .into_iter()
+                        .for_each(|(new_this, new_other)| {
+                            Self::overlaps_bounding_box_and_children(
+                                new_this,
+                                this_boundingbox,
+                                this_transform,
+                                this_vertex_transform,
+                                new_other,
+                                other_boundingbox,
+                                other_transform,
+                                other_vertex_transform,
+                                alter_meta,
+                                accumulator,
+                            )
+                        })
+                }
                 (
-                    InnerChildrenOrMeta::Meta(_),
-                    InnerChildrenOrMeta::Children([otherleft, otherright]),
-                ) => [(this, otherleft), (this, otherright)]
-                    .into_iter()
-                    .for_each(|(new_this, new_other)| {
-                        Self::overlaps_bounding_box_and_children(
-                            new_this,
-                            this_boundingbox,
-                            this_transform,
-                            new_other,
-                            other_boundingbox,
-                            other_transform,
-                            alter_meta,
-                            accumulator,
-                        )
-                    }),
-                (
-                    InnerChildrenOrMeta::Children([thisleft, thisright]),
-                    InnerChildrenOrMeta::Meta(_),
-                ) => [(thisleft, other), (thisright, other)]
-                    .into_iter()
-                    .for_each(|(new_this, new_other)| {
-                        Self::overlaps_bounding_box_and_children(
-                            new_this,
-                            this_boundingbox,
-                            this_transform,
-                            new_other,
-                            other_boundingbox,
-                            other_transform,
-                            alter_meta,
-                            accumulator,
-                        )
-                    }),
-                (InnerChildrenOrMeta::Meta(mut lhs), InnerChildrenOrMeta::Meta(mut rhs)) => {
-                    alter_meta(&mut *lhs, &mut *rhs);
-
-                    let this_triangles = this.get_triangles(this_boundingbox);
-                    let other_triangles = other.get_triangles(other_boundingbox);
-
+                    InnerChildrenOrMeta::Meta {
+                        meta: mut lhs,
+                        triangles: this_triangles,
+                    },
+                    InnerChildrenOrMeta::Meta {
+                        meta: mut rhs,
+                        triangles: other_triangles,
+                    },
+                ) => {
+                    // shortcut to say "don't bother testing triangles"
+                    if !alter_meta(&mut *lhs, &mut *rhs) {
+                        return;
+                    }
                     // compare all triangles in this with all triangles in other.
 
                     let other_iter = other_triangles
                         .iter()
                         .map(|(_, tri)| {
-                            let tri_transformed =
-                                tri.each_ref().map(|vert| other_transform.transform(vert));
+                            let tri_transformed = tri
+                                .each_ref()
+                                .map(|vert| other_vertex_transform.transform(vert));
                             let positions = tri.each_ref().map(|vert| vert.position());
                             (tri_transformed, positions)
                         })
-                        .filter(|(triangle, pos)| this.intersects_triangle(this_transform, pos));
+                        .filter(|(_, pos)| this.intersects_triangle(this_transform, pos));
 
                     this_triangles
                         .iter()
                         .filter_map(|(_, tri)| {
-                            let new_this =
-                                tri.each_ref().map(|vert| this_transform.transform(vert));
+                            let new_this = tri
+                                .each_ref()
+                                .map(|vert| this_vertex_transform.transform(vert));
                             let this_pos = new_this.each_ref().map(|vert| vert.position());
 
                             if other.intersects_triangle(other_transform, &this_pos) {
@@ -281,13 +334,21 @@ impl<V: ExtendedVertex<3>, T> BoundingBoxElement<V, 3, T> {
     }
 }
 
-impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T> {
+impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
     pub(crate) fn get_children<'a>(
         &'a self,
-        bounding_box: &'a BoundingBox<V, DIMS, T>,
-    ) -> InnerChildrenOrMeta<'a, V, DIMS, T> {
+        bounding_box: &'a BoundingBox<V, T>,
+    ) -> InnerChildrenOrMeta<'a, V, T> {
         match &self.children_or_meta {
-            ChildrenOrMeta::Meta(cell) => InnerChildrenOrMeta::Meta(cell.borrow_mut()),
+            ChildrenOrMeta::Meta {
+                meta: cell,
+                triangle_start,
+                triangle_len,
+            } => InnerChildrenOrMeta::Meta {
+                meta: cell.borrow_mut(),
+                triangles: &bounding_box.triangles
+                    [*triangle_start..(*triangle_start + *triangle_len)],
+            },
             ChildrenOrMeta::Children(children) => {
                 InnerChildrenOrMeta::Children(children.map(|index| bounding_box.get(index)))
             }

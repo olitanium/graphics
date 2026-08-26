@@ -1,3 +1,4 @@
+use geometry::Pose;
 use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
@@ -10,14 +11,22 @@ use utils::error_boilerplate;
 // use crate::modelling::bounding_box::collision::TempModelTransform;
 use crate::modelling::bounding_box::element::DrawRecursiveError;
 use crate::modelling::cubic::{CalculatedAnimation, GetAnimationError, SkeletonBoneIndex};
-use crate::modelling::{BoundingBox, Collision, CubicVertex, Skeleton};
+use crate::modelling::{
+    BoundingBox,
+    Collision,
+    CubicVertex,
+    ExtendedVertex,
+    SimpleVertex,
+    SkeletalVertex,
+    Skeleton,
+};
 
 mod group;
 pub use group::Group as SkeletonBbGroup;
 
 #[derive(Debug, Clone)]
 pub struct SkeletonBb<V: CubicVertex, T> {
-    per_bone: Vec<BoundingBox<V, 3, T>>,
+    per_bone: Vec<BoundingBox<V, T>>,
 }
 
 impl<V: CubicVertex, T> SkeletonBb<V, T> {
@@ -36,13 +45,13 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
         })
     }
 
-    pub fn from_single(bbox: BoundingBox<V, 3, T>) -> Self {
+    pub fn from_single(bbox: BoundingBox<V, T>) -> Self {
         Self {
             per_bone: vec![bbox],
         }
     }
 
-    pub fn debug_get_first(&self) -> &BoundingBox<V, 3, T> {
+    pub fn debug_get_first(&self) -> &BoundingBox<V, T> {
         self.per_bone.first().unwrap()
     }
 }
@@ -107,7 +116,7 @@ pub enum DrawError<'a> {
 
 error_boilerplate!(<'a> DrawError<'a>);
 
-impl<V: CubicVertex, T> SkeletonBb<V, T> {
+impl<V: CubicVertex, T: 'static> SkeletonBb<V, T> {
     pub(crate) fn draw<
         'a,
         D: FramebufferWithDepth<1, Tex = FlatTexture>,
@@ -135,41 +144,78 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
     }
 }
 
-impl<VThis: CubicVertex, TThis> Collision for SkeletonBb<VThis, TThis> {
+pub trait MakePreferredTransformFromSkeleton: ExtendedVertex {
+    fn get_pose<'a>(
+        skeleton: &'a Skeleton,
+        calc_anim: &'a CalculatedAnimation,
+        skeleton_index: &'a SkeletonBoneIndex,
+    ) -> Option<Self::PreferredTransform<'a>>;
+}
+
+impl MakePreferredTransformFromSkeleton for SimpleVertex {
+    fn get_pose(
+        skeleton: &Skeleton,
+        calc_anim: &CalculatedAnimation,
+        skeleton_index: &SkeletonBoneIndex,
+    ) -> Option<Pose> {
+        calc_anim.get(skeleton_index, skeleton).ok()
+    }
+}
+
+impl MakePreferredTransformFromSkeleton for SkeletalVertex {
+    fn get_pose<'a>(
+        skeleton: &'a Skeleton,
+        calc_anim: &'a CalculatedAnimation,
+        _: &'a SkeletonBoneIndex,
+    ) -> Option<Self::PreferredTransform<'a>> {
+        Some((skeleton, calc_anim))
+    }
+}
+
+impl<VThis, TThis> Collision for SkeletonBb<VThis, TThis>
+where
+    VThis: CubicVertex + MakePreferredTransformFromSkeleton,
+{
     type FuncInputs = SkeletonBoneIndex;
     type Meta = TThis;
     type Transform<'a> = (&'a Skeleton, &'a CalculatedAnimation);
     type Vertex = VThis;
+    type VertexTransform<'a> = ();
 
     fn collides<
-        'a,
-        'b,
         T: Collision + ?Sized,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
     >(
-        &'a self,
-        transform: Self::Transform<'_>,
-        target: &'b T,
-        target_transform: T::Transform<'_>,
+        &self,
+        self_transform: &Self::Transform<'_>,
+        &(): &Self::VertexTransform<'_>,
+        target: &T,
+        target_transform: &T::Transform<'_>,
+        target_vertex_transform: &T::VertexTransform<'_>,
         mut alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>
-    where
-        for<'c> T::Transform<'c>: Clone,
-    {
+    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>> {
         let out = self
             .per_bone
             .iter()
             .enumerate()
             .filter_map(|(index, self_bounding_box)| {
                 let skeleton_index = SkeletonBoneIndex(index);
-                let Ok(this_transform) = transform.1.get(&skeleton_index, transform.0) else {
-                    return None;
-                };
+                let (skeleton, calc_anim) = *self_transform;
+                let this_transform = calc_anim.get(&skeleton_index, skeleton).ok()?;
+
+                let self_vertex_transform =
+                    <VThis as MakePreferredTransformFromSkeleton>::get_pose(
+                        skeleton,
+                        calc_anim,
+                        &skeleton_index,
+                    )?;
 
                 self_bounding_box.collides(
-                    this_transform,
+                    &this_transform,
+                    &self_vertex_transform,
                     target,
-                    target_transform.clone(),
+                    target_transform,
+                    target_vertex_transform,
                     |(), self_meta, target_inputs, target_meta| {
                         alter_meta(
                             skeleton_index.clone_inner(),
@@ -187,16 +233,10 @@ impl<VThis: CubicVertex, TThis> Collision for SkeletonBb<VThis, TThis> {
     }
 }
 
-impl<V: CubicVertex, T> From<BoundingBox<V, 3, T>> for SkeletonBb<V, T> {
-    fn from(value: BoundingBox<V, 3, T>) -> Self {
+impl<V: CubicVertex, T> From<BoundingBox<V, T>> for SkeletonBb<V, T> {
+    fn from(value: BoundingBox<V, T>) -> Self {
         Self {
             per_bone: vec![value],
         }
     }
 }
-
-// impl<'a> TempModelTransform for (&'a Skeleton, &'a CalculatedAnimation) {
-// fn get_root_pose(&self) -> geometry::Pose {
-// self.1.root()
-// }
-// }

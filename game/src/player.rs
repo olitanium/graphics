@@ -63,8 +63,8 @@ impl Player {
         environment: &mut SimpleEntity<()>,
         ground: &mut SimpleEntity<()>,
     ) {
-        let (_, on_box) = self.entity.move_collide_repel(environment, ());
-        let (_, on_ground) = self.entity.move_collide_repel(ground, ());
+        let (_, on_box) = self.entity.move_collide_repel(environment, &());
+        let (_, on_ground) = self.entity.move_collide_repel(ground, &());
 
         const UP: UnitVector<3> = UnitVector::Y;
         // gravity

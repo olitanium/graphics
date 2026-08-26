@@ -11,6 +11,8 @@ use super::DualNumber;
 pub type DualQuaternion = DualNumber<Quaternion>;
 
 impl DualQuaternion {
+    pub const ZERO: Self = Self::new(Quaternion::ZERO, Quaternion::ZERO);
+
     #[must_use]
     pub const fn new_transpose(scalar: DualNumber<f32>, vector: DualNumber<Vector<3>>) -> Self {
         Self {

@@ -11,7 +11,7 @@ use crate::modelling::{BoundingBox, Collision, CubicVertex, SimpleVertex, Skelet
 #[derive(Debug)]
 pub struct SimpleEntity<T> {
     pub model: SimpleCubic,
-    pub bounding_box: Option<BoundingBox<SimpleVertex, 3, T>>,
+    pub bounding_box: Option<BoundingBox<SimpleVertex, T>>,
     pub physics: SimplePhysics,
 }
 
@@ -53,9 +53,9 @@ impl<T> SimpleEntity<T> {
 
 impl<T> SimpleEntity<T> {
     #[inline]
-    pub const fn bounding_box(&self) -> Option<&BoundingBox<SimpleVertex, 3, T>>
+    pub const fn bounding_box(&self) -> Option<&BoundingBox<SimpleVertex, T>>
     where
-        Vector<3>: Volume<3>,
+        Vector<3>: Volume,
     {
         self.bounding_box.as_ref()
     }
@@ -64,48 +64,53 @@ impl<T> SimpleEntity<T> {
     pub fn move_collide_repel<B: Physics>(
         &mut self,
         other: &mut B,
-        other_transform: B::Transform<'_>,
+        other_transform: &B::Transform<'_>,
     ) -> (Option<UnitVector<3>>, Option<UnitVector<3>>)
     where
         <B as Collision>::Vertex: CubicVertex + PartialEq,
     {
-        <Self as Physics>::move_collide_repel(self, (), other, other_transform)
+        <Self as Physics>::move_collide_repel(self, &(), other, other_transform)
     }
 }
 
 impl<TThis> Collision for SimpleEntity<TThis> {
-    type FuncInputs = <BoundingBox<SimpleVertex, 3, TThis> as Collision>::FuncInputs;
-    type Meta = <BoundingBox<SimpleVertex, 3, TThis> as Collision>::Meta;
+    type FuncInputs = <BoundingBox<SimpleVertex, TThis> as Collision>::FuncInputs;
+    type Meta = <BoundingBox<SimpleVertex, TThis> as Collision>::Meta;
     type Transform<'a> = ();
-    type Vertex = <BoundingBox<SimpleVertex, 3, TThis> as Collision>::Vertex;
+    type Vertex = <BoundingBox<SimpleVertex, TThis> as Collision>::Vertex;
+    type VertexTransform<'a> = ();
 
     fn collides<
-        'a,
-        'b,
         T: Collision + ?Sized,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
     >(
-        &'a self,
-        (): Self::Transform<'_>,
-        target: &'b T,
-        target_transform: T::Transform<'_>,
+        &self,
+        _self_transform: &Self::Transform<'_>,
+        _self_vertex_transform: &Self::VertexTransform<'_>,
+        target: &T,
+        target_transform: &T::Transform<'_>,
+        target_vertex_transform: &T::VertexTransform<'_>,
         alter_meta: F,
     ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>> {
         self.bounding_box.as_ref()?.collides(
-            self.physics.pose,
+            &self.physics.pose,
+            &self.physics.pose,
             target,
             target_transform,
+            target_vertex_transform,
             alter_meta,
         )
     }
 }
 
-impl<T> ToAggregateEntity<T, SimpleCubic> for SimpleEntity<T> {
+impl<T> ToAggregateEntity<SimpleCubic> for SimpleEntity<T> {
+    type BoundingBoxInner = T;
+
     fn to_pair_model_bbox(
         self,
     ) -> (
         SimpleCubic,
-        Option<<SimpleCubic as EntityInner>::BoundingBox<T>>,
+        Option<<SimpleCubic as EntityInner>::BoundingBox<Self::BoundingBoxInner>>,
     ) {
         let Self {
             model,
@@ -116,12 +121,14 @@ impl<T> ToAggregateEntity<T, SimpleCubic> for SimpleEntity<T> {
     }
 }
 
-impl<T> ToAggregateEntity<T, SkeletonCubic> for SimpleEntity<T> {
+impl<T> ToAggregateEntity<SkeletonCubic> for SimpleEntity<T> {
+    type BoundingBoxInner = T;
+
     fn to_pair_model_bbox(
         self,
     ) -> (
         SkeletonCubic,
-        Option<<SkeletonCubic as EntityInner>::BoundingBox<T>>,
+        Option<<SkeletonCubic as EntityInner>::BoundingBox<Self::BoundingBoxInner>>,
     ) {
         let Self {
             model,

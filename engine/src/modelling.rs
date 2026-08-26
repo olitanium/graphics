@@ -39,10 +39,10 @@ pub use bounding_box::{
     BoundingBox,
     BoundingBoxGroup,
     Collision,
+    MakePreferredTransformFromSkeleton,
     SkeletonBb,
     SkeletonBbDrawError,
     SkeletonBbGroup,
-    // TempModelTransform,
 };
 
 mod extended_vertex;

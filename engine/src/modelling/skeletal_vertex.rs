@@ -1,13 +1,15 @@
-use std::array;
 use std::mem::offset_of;
+use std::{array, iter};
 
+use dual_number::DualQuaternion;
 use geometry::{Pose, TransformBy};
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
 
+use crate::modelling::cubic::CalculatedAnimation;
 use crate::modelling::extended_vertex::IncompleteVertex;
-use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex};
+use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex, Skeleton};
 
 #[derive(Debug, Clone, Copy)]
 pub struct SkeletalVertex {
@@ -42,7 +44,40 @@ impl Vertex for SkeletalVertex {
     }
 }
 
-impl ExtendedVertex<3> for SkeletalVertex {
+impl<'a> TransformBy<(&'a Skeleton, &'a CalculatedAnimation)> for SkeletalVertex {
+    fn transform_by(
+        &self,
+        &(skeleton, animation): &(&'a Skeleton, &'a CalculatedAnimation),
+    ) -> Self {
+        let mut accum = DualQuaternion::ZERO;
+        let bones = animation.poses(skeleton).unwrap();
+        for (weight, index) in iter::zip(self.bone_weights, self.bone_indices) {
+            let index = index as usize;
+            if weight == 0.0 {
+                break;
+            }
+            let bone = bones.get(index).unwrap();
+            let dual_quat = bone.into_inner().u();
+            accum = accum + dual_quat;
+        }
+
+        let unit_pose = accum.normalize();
+        let pose = Pose::new_from_dual(unit_pose);
+
+        Self {
+            position: self.position.transform_by(&pose),
+            normal: self.normal.transform_by(&pose),
+            tangent: self.tangent.transform_by(&pose),
+            ..*self
+        }
+    }
+}
+
+impl ExtendedVertex for SkeletalVertex {
+    type PreferredTransform<'a> = (&'a Skeleton, &'a CalculatedAnimation);
+
+    type const LEN: usize = 3;
+
     fn position(&self) -> Vector<3> {
         self.position
     }
@@ -52,10 +87,12 @@ impl ExtendedVertex<3> for SkeletalVertex {
         let weights = triangle.each_mut().map(|vert| {
             let weight = vert.weights.take();
 
-            weight.map_or([(0, 1.0), (0, 0.0), (0, 0.0), (0, 0.0)], |vec| {
+            const NO_WEIGHT: (usize, f32) = (0, 0.0);
+            const ONLY_ROOT: (usize, f32) = (0, 1.0);
+            weight.map_or([ONLY_ROOT, NO_WEIGHT, NO_WEIGHT, NO_WEIGHT], |vec| {
                 // while vec.push((0, 0.0)).is_ok() {}
                 // vec.try_into_array().expect("filled above")
-                vec.into_array_with(|| (0, 0.0))
+                vec.into_array_with(|| NO_WEIGHT)
             })
         });
 

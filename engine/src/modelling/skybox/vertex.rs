@@ -1,4 +1,4 @@
-use geometry::{Pose, TransformBy};
+use geometry::{NoTransform, Pose, TransformBy};
 use graphics::linear_algebra::Vector;
 use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
@@ -22,7 +22,11 @@ impl Vertex for SkyBoxVertex {
     }
 }
 
-impl ExtendedVertex<3> for SkyBoxVertex {
+impl ExtendedVertex for SkyBoxVertex {
+    type PreferredTransform<'a> = NoTransform;
+
+    type const LEN: usize = 3;
+
     fn position(&self) -> Vector<3> {
         self.0.position()
     }

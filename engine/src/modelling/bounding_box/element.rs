@@ -22,7 +22,11 @@ mod active_element;
 
 #[derive(Debug, Clone)]
 pub(crate) enum ChildrenOrMeta<T> {
-    Meta(RefCell<T>),
+    Meta {
+        meta: RefCell<T>,
+        triangle_start: usize,
+        triangle_len: usize,
+    },
     Children([usize; 2]),
 }
 
@@ -31,10 +35,8 @@ pub struct BoundingBoxElement<V: ExtendedVertex, T> {
     pub(crate) lower_bound: Vector<{ V::LEN }>,
     pub(crate) upper_bound: Vector<{ V::LEN }>,
 
-    pub(crate) triangles: PhantomData<Vec<(Vector<{ V::LEN }>, [V; 3])>>,
-    pub(crate) start_index: usize,
-    pub(crate) len: usize,
-
+    // pub(crate) triangles: PhantomData<Vec<(Vector<{ V::LEN }>, [V; 3])>>,
+    // pub(crate) start_index: usize,
     pub(crate) children_or_meta: ChildrenOrMeta<T>,
 }
 
@@ -80,10 +82,10 @@ fn make_bound<V: ExtendedVertex>(
     make_bound_inner(iter)
 }
 
-impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T> {
-    pub fn new_from_many_inner<F: FnMut(&[(Vector<DIMS>, [V; 3])]) -> T>(
+impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
+    pub fn new_from_many_inner<F: FnMut(&[(Vector<{ V::LEN }>, [V; 3])]) -> T>(
         so_far: &mut Vec<Self>,
-        triangles: &mut [(Vector<DIMS>, [V; 3])],
+        triangles: &mut [(Vector<{ V::LEN }>, [V; 3])],
         start_index: usize,
         depth: usize,
         init: &mut F,
@@ -150,18 +152,23 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
 
             match opt_children {
                 Some(children) => ChildrenOrMeta::Children(children),
-                None => ChildrenOrMeta::Meta(RefCell::new(init(triangles))),
+                None => ChildrenOrMeta::Meta {
+                    meta: RefCell::new(init(triangles)),
+                    triangle_start: start_index,
+                    triangle_len: triangles.len(),
+                },
             }
         } else {
-            ChildrenOrMeta::Meta(RefCell::new(init(triangles)))
+            ChildrenOrMeta::Meta {
+                meta: RefCell::new(init(triangles)),
+                triangle_start: start_index,
+                triangle_len: triangles.len(),
+            }
         };
 
         let destination_index = so_far.len();
 
         so_far.push(Self {
-            triangles: PhantomData,
-            start_index,
-            len: triangles.len(),
             lower_bound: lower_bounds,
             upper_bound: upper_bounds,
             children_or_meta,
@@ -172,10 +179,19 @@ impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, 
 
     pub fn get_triangles<'a>(
         &self,
-        bounding_box: &'a BoundingBox<V, DIMS, T>,
+        bounding_box: &'a BoundingBox<V, T>,
         // all_triangles: &'a [(Vector<DIMS>, [V; 3])],
-    ) -> &'a [(Vector<DIMS>, [V; 3])] {
-        &bounding_box.triangles[self.start_index..(self.start_index + self.len)]
+    ) -> Option<&'a [(Vector<{ V::LEN }>, [V; 3])]> {
+        if let ChildrenOrMeta::Meta {
+            triangle_start,
+            triangle_len,
+            ..
+        } = self.children_or_meta
+        {
+            Some(&bounding_box.triangles[triangle_start..(triangle_start + triangle_len)])
+        } else {
+            None
+        }
     }
 }
 
@@ -188,26 +204,26 @@ pub enum DrawRecursiveError<'a> {
 
 error_boilerplate!(<'a> DrawRecursiveError<'a>);
 
-impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> BoundingBoxElement<V, DIMS, T>
+impl<V: ExtendedVertex, T> BoundingBoxElement<V, T>
 where
-    Vector<DIMS>: Volume<DIMS>,
+    Vector<{ V::LEN }>: Volume,
 {
     pub fn draw_recursive<
         'a,
         D: FramebufferWithDepth<OUT>,
-        P: Transform<Vector<DIMS>>,
+        P: Transform<Vector<{ V::LEN }>>,
         const OUT: usize,
         F: FnMut() -> ColourRGBA,
     >(
         &self,
-        bounding_box: &BoundingBox<V, DIMS, T>,
+        bounding_box: &BoundingBox<V, T>,
         pose: &P,
         level: usize,
         active_shader: &mut ActiveShaderProgram<
             'a,
             '_,
             '_,
-            VertexArray<Vector<DIMS>>,
+            VertexArray<Vector<{ V::LEN }>>,
             (),
             D::Tex,
             OUT,
@@ -240,7 +256,7 @@ where
 
             let (lower_bounds, upper_bounds) = self.transform_by(pose);
             let positions_triangles = Volume::volume(lower_bounds, upper_bounds)
-                .map(|triangle| Vector::<DIMS>::from_incomplete_triangle(triangle).unwrap());
+                .map(|triangle| Vector::<{ V::LEN }>::from_incomplete_triangle(triangle).unwrap());
             let mut vertex_array_builder = VertexArray::builder();
             vertex_array_builder.extend_triangles(positions_triangles);
             let vertex_array = vertex_array_builder.build();
@@ -261,9 +277,9 @@ where
     }
 }
 
-impl<V: ExtendedVertex<DIMS>, const DIMS: usize, T> Model for BoundingBoxElement<V, DIMS, T>
+impl<V: ExtendedVertex, T> Model for BoundingBoxElement<V, T>
 where
-    Vector<DIMS>: Volume<DIMS>,
+    Vector<{ V::LEN }>: Volume,
 {
-    type Vertex = Vector<DIMS>;
+    type Vertex = Vector<{ V::LEN }>;
 }

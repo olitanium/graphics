@@ -15,7 +15,7 @@ use crate::modelling::cubic::{AggregateCalcAnim, Camera, CameraPose};
 pub struct Group<
     'a,
     M: EntityInner,
-    T: Debug,
+    T,
     const MAX: usize,
     const OUT: usize,
     D: FramebufferWithDepth<OUT>,
@@ -29,14 +29,14 @@ pub struct Group<
     camera_look_at: Matrix<4, 4>,
 
     lights: ListLights<'a, MAX>,
-    opaque: Vec<(&'a AggregateEntity<T, M>, AggregateCalcAnim)>,
+    opaque: Vec<(&'a AggregateEntity<M, T>, AggregateCalcAnim)>,
     uniforms: Vec<(String, &'a dyn Uniform)>,
 }
 
 impl<
     'a,
     M: EntityInner,
-    T: Debug,
+    T,
     const MAX: usize,
     const OUT: usize,
     D: FramebufferWithDepth<OUT, Tex = FlatTexture>,
@@ -52,7 +52,7 @@ where
 impl<
     'a,
     M: EntityInner,
-    T: Debug,
+    T,
     const MAX: usize,
     const OUT: usize,
     D: FramebufferWithDepth<OUT, Tex = FlatTexture>,
@@ -68,7 +68,7 @@ where
         hint: &O::Hint,
         lights: ListLights<'a, MAX>,
         opaque: Vec<(
-            &'a AggregateEntity<T, M>,
+            &'a AggregateEntity<M, T>,
             // HashMap<AggregateModelIndex, (&'a SkeletalAnimation, f32)>, // time
             // Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,     // fix_anim
             AggregateCalcAnim,
@@ -88,8 +88,8 @@ where
     }
 }
 
-impl<'a, T: Debug, M: EntityInner, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>>
-    Draw for Group<'a, M, T, MAX, OUT, D>
+impl<'a, M: EntityInner, T, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
+    for Group<'a, M, T, MAX, OUT, D>
 where
     M::Vertex: CubicVertex,
 {
@@ -116,9 +116,7 @@ where
         active_shader.set_uniform_dyn(self.uniforms).unwrap();
 
         for (model, animations) in self.opaque {
-            model
-                .draw(&mut active_shader, &mut active_framebuffer, animations)
-                .unwrap();
+            let _ = model.draw(&mut active_shader, &mut active_framebuffer, animations);
         }
         DrawOut::OK
     }

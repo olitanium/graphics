@@ -76,34 +76,40 @@ impl<TThis> Collision for SkinningEntity<TThis> {
     type Meta = <SkeletonBb<SkeletalVertex, TThis> as Collision>::Meta;
     type Transform<'a> = <SkeletonBb<SkeletalVertex, TThis> as Collision>::Transform<'a>;
     type Vertex = <SkeletonBb<SkeletalVertex, TThis> as Collision>::Vertex;
+    type VertexTransform<'a> =
+        <SkeletonBb<SkeletalVertex, TThis> as Collision>::VertexTransform<'a>;
 
     fn collides<
-        'a,
-        'b,
         T: Collision + ?Sized,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
     >(
-        &'a self,
-        transform: Self::Transform<'_>,
-        target: &'b T,
-        target_transform: T::Transform<'_>,
+        &self,
+        self_transform: &Self::Transform<'_>,
+        self_vertex_transform: &Self::VertexTransform<'_>,
+        target: &T,
+        target_transform: &T::Transform<'_>,
+        target_vertex_transform: &T::VertexTransform<'_>,
         alter_meta: F,
     ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>> {
-        // let Some(bbox) = &self.bounding_box else {
-        // return None;
-        // };
-        self.bounding_box
-            .as_ref()?
-            .collides(transform, target, target_transform, alter_meta)
+        self.bounding_box.as_ref()?.collides(
+            self_transform,
+            self_vertex_transform,
+            target,
+            target_transform,
+            target_vertex_transform,
+            alter_meta,
+        )
     }
 }
 
-impl<T> ToAggregateEntity<T, SkinningCubic> for SkinningEntity<T> {
+impl<T> ToAggregateEntity<SkinningCubic> for SkinningEntity<T> {
+    type BoundingBoxInner = T;
+
     fn to_pair_model_bbox(
         self,
     ) -> (
         SkinningCubic,
-        Option<<SkinningCubic as EntityInner>::BoundingBox<T>>,
+        Option<<SkinningCubic as EntityInner>::BoundingBox<Self::BoundingBoxInner>>,
     ) {
         let Self {
             model,

@@ -72,31 +72,28 @@ impl<T> SkeletonEntity<T> {
 impl<TThis> Collision for SkeletonEntity<TThis> {
     type FuncInputs = <SkeletonBb<SimpleVertex, TThis> as Collision>::FuncInputs;
     type Meta = <SkeletonBb<SimpleVertex, TThis> as Collision>::Meta;
-    type Transform<'a> = &'a CalculatedAnimation;
+    type Transform<'a> = CalculatedAnimation;
     type Vertex = <SkeletonBb<SimpleVertex, TThis> as Collision>::Vertex;
+    type VertexTransform<'a> = ();
 
     fn collides<
-        'a,
-        'b,
         T: Collision + ?Sized,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta),
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
     >(
-        &'a self,
-        transform: Self::Transform<'_>,
-        target: &'b T,
-        target_transform: T::Transform<'_>,
+        &self,
+        self_transform: &Self::Transform<'_>,
+        _self_vertex_transform: &(),
+        target: &T,
+        target_transform: &T::Transform<'_>,
+        target_vertex_transform: &T::VertexTransform<'_>,
         alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>
-    where
-        for<'c> T::Transform<'c>: Clone,
-    {
-        // let Some(bbox) = &self.bounding_box else {
-        // return None;
-        // };
+    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>> {
         self.bounding_box.as_ref()?.collides(
-            (&self.model.skeleton, transform),
+            &(&self.model.skeleton, self_transform),
+            &(),
             target,
             target_transform,
+            target_vertex_transform,
             alter_meta,
         )
     }
@@ -121,12 +118,14 @@ impl<T> From<SimpleEntity<T>> for SkeletonEntity<T> {
     }
 }
 
-impl<T> ToAggregateEntity<T, SkeletonCubic> for SkeletonEntity<T> {
+impl<T> ToAggregateEntity<SkeletonCubic> for SkeletonEntity<T> {
+    type BoundingBoxInner = T;
+
     fn to_pair_model_bbox(
         self,
     ) -> (
         SkeletonCubic,
-        Option<<SkeletonCubic as super::EntityInner>::BoundingBox<T>>,
+        Option<<SkeletonCubic as super::EntityInner>::BoundingBox<Self::BoundingBoxInner>>,
     ) {
         let Self {
             model,

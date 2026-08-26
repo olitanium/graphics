@@ -163,6 +163,20 @@ impl EntityInner for SkeletonCubic {
         &self.skeleton
     }
 
+    fn box_transform<'a, T>(
+        &'a self,
+        calc_anim: &'a CalculatedAnimation,
+    ) -> <Self::BoundingBox<T> as crate::modelling::Collision>::Transform<'a> {
+        (&self.skeleton, calc_anim)
+    }
+
+    fn vertex_transform<'a, T>(
+        &'a self,
+        _calc_anim: &'a CalculatedAnimation,
+    ) -> <Self::BoundingBox<T> as crate::modelling::Collision>::VertexTransform<'a> {
+        ()
+    }
+
     fn draw<'a, 'b, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'b, '_, 'a, Self, L, D::Tex, OUT>,

@@ -3,14 +3,14 @@ use graphics::linear_algebra::Vector;
 use crate::modelling::extended_vertex::IncompleteVertex;
 use crate::modelling::{ExtendedVertex, test_models};
 
-pub trait Volume<const N: usize>: ExtendedVertex<N> {
+pub trait Volume: ExtendedVertex {
     fn volume(
         lower_bound: Self,
         upper_bound: Self,
-    ) -> impl Iterator<Item = [IncompleteVertex<N>; 3]>;
+    ) -> impl Iterator<Item = [IncompleteVertex<{ Self::LEN }>; 3]>;
 }
 
-impl Volume<2> for Vector<2> {
+impl Volume for Vector<2> {
     fn volume(
         lower_bound: Self,
         upper_bound: Self,
@@ -19,7 +19,7 @@ impl Volume<2> for Vector<2> {
     }
 }
 
-impl Volume<3> for Vector<3> {
+impl Volume for Vector<3> {
     fn volume(
         lower_bound: Self,
         upper_bound: Self,

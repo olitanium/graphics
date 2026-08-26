@@ -52,7 +52,11 @@ impl TransformBy<Pose> for SimpleVertex {
     }
 }
 
-impl ExtendedVertex<3> for SimpleVertex {
+impl ExtendedVertex for SimpleVertex {
+    type PreferredTransform<'a> = Pose;
+
+    type const LEN: usize = 3;
+
     fn position(&self) -> Vector<3> {
         self.position
     }

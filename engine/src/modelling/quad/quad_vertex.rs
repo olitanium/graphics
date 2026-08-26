@@ -1,5 +1,6 @@
 use std::mem;
 
+use geometry::NoTransform;
 use graphics::linear_algebra::Vector;
 use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
@@ -29,7 +30,12 @@ impl Vertex for QuadVertex {
     }
 }
 
-impl ExtendedVertex<2> for QuadVertex {
+impl ExtendedVertex for QuadVertex {
+    // TODO: 2D transforms
+    type PreferredTransform<'a> = NoTransform;
+
+    type const LEN: usize = 2;
+
     fn from_incomplete_triangle(triangle: [IncompleteVertex<2>; 3]) -> Option<[Self; 3]> {
         triangle.try_map(
             |IncompleteVertex {

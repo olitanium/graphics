@@ -11,6 +11,8 @@ pub trait TransformBy<By: ?Sized>: Sized {
     /// multiplication, as `vec.transform_by(matrix)` is equal to matrix *
     /// vec.
     ///
+    /// Prefer implementing this trait over Transform
+    ///
     /// A seperate trait `Transform<Target>` which takes `Target` and returns
     /// `Target` exists, and there is a blanket impl for all types which
     /// implement `TransformBy`

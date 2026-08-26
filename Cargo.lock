@@ -404,6 +404,7 @@ dependencies = [
  "geometry",
  "graphics",
  "infinite_window",
+ "multi_zip",
  "partition",
  "quaternion",
  "russimp",

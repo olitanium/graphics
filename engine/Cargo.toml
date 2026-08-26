@@ -16,6 +16,7 @@ triangle_intersection = {path = "../triangle_intersection"}
 partition = {path = "../partition"}
 geometry = {path = "../geometry"}
 zip_with = {path = "../zip_with"}
+multi_zip = {path = "../multi_zip"}
 
 [lints]
 workspace = true

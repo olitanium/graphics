@@ -4,7 +4,7 @@ use linear_algebra::{UnitVector, Vector};
 
 use crate::types::{VertexAttr, VertexAttrType};
 
-pub trait Vertex: Copy {
+pub trait Vertex: Copy + 'static {
     type const ELEMENT_COUNT: usize;
 
     #[must_use]
@@ -32,7 +32,7 @@ impl Vertex for NoVertex {
     }
 }
 
-impl<T: VertexAttr> Vertex for T {
+impl<T: VertexAttr + 'static> Vertex for T {
     type const ELEMENT_COUNT: usize = 1;
 
     fn offsets() -> [usize; Self::ELEMENT_COUNT] {

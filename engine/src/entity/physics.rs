@@ -62,14 +62,14 @@ pub(crate) struct NormalMax {
     pub(crate) max_depth: f32,
 }
 
-pub trait Physics: Collision {
+pub trait Physics: for<'a> Collision<VertexTransform<'a> = ()> {
     fn physics(&mut self) -> Option<&mut SimplePhysics>;
 
     fn move_collide_repel<B>(
         &mut self,
-        first_transform: Self::Transform<'_>,
+        first_transform: &Self::Transform<'_>,
         other: &mut B,
-        other_transform: B::Transform<'_>,
+        other_transform: &B::Transform<'_>,
     ) -> (Option<UnitVector<3>>, Option<UnitVector<3>>)
     where
         B: Physics + ?Sized,
@@ -78,8 +78,10 @@ pub trait Physics: Collision {
     {
         let Some(collides) = self.collides(
             first_transform,
+            &(),
             other,
             other_transform,
+            &(),
             no_alter_meta::<Self, B>,
         ) else {
             return (None, None);

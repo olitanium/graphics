@@ -68,8 +68,6 @@ impl ApiState for State {
                 |_| (),
             );
 
-            out.bounding_box = out.bounding_box.map(|bbox| bbox.temp_make_really_big());
-
             out
         };
 
@@ -92,8 +90,6 @@ impl ApiState for State {
                 Mass::new_inverse(1.0),
                 |_| (),
             );
-
-            out.bounding_box = out.bounding_box.map(|bbox| bbox.temp_make_really_big());
 
             out
         };
@@ -150,7 +146,7 @@ impl ApiState for State {
 
         let test_collision =
             self.triangle_one
-                .collides((), &self.triangle_two, (), |_, _, _, _| ());
+                .collides(&(), &(), &self.triangle_two, &(), &(), |_, _, _, _| true);
 
         if test_collision.is_some() {
             self.triangle_one

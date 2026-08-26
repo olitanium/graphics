@@ -20,7 +20,7 @@ use crate::modelling::cubic::{
     SkeletalAnimation,
     SkeletonBoneIndex,
 };
-use crate::modelling::{Collision, CubicVertex, Skeleton};
+use crate::modelling::{Collision, CubicVertex, MakePreferredTransformFromSkeleton, Skeleton};
 
 mod group;
 pub use group::Group as AggregateGroup;
@@ -34,20 +34,21 @@ pub use from_to::ToAggregateEntity;
 mod entity_inner;
 pub use entity_inner::EntityInner;
 
-pub struct AggregateEntity<T, M: EntityInner>
+pub struct AggregateEntity<M: EntityInner, T>
 where
     M::Vertex: CubicVertex,
 {
     base_model: M,
     base_bounding_box: Option<M::BoundingBox<T>>,
     pub base_pose: Pose,
-    children: Vec<Option<AggregateUnit<T, M>>>,
+    children: Vec<Option<AggregateUnit<M, T>>>,
 }
 
-impl<T: Debug, M: EntityInner + Debug> Debug for AggregateEntity<T, M>
+impl<T, M: EntityInner + Debug> Debug for AggregateEntity<M, T>
 where
     M::Vertex: CubicVertex,
     M::BoundingBox<T>: Debug,
+    T: Debug,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct(stringify!(AggregateEntity))
@@ -60,7 +61,7 @@ where
 }
 
 #[derive(Debug)]
-pub(crate) struct AggregateUnit<T, M: EntityInner>
+pub(crate) struct AggregateUnit<M: EntityInner, T>
 where
     M::Vertex: CubicVertex,
 {
@@ -85,7 +86,7 @@ impl AggregateModelIndex {
     }
 }
 
-impl<T, M: EntityInner> AggregateEntity<T, M>
+impl<M: EntityInner, T> AggregateEntity<M, T>
 where
     M::Vertex: CubicVertex,
 {
@@ -105,7 +106,7 @@ where
     }
 }
 
-impl<T, M: EntityInner> AggregateEntity<T, M>
+impl<M: EntityInner, T> AggregateEntity<M, T>
 where
     M::Vertex: CubicVertex,
 {
@@ -164,11 +165,11 @@ where
     }
 }
 
-impl<T, M: EntityInner> AggregateEntity<T, M>
+impl<M: EntityInner, T> AggregateEntity<M, T>
 where
     M::Vertex: CubicVertex,
 {
-    fn push_aggregate_unit(&mut self, unit: AggregateUnit<T, M>) -> AggregateModelIndex {
+    fn push_aggregate_unit(&mut self, unit: AggregateUnit<M, T>) -> AggregateModelIndex {
         let parent_unit = unit.parent_unit.inner_clone();
         let child_at = if let Some((index, child_dest)) = self
             .children
@@ -258,7 +259,7 @@ pub enum CalculateAnimationError<'a> {
 }
 error_boilerplate!(<'a> CalculateAnimationError<'a>);
 
-impl<T, M: EntityInner> AggregateEntity<T, M>
+impl<M: EntityInner, T> AggregateEntity<M, T>
 where
     M::Vertex: CubicVertex,
 {
@@ -447,7 +448,7 @@ where
 
 impl<'a, M: EntityInner + 'a> std::error::Error for DrawError<'a, M> where M::Vertex: CubicVertex {}
 
-impl<T, M: EntityInner> AggregateEntity<T, M>
+impl<M: EntityInner, T> AggregateEntity<M, T>
 where
     M::Vertex: CubicVertex,
 {
@@ -467,17 +468,20 @@ where
     }
 }
 
-impl<T, M: EntityInner> AggregateEntity<T, M>
+impl<M: EntityInner, T> AggregateEntity<M, T>
 where
     <M as Model>::Vertex: CubicVertex,
 {
-    pub fn push<E: ToAggregateEntity<T, M>>(
+    pub fn push<E>(
         &mut self,
         entity: E,
         offset: Pose,
         parent_unit: &AggregateModelIndex,
         skeleton_attachment: &SkeletonBoneIndex,
-    ) -> Result<AggregateModelIndex, PushModelError> {
+    ) -> Result<AggregateModelIndex, PushModelError>
+    where
+        E: ToAggregateEntity<M, BoundingBoxInner = T>,
+    {
         self.check_parent_and_bone(skeleton_attachment, parent_unit)?;
 
         let (model, bounding_box) = entity.to_pair_model_bbox();
@@ -494,48 +498,48 @@ where
     }
 }
 
-impl<SelfMeta, M: EntityInner> Collision for AggregateEntity<SelfMeta, M>
+impl<M: EntityInner, T> Collision for AggregateEntity<M, T>
 where
     M::Vertex: CubicVertex,
-    for<'a> <M::BoundingBox<SelfMeta> as Collision>::Transform<'a>:
+    for<'a> <M::BoundingBox<T> as Collision>::Transform<'a>:
         From<(&'a Skeleton, &'a CalculatedAnimation)>,
 {
     type FuncInputs = (
         AggregateModelIndex,
-        <M::BoundingBox<SelfMeta> as Collision>::FuncInputs,
+        <M::BoundingBox<T> as Collision>::FuncInputs,
     );
-    type Meta = <M::BoundingBox<SelfMeta> as Collision>::Meta;
+    type Meta = <M::BoundingBox<T> as Collision>::Meta;
     type Transform<'a> = &'a AggregateCalcAnim;
-    type Vertex = <M::BoundingBox<SelfMeta> as Collision>::Vertex;
+    type Vertex = <M::BoundingBox<T> as Collision>::Vertex;
+    type VertexTransform<'a> = ();
 
     fn collides<
-        'a,
-        'b,
         Other: Collision + ?Sized,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, Other::FuncInputs, &mut Other::Meta),
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, Other::FuncInputs, &mut Other::Meta) -> bool,
     >(
-        &'a self,
-        transform: Self::Transform<'_>,
-        target: &'b Other,
-        target_transform: Other::Transform<'_>,
+        &self,
+        self_transform: &Self::Transform<'_>,
+        self_vertex_transform: &Self::VertexTransform<'_>,
+        target: &Other,
+        target_transform: &Other::Transform<'_>,
+        target_vertex_transform: &Other::VertexTransform<'_>,
         mut alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [Other::Vertex; 3])>>
-    where
-        for<'c> Other::Transform<'c>: Clone,
-    {
-        let out = self
-            .zip_calculated_animation_get_index(transform)
+    ) -> Option<Vec<([Self::Vertex; 3], [Other::Vertex; 3])>> {
+        let mut out = Vec::new();
+        self.zip_calculated_animation_get_index(self_transform)
             .flat_map(|(x, y, opt_z, t)| opt_z.map(|z| (x, y, z, t)))
             .flat_map(|(index, model, bbox, animation)| {
-                let transform = (model.skeleton(), animation);
-                let transform = transform.into();
-
-                bbox.collides(transform, target, target_transform.clone(), |x, y, z, t| {
-                    alter_meta((index.inner_clone(), x), y, z, t)
-                })
+                bbox.collides(
+                    &model.box_transform(animation),
+                    &model.vertex_transform(animation),
+                    target,
+                    target_transform,
+                    target_vertex_transform,
+                    |x, y, z, t| alter_meta((index.inner_clone(), x), y, z, t),
+                )
                 .unwrap_or_default()
             })
-            .collect::<Vec<_>>();
+            .collect_into(&mut out);
 
         if out.is_empty() { None } else { Some(out) }
     }
