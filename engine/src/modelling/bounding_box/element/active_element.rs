@@ -1,6 +1,6 @@
 use std::cell::RefMut;
 use std::fmt::Debug;
-use std::{array, cmp};
+use std::array;
 
 use geometry::{Transform, TransformBy};
 use graphics::linear_algebra::Vector;
@@ -10,7 +10,7 @@ use zip_with::ArrayZipWith;
 use super::ChildrenOrMeta;
 use crate::modelling::BoundingBox;
 use crate::modelling::bounding_box::BoundingBoxElement;
-use crate::modelling::bounding_box::element::{make_bound, make_bound_inner};
+use crate::modelling::bounding_box::element::make_bound_inner;
 use crate::modelling::extended_vertex::ExtendedVertex;
 
 // pub(crate) struct ActiveBoundingBoxElement<'a, V, const DIMS: usize, T> {

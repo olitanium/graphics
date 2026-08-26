@@ -139,7 +139,7 @@ impl EntityInner for SkinningCubic {
 
     fn vertex_transform<'a, T>(
         &'a self,
-        calc_anim: &'a CalculatedAnimation,
+        _calc_anim: &'a CalculatedAnimation,
     ) -> <Self::BoundingBox<T> as crate::modelling::Collision>::VertexTransform<'a> {
     }
 

@@ -61,7 +61,7 @@ impl ApiState for State {
 
             let triangle_one_model = triangle_one_cubic.build();
 
-            let mut out = SimpleEntity::from_simple_cubic(
+            let out = SimpleEntity::from_simple_cubic(
                 triangle_one_model,
                 1,
                 Mass::new_inverse(1.0),
@@ -84,7 +84,7 @@ impl ApiState for State {
 
             let triangle_one_model = triangle_two_cubic.build();
 
-            let mut out = SimpleEntity::from_simple_cubic(
+            let out = SimpleEntity::from_simple_cubic(
                 triangle_one_model,
                 1,
                 Mass::new_inverse(1.0),

@@ -14,7 +14,7 @@ use super::material::Material;
 use super::{Mesh, Skeleton, import};
 use crate::entity::EntityInner;
 use crate::modelling::cubic::{CalculatedAnimation, mesh};
-use crate::modelling::{BoundingBox, ExtendedVertex, SimpleVertex};
+use crate::modelling::{BoundingBox, SimpleVertex};
 
 mod group;
 pub use group::Group;

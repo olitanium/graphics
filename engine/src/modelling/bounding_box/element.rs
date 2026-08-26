@@ -1,7 +1,6 @@
 use std::array;
 use std::cell::RefCell;
 use std::fmt::Debug;
-use std::marker::PhantomData;
 
 use active_element::InnerChildrenOrMeta;
 use geometry::Transform;
@@ -10,7 +9,6 @@ use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::shader_program::ShaderSetUniformError;
-use graphics::vertex::Vertex;
 use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
 use graphics::{ActiveShaderProgram, Model};
 use utils::error_boilerplate;

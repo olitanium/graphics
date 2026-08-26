@@ -20,7 +20,7 @@ use crate::modelling::cubic::{
     SkeletalAnimation,
     SkeletonBoneIndex,
 };
-use crate::modelling::{Collision, CubicVertex, MakePreferredTransformFromSkeleton, Skeleton};
+use crate::modelling::{Collision, CubicVertex, Skeleton};
 
 mod group;
 pub use group::Group as AggregateGroup;
@@ -519,7 +519,7 @@ where
     >(
         &self,
         self_transform: &Self::Transform<'_>,
-        self_vertex_transform: &Self::VertexTransform<'_>,
+        _self_vertex_transform: &Self::VertexTransform<'_>,
         target: &Other,
         target_transform: &Other::Transform<'_>,
         target_vertex_transform: &Other::VertexTransform<'_>,
