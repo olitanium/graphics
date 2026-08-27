@@ -30,8 +30,7 @@ impl TransformBy<Pose> for Vector<3> {
 impl TransformBy<Pose> for UnitVector<3> {
     fn transform_by(&self, pose: &Pose) -> Self {
         let orientation = pose.orientation();
-        let vector = orientation.act_on(self.v());
-        vector.normalize_or_panic()
+        orientation.act_on_unit(*self)
     }
 }
 

@@ -28,7 +28,7 @@ impl<T, const N: usize> FromIterator<T> for ArrayVec<T, N> {
 }
 
 impl<T, const N: usize> Extend<T> for ArrayVec<T, N> {
-    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+    fn extend<I>(&mut self, iter: I) where I: IntoIterator<Item = T> {
         for elem in iter {
             let _ = self.push(elem);
         }

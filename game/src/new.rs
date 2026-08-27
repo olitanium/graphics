@@ -120,8 +120,8 @@ impl State {
 
             sun,
             sun_duplicate_light,
-            origin_cube,
-            small_cube,
+            origin_cube: origin_cube.into(),
+            small_cube: small_cube.into(),
             player,
 
             toggle_m: true,

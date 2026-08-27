@@ -109,12 +109,19 @@ impl State {
         self.game_camera
             .controls(&keyboard, string, mouse_delta, frame_time);
 
+        let small_cube_anim = self.small_cube.debug_get_pair_model_bind_pose().1;
+        let origin_cube_anim = self.origin_cube.debug_get_pair_model_bind_pose().1;
+
         if !self.game_camera.move_lock {
             self.player.controls(
+                &self.player.get_pair_model().1,
+                &self.game_camera.camera,
                 &keyboard,
                 frame_time,
                 &mut self.small_cube,
+                &small_cube_anim,
                 &mut self.origin_cube,
+                &origin_cube_anim,
             );
         }
 

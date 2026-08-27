@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 use std::time::Duration;
 
+use engine::entity::SkeletonEntity;
 use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
@@ -27,8 +28,8 @@ pub struct State {
 
     pub sun: Sun,
     pub sun_duplicate_light: ShadowPointLight,
-    pub origin_cube: SimpleEntity<()>,
-    pub small_cube: SimpleEntity<()>,
+    pub origin_cube: SkeletonEntity<()>,
+    pub small_cube: SkeletonEntity<()>,
     pub player: Player,
 
     pub skybox: SkyBox,

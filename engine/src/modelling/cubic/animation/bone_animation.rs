@@ -49,14 +49,6 @@ impl BoneAnimation {
     }
 }
 
-impl Extend<(f32, Pose)> for BoneAnimation {
-    fn extend<T: IntoIterator<Item = (f32, Pose)>>(&mut self, iter: T) {
-        for (time, pose) in iter {
-            _ = self.push(pose, time);
-        }
-    }
-}
-
 impl BoneAnimation {
     pub fn get_pose(&self, time: f32) -> Pose {
         match (self.keyframes.as_slice(), self.duration) {

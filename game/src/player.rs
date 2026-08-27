@@ -1,16 +1,17 @@
 use std::collections::HashSet;
 use std::rc::Rc;
 
-use engine::entity::Mass;
-use engine::geometry::Pose;
+use engine::entity::{Mass, Physics, SkeletonEntity};
+use engine::geometry::{Pose, Transform};
 use engine::linear_algebra::{UnitVector, Vector};
-use engine::modelling::cubic::SimpleCubic;
 use engine::modelling::cubic::material::Material;
+use engine::modelling::cubic::{CalculatedAnimation, Camera, SimpleCubic};
+use engine::modelling::{Collision, CubicVertex, SkeletonCubic};
 use engine::{ColourRGBA, Key, SimpleEntity};
 use utils::hash_matches;
 
 pub struct Player {
-    entity: SimpleEntity<()>,
+    entity: SkeletonEntity<()>,
     // velocity: Vector<3>,
 }
 
@@ -27,7 +28,7 @@ impl Player {
             Pose::new_from_translation(Vector::new([0.25, PLAYER_SIZE * 0.5, 0.25]));
         player.physics.velocity = Vector::ZERO;
         Player {
-            entity: player,
+            entity: player.into(),
             // velocity: Vector::ZERO,
         }
     }
@@ -52,19 +53,30 @@ impl Player {
     // CalculatedAnimation) { self.entity.get_pair_model_bind_pose()
     // }
 
-    pub fn get_pair_model(&self) -> (&SimpleCubic, Pose) {
-        self.entity.temp_as_simplecubic_and_anim()
+    pub fn get_pair_model(&self) -> (&SkeletonCubic, CalculatedAnimation) {
+        self.entity.debug_get_pair_model_bind_pose()
     }
 
-    pub fn controls(
+    pub fn controls<E>(
         &mut self,
+        animation: &CalculatedAnimation,
+        camera: &Camera,
         keyboard: &HashSet<Key>,
         frame_time: f32,
-        environment: &mut SimpleEntity<()>,
-        ground: &mut SimpleEntity<()>,
-    ) {
-        let (_, on_box) = self.entity.move_collide_repel(environment, &());
-        let (_, on_ground) = self.entity.move_collide_repel(ground, &());
+        environment: &mut E,
+        env_anim: &E::Transform<'_>,
+        ground: &mut E,
+        ground_anim: &E::Transform<'_>,
+    ) where
+        E: Physics,
+        <E as Collision>::Vertex: CubicVertex + PartialEq,
+    {
+        let (_, on_box) = self
+            .entity
+            .move_collide_repel(animation, environment, env_anim);
+        let (_, on_ground) = self
+            .entity
+            .move_collide_repel(animation, ground, ground_anim);
 
         const UP: UnitVector<3> = UnitVector::Y;
         // gravity
@@ -77,10 +89,10 @@ impl Player {
 
         if grounded {
             hash_matches! {keyboard:
-                &Key::W => force_accum += -Vector::Z,
-                &Key::S => force_accum += Vector::Z,
-                &Key::A => force_accum += -Vector::X,
-                &Key::D => force_accum += Vector::X,
+                &Key::W => force_accum += camera.pose.motion_forward().v(),
+                &Key::S => force_accum += -camera.pose.motion_forward().v(),
+                &Key::A => force_accum += camera.pose.motion_left().v(),
+                &Key::D => force_accum += -camera.pose.motion_left().v(),
                 &Key::Space => *self.entity.physics.velocity.y_mut() = 1.0,
                 //&Key::Space => {force_accum += 30.0 * Vector::Y; eprintln!("jump");},
             }

@@ -1,5 +1,3 @@
-pub mod demo;
-
 use geometry::{Orientation, Pose};
 use graphics::linear_algebra::Vector;
 

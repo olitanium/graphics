@@ -3,6 +3,9 @@ use graphics::linear_algebra::{UnitVector, Vector};
 
 use crate::modelling::cubic::camera::CameraPose;
 
+// mod fixed_up;
+// mod flexible;
+
 #[derive(Debug, Clone, Copy)]
 pub enum ManualPose {
     FixedUp {

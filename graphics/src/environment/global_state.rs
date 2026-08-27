@@ -1,7 +1,7 @@
+use crate::Draw;
 use crate::environment::Event;
 use crate::environment::draw::PollResult;
 use crate::types::TexDim;
-use crate::{Draw, DrawOut};
 
 pub trait ApiState: Sized {
     type Error;

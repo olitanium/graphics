@@ -1,10 +1,10 @@
-use std::collections::HashSet;
 use core::time::Duration;
+use std::collections::HashSet;
 
 use engine::types::TexDim;
 use engine::{ApiState, DrawNothing, Event};
 
-pub struct State {}
+pub struct State;
 
 impl ApiState for State {
     type DrawOutput<'a>
@@ -17,6 +17,7 @@ impl ApiState for State {
         Ok(Self {})
     }
 
+    #[expect(unused, reason = "Template application")]
     fn poll<'a>(
         &'a mut self,
         events: Vec<engine::Event<'a>>,

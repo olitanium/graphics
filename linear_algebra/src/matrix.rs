@@ -143,10 +143,11 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
 
     #[expect(clippy::missing_panics_doc)]
     #[inline]
+    #[must_use]
     pub fn col_major(&self) -> [VectorPreferredFloat; C * R] {
         let mut x = ArrayVec::new();
         self.col_flattened()
-            .into_iter()
+            .iter()
             .copied()
             .collect_into(&mut x);
         x.into_array_with(|| 0.0)
@@ -181,6 +182,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     #[inline]
+    #[must_use]
     pub fn row_major(&self) -> [VectorPreferredFloat; C * R] {
         let mut x = ArrayVec::new();
         self.row_iter().flatten().collect_into(&mut x);

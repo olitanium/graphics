@@ -68,7 +68,7 @@ impl<const N: usize> Ord for Vector<N, VectorPreferredFloat> {
     fn cmp(&self, other: &Self) -> Ordering {
         for (a, b) in iter::zip(self.iter(), other.iter()) {
             match a.total_cmp(b) {
-                a @ Ordering::Greater | a @ Ordering::Less => return a,
+                a @ (Ordering::Greater | Ordering::Less) => return a,
                 Ordering::Equal => continue,
             }
         }

@@ -13,7 +13,6 @@
 #![feature(const_drop_in_place)]
 #![feature(const_iter)]
 #![feature(const_result_unwrap_unchecked)]
-#![feature(const_closures)]
 
 use core::fmt::Debug;
 use core::marker::Destruct;
@@ -33,7 +32,6 @@ mod initmacro;
 mod pop_front;
 pub use pop_front::ArrayVecPopFront;
 
-mod test_zip_with;
 pub struct ArrayVec<T, const N: usize> {
     len: usize,
     array: [MaybeUninit<T>; N],

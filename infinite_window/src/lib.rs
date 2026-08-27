@@ -55,8 +55,6 @@ impl<'a, T, const N: usize> Iterator for InfiniteWindowIter<'a, T, N> {
 
 #[cfg(test)]
 mod test {
-    use std::iter;
-
     use super::InfiniteWindowIter;
 
     #[test]

@@ -28,6 +28,11 @@ impl Orientation {
     }
 
     #[must_use]
+    pub fn act_on_unit(self, unit: UnitVector<3>) -> UnitVector<3> {
+        UnitVector::new_unchecked(self.act_on(unit.v()).into_inner())
+    }
+
+    #[must_use]
     pub fn combine(self, after: Self) -> Self {
         let new_quaternion = (after.quaternion.q() * self.quaternion.q()).normalize();
         Self::from_quaternion(new_quaternion)
@@ -79,7 +84,7 @@ impl Orientation {
         Vector::new([
             2.0 * w.mul_add(y, x * z),
             2.0 * w.mul_add(-x, y * z),
-            2.0f32.mul_add(-y.mul_add(y, x * x), 1.0),
+            2.0_f32.mul_add(-y.mul_add(y, x * x), 1.0),
         ])
         .normalize_or_panic() // z
     }
@@ -91,7 +96,7 @@ impl Orientation {
 
         Vector::new([
             2.0 * w.mul_add(-z, x * y),
-            2.0f32.mul_add(-z.mul_add(z, x * x), 1.0),
+            2.0_f32.mul_add(-z.mul_add(z, x * x), 1.0),
             2.0 * w.mul_add(x, y * z),
         ])
         .normalize_or_panic() // z
@@ -103,7 +108,7 @@ impl Orientation {
         let [x, y, z] = self.quaternion.q().vector().into_inner();
 
         Vector::new([
-            2.0f32.mul_add(-z.mul_add(z, y * y), 1.0),
+            2.0_f32.mul_add(-z.mul_add(z, y * y), 1.0),
             2.0 * w.mul_add(z, x * y),
             2.0 * w.mul_add(-y, x * z),
         ])
@@ -116,8 +121,7 @@ impl Orientation {
     }
 
     pub fn look_up(&mut self, angle: f32) {
-        let effect =
-            Quaternion::axis_angle(angle, Vector::new([-1.0, 0.0, 0.0]).normalize_or_panic());
+        let effect = Quaternion::axis_angle(angle, -UnitVector::X);
         self.quaternion = (self.quaternion.q() * effect.q()).normalize();
     }
 

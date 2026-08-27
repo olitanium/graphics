@@ -1,3 +1,6 @@
+//! Search between two bounds, using a test function returning `cmp::Ordering`
+//! and a function which calculates a mid-point between two values.
+
 use core::cmp::Ordering;
 use core::debug_assert_matches;
 
@@ -7,7 +10,8 @@ use core::debug_assert_matches;
 /// Returns None if both `test(&lower) == test(&upper)`. i.e. they are both too
 /// low or too high.
 ///
-/// This function performs `test` on `upper` and `lower` and may switch them.
+/// This function may switch `upper` and `lower` if they are the wrong way
+/// around, adding two more `test`s
 pub fn binary_search<T, F, O>(
     mut lower: T,
     mut upper: T,
@@ -40,8 +44,8 @@ where
 /// Binary search to find the `T` on the boundary between `test` returning
 /// `Ordering::Greater` and 'Ordering::Less`.
 ///
-/// Undefined behavior if `test(&lower)` does not return `Ordering::Less` and
-/// `test(&upper)` does not return `Ordering::Greater`.
+/// Undefined behavior if `test(&lower) != Ordering::Less` and
+/// `test(&upper) != Ordering::Greater`.
 pub fn binary_search_unchecked<T, F, O>(
     mut lower: T,
     mut upper: T,

@@ -47,9 +47,8 @@ impl ShadowPointLight {
 
         // perspecitve * view * model
         // (FORWARD, UP)
-        // TODO: Check that the shadows are correct for all six directions.
         [
-            (UnitVector::X, UnitVector::Y),
+            (UnitVector::X, -UnitVector::Y),
             (-UnitVector::X, -UnitVector::Y),
             (UnitVector::Y, UnitVector::Z),
             (-UnitVector::Y, -UnitVector::Z),

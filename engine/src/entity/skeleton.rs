@@ -63,7 +63,7 @@ impl<T> SkeletonEntity<T> {
         self.bounding_box.as_ref()
     }
 
-    pub fn get_pair_model_bind_pose(&self) -> (&SkeletonCubic, CalculatedAnimation) {
+    pub fn debug_get_pair_model_bind_pose(&self) -> (&SkeletonCubic, CalculatedAnimation) {
         let animation = CalculatedAnimation::bind_pose(&self.model, self.physics.pose);
         (&self.model, animation)
     }

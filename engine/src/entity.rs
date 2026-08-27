@@ -21,4 +21,4 @@ mod mass;
 pub use mass::Mass;
 
 mod physics;
-pub use physics::SimplePhysics;
+pub use physics::{Physics, SimplePhysics};

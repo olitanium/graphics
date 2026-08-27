@@ -1,8 +1,6 @@
 = Jobs
 
 == Longer term
-- ExtendedVertex no longer generic over const usize, instead has associated const DIMS,
-- Volume no longer generic, instead has associated const DIMS,
 - Types use Self::Primitive as the inner value. Blocked on RustAnalyser failure,
 - Yeet instead of Err(...into()) or Err(...)?
 

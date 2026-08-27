@@ -1,8 +1,8 @@
+use std::array;
 use std::cell::RefMut;
 use std::fmt::Debug;
-use std::array;
 
-use geometry::{Transform, TransformBy};
+use geometry::Transform;
 use graphics::linear_algebra::Vector;
 use multi_zip::MultiZip;
 use zip_with::ArrayZipWith;
