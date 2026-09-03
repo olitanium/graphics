@@ -5,11 +5,11 @@ use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
-use engine::modelling::cubic::{self, CameraBuilder, ManualCameraPose};
+use engine::modelling::cubic::{self, CameraBuilder, ManualPoseFixedUp};
 
 pub struct GameCamera {
     pub move_lock: bool,
-    pub camera: cubic::Camera,
+    pub camera: cubic::Camera<ManualPoseFixedUp>,
     pub sensitivity: f32,
     pub speed: f32,
 }
@@ -19,10 +19,7 @@ impl GameCamera {
         const START_LOC: Vector<3> = Vector::new([0.0, 0.5, 1.0]);
 
         let camera = CameraBuilder::new()
-            .pose(
-                ManualCameraPose::new_fixed_up_from_to(START_LOC, Vector::ZERO, UnitVector::Y)
-                    .unwrap(),
-            )
+            .pose(ManualPoseFixedUp::new_from_to(START_LOC, Vector::ZERO, UnitVector::Y).unwrap())
             .perspective(90.0, hdr_fb.aspect_ratio(), 0.01, 100.0)
             .build();
         let sensitivity = 0.01;
@@ -46,16 +43,16 @@ impl GameCamera {
             let distance = frame_time * self.speed;
 
             if keyboard.contains(&Key::Right) | keyboard.contains(&Key::D) {
-                self.camera.pose.move_left(-distance);
+                self.camera.pose.move_left(-distance, None);
             }
             if keyboard.contains(&Key::Left) | keyboard.contains(&Key::A) {
-                self.camera.pose.move_left(distance);
+                self.camera.pose.move_left(distance, None);
             }
             if keyboard.contains(&Key::Up) | keyboard.contains(&Key::W) {
-                self.camera.pose.move_forward(distance);
+                self.camera.pose.move_forward(distance, None);
             }
             if keyboard.contains(&Key::Down) | keyboard.contains(&Key::S) {
-                self.camera.pose.move_forward(-distance);
+                self.camera.pose.move_forward(-distance, None);
             }
             if keyboard.contains(&Key::Space) {
                 self.camera.pose.move_up(distance);

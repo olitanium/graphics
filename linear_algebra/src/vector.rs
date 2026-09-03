@@ -80,10 +80,10 @@ impl<const N: usize> Ord for Vector<N, VectorPreferredFloat> {
 /// `Vector::new([...])`.
 #[macro_export]
 macro_rules! vector {
-    ($($num:literal),+) => {
+    ($($num:expr),+) => {
         Vector::new([$($num,)+])
     };
-    ($num:literal; $len:expr) => {
+    ($num:expr; $len:expr) => {
         Vector::new([$num; $len])
     };
 }
@@ -243,8 +243,8 @@ impl<const N: usize> Vector<N, VectorPreferredFloat> {
             .then(|| UnitVector::new_unchecked(self.0.map(|x| x * one_len)))
     }
 
-    // pub const fn truncate_with<F, const M: usize>(self, f: F) -> Vector<M, f32>
-    // where
+    // pub const fn truncate_with<F, const M: usize>(self, f: F) -> Vector<M,
+    // f32> where
     // F: [const] FnMut() -> f32,
     // {
     // let array_vec = ArrayVec::from_array(self.0);
@@ -380,7 +380,7 @@ impl<const N: usize, T> Vector<N, T> {
     where
         T: [const] Mul<U, Output = T>,
         // TODO: remove when `Vector::into_inner` no longer needs it
-        T: [const] Destruct,
+        Self: [const] Destruct,
         U: [const] Clone + [const] Destruct,
     {
         let lhs = array::from_fn(const |_| scalar.clone());
@@ -692,8 +692,8 @@ where
 impl<const N: usize, T> AsRef<Vector<N, T>> for [T; N] {
     #[inline]
     fn as_ref(&self) -> &Vector<N, T> {
-        // SAFETY: reinterpret the reference as an array, this is similar to how it's
-        // done in `array::from_ref`
+        // SAFETY: reinterpret the reference as an array, this is similar to how
+        // it's done in `array::from_ref`
         unsafe { &*ptr::from_ref(self).cast() }
     }
 }

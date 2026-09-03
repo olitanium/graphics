@@ -3,7 +3,6 @@
 #![feature(type_changing_struct_update)]
 #![feature(checked_type_aliases)]
 #![feature(inherent_associated_types)]
-#![feature(never_type)]
 #![feature(option_array_transpose)]
 #![feature(try_trait_v2_residual)]
 #![feature(try_trait_v2)]

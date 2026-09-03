@@ -21,7 +21,7 @@ use crate::modelling::extended_vertex::ExtendedVertex;
 pub(crate) enum InnerChildrenOrMeta<'a, V: ExtendedVertex, T> {
     Meta {
         meta: RefMut<'a, T>,
-        triangles: &'a [(Vector<{ V::LEN }>, [V; 3])],
+        triangles: &'a [[V; 3]],
     },
     Children([&'a BoundingBoxElement<V, T>; 2]),
 }
@@ -111,21 +111,6 @@ impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
         let (self_lower_bound, self_upper_bound) = self.transform_by(self_transform);
         let (other_lower_bound, other_upper_bound) = other.transform_by(other_transform);
 
-        // let lines: [_; V::LEN] = array::from_fn(|index| {
-        // let one_lb = self_lower_bound[index];
-        // let one_ub = self_upper_bound[index];
-        // let two_lb = other_lower_bound[index];
-        // let two_ub = other_upper_bound[index];
-        //
-        // TestBoxVertex {
-        // one_lb,
-        // one_ub,
-        // two_lb,
-        // two_ub,
-        // }
-        // });
-        // .all(line_overlap)
-
         collides_with_upper_lower(
             self_upper_bound,
             self_lower_bound,
@@ -170,22 +155,6 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
         };
 
         let (self_lower_bound, self_upper_bound) = self.transform_by(transform);
-
-        // let lines: [_; 3] = array::from_fn(|index| {
-        // let one_lb = self_lower_bound[index];
-        // let one_ub = self_upper_bound[index];
-        // let two_lb = other_lower_bound[index];
-        // let two_ub = other_upper_bound[index];
-        //
-        // TestBoxVertex {
-        // one_lb,
-        // one_ub,
-        // two_lb,
-        // two_ub,
-        // }
-        // });
-        //
-        // lines.into_iter().all(line_overlap)
 
         collides_with_upper_lower(
             self_upper_bound,
@@ -296,35 +265,39 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
                     if !alter_meta(&mut *lhs, &mut *rhs) {
                         return;
                     }
-                    // compare all triangles in this with all triangles in other.
+                    // compare all triangles in this with all triangles in
+                    // other.
 
                     let other_iter = other_triangles
                         .iter()
-                        .map(|(_, tri)| {
+                        .map(|tri| {
                             let tri_transformed = tri
                                 .each_ref()
                                 .map(|vert| other_vertex_transform.transform(vert));
-                            let positions = tri.each_ref().map(|vert| vert.position());
+
+                            let positions = tri_transformed.each_ref().map(|vert| vert.position());
+
                             (tri_transformed, positions)
                         })
                         .filter(|(_, pos)| this.intersects_triangle(this_transform, pos));
 
                     this_triangles
                         .iter()
-                        .filter_map(|(_, tri)| {
-                            let new_this = tri
+                        .filter_map(|tri| {
+                            let tri_transformed = tri
                                 .each_ref()
                                 .map(|vert| this_vertex_transform.transform(vert));
-                            let this_pos = new_this.each_ref().map(|vert| vert.position());
 
-                            if other.intersects_triangle(other_transform, &this_pos) {
-                                Some(other_iter.clone().flat_map(move |(new_other, other_pos)| {
-                                    triangle_intersection::intersect3(this_pos, other_pos)
-                                        .then_some((new_this, new_other))
-                                }))
-                            } else {
-                                None
-                            }
+                            let positions = tri_transformed.each_ref().map(|vert| vert.position());
+
+                            other
+                                .intersects_triangle(other_transform, &positions)
+                                .then(|| {
+                                    other_iter.clone().flat_map(move |(new_other, other_pos)| {
+                                        triangle_intersection::intersect3(positions, other_pos)
+                                            .then_some((tri_transformed, new_other))
+                                    })
+                                })
                         })
                         .flatten()
                         .collect_into(accumulator);

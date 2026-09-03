@@ -2,11 +2,17 @@ use geometry::{Orientation, Pose};
 use graphics::linear_algebra::UnitVector;
 use triangle_intersection::Vector;
 
+use crate::modelling::cubic::CameraPose;
+
+// REMEMBER: left = +x
+//             up = +y
+//        forward = +z
+
 #[derive(Debug, Clone, Copy)]
 pub struct FixedUp {
-    up: UnitVector<3>,
     position: Vector<3>,
     forward: UnitVector<3>,
+    up: UnitVector<3>,
 }
 
 impl Default for FixedUp {
@@ -15,7 +21,7 @@ impl Default for FixedUp {
             up: UnitVector::Y,
             position: Vector::ZERO,
             forward: UnitVector::Z,
-            // left:
+            // left: UnitVector::X,
         }
     }
 }
@@ -45,24 +51,44 @@ impl FixedUp {
         })
     }
 
-    pub fn motion_up(&self) -> UnitVector<3> {
-        self.up
-    }
-
-    pub fn view_forward(&self) -> UnitVector<3> {
-        self.forward
-    }
-
-    pub fn view_left(&self) -> UnitVector<3> {
+    pub fn left(&self) -> UnitVector<3> {
         self.up
             .v()
             .cross(self.forward.v())
             .try_normalize()
-            .unwrap_or_default()
+            .unwrap_or(UnitVector::X)
     }
 
-    pub fn view_up(&self) -> UnitVector<3> {
-        self.pose.orientation().view_up()
+    pub fn left_nonunit(&self) -> Vector<3> {
+        self.up.v().cross(self.forward.v())
+    }
+
+    pub fn motion_up(&self) -> UnitVector<3> {
+        self.up
+    }
+
+    pub fn view_up(&self, left: Option<Vector<3>>) -> UnitVector<3> {
+        let left = left.unwrap_or_else(|| self.left_nonunit());
+        let up = self
+            .forward
+            .v()
+            .cross(left)
+            .try_normalize()
+            .unwrap_or(UnitVector::Y);
+        up
+    }
+
+    pub fn motion_forward(&self, left: Option<Vector<3>>) -> UnitVector<3> {
+        let left = left.unwrap_or_else(|| self.left_nonunit());
+        let forward = left
+            .cross(self.up.v())
+            .try_normalize()
+            .unwrap_or(UnitVector::Z);
+        forward
+    }
+
+    pub fn view_forward(&self) -> UnitVector<3> {
+        self.forward
     }
 
     pub fn look_up(&mut self, angle: f32) {
@@ -70,19 +96,40 @@ impl FixedUp {
         if !((angle > 0.0 && fdotu > Self::COS_NO_CONE)
             || (angle < 0.0 && fdotu < -Self::COS_NO_CONE))
         {
-            Orientation::look_up(angle);
+            let look_up = Orientation::axis_angle(-UnitVector::X, angle);
+            self.forward = look_up.act_on_unit(self.forward)
         }
     }
 
-    pub fn motion_forward(&self) -> UnitVector<3> {
-        match self {
-            Self::FixedUp {
-                up, orientation, ..
-            } => up
-                .v()
-                .cross(orientation.view_forward().v().cross(up.v()))
-                .normalize_or_panic(),
-            Self::Flexible { orientation, .. } => orientation.view_forward(),
-        }
+    pub fn look_left(&mut self, angle: f32) {
+        let look_left = Orientation::axis_angle(self.up, angle);
+        self.forward = look_left.act_on_unit(self.forward)
+    }
+
+    pub fn move_left(&mut self, distance: f32, left: Option<UnitVector<3>>) {
+        self.move_in(left.unwrap_or_else(|| self.left()).v().scale(distance));
+    }
+
+    pub fn move_forward(&mut self, distance: f32, left: Option<Vector<3>>) {
+        self.move_in(self.motion_forward(left).v().scale(distance))
+    }
+
+    pub fn move_up(&mut self, distance: f32) {
+        self.move_in(self.motion_up().v().scale(distance));
+    }
+
+    pub fn move_in(&mut self, displacement: Vector<3>) {
+        self.position += displacement
+    }
+}
+
+impl CameraPose for FixedUp {
+    type Hint = ();
+
+    fn get_pose(&self, _: &Self::Hint) -> Pose {
+        Pose::new_from_orientation_translation(
+            Orientation::new_forward_up(self.forward, self.up).unwrap_or_default(),
+            self.position,
+        )
     }
 }

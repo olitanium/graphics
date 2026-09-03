@@ -2,13 +2,15 @@ use std::collections::HashSet;
 use std::rc::Rc;
 
 use engine::entity::{Mass, Physics, SkeletonEntity};
-use engine::geometry::{Pose, Transform};
+use engine::geometry::Pose;
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{CalculatedAnimation, Camera, SimpleCubic};
+use engine::modelling::cubic::{CalculatedAnimation, SimpleCubic};
 use engine::modelling::{Collision, CubicVertex, SkeletonCubic};
 use engine::{ColourRGBA, Key, SimpleEntity};
 use utils::hash_matches;
+
+use crate::camera::GameCamera;
 
 pub struct Player {
     entity: SkeletonEntity<()>,
@@ -60,7 +62,7 @@ impl Player {
     pub fn controls<E>(
         &mut self,
         animation: &CalculatedAnimation,
-        camera: &Camera,
+        camera: &GameCamera,
         keyboard: &HashSet<Key>,
         frame_time: f32,
         environment: &mut E,
@@ -87,14 +89,15 @@ impl Player {
             .or_else(|| on_box.map(|unit| unit.v().dot(UP.v()) > 1.0 / 2.0_f32.sqrt()))
             .unwrap_or(false);
 
+        let camera_pose = &camera.camera.pose;
+
         if grounded {
             hash_matches! {keyboard:
-                &Key::W => force_accum += camera.pose.motion_forward().v(),
-                &Key::S => force_accum += -camera.pose.motion_forward().v(),
-                &Key::A => force_accum += camera.pose.motion_left().v(),
-                &Key::D => force_accum += -camera.pose.motion_left().v(),
+                &Key::W => force_accum += camera_pose.motion_forward(None).v(),
+                &Key::S => force_accum += -camera_pose.motion_forward(None).v(),
+                &Key::A => force_accum += camera_pose.left().v(),
+                &Key::D => force_accum += -camera_pose.left().v(),
                 &Key::Space => *self.entity.physics.velocity.y_mut() = 1.0,
-                //&Key::Space => {force_accum += 30.0 * Vector::Y; eprintln!("jump");},
             }
         }
 

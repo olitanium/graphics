@@ -7,7 +7,7 @@ pub struct Orientation {
 }
 
 impl Orientation {
-    pub const IDENTITY: Self = Self::from_quaternion(UnitQuaternion::IDENTITY);
+    pub const IDENTITY: Self = Self::from_unitquaternion(UnitQuaternion::IDENTITY);
 
     #[must_use]
     pub const fn into_quaternion(self) -> UnitQuaternion {
@@ -15,7 +15,7 @@ impl Orientation {
     }
 
     #[must_use]
-    pub const fn from_quaternion(quaternion: UnitQuaternion) -> Self {
+    pub const fn from_unitquaternion(quaternion: UnitQuaternion) -> Self {
         Self { quaternion }
     }
 
@@ -35,13 +35,13 @@ impl Orientation {
     #[must_use]
     pub fn combine(self, after: Self) -> Self {
         let new_quaternion = (after.quaternion.q() * self.quaternion.q()).normalize();
-        Self::from_quaternion(new_quaternion)
+        Self::from_unitquaternion(new_quaternion)
     }
 
     #[must_use]
     pub fn axis_angle(direction: UnitVector<3>, angle: f32) -> Self {
         let unit_quaternion = Quaternion::axis_angle(angle, direction);
-        Self::from_quaternion(unit_quaternion)
+        Self::from_unitquaternion(unit_quaternion)
     }
 
     #[must_use]

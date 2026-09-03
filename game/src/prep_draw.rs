@@ -25,7 +25,7 @@ impl State {
 
         let mut opaque = vec![
             self.origin_cube.debug_get_pair_model_bind_pose(),
-            // self.player.get_pair_model(),
+            self.player.get_pair_model(),
         ];
         if self.toggle_m {
             opaque.push(self.small_cube.debug_get_pair_model_bind_pose());

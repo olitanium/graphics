@@ -33,8 +33,6 @@ pub struct BoundingBoxElement<V: ExtendedVertex, T> {
     pub(crate) lower_bound: Vector<{ V::LEN }>,
     pub(crate) upper_bound: Vector<{ V::LEN }>,
 
-    // pub(crate) triangles: PhantomData<Vec<(Vector<{ V::LEN }>, [V; 3])>>,
-    // pub(crate) start_index: usize,
     pub(crate) children_or_meta: ChildrenOrMeta<T>,
 }
 
@@ -179,7 +177,7 @@ impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
         &self,
         bounding_box: &'a BoundingBox<V, T>,
         // all_triangles: &'a [(Vector<DIMS>, [V; 3])],
-    ) -> Option<&'a [(Vector<{ V::LEN }>, [V; 3])]> {
+    ) -> Option<&'a [[V; 3]]> {
         if let ChildrenOrMeta::Meta {
             triangle_start,
             triangle_len,

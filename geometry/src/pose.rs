@@ -1,5 +1,5 @@
 use dual_number::{DualNumber, DualQuaternion, UnitDualQuaternion};
-use linear_algebra::{Matrix, Vector};
+use linear_algebra::{Matrix, UnitVector, Vector};
 use quaternion::Quaternion;
 
 use crate::{Orientation, Transform as _};
@@ -26,6 +26,20 @@ impl Pose {
     #[must_use]
     pub const fn new_from_dual(dual_quaternion: UnitDualQuaternion) -> Self {
         Self { dual_quaternion }
+    }
+
+    pub fn new_from_to_up(from: Vector<3>, to: Vector<3>, up: UnitVector<3>) -> Option<Self> {
+        let forward = (to - from).try_normalize()?;
+        Self::new_forward_up(from, forward, up)
+    }
+
+    pub fn new_forward_up(
+        from: Vector<3>,
+        forward: UnitVector<3>,
+        up: UnitVector<3>,
+    ) -> Option<Self> {
+        let orientation = Orientation::new_forward_up(forward, up)?;
+        Some(Self::new_from_orientation_translation(orientation, from))
     }
 
     #[must_use]
@@ -87,7 +101,7 @@ impl Pose {
     pub fn orientation(self) -> Orientation {
         let new = self.dual_quaternion.u().real.normalize();
 
-        Orientation::from_quaternion(new)
+        Orientation::from_unitquaternion(new)
     }
 
     #[must_use]
@@ -109,6 +123,18 @@ impl Pose {
     pub fn push_change(&mut self, pose: Self) -> &Self {
         *self = pose.transform(self);
         self
+    }
+
+    pub fn transform_x(&self) -> UnitVector<3> {
+        self.transform(&UnitVector::X)
+    }
+
+    pub fn transform_y(&self) -> UnitVector<3> {
+        self.transform(&UnitVector::Y)
+    }
+
+    pub fn transform_z(&self) -> UnitVector<3> {
+        self.transform(&UnitVector::Z)
     }
 }
 

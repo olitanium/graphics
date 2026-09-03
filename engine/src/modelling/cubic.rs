@@ -13,7 +13,8 @@ pub use camera::{
     Builder as CameraBuilder,
     Camera,
     CameraPose,
-    ManualPose as ManualCameraPose,
+    ManualPoseFixedUp,
+    ManualPoseFlexible,
     Projection as CameraProjection,
 };
 

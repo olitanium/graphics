@@ -36,7 +36,7 @@ impl AggregateCalcAnim {
     }
 
     pub fn get<'a>(&'a self, index: &AggregateModelIndex) -> Option<&'a CalculatedAnimation> {
-        self.vec.get(index.0) //.map(|opt| opt.as_ref()).flatten()
+        self.vec.get(index.0)
     }
 
     pub fn root(&self) -> &CalculatedAnimation {
@@ -77,10 +77,10 @@ impl<'a> AggregateCalcAnimBuilder<'a> {
 
         if let Some(parent_skeleton) = self.units.get(parent_index.index) {
             if parent_skeleton.skeleton.get(attachment_point).is_bone() {
-                // Asserted that there is a valid parent and that parent has a bone to attach
-                // to.
-                // parent IS in the builder and skeleton DOES have relevant attachement point
-                // (bone)
+                // Asserted that there is a valid parent and that parent has a
+                // bone to attach to.
+                // parent IS in the builder and skeleton DOES have relevant
+                // attachement point (bone)
                 let parent = Some(Parent {
                     index: parent_index,
                     bone_attachment_point: attachment_point.clone_inner(),

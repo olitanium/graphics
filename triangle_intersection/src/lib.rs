@@ -196,7 +196,6 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
         CrossType::Success(new_one, new_two) => {
             // TODO: intersecting planes and/or triangles
             use SignOrZero as S;
-
             #[cfg(debug_assertions)]
             {
                 let test1 = make_determinants_signorzero(new_one, new_two);
@@ -246,8 +245,8 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
 
 fn embed_three_to_two(one: Triangle<3>, two: Triangle<3>) -> Option<(Triangle<2>, Triangle<2>)> {
     let [a, b, c] = one;
-    // if ab and ac are parallel, then the vector is just a line and is not handled
-    // yet
+    // if ab and ac are parallel, then the vector is just a line and is not
+    // handled yet
     let normal = (b - a).cross(c - a).try_normalize()?;
 
     // Should not fail because `X` != `Y`

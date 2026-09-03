@@ -1,4 +1,3 @@
-use std::convert::Infallible;
 use std::ops::{ControlFlow, FromResidual, Residual, Try};
 
 use crate::framebuffer::FramebufferContext;
@@ -20,14 +19,6 @@ pub enum PollResultResidual<E> {
 
 impl<'a, E, D: Draw + 'a> Residual<D> for PollResultResidual<E> {
     type TryType = PollResult<D, E>;
-}
-
-impl<E, D: Draw> FromResidual<Result<Infallible, E>> for PollResult<D, E> {
-    fn from_residual(residual: Result<Infallible, E>) -> Self {
-        match residual {
-            Err(e) => Self::Error(e),
-        }
-    }
 }
 
 impl<E, D: Draw> FromResidual<Result<!, E>> for PollResult<D, E> {

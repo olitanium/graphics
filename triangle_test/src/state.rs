@@ -5,7 +5,13 @@ use engine::geometry::{Orientation, Pose};
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{Camera, CameraBuilder, ManualCameraPose, MeshBuilder, SimpleCubic};
+use engine::modelling::cubic::{
+    Camera,
+    CameraBuilder,
+    ManualPoseFixedUp,
+    MeshBuilder,
+    SimpleCubic,
+};
 use engine::modelling::{Collision, IncompleteVertex, SimpleCubicGroup};
 use engine::types::TexDim;
 use engine::{
@@ -39,7 +45,7 @@ impl ApiState for State {
         let camera = CameraBuilder::new()
             .perspective(90_f32.to_radians(), aspect, 0.1, 10.0)
             .pose(
-                ManualCameraPose::new_fixed_forward_up(
+                ManualPoseFixedUp::new_forward(
                     Vector::new([0.0, 0.0, 2.0]),
                     -UnitVector::Z,
                     UnitVector::Y,
@@ -48,9 +54,9 @@ impl ApiState for State {
             )
             .build();
 
-        let triangle_one = {
-            let triangle_one_vertices = [-Vector::X + Vector::Y, -Vector::X, Vector::Y]
-                .map(|vec| IncompleteVertex::new(vec).texture(vec.truncate()));
+        fn make_triangle(triangle: [Vector<3>; 3]) -> SimpleEntity<()> {
+            let triangle_one_vertices =
+                triangle.map(|vec| IncompleteVertex::new(vec).texture(vec.truncate()));
 
             let mut triangle_one_cubic =
                 SimpleCubic::builder().cull_face(shader_program::CullFace::DoNotCull);
@@ -68,31 +74,15 @@ impl ApiState for State {
                 |_| (),
             );
 
+            // out.bounding_box = out
+            // .bounding_box
+            // .take()
+            // .map(|value| value.new_test_trianges(|_| ()));
             out
-        };
+        }
 
-        let triangle_two = {
-            let triangle_two_vertices = [Vector::ZERO, Vector::X, -Vector::Y]
-                .map(|vec| IncompleteVertex::new(vec).texture(vec.truncate()));
-
-            let mut triangle_two_cubic =
-                SimpleCubic::builder().cull_face(shader_program::CullFace::DoNotCull);
-            let mut mesh_builder = MeshBuilder::new().material(Rc::new(Material::black()));
-
-            mesh_builder.push_triangle(triangle_two_vertices);
-            triangle_two_cubic.push_mesh(mesh_builder);
-
-            let triangle_one_model = triangle_two_cubic.build();
-
-            let out = SimpleEntity::from_simple_cubic(
-                triangle_one_model,
-                1,
-                Mass::new_inverse(1.0),
-                |_| (),
-            );
-
-            out
-        };
+        let triangle_one = make_triangle([-Vector::X + Vector::Y, -Vector::X, Vector::Y]);
+        let triangle_two = make_triangle([Vector::ZERO, Vector::X, -Vector::Y]);
 
         Ok(Self {
             triangle_one,
@@ -121,9 +111,8 @@ impl ApiState for State {
         let frame_time = frame_time.as_secs_f32();
 
         fn move_triangle_two(state: &mut State, translation: [f32; 3]) {
-            let mut old_pose = state.triangle_two.physics.pose;
+            let old_pose = &mut state.triangle_two.physics.pose;
             old_pose.push_change(Pose::new_from_translation(Vector::new(translation)));
-            state.triangle_two.physics.pose = old_pose;
         }
 
         fn rotate_triangle_two(state: &mut State, rotation: Orientation) {
@@ -133,7 +122,7 @@ impl ApiState for State {
             state.triangle_two.physics.pose = new_pose;
         }
 
-        hash_matches! {keys:
+        hash_matches! { keys:
             &Key::Escape => return PollResult::Close,
             &Key::W => move_triangle_two(self, [0.0, frame_time, 0.0]),
             &Key::S => move_triangle_two(self, [0.0, -frame_time, 0.0]),

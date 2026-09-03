@@ -7,14 +7,14 @@ pub use projection::Projection;
 
 mod manual_pose;
 pub use builder::Builder;
-pub use manual_pose::ManualPose;
+pub use manual_pose::{FixedUp as ManualPoseFixedUp, Flexible as ManualPoseFlexible};
 
 pub mod camerapose;
 pub use camerapose::CameraPose;
 use geometry::Orientation;
 
 #[derive(Clone, Debug)]
-pub struct Camera<P: CameraPose = ManualPose> {
+pub struct Camera<P: CameraPose = ManualPoseFixedUp> {
     pub pose: P,
     pub radius: f32, // first or third-person
     pub projection: Projection,

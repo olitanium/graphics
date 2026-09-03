@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use std::convert::Infallible;
 use std::mem;
 use std::ops::{FromResidual, Try};
 
@@ -47,11 +46,10 @@ impl<T> FromResidual for ControlOutput<T> {
     }
 }
 
-impl<T, E: Into<StateError>> FromResidual<Result<Infallible, E>> for ControlOutput<T> {
-    fn from_residual(residual: Result<Infallible, E>) -> Self {
-        match residual {
-            Err(x) => ControlOutput::Error(x.into()),
-        }
+impl<T, E: Into<StateError>> FromResidual<Result<!, E>> for ControlOutput<T> {
+    fn from_residual(residual: Result<!, E>) -> Self {
+        let x = residual.into_err();
+        ControlOutput::Error(x.into())
     }
 }
 
@@ -105,21 +103,21 @@ impl State {
             self.exposure += 1.2 * frame_time;
         }
         // if keyboard.contains(&Key::Right) {
-        // let diff = Pose::new_from_translation(Vector::new([0.0, 0.0, frame_time *
-        // 0.5])); self.morgan.pose = self.morgan.pose.transform_by(&diff);
-        // }
+        // let diff = Pose::new_from_translation(Vector::new([0.0, 0.0,
+        // frame_time * 0.5])); self.morgan.pose =
+        // self.morgan.pose.transform_by(&diff); }
         // if keyboard.contains(&Key::Left) {
-        // let diff = Pose::new_from_translation(Vector::new([0.0, 0.0, -frame_time *
-        // 0.5])); self.morgan.pose = self.morgan.pose.transform_by(&diff);
-        // }
+        // let diff = Pose::new_from_translation(Vector::new([0.0, 0.0,
+        // -frame_time * 0.5])); self.morgan.pose =
+        // self.morgan.pose.transform_by(&diff); }
         // if keyboard.contains(&Key::Up) {
-        // let diff = Pose::new_from_translation(Vector::new([0.0, frame_time * 0.5,
-        // 0.0])); self.morgan.pose = self.morgan.pose.transform_by(&diff);
-        // }
+        // let diff = Pose::new_from_translation(Vector::new([0.0, frame_time *
+        // 0.5, 0.0])); self.morgan.pose =
+        // self.morgan.pose.transform_by(&diff); }
         // if keyboard.contains(&Key::Down) {
-        // let diff = Pose::new_from_translation(Vector::new([0.0, -frame_time * 0.5,
-        // 0.0])); self.morgan.pose = self.morgan.pose.transform_by(&diff);
-        // }
+        // let diff = Pose::new_from_translation(Vector::new([0.0, -frame_time *
+        // 0.5, 0.0])); self.morgan.pose =
+        // self.morgan.pose.transform_by(&diff); }
         if keyboard.contains(&Key::U) {
             self.camera.radius_out(-0.5 * frame_time);
         }

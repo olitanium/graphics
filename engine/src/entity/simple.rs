@@ -92,14 +92,16 @@ impl<TThis> Collision for SimpleEntity<TThis> {
         target_vertex_transform: &T::VertexTransform<'_>,
         alter_meta: F,
     ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>> {
-        self.bounding_box.as_ref()?.collides(
-            &self.physics.pose,
-            &self.physics.pose,
-            target,
-            target_transform,
-            target_vertex_transform,
-            alter_meta,
-        )
+        self.bounding_box.as_ref().and_then(|bbox| {
+            bbox.collides(
+                &self.physics.pose,
+                &self.physics.pose,
+                target,
+                target_transform,
+                target_vertex_transform,
+                alter_meta,
+            )
+        })
     }
 }
 

@@ -1,9 +1,11 @@
+use std::marker::Destruct;
+
 use utils::{builder, new};
 
 use super::{Camera, Projection};
 use crate::modelling::cubic::camera::CameraPose;
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct MissingPose;
 
 #[derive(Default, Debug)]
@@ -20,7 +22,10 @@ impl Builder<MissingPose> {
 impl<P> Builder<P> {
     builder!(radius: f32);
 
-    pub fn pose<PN: CameraPose>(self, pose: PN) -> Builder<PN> {
+    pub const fn pose<PN: CameraPose>(self, pose: PN) -> Builder<PN>
+    where
+        Self: [const] Destruct,
+    {
         Builder { pose, ..self }
     }
 

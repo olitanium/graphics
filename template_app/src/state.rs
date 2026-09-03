@@ -2,7 +2,7 @@ use core::time::Duration;
 use std::collections::HashSet;
 
 use engine::types::TexDim;
-use engine::{ApiState, DrawNothing, Event};
+use engine::{ApiState, DrawNothing, Event, PollResult};
 
 pub struct State;
 
@@ -21,7 +21,7 @@ impl ApiState for State {
     fn poll<'a>(
         &'a mut self,
         events: Vec<engine::Event<'a>>,
-    ) -> engine::PollResult<Self::DrawOutput<'a>, Self::Error> {
+    ) -> PollResult<Self::DrawOutput<'a>, Self::Error> {
         let mut opt_default = None;
         let mut frame_time = Duration::default();
         let mut keys = HashSet::default();
@@ -35,6 +35,6 @@ impl ApiState for State {
             }
         }
 
-        engine::PollResult::Draw(DrawNothing)
+        PollResult::Draw(DrawNothing)
     }
 }

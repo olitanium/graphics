@@ -1,6 +1,6 @@
 use std::collections::HashSet;
-use std::convert::Infallible;
 use std::ops::{FromResidual, Residual, Try};
+use std::ptr::read;
 use std::time::Duration;
 
 use engine::linear_algebra::Vector;
@@ -47,11 +47,10 @@ impl<T> FromResidual for ControlOutput<T> {
     }
 }
 
-impl<T, E: Into<StateError>> FromResidual<Result<Infallible, E>> for ControlOutput<T> {
-    fn from_residual(residual: Result<Infallible, E>) -> Self {
-        match residual {
-            Err(x) => ControlOutput::Error(x.into()),
-        }
+impl<T, E: Into<StateError>> FromResidual<Result<!, E>> for ControlOutput<T> {
+    fn from_residual(residual: Result<!, E>) -> Self {
+        let Err(x) = residual;
+        ControlOutput::Error(x.into())
     }
 }
 
@@ -115,7 +114,7 @@ impl State {
         if !self.game_camera.move_lock {
             self.player.controls(
                 &self.player.get_pair_model().1,
-                &self.game_camera.camera,
+                &self.game_camera,
                 &keyboard,
                 frame_time,
                 &mut self.small_cube,

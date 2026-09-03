@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::fmt::Debug;
 use std::sync::LazyLock;
 
@@ -12,6 +13,7 @@ use graphics::{ActiveShaderProgram, Model, ShaderProgram};
 
 mod element;
 pub use element::BoundingBoxElement;
+use element::{ChildrenOrMeta, DrawRecursiveError};
 use graphics::vertex::Vertex;
 
 mod group;
@@ -29,17 +31,41 @@ pub mod collision;
 pub use collision::{Collision, no_alter_meta};
 
 // pub use crate::modelling::bounding_box::collision::TempModelTransform;
-use crate::modelling::bounding_box::element::DrawRecursiveError;
 use crate::modelling::extended_vertex::ExtendedVertex;
 use crate::modelling::{CubicVertex, SimpleVertex, SkeletonCubic, Volume};
 
 #[derive(Debug, Clone)]
 pub struct BoundingBox<V: ExtendedVertex, T> {
-    triangles: Vec<(Vector<{ V::LEN }>, [V; 3])>,
+    triangles: Vec<[V; 3]>,
     inner: Vec<BoundingBoxElement<V, T>>,
 }
 
 impl<V: ExtendedVertex, T> BoundingBox<V, T> {
+    pub fn new_test_trianges<F>(self, f: F) -> Self
+    where
+        F: FnOnce(&[[V; 3]]) -> T,
+        Vector<{ V::LEN }>: Volume,
+    {
+        let triangles_len = self.triangles.len();
+        let (upper_bound, lower_bound) = Volume::infinity();
+        let meta = f(&self.triangles);
+        let children_or_meta = ChildrenOrMeta::Meta {
+            triangle_start: 0,
+            triangle_len: triangles_len,
+            meta: RefCell::new(meta),
+        };
+        let elem = BoundingBoxElement {
+            lower_bound,
+            upper_bound,
+            children_or_meta,
+        };
+
+        Self {
+            triangles: self.triangles,
+            inner: vec![elem],
+        }
+    }
+
     fn get(&self, index: usize) -> &BoundingBoxElement<V, T> {
         &self.inner[index]
     }
@@ -72,15 +98,17 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
         depth: usize,
         mut init: F,
     ) -> Option<Self> {
+        let triangles: Vec<_> = triangles.into_iter().collect();
+
         let mut triangles_with_mid: Vec<_> = triangles
-            .into_iter()
+            .iter()
             .map(|triangle| {
                 let vertices = triangle.map(|vertex| vertex.position());
                 let mut mid: Vector<_> = vertices.into_iter().sum();
                 const ONE_THIRD: f32 = 1.0 / 3.0;
                 mid = mid.scale(ONE_THIRD);
 
-                (mid, triangle)
+                (mid, *triangle)
             })
             .collect();
 
@@ -94,7 +122,7 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
         )?;
 
         Some(BoundingBox {
-            triangles: triangles_with_mid,
+            triangles,
             inner: accumulator,
         })
     }
