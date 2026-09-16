@@ -55,7 +55,6 @@ impl SimplePhysics {
                 let nudge_dir = -f32::max(self.velocity.dot(normal.v()), 0.0) * normal.v();
 
                 self.velocity += nudge_dir;
-                dbg!(self.velocity);
             }
         }
 
@@ -97,25 +96,24 @@ pub trait Physics: for<'a> Collision<VertexTransform<'a> = ()> {
         let (mut first_tri, mut other_tri): (Vec<_>, Vec<_>) = collides.into_iter().unzip();
 
         fn get_average_normal<V: CubicVertex + PartialEq>(
-            this: &mut [[V; 3]],
+            mut this: &mut [[V; 3]],
         ) -> Option<UnitVector<3>> {
             this.sort_by_cached_key(|pos1| pos1.each_ref().map(|vert| vert.position()));
-            let to_test = this.partition_dedup().0;
+            this = this.partition_dedup().0;
 
-            let x: Vector<3> = to_test
+            let total_normals = this
                 .iter()
-                .map(|tri| V::triangle_normal(tri))
-                .map(UnitVector::v)
-                .sum();
+                .map(|tri| V::triangle_normal(tri).v())
+                .sum::<Vector<_>>();
 
-            x.try_normalize()
+            total_normals.try_normalize()
         }
 
         fn get_average_normal_and_depth_into_other<V: CubicVertex + PartialEq, V2: CubicVertex>(
             this: &mut [[V; 3]],
             other: &[[V2; 3]],
         ) -> Option<NormalMax> {
-            let normal = dbg!(get_average_normal(this))?;
+            let normal = get_average_normal(this)?;
 
             let this_depth = this
                 .as_flattened()
@@ -150,7 +148,7 @@ pub trait Physics: for<'a> Collision<VertexTransform<'a> = ()> {
                 None => get_average_normal(this_tri),
                 Some(this_phys) => get_average_normal_and_depth_into_other(this_tri, other_tri)
                     .map(|normal_max| {
-                        this_phys.append_to_collision_dir(dbg!(normal_max));
+                        this_phys.append_to_collision_dir(normal_max);
                         normal_max.normal
                     }),
             }

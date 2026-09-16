@@ -99,7 +99,6 @@ impl Player {
                 &Key::D => force_accum += -camera_pose.left().v(),
                 &Key::Space => *self.entity.physics.velocity.y_mut() = 1.0,
             }
-            // force_accum += -camera_pose.motion_forward(None).v();
         }
 
         let mass = self.entity.physics.mass.mass();

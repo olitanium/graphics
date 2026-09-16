@@ -6,7 +6,6 @@
 #![feature(const_ops)]
 #![feature(const_trait_impl)]
 #![feature(const_convert)]
-#![feature(never_type)]
 
 mod error;
 mod sf;
