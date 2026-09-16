@@ -10,7 +10,7 @@ use engine::modelling::cubic::CameraProjection;
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
 use engine::modelling::{Bloom, SkyBox};
 use engine::types::TexDim;
-use engine::{ApiState, Draw, Event, PollResult, SimpleEntity};
+use engine::{ApiState, Draw, Event, PollResult};
 
 use crate::camera::GameCamera;
 use crate::morgan::Sun;

@@ -1,18 +1,15 @@
 use engine::array_vec::arrvec;
 use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::lighting::shadow::{PointLightIlluminatesGroup, ShadowListLights};
-use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::{
     BloomGroup,
-    BoundingBoxGroup,
     FramebufferQuad,
     ScreenQuadGroup,
     ShadowGroup,
-    SimpleCubicGroup,
     SkyBoxGroup,
 };
 use engine::query::HasDrawnQuery;
-use engine::{Draw, PollResult, VecDraw, opengl_shaders};
+use engine::{Draw, PollResult, VecDraw};
 
 use crate::state::{State, StateError};
 
@@ -31,7 +28,7 @@ impl State {
             opaque.push(self.small_cube.debug_get_pair_model_bind_pose());
         }
 
-        let sun = vec![self.sun.inner.debug_get_pair_model_bind_pose()];
+        let _sun = vec![self.sun.inner.debug_get_pair_model_bind_pose()];
 
         out.push(
             ShadowGroup::new(

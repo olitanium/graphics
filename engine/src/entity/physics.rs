@@ -1,8 +1,8 @@
 use std::fmt::Debug;
-use std::{iter, mem};
+use std::mem;
 
 use geometry::Pose;
-use graphics::linear_algebra::{UnitVector, vector};
+use graphics::linear_algebra::UnitVector;
 use triangle_intersection::Vector;
 
 use crate::entity::Mass;

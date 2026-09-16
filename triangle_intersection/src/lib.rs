@@ -3,9 +3,8 @@
 #![warn(missing_docs)]
 #![expect(clippy::too_many_lines, reason = "I don't mind")]
 
-use geometry::{Orientation, Pose, TransformBy as _};
 pub use linear_algebra::Vector;
-use linear_algebra::{Matrix, UnitVector, vector};
+use linear_algebra::{Matrix, vector};
 
 /// Triangle is just an array of Vectors.
 type Triangle<const DIMS: usize> = [Vector<DIMS>; 3];

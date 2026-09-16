@@ -1,11 +1,9 @@
 use std::collections::HashSet;
-use std::fmt::Debug;
 use std::rc::Rc;
 
 use engine::entity::{Mass, Physics, SkeletonEntity};
 use engine::geometry::Pose;
 use engine::linear_algebra::{UnitVector, Vector};
-use engine::modelling::bounding_box::no_alter_meta;
 use engine::modelling::cubic::material::Material;
 use engine::modelling::cubic::{CalculatedAnimation, SimpleCubic};
 use engine::modelling::{Collision, CubicVertex, SkeletonCubic};

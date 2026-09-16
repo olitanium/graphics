@@ -2,7 +2,6 @@ use std::collections::HashSet;
 use std::time::Duration;
 
 use engine::Key;
-use engine::entity::Physics;
 use engine::geometry::{Orientation, Pose};
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::CalculatedAnimation;

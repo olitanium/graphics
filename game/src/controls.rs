@@ -1,6 +1,5 @@
 use std::collections::HashSet;
 use std::ops::{FromResidual, Residual, Try};
-use std::ptr::read;
 use std::time::Duration;
 
 use engine::linear_algebra::Vector;
