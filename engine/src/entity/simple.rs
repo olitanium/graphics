@@ -67,7 +67,7 @@ impl<T> SimpleEntity<T> {
         other_transform: &B::Transform<'_>,
     ) -> (Option<UnitVector<3>>, Option<UnitVector<3>>)
     where
-        <B as Collision>::Vertex: CubicVertex + PartialEq,
+        <B as Collision>::Vertex: CubicVertex + PartialEq + Debug,
     {
         <Self as Physics>::move_collide_repel(self, &(), other, other_transform)
     }

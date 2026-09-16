@@ -10,11 +10,11 @@ use crate::modelling::cubic::material::Material;
 use crate::modelling::cubic::mesh::MeshBuilder;
 use crate::modelling::cubic::simple_cubic::TransformType;
 use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
-use crate::modelling::test_models;
+use crate::modelling::{SimpleVertex, test_models};
 
 #[derive(Debug, Clone, Default)]
 pub struct Builder<'a> {
-    mesh_builders: Vec<(&'a SkeletonBoneIndex, MeshBuilder)>,
+    mesh_builders: Vec<(&'a SkeletonBoneIndex, MeshBuilder<SimpleVertex>)>,
     cull_face: CullFace,
     skeleton: Option<Skeleton>,
     transforms: Vec<TransformType>,
@@ -27,11 +27,13 @@ impl<'a> Builder<'a> {
 
     builder!(skeleton: Option<Skeleton>);
 
-    pub fn push_mesh(&mut self, bone: &'a SkeletonBoneIndex, mesh: MeshBuilder) {
+    pub fn push_mesh(&mut self, bone: &'a SkeletonBoneIndex, mesh: MeshBuilder<SimpleVertex>) {
         self.mesh_builders.push((bone, mesh));
     }
 
-    pub fn extend_meshes<I: IntoIterator<Item = (&'a SkeletonBoneIndex, MeshBuilder)>>(
+    pub fn extend_meshes<
+        I: IntoIterator<Item = (&'a SkeletonBoneIndex, MeshBuilder<SimpleVertex>)>,
+    >(
         &mut self,
         meshes: I,
     ) {
@@ -47,7 +49,7 @@ impl<'a> Builder<'a> {
     ) {
         let mut mesh_builder = MeshBuilder::new().material(material);
         mesh_builder.extend_triangle(
-            test_models::origin_cube(side_length).map(|triangle| triangle.transform_by(&pose)),
+            test_models::origin_cube(side_length).map(|triangle| triangle.transform_by(pose)),
         );
         self.mesh_builders.push((bone, mesh_builder));
     }

@@ -3,9 +3,10 @@
 use core::marker::Destruct;
 use core::mem;
 use core::mem::MaybeUninit;
-use core::ops::{Add, Mul, Sub};
+use core::ops::{Add, Div, Mul, Sub};
 
 use array_vec::ArrayVec;
+use float_eq::NearlyEq;
 
 use crate::VectorPreferredFloat;
 
@@ -77,6 +78,7 @@ where
 elem_wise!(Add::add, +);
 elem_wise!(Sub::sub, -);
 elem_wise!(Mul::mul, *);
+elem_wise!(Div::div, /);
 
 /// Calculate the dot product, that is the sum of the element-wise products of
 /// two cartesian vectors.
@@ -93,27 +95,17 @@ where
 /// Check whether all components of the vector are zero (or very close).
 #[inline]
 pub const fn is_zero<const N: usize>(v1: [VectorPreferredFloat; N]) -> bool {
-    const PRECISION_PER_DIMENSION: VectorPreferredFloat = 0.001;
-    let mut index = 0;
-    while let Some(&value) = v1.get(index) {
-        if value.abs() > PRECISION_PER_DIMENSION {
-            return false;
-        }
-
-        index += 1;
-    }
-    true
+    nearly_eq(v1, [0.0; N])
 }
 
 /// Check whether all components are element-wise equal.
-pub const fn eq<const N: usize>(
-    v1: [VectorPreferredFloat; N],
-    v2: [VectorPreferredFloat; N],
-) -> bool {
-    const PRECISION_PER_DIMENSION: VectorPreferredFloat = 0.001;
+pub const fn nearly_eq<const N: usize, T>(v1: [T; N], v2: [T; N]) -> bool
+where
+    T: [const] NearlyEq + [const] Destruct,
+{
     let mut index = 0;
-    while let (Some(&value), Some(&value2)) = (v1.get(index), v2.get(index)) {
-        if (value - value2).abs() > PRECISION_PER_DIMENSION {
+    while let (Some(value), Some(value2)) = (v1.get(index), v2.get(index)) {
+        if !value.nearly_eq(value2, T::SMALL_VALUE, T::SMALL_VALUE) {
             return false;
         }
 
@@ -146,7 +138,7 @@ mod test {
 
     #[test]
     fn equal() {
-        assert!(eq([1.0, 1.0], [1.0, 1.0]));
-        assert!(!eq([0.0, 0.0], [1.0, 1.0]));
+        assert!(nearly_eq([1.0, 1.0], [1.0, 1.0]));
+        assert!(!nearly_eq([0.0, 0.0], [1.0, 1.0]));
     }
 }

@@ -114,7 +114,7 @@ impl<'a> AggregateCalcAnimBuilder<'a> {
                     .0
                     .get(parent.bone_attachment_point.0)
                     .expect("invariant, the existence of this is checked by the `push` method");
-                attachment_pose.pose.transform(&unit.local_transform)
+                attachment_pose.pose.transform(unit.local_transform)
             } else {
                 unit.local_transform
             };
@@ -156,7 +156,7 @@ impl<'a> AggregateCalcAnimBuilder<'a> {
             .ok_or(BuildFixingBoneError::BoneDoesNotExist)?
             .pose;
 
-        let deviation = pose.transform(&fixed_pose.inverse());
+        let deviation = pose.transform(fixed_pose.inverse());
 
         let vec = world_positions
             .into_iter()

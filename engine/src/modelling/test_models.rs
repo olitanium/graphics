@@ -263,7 +263,7 @@ pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletonBoneIndex, Skeleta
             .push_animation(animation1.clone(), &current_bone)
             .expect("parent bone always exists");
 
-        cube_pose = cube_pose.transform_by(&cube_push);
+        cube_pose = cube_pose.transform_by(cube_push);
         current_bone = skeleton.push_bone(bone).unwrap();
     }
 

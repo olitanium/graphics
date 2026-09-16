@@ -42,12 +42,12 @@ impl Vertex for SimpleVertex {
 }
 
 impl TransformBy<Pose> for SimpleVertex {
-    fn transform_by(&self, pose: &Pose) -> Self {
+    fn transform_by(self, pose: Pose) -> Self {
         Self {
-            position: pose.transform(&self.position),
-            normal: pose.transform(&self.normal),
-            tangent: pose.transform(&self.tangent),
-            ..*self
+            position: pose.transform(self.position),
+            normal: pose.transform(self.normal),
+            tangent: pose.transform(self.tangent),
+            ..self
         }
     }
 }
@@ -66,21 +66,33 @@ impl ExtendedVertex for SimpleVertex {
     ) -> Option<[Self; 3]> {
         let temp_incomplete_triangle = incomplete_triangle.clone();
 
-        let new_normal = LazyCell::new(|| {
+        let new_normal = || {
             let ab = temp_incomplete_triangle[1].position - temp_incomplete_triangle[0].position;
             let ac = temp_incomplete_triangle[2].position - temp_incomplete_triangle[0].position;
-            ab.cross(ac).try_normalize()
-        });
+            let out = ab.cross(ac).try_normalize();
+            if out.is_none() {
+                eprintln!("failed to make normal: ab: {ab:?}, ac: {ac:?}");
+            }
+            out
+        };
 
-        let new_tangent = LazyCell::new(|| {
+        let new_tangent = || {
             let ab = temp_incomplete_triangle[1].position - temp_incomplete_triangle[0].position;
             let ac = temp_incomplete_triangle[2].position - temp_incomplete_triangle[0].position;
             let z = temp_incomplete_triangle[1].texture? - temp_incomplete_triangle[0].texture?;
             let g = temp_incomplete_triangle[2].texture? - temp_incomplete_triangle[0].texture?;
 
-            (ab.scale(g[1]) - ac.scale(z[1])) // .scale(1.0/(g[1]*z[0] - g[0]*z[1]))
-                .try_normalize() // change of basis
-        });
+            let out = (ab.scale(g[1]) - ac.scale(z[1])) // .scale(1.0/(g[1]*z[0] - g[0]*z[1]))
+                .try_normalize(); // change of basis
+            if out.is_none() {
+                eprintln!(
+                    "failed to make tangent: ab: {ab:?}, ac: {ac:?}, z[1]: {0:?}, g[1]: {1:?}",
+                    z[1], g[1]
+                )
+            }
+
+            out
+        };
 
         incomplete_triangle.try_map(
             |IncompleteVertex {
@@ -90,8 +102,8 @@ impl ExtendedVertex for SimpleVertex {
                  tangent,
                  ..
              }| {
-                let final_normal = normal.or_else(|| *new_normal)?;
-                let final_tangent = tangent.or_else(|| *new_tangent)?;
+                let final_normal = normal.or_else(new_normal)?;
+                let final_tangent = tangent.or_else(new_tangent)?;
 
                 Some(Self {
                     position,
@@ -107,6 +119,10 @@ impl ExtendedVertex for SimpleVertex {
 impl CubicVertex for SimpleVertex {
     fn triangle_normal(triangle: &[Self; 3]) -> UnitVector<3> {
         Self::triangle_normal_tangent(triangle)
+    }
+
+    fn multi_normal(triangle: &[Self; 3]) -> [UnitVector<3>; 3] {
+        Self::triangle_multi_normal_tangent(triangle)
     }
 }
 

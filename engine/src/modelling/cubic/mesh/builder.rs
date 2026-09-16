@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 use std::rc::Rc;
 
 use geometry::TransformBy;
@@ -10,14 +11,26 @@ use crate::modelling::cubic::simple_cubic::TransformType;
 use crate::modelling::extended_vertex::IncompleteVertex;
 use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex};
 
-#[derive(Debug, Clone, Default)]
-pub struct Builder {
+#[derive(Debug, Clone)]
+pub struct Builder<V: CubicVertex> {
     pub triangles: Vec<[IncompleteVertex<3>; 3]>,
     pub material: Rc<Material>,
     transforms: Rc<[TransformType]>,
+    phantom: PhantomData<Vec<V>>,
 }
 
-impl Builder {
+impl<V: CubicVertex> Default for Builder<V> {
+    fn default() -> Self {
+        Self {
+            triangles: Vec::default(),
+            material: Rc::default(),
+            transforms: Rc::default(),
+            phantom: PhantomData,
+        }
+    }
+}
+
+impl<V: CubicVertex> Builder<V> {
     new!();
 
     builder!(material: Rc<Material>);
@@ -31,8 +44,9 @@ impl Builder {
     pub fn extend_triangle<I: IntoIterator<Item = [IncompleteVertex<3>; 3]>>(
         &mut self,
         triangles: I,
-    ) {
+    ) -> &mut Self {
         self.triangles.extend(triangles);
+        self
     }
 
     pub fn extend_complete_triangle<I: IntoIterator<Item = [SimpleVertex; 3]>>(
@@ -57,12 +71,12 @@ impl Builder {
         }));
     }
 
-    pub fn build<V: CubicVertex>(mut self) -> Mesh<V> {
+    pub fn build(mut self) -> Mesh<V> {
         for transform in self.transforms.iter() {
             match transform {
                 TransformType::ByPose(pose) => {
                     for triangle in &mut self.triangles {
-                        *triangle = triangle.transform_by(pose);
+                        *triangle = triangle.clone().transform_by(*pose);
                     }
                 }
                 TransformType::Scale(factor) => {
@@ -79,7 +93,13 @@ impl Builder {
         vertex_array_builder.extend_triangles(
             self.triangles
                 .into_iter()
-                .filter_map(ExtendedVertex::from_incomplete_triangle),
+                .map(ExtendedVertex::from_incomplete_triangle)
+                .inspect(|opt_triangle| {
+                    if opt_triangle.is_none() {
+                        eprintln!("bad triangle");
+                    }
+                })
+                .flatten(),
         );
 
         let vertex_array = vertex_array_builder.build();

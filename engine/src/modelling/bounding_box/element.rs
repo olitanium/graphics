@@ -207,7 +207,7 @@ where
     pub fn draw_recursive<
         'a,
         D: FramebufferWithDepth<OUT>,
-        P: Transform<Vector<{ V::LEN }>>,
+        P: Transform<Vector<{ V::LEN }>> + Clone,
         const OUT: usize,
         F: FnMut() -> ColourRGBA,
     >(

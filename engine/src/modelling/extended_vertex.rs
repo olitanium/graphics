@@ -12,9 +12,14 @@ use crate::modelling::SimpleVertex;
 
 pub trait ExtendedVertex: Vertex {
     type const LEN: usize;
-    type PreferredTransform<'a>: Transform<Self>;
+    type PreferredTransform<'a>: Transform<Self> + Clone;
 
     fn position(&self) -> Vector<{ Self::LEN }>;
+
+    fn multi_position(vec: &[Self; 3]) -> [Vector<{ Self::LEN }>; 3] {
+        vec.each_ref().map(Self::position)
+    }
+
     fn from_incomplete_triangle(
         triangle: [IncompleteVertex<{ Self::LEN }>; 3],
     ) -> Option<[Self; 3]>;
@@ -29,6 +34,11 @@ pub trait CubicVertex: ExtendedVertex<LEN = 3> {
             .try_normalize()
             .unwrap_or_default()
     }
+
+    fn multi_normal(triangle: &[Self; 3]) -> [UnitVector<3>; 3] {
+        let vec = Self::triangle_normal(triangle);
+        [vec; 3]
+    }
 }
 
 pub trait VertexHasTangent: CubicVertex {
@@ -40,6 +50,10 @@ pub trait VertexHasTangent: CubicVertex {
         } else {
             Self::triangle_normal(triangle)
         }
+    }
+
+    fn triangle_multi_normal_tangent(triangle: &[Self; 3]) -> [UnitVector<3>; 3] {
+        triangle.each_ref().map(Self::normal)
     }
 
     fn normal(&self) -> UnitVector<3>;

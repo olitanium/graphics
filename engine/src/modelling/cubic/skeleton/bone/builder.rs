@@ -37,7 +37,7 @@ impl<'a> Builder<'a> {
             (None, GetBone::RootBone) => Pose::default(),
             (_, GetBone::NoBone) => return None,
             (Some(self_inverse), GetBone::Bone { bone: parent, .. }) => {
-                parent.inverse_bind_pose().transform(&self_inverse)
+                parent.inverse_bind_pose().transform(self_inverse)
             }
             (Some(self_inverse), GetBone::RootBone) => self_inverse,
         };

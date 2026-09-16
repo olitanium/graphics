@@ -7,11 +7,11 @@ use utils::{builder, new};
 use super::SimpleCubic;
 use crate::modelling::cubic::material::Material;
 use crate::modelling::cubic::mesh::MeshBuilder;
-use crate::modelling::test_models;
+use crate::modelling::{SimpleVertex, test_models};
 
 #[derive(Debug, Clone, Default)]
 pub struct Builder {
-    mesh_builders: Vec<MeshBuilder>,
+    mesh_builders: Vec<MeshBuilder<SimpleVertex>>,
     transforms: Vec<TransformType>,
     // transform: Option<Pose>,
     cull_face: CullFace,
@@ -29,18 +29,18 @@ impl Builder {
 
     builder!(cull_face: CullFace);
 
-    pub fn push_mesh(&mut self, mesh: MeshBuilder) {
+    pub fn push_mesh(&mut self, mesh: MeshBuilder<SimpleVertex>) {
         self.mesh_builders.push(mesh);
     }
 
-    pub fn extend_meshes<I: IntoIterator<Item = MeshBuilder>>(&mut self, meshes: I) {
+    pub fn extend_meshes<I: IntoIterator<Item = MeshBuilder<SimpleVertex>>>(&mut self, meshes: I) {
         self.mesh_builders.extend(meshes);
     }
 
     pub fn push_cube(&mut self, pose: Pose, material: Rc<Material>, side_length: f32) {
         let mut mesh_builder = MeshBuilder::new().material(material);
         mesh_builder.extend_triangle(
-            test_models::origin_cube(side_length).map(|triangle| triangle.transform_by(&pose)),
+            test_models::origin_cube(side_length).map(|triangle| triangle.transform_by(pose)),
         );
         self.mesh_builders.push(mesh_builder);
     }

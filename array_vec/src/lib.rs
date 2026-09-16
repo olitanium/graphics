@@ -138,8 +138,8 @@ impl<T, const N: usize> ArrayVec<T, N> {
         );
         self.len -= 1;
 
-        // SAFETY: self.array[self.len - 1] is within the initialized, it is swapped for
-        // uninit, and the len is decremented
+        // SAFETY: self.array[self.len - 1] is within the initialized, it is
+        // swapped for uninit, and the len is decremented
         Some(unsafe { output.assume_init() })
     }
 
@@ -190,8 +190,8 @@ impl<T, const N: usize> ArrayVec<T, N> {
         F: FnMut() -> T,
     {
         let out: ArrayVec<_, _> = self.into_iter().chain(iter::repeat_with(gaps)).collect();
-        // SAFETY: iter above has unlimited length, so the array_vec will always be
-        // full.
+        // SAFETY: iter above has unlimited length, so the array_vec will always
+        // be full.
         unsafe { out.try_into_array().unwrap_unchecked() }
     }
 

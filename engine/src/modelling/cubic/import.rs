@@ -13,9 +13,9 @@ use russimp::scene::{PostProcess, Scene};
 use utils::error_boilerplate;
 
 use super::material::Material;
-use crate::modelling::Bone;
-use crate::modelling::extended_vertex::IncompleteVertex;
 use crate::modelling::cubic::mesh::MeshBuilder;
+use crate::modelling::extended_vertex::IncompleteVertex;
+use crate::modelling::{Bone, CubicVertex};
 
 #[derive(Debug, Clone)]
 #[non_exhaustive]
@@ -49,15 +49,15 @@ pub enum ImportError {
 
 error_boilerplate!(ImportError);
 
-pub(crate) struct ImportOutput {
-    pub meshes: Vec<MeshBuilder>,
+pub(crate) struct ImportOutput<V: CubicVertex> {
+    pub meshes: Vec<MeshBuilder<V>>,
 }
 
-pub(super) fn import<P: AsRef<Path>>(
+pub(super) fn import<P: AsRef<Path>, V: CubicVertex>(
     path: P,
     post_process: Vec<PostProcess>,
     load_tangent_space: bool,
-) -> Result<ImportOutput, ImportError> {
+) -> Result<ImportOutput<V>, ImportError> {
     let path = path.as_ref();
 
     let dir = path
@@ -105,7 +105,7 @@ fn assimp_matrix_to_pose(matrix: Matrix4x4) -> Pose {
     Pose::new_from_matrix(matrix)
 }
 
-fn process_node(
+fn process_node<V: CubicVertex>(
     scene: &Scene,
     node: &Node,
     dir: &Path,
@@ -113,10 +113,10 @@ fn process_node(
     _current_bones: &mut HashMap<String, Bone>,
     accum_transform: Pose,
     load_tangent_space: bool,
-) -> Result<Vec<MeshBuilder>, ImportError> {
+) -> Result<Vec<MeshBuilder<V>>, ImportError> {
     // process current node and recursively process each in node.children.
     let node_transform = assimp_matrix_to_pose(node.transformation);
-    let accum_transform = node_transform.transform(&accum_transform);
+    let accum_transform = node_transform.transform(accum_transform);
 
     let mut curr_meshes =
         node.meshes
@@ -224,7 +224,7 @@ fn process_node(
                                 .texture(triangle_texture)
                                 .opt_normal(triangle_normal)
                                 .opt_tangent(triangle_tangent)
-                                .transform_by(&accum_transform))
+                                .transform_by(accum_transform))
                         }) //;
                     })
                     .collect::<Result<Vec<_>, ImportError>>();

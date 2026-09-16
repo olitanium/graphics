@@ -70,7 +70,7 @@ impl State {
     pub fn controls(
         &mut self,
         mouse_delta: Vector<2>,
-        keyboard: HashSet<Key>,
+        keyboard: &HashSet<Key>,
         string: &mut String,
         frame_time: Duration,
         _time: Duration,
@@ -92,7 +92,6 @@ impl State {
 
         if let Some(ch) = string.pop() {
             match ch {
-                'Q' => string.clear(),
                 'b' | 'B' => self.toggle_b = !self.toggle_b,
                 'm' | 'M' => self.toggle_m = !self.toggle_m,
                 'g' | 'G' => self.toggle_g = !self.toggle_g,
@@ -101,28 +100,25 @@ impl State {
             }
         }
 
+        self.game_camera.move_lock = !self.game_camera.move_lock;
         if string.ends_with('q') | string.ends_with('Q') {
             _ = string.pop();
-            self.game_camera.move_lock = !self.game_camera.move_lock;
         }
         self.game_camera
             .controls(&keyboard, string, mouse_delta, frame_time);
 
-        let small_cube_anim = self.small_cube.debug_get_pair_model_bind_pose().1;
-        let origin_cube_anim = self.origin_cube.debug_get_pair_model_bind_pose().1;
-
-        if !self.game_camera.move_lock {
-            self.player.controls(
-                &self.player.get_pair_model().1,
-                &self.game_camera,
-                &keyboard,
-                frame_time,
-                &mut self.small_cube,
-                &small_cube_anim,
-                &mut self.origin_cube,
-                &origin_cube_anim,
-            );
-        }
+        // if !self.game_camera.move_lock {
+        // self.player.controls(
+        // &self.player.get_pair_model().1,
+        // &self.game_camera,
+        // &keyboard,
+        // frame_time,
+        // &mut self.small_cube,
+        // &small_cube_anim,
+        // &mut self.origin_slope,
+        // &origin_cube_anim,
+        // );
+        // }
 
         ControlOutput::Data(())
     }

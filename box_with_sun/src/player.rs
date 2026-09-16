@@ -32,7 +32,6 @@ impl Player {
         player.physics.velocity = Vector::ZERO;
         Player {
             entity: player.into(),
-            // velocity: Vector::ZERO,
         }
     }
 
@@ -77,7 +76,7 @@ impl Player {
         let (_, on_box) = self
             .entity
             .move_collide_repel(animation, environment, env_anim);
-        let (on_ground, _) = self
+        let (_, on_ground) = self
             .entity
             .move_collide_repel(animation, ground, ground_anim);
 
@@ -100,6 +99,7 @@ impl Player {
                 &Key::D => force_accum += -camera_pose.left().v(),
                 &Key::Space => *self.entity.physics.velocity.y_mut() = 1.0,
             }
+            // force_accum += -camera_pose.motion_forward(None).v();
         }
 
         let mass = self.entity.physics.mass.mass();

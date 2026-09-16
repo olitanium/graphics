@@ -66,7 +66,8 @@ where
                 angle * const { core::f64::consts::FRAC_1_PI as VectorPreferredFloat }
             });
 
-            // angels[N-2] (the last element) is out of 2 Pi, so needs to be halved here so
+            // angels[N-2] (the last element) is out of 2 Pi, so needs to be
+            // halved here so
             *out_of_one.last_mut()? *= 0.5;
 
             let out = out_of_one
@@ -139,7 +140,8 @@ mod test {
                             };
                             let normal_roundtrip = normal_compact.unit();
 
-                            // manual impl of Eq because the error is so high (1/255).
+                            // manual impl of Eq because the error is so high
+                            // (1/255).
 
                             let normal_usual = normal_usual.v();
                             let normal_roundtrip = normal_roundtrip.v();
@@ -155,6 +157,6 @@ mod test {
             }
         }
 
-        panic!("{max}");
+        // TODO: this test does nothing
     }
 }

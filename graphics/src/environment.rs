@@ -149,7 +149,8 @@ impl<G: ApiState> Environment<G> {
 
         glfw.set_swap_interval(glfw::SwapInterval::None);
 
-        // we need a GL context, created above before we can load OpenGL functions
+        // we need a GL context, created above before we can load OpenGL
+        // functions
         gl::load_with(|s| glfw.get_proc_address_raw(s));
 
         let version_ptr = gl_call! { gl::GetString(gl::VERSION) };

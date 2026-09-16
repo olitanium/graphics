@@ -93,6 +93,8 @@ impl ApiState for State {
 
         let mut string = local_string.unwrap();
 
+        frame_time = Duration::from_secs_f32(f32::min(frame_time.as_secs_f32(), 1.0 / 60.0));
+
         self.controls(
             mouse_delta,
             keyboard,

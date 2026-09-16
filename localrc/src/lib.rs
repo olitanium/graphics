@@ -102,11 +102,11 @@ impl<T: Freeze> LocalRc<T> {
     #[inline]
     pub fn new(value: T) -> Self {
         // SAFETY:
-        // the `ptr::read` is being placed into a ManuallyDrop to prevent dropping. It
-        // will never be dropped when in this struct.
-        // The `T: Freeze` bound ensures that the value in `data` cannot be modified
-        // with a shared reference. this type does not allow the user to obtain
-        // a mutable reference to `data`
+        // the `ptr::read` is being placed into a ManuallyDrop to prevent
+        // dropping. It will never be dropped when in this struct.
+        // The `T: Freeze` bound ensures that the value in `data` cannot be
+        // modified with a shared reference. this type does not allow
+        // the user to obtain a mutable reference to `data`
         let data = unsafe { ManuallyDrop::new(ptr::read(&raw const value)) };
         let reference_count = Rc::new(value);
         Self {
@@ -137,11 +137,11 @@ impl<T: Freeze> Clone for LocalRc<T> {
     #[inline]
     fn clone(&self) -> Self {
         // SAFETY:
-        // the `ptr::read` is being placed into a ManuallyDrop to prevent dropping. It
-        // will never be dropped when in this struct.
-        // The `T: Freeze` bound ensures that the value in `data` cannot be modified
-        // with a shared reference which ensures consistency with original.
-        // this type does not allow the user to obtain
+        // the `ptr::read` is being placed into a ManuallyDrop to prevent
+        // dropping. It will never be dropped when in this struct.
+        // The `T: Freeze` bound ensures that the value in `data` cannot be
+        // modified with a shared reference which ensures consistency
+        // with original. this type does not allow the user to obtain
         // a mutable reference to `data`
         let data = unsafe { ManuallyDrop::new(ptr::read(&raw const *self.data)) };
         Self {

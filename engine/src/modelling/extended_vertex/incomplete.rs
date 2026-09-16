@@ -14,7 +14,7 @@ pub struct IncompleteVertex<const N: usize> {
 }
 
 impl TransformBy<Pose> for IncompleteVertex<3> {
-    fn transform_by(&self, operator: &Pose) -> Self {
+    fn transform_by(self, operator: Pose) -> Self {
         Self {
             position: self.position.transform_by(operator),
             texture: self.texture,

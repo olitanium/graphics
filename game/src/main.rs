@@ -1,4 +1,3 @@
-#![feature(never_type)]
 #![expect(incomplete_features)]
 #![feature(generic_const_exprs)]
 #![feature(try_trait_v2)]
@@ -16,7 +15,7 @@ mod prep_draw;
 mod state;
 
 fn main() {
-    Environment::<state::State>::new((4, 5), (2000, 1000), "Window", false)
+    Environment::<state::State>::new((4, 5), (2000, 1000), "Window", true)
         .unwrap()
         .run()
         .unwrap();

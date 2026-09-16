@@ -5,7 +5,7 @@
 
 use geometry::{Orientation, Pose, TransformBy as _};
 pub use linear_algebra::Vector;
-use linear_algebra::{Matrix, UnitVector};
+use linear_algebra::{Matrix, UnitVector, vector};
 
 /// Triangle is just an array of Vectors.
 type Triangle<const DIMS: usize> = [Vector<DIMS>; 3];
@@ -244,24 +244,43 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
 }
 
 fn embed_three_to_two(one: Triangle<3>, two: Triangle<3>) -> Option<(Triangle<2>, Triangle<2>)> {
-    let [a, b, c] = one;
-    // if ab and ac are parallel, then the vector is just a line and is not
-    // handled yet
-    let normal = (b - a).cross(c - a).try_normalize()?;
+    #[inline]
+    fn setx0(tri: Triangle<3>) -> Triangle<2> {
+        tri.map(|vec| {
+            #[allow(unused)]
+            let [a, b, c] = vec.into_inner();
+            vector![b, c]
+        })
+    }
+    #[inline]
+    fn sety0(tri: Triangle<3>) -> Triangle<2> {
+        tri.map(|vec| {
+            #[allow(unused)]
+            let [a, b, c] = vec.into_inner();
+            vector![a, c]
+        })
+    }
+    #[inline]
+    fn setz0(tri: Triangle<3>) -> Triangle<2> {
+        tri.map(|vec| {
+            #[allow(unused)]
+            let [a, b, c] = vec.into_inner();
+            vector![a, b]
+        })
+    }
 
-    // Should not fail because `X` != `Y`
-    let orientation = Orientation::new_forward_up_try_two(normal, UnitVector::Y, UnitVector::X)?;
+    let test_function = |f: fn(Triangle<3>) -> Triangle<2>| {
+        let new_one = f(one);
+        let [a, b, c] = new_one;
+        let ba = a - b;
+        let ac = c - a;
+        let colinear = ba.colinear(ac);
+        (!colinear).then(|| (new_one, f(two)))
+    };
 
-    let transform = Pose::new_from_orientation_translation(orientation, a);
-    let inverse_transform = transform.inverse();
-
-    let new_one = one.transform_by(&inverse_transform);
-    let new_two = two.transform_by(&inverse_transform);
-
-    let new_one_trunc = new_one.map(Vector::truncate);
-    let new_two_trunc = new_two.map(Vector::truncate);
-
-    Some((new_one_trunc, new_two_trunc))
+    test_function(setx0)
+        .or_else(|| test_function(sety0))
+        .or_else(|| test_function(setz0))
 }
 
 #[inline]

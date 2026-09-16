@@ -28,7 +28,7 @@ pub struct State {
 
     pub sun: Sun,
     pub sun_duplicate_light: ShadowPointLight,
-    pub origin_cube: SkeletonEntity<()>,
+    pub origin_slope: SkeletonEntity<()>,
     pub small_cube: SkeletonEntity<()>,
     pub player: Player,
 
@@ -95,7 +95,7 @@ impl ApiState for State {
 
         self.controls(
             mouse_delta,
-            keyboard,
+            &keyboard,
             &mut string,
             frame_time,
             game_duration,
@@ -103,7 +103,13 @@ impl ApiState for State {
 
         self.player.can_see(can_see_player);
 
-        self.physics(frame_time, game_duration);
+        if string.ends_with('f') {
+            string.pop();
+            let sixty = Duration::from_secs_f32(1.0 / 60.0);
+            let (_, player_anim) = self.player.get_pair_model();
+            let (_, slope_anim) = self.origin_slope.debug_get_pair_model_bind_pose();
+            self.physics(sixty, &keyboard, game_duration, &player_anim, &slope_anim);
+        }
 
         self.draw(default_fb.unwrap())
     }

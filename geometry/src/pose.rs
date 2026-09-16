@@ -2,7 +2,7 @@ use dual_number::{DualNumber, DualQuaternion, UnitDualQuaternion};
 use linear_algebra::{Matrix, UnitVector, Vector};
 use quaternion::Quaternion;
 
-use crate::{Orientation, Transform as _};
+use crate::{Orientation, Transform as _, TransformBy};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Pose {
@@ -120,21 +120,21 @@ impl Pose {
         ])
     }
 
-    pub fn push_change(&mut self, pose: Self) -> &Self {
-        *self = pose.transform(self);
+    pub fn push_change(&mut self, pose: Self) -> &mut Self {
+        *self = (*self).transform_by(pose);
         self
     }
 
-    pub fn transform_x(&self) -> UnitVector<3> {
-        self.transform(&UnitVector::X)
+    pub fn transform_x(self) -> UnitVector<3> {
+        self.transform(UnitVector::X)
     }
 
-    pub fn transform_y(&self) -> UnitVector<3> {
-        self.transform(&UnitVector::Y)
+    pub fn transform_y(self) -> UnitVector<3> {
+        self.transform(UnitVector::Y)
     }
 
-    pub fn transform_z(&self) -> UnitVector<3> {
-        self.transform(&UnitVector::Z)
+    pub fn transform_z(self) -> UnitVector<3> {
+        self.transform(UnitVector::Z)
     }
 }
 
@@ -157,7 +157,7 @@ mod test {
             Vector::new([0.0, 0.5, 0.5]),
         );
 
-        let new_pose = second_pose.transform(&first_pose);
+        let new_pose = second_pose.transform(first_pose);
 
         let composite_matrix =
             second_pose.as_transformation_matrix() * first_pose.as_transformation_matrix();

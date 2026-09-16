@@ -74,7 +74,7 @@ impl State {
         frame_time: Duration,
         _time: Duration,
     ) -> ControlOutput<()> {
-        let frame_time = frame_time.as_secs_f32();
+        let frame_time = f32::min(frame_time.as_secs_f32(), 1.0 / 60.0);
 
         if keyboard.contains(&Key::LeftControl) {
             return ControlOutput::Restart;

@@ -1,9 +1,11 @@
 use std::collections::HashSet;
+use std::fmt::Debug;
 use std::rc::Rc;
 
 use engine::entity::{Mass, Physics, SkeletonEntity};
 use engine::geometry::Pose;
 use engine::linear_algebra::{UnitVector, Vector};
+use engine::modelling::bounding_box::no_alter_meta;
 use engine::modelling::cubic::material::Material;
 use engine::modelling::cubic::{CalculatedAnimation, SimpleCubic};
 use engine::modelling::{Collision, CubicVertex, SkeletonCubic};
@@ -13,7 +15,7 @@ use utils::hash_matches;
 use crate::camera::GameCamera;
 
 pub struct Player {
-    entity: SkeletonEntity<()>,
+    pub entity: SkeletonEntity<()>,
     // velocity: Vector<3>,
 }
 
@@ -27,11 +29,10 @@ impl Player {
             |_| (),
         );
         player.physics.pose =
-            Pose::new_from_translation(Vector::new([0.25, PLAYER_SIZE * 0.5, 0.25]));
+            Pose::new_from_translation(Vector::new([0.25, 0.5 + PLAYER_SIZE * 0.5, 0.25]));
         player.physics.velocity = Vector::ZERO;
         Player {
             entity: player.into(),
-            // velocity: Vector::ZERO,
         }
     }
 
@@ -59,35 +60,37 @@ impl Player {
         self.entity.debug_get_pair_model_bind_pose()
     }
 
-    pub fn controls<E>(
+    pub fn controls(
         &mut self,
-        animation: &CalculatedAnimation,
         camera: &GameCamera,
         keyboard: &HashSet<Key>,
-        frame_time: f32,
-        environment: &mut E,
-        env_anim: &E::Transform<'_>,
-        ground: &mut E,
-        ground_anim: &E::Transform<'_>,
-    ) where
-        E: Physics,
-        <E as Collision>::Vertex: CubicVertex + PartialEq,
-    {
-        let (_, on_box) = self
-            .entity
-            .move_collide_repel(animation, environment, env_anim);
-        let (_, on_ground) = self
-            .entity
-            .move_collide_repel(animation, ground, ground_anim);
+        self_normal: Option<UnitVector<3>>,
+    ) -> Vector<3> {
+        // let on_box = self
+        // .entity
+        // .collides(
+        // animation,
+        // &(),
+        // environment,
+        // env_anim,
+        // &(),
+        // no_alter_meta::<SkeletonEntity<()>, E>,
+        // )
+        // .is_some();
+        // let (_, on_box) = self
+        // .entity
+        // .move_collide_repel(animation, environment, env_anim);
+        // let (_, on_ground) = self
+        // .entity
+        // .move_collide_repel(animation, ground, ground_anim);
 
         const UP: UnitVector<3> = UnitVector::Y;
         // gravity
-        let mut force_accum = -UP.v();
+        let mut force_accum = Vector::ZERO;
 
-        let grounded = on_ground
-            .map(|unit| unit.v().dot(UP.v()) > 1.0 / 2.0_f32.sqrt())
-            .or_else(|| on_box.map(|unit| unit.v().dot(UP.v()) > 1.0 / 2.0_f32.sqrt()))
-            .unwrap_or(false);
+        let grounded = self_normal.is_some();
+        //.map(|unit| unit.v().dot(UP.v()) > 1.0 / 2.0_f32.sqrt())
+        //.unwrap_or(false);
 
         let camera_pose = &camera.camera.pose;
 
@@ -101,8 +104,32 @@ impl Player {
             }
         }
 
+        force_accum
+    }
+
+    pub fn physics<E>(
+        &mut self,
+        camera: &GameCamera,
+        keyboard: &HashSet<Key>,
+        animation: &CalculatedAnimation,
+        environment: &mut E,
+        environment_animation: &E::Transform<'_>,
+        frame_time: f32,
+    ) where
+        E: Physics,
+        <E as Collision>::Vertex: CubicVertex + PartialEq,
+    {
+        let (self_depth_in_other, _) =
+            self.entity
+                .move_collide_repel(animation, environment, environment_animation);
+
+        let mut force_accum = self.controls(camera, keyboard, self_depth_in_other);
+
         let mass = self.entity.physics.mass.mass();
         const COEF_FRICTION: f32 = 1.0;
+        // gravity
+        force_accum += -Vector::Y;
+
         self.entity.physics.process(
             frame_time,
             |vel, _pos| (Vector::Y * vel.dot(Vector::Y) - vel) * COEF_FRICTION * mass + force_accum,

@@ -69,17 +69,13 @@ where
     }
 }
 
-impl<
-    'a,
-    D: FramebufferWithDepth<1, Tex = FlatTexture>,
-    V: ExtendedVertex,
-    T,
-    Bt,
-    F: FnMut() -> ColourRGBA,
-> Draw for Group<'a, 1, D, V, T, Bt, F>
+impl<'a, D, V, T, Bt, F> Draw for Group<'a, 1, D, V, T, Bt, F>
 where
+    V: ExtendedVertex,
+    F: FnMut() -> ColourRGBA,
+    D: FramebufferWithDepth<1, Tex = FlatTexture>,
     Vector<{ V::LEN }>: Volume,
-    T: Transform<Vector<{ V::LEN }>>,
+    T: Transform<Vector<{ V::LEN }>> + Clone,
     BoundingBoxElement<V, Bt>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
 {
     fn draw_sized(

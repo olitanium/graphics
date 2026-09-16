@@ -37,7 +37,7 @@ impl ExtendedVertex for SkyBoxVertex {
 }
 
 impl TransformBy<Pose> for SkyBoxVertex {
-    fn transform_by(&self, operator: &Pose) -> Self {
+    fn transform_by(self, operator: Pose) -> Self {
         Self(self.0.transform_by(operator))
     }
 }

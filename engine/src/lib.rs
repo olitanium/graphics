@@ -2,8 +2,9 @@
 #![feature(type_changing_struct_update)]
 //#![feature(generic_const_exprs)]
 #![feature(array_try_map)]
-#![feature(never_type)]
+#![feature(slice_partition_dedup)]
 #![feature(option_array_transpose)]
+#![feature(try_blocks)]
 #![feature(min_generic_const_args)]
 #![feature(macroless_generic_const_args)]
 #![feature(iter_map_windows)]
@@ -11,7 +12,6 @@
 #![feature(const_trait_impl)]
 #![feature(iter_collect_into)]
 #![feature(const_destruct)]
-#![feature(slice_partition_dedup)]
 
 pub mod eng_state;
 pub mod entity;

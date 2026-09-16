@@ -8,6 +8,7 @@ multi_zip = {path = "../multi_zip"}
 fixed_point = {path = "../fixed_point"}
 array_vec = {path = "../array_vec"}
 utils = {path = "../utils"}
+float_eq = {path = "../float_eq"}
 
 [lints]
 workspace = true

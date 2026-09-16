@@ -6,6 +6,7 @@ use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::{self, CameraBuilder, ManualPoseFixedUp};
+use utils::hash_matches;
 
 pub struct GameCamera {
     pub move_lock: bool,
@@ -41,29 +42,37 @@ impl GameCamera {
     ) {
         if self.move_lock {
             let distance = frame_time * self.speed;
+            let mut displacement = Vector::ZERO;
 
-            if keyboard.contains(&Key::Right) | keyboard.contains(&Key::D) {
-                self.camera.pose.move_left(-distance, None);
+            hash_matches! { keyboard:
+                &Key::Right => displacement += -Vector::X,
+                &Key::D => displacement += -Vector::X,
+                &Key::A => displacement += Vector::X,
+                &Key::Left => displacement += Vector::X,
+                &Key::W => displacement += Vector::Z,
+                &Key::Up => displacement += Vector::Z,
+                &Key::S => displacement += -Vector::Z,
+                &Key::Down => displacement += -Vector::Z,
+                &Key::Space => displacement += Vector::Y,
+                &Key::LeftShift => displacement += -Vector::Y,
             }
-            if keyboard.contains(&Key::Left) | keyboard.contains(&Key::A) {
-                self.camera.pose.move_left(distance, None);
+
+            if let Some(displacement) = displacement.try_normalize() {
+                self.camera
+                    .pose
+                    .move_in_relative(displacement.v().scale(distance));
             }
-            if keyboard.contains(&Key::Up) | keyboard.contains(&Key::W) {
-                self.camera.pose.move_forward(distance, None);
-            }
-            if keyboard.contains(&Key::Down) | keyboard.contains(&Key::S) {
-                self.camera.pose.move_forward(-distance, None);
-            }
-            if keyboard.contains(&Key::Space) {
-                self.camera.pose.move_up(distance);
-            }
-            if keyboard.contains(&Key::LeftShift) {
-                self.camera.pose.move_up(-distance);
-            }
+
+            // -mouse_delta[0] is because I the positive direction on the mouse
+            // is right
             self.camera
                 .pose
                 .look_left(-mouse_delta[0] * self.sensitivity);
-            self.camera.pose.look_up(mouse_delta[1] * self.sensitivity);
+
+            // -mouse_delta[1] is because I have inverted Y
+            self.camera
+                .pose
+                .look_up(-mouse_delta[1] * self.sensitivity, None);
         }
     }
 }

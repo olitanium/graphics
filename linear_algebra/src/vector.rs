@@ -5,15 +5,16 @@ mod array_maths;
 use core::cmp::Ordering;
 use core::iter::Sum;
 use core::marker::Destruct;
-use core::ops::{Add, AddAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign};
+use core::ops::{Add, AddAssign, Div, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign};
 use core::slice::SliceIndex;
 use core::{array, iter, ptr};
 
 use super::matrix::Matrix;
 use crate::VectorPreferredFloat;
-use crate::vector::array_maths::mul;
+use crate::vector::array_maths::{div, mul};
 
 mod unit_vector;
+use float_eq::NearlyEq;
 pub use unit_vector::UnitVector;
 
 #[cfg(test)]
@@ -52,7 +53,7 @@ where
 const impl<const N: usize> PartialEq for Vector<N, VectorPreferredFloat> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
-        array_maths::eq(self.into_inner(), other.into_inner())
+        array_maths::nearly_eq(self.into_inner(), other.into_inner())
     }
 }
 
@@ -80,11 +81,11 @@ impl<const N: usize> Ord for Vector<N, VectorPreferredFloat> {
 /// `Vector::new([...])`.
 #[macro_export]
 macro_rules! vector {
-    ($($num:expr),+) => {
-        Vector::new([$($num,)+])
+    ($($num:expr),+ $(,)?) => {
+        $crate::Vector::new([$($num,)+])
     };
     ($num:expr; $len:expr) => {
-        Vector::new([$num; $len])
+        $crate::Vector::new([$num; $len])
     };
 }
 
@@ -260,7 +261,7 @@ impl<const N: usize> Vector<N, VectorPreferredFloat> {
         Vector::new(array)
     }
 
-    /// Refelct the incoming ray `self` about a normal.
+    /// Reflect the incoming ray `self` about a normal.
     #[must_use]
     #[inline]
     pub const fn reflect(self, normal: UnitVector<N, VectorPreferredFloat>) -> Self
@@ -270,6 +271,26 @@ impl<const N: usize> Vector<N, VectorPreferredFloat> {
         let normal = normal.v();
         let projection = normal.dot(self);
         self - normal.scale(2.0 * projection)
+    }
+
+    pub fn colinear(mut self, mut other: Self) -> bool {
+        const SMALLEST: f32 = 0.001;
+
+        // normalize all `-small` to `0.0`
+        fn normalize_zero(val: &mut f32) {
+            if *val < 0.0 && *val > SMALLEST {
+                *val = 0.0
+            }
+        }
+
+        self.iter_mut().for_each(normalize_zero);
+        other.iter_mut().for_each(normalize_zero);
+
+        let factors = self.elem_wise_div(other);
+        factors
+            .into_inner()
+            .array_windows()
+            .all(|[a, b]| a.nearly_eq(b, SMALLEST, SMALLEST) | b.is_nan() | a.is_nan())
     }
 }
 
@@ -399,6 +420,19 @@ impl<const N: usize, T> Vector<N, T> {
         T: [const] Clone,
     {
         Self::new(mul(self.into_inner(), other.into_inner()))
+    }
+
+    /// Divide each element of the vector with it's corresponding element in
+    /// the other.
+    #[inline]
+    #[must_use]
+    pub const fn elem_wise_div(self, other: Self) -> Self
+    where
+        T: [const] Div<Output = T>,
+        T: [const] Destruct,
+        T: [const] Clone,
+    {
+        Self::new(div(self.into_inner(), other.into_inner()))
     }
 }
 

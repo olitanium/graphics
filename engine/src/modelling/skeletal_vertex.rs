@@ -45,10 +45,7 @@ impl Vertex for SkeletalVertex {
 }
 
 impl<'a> TransformBy<(&'a Skeleton, &'a CalculatedAnimation)> for SkeletalVertex {
-    fn transform_by(
-        &self,
-        &(skeleton, animation): &(&'a Skeleton, &'a CalculatedAnimation),
-    ) -> Self {
+    fn transform_by(self, (skeleton, animation): (&'a Skeleton, &'a CalculatedAnimation)) -> Self {
         let mut accum = DualQuaternion::ZERO;
         let bones = animation.poses(skeleton).unwrap();
         for (weight, index) in iter::zip(self.bone_weights, self.bone_indices) {
@@ -65,10 +62,10 @@ impl<'a> TransformBy<(&'a Skeleton, &'a CalculatedAnimation)> for SkeletalVertex
         let pose = Pose::new_from_dual(unit_pose);
 
         Self {
-            position: self.position.transform_by(&pose),
-            normal: self.normal.transform_by(&pose),
-            tangent: self.tangent.transform_by(&pose),
-            ..*self
+            position: self.position.transform_by(pose),
+            normal: self.normal.transform_by(pose),
+            tangent: self.tangent.transform_by(pose),
+            ..self
         }
     }
 }

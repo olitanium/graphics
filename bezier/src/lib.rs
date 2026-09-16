@@ -1,5 +1,3 @@
-#![feature(never_type)]
-
 use core::fmt::{Debug, Display};
 
 use array_vec::ArrayVec;

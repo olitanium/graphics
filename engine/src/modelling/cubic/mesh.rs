@@ -19,7 +19,7 @@ pub struct Mesh<V: CubicVertex> {
 }
 
 impl<V: CubicVertex> Mesh<V> {
-    pub fn builder() -> MeshBuilder {
+    pub fn builder() -> MeshBuilder<V> {
         MeshBuilder::new()
     }
 

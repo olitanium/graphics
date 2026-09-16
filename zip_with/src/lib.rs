@@ -15,8 +15,8 @@ use array_vec::ArrayVecPopFront;
 /// Zip two arrays together and map with the given closure.
 /// for example
 /// ```rust
-/// # use utils::ArrayZipWith as _;
-/// let x = [1, 2, 3];
+/// # use zip_with::ArrayZipWith as _;
+/// let x = [1_usize, 2, 3];
 /// let y = [4, 5, 6];
 ///
 /// assert_eq!(x.zip_with(y, |a, b| a + b), [5, 7, 9])

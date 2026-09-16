@@ -52,18 +52,18 @@ impl Flexible {
     pub fn look_up(&mut self, angle: f32) {
         let look_up = Orientation::axis_angle(-UnitVector::X, angle);
         let transform = Pose::new_from_orientation(look_up);
-        self.pose = self.pose.transform_by(&transform);
+        self.pose = self.pose.transform_by(transform);
     }
 
     pub fn look_left(&mut self, angle: f32) {
         let look_left = Orientation::axis_angle(UnitVector::Y, angle);
         let transform = Pose::new_from_orientation(look_left);
-        self.pose = self.pose.transform_by(&transform);
+        self.pose = self.pose.transform_by(transform);
     }
 
     pub fn move_in(&mut self, displacement: Vector<3>) {
         let pose = Pose::new_from_translation(displacement);
-        self.pose = self.pose.transform_by(&pose);
+        self.pose = self.pose.transform_by(pose);
     }
 
     pub fn move_left(&mut self, distance: f32, left: Option<UnitVector<3>>) {

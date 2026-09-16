@@ -24,10 +24,10 @@ impl State {
         let mut out = VecDraw::new();
 
         let mut opaque = vec![
-            self.origin_cube.debug_get_pair_model_bind_pose(),
+            self.origin_slope.debug_get_pair_model_bind_pose(),
             self.player.get_pair_model(),
         ];
-        if self.toggle_m {
+        if !self.toggle_m {
             opaque.push(self.small_cube.debug_get_pair_model_bind_pose());
         }
 
@@ -43,13 +43,13 @@ impl State {
                     ..Default::default()
                 },
                 opaque.clone(),
-                sun,
+                vec![], // sun,
                 vec![],
             )
             .unwrap(),
         );
 
-        let mut opaque = vec![self.origin_cube.debug_get_pair_model_bind_pose()];
+        let mut opaque = vec![self.origin_slope.debug_get_pair_model_bind_pose()];
         if self.toggle_m {
             opaque.push(self.small_cube.debug_get_pair_model_bind_pose());
         }

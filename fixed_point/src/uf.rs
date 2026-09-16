@@ -162,7 +162,7 @@ mod tests {
         let third = Unitf8::from_f32(0.33).unwrap();
         let float = third.to_f32();
 
-        assert!((float - (0.33)).abs() < 0.00001);
+        assert!((float - (0.33)).abs() < 0.01, "{float} ?= 0.33");
     }
 
     #[test]

@@ -1,16 +1,17 @@
 use std::num::NonZero;
 use std::rc::Rc;
 
+use engine::Key::W;
 use engine::entity::Mass;
 use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::geometry::{Orientation, Pose};
-use engine::linear_algebra::Vector;
-use engine::modelling::cubic::SimpleCubic;
+use engine::linear_algebra::{Vector, vector};
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
 use engine::modelling::cubic::lighting::simple::PointLight;
 use engine::modelling::cubic::material::Material;
-use engine::modelling::{Bloom, SkyBox};
+use engine::modelling::cubic::{Mesh, MeshBuilder, SimpleCubic};
+use engine::modelling::{Bloom, IncompleteVertex, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
@@ -42,15 +43,37 @@ impl State {
                 .build(),
         );
 
+        let origin_slope = {
+            let mut builder = SimpleCubic::builder();
+
+            let mut mesh_builder = Mesh::builder();
+            mesh_builder.extend_triangle(
+                [
+                    [[-1.0, 0.0, 0.0], [-1.0, 0.0, 1.0], [1.0, 1.0, 1.0]],
+                    [[-1.0, 0.0, 0.0], [1.0, 1.0, 1.0], [1.0, 1.0, -1.0]],
+                ]
+                .into_iter()
+                .map(|arr| {
+                    arr.map(|vec @ [x, _y, z]| {
+                        IncompleteVertex::new(Vector::new(vec)).texture(vector![x, z])
+                    })
+                }),
+            );
+
+            builder.push_mesh(mesh_builder);
+            builder = builder.cull_face(CullFace::BackFace);
+
+            builder
+        };
+
         const ORIGIN_CUBE_SIDE_LENGTH: f32 = 1.0;
-        let origin_cube = SimpleEntity::from_simple_cubic(
-            SimpleCubic::cube(ORIGIN_CUBE_SIDE_LENGTH, Rc::new(Material::white()))
-                .apply_transformation(Pose::new_from_orientation_translation(
-                    Orientation::IDENTITY,
-                    // Orientation::new_forward_up((Vector::X +
-                    // Vector::Z).normalize(), UnitVector::Y),
-                    Vector::new([0.0, -ORIGIN_CUBE_SIDE_LENGTH * 0.5, 0.0]),
-                ))
+        let origin_slope = SimpleEntity::from_simple_cubic(
+            origin_slope
+                .apply_transformation(Pose::new_from_translation(vector![
+                    0.0,
+                    -ORIGIN_CUBE_SIDE_LENGTH * 0.5,
+                    0.0,
+                ]))
                 .build(),
             0,
             Mass::new_inverse(0.0),
@@ -120,7 +143,7 @@ impl State {
 
             sun,
             sun_duplicate_light,
-            origin_cube: origin_cube.into(),
+            origin_slope: origin_slope.into(),
             small_cube: small_cube.into(),
             player,
 

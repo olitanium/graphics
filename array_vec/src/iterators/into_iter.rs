@@ -1,4 +1,3 @@
-
 use crate::{ArrayVec, ArrayVecPopFront};
 
 impl<T, const N: usize> IntoIterator for ArrayVec<T, N> {
@@ -37,6 +36,11 @@ const impl<T, const N: usize> Iterator for IntoIter<T, N> {
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         self.inner.pop_front()
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let leftover = self.inner.left();
+        (leftover, Some(leftover))
     }
 }
 

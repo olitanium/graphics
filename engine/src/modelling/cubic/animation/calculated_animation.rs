@@ -129,8 +129,9 @@ impl<'a> AnimationUnit<'a> {
             }];
 
             for (index, bone) in self.skeleton.iter_non_root() {
-                // NOTE: all bone parents are above it in the heirarchy, so we can look up the
-                // total parent pose in the pre-filled `poses` vec.
+                // NOTE: all bone parents are above it in the heirarchy, so we
+                // can look up the total parent pose in the
+                // pre-filled `poses` vec.
 
                 let PoseAndInverseBindPose { pose: parent, .. } = *poses.get(bone.parent.0).expect(
                     "Skeleton invariant, each bone in a skeleton may only refer to bones before it",
@@ -139,7 +140,7 @@ impl<'a> AnimationUnit<'a> {
                     .get_animation(index)
                     .expect("invariant, signatures are the same so should exist")
                     .get_pose(time)
-                    .transform_by(&parent);
+                    .transform_by(parent);
                 let inverse_bind_pose = bone.inverse_bind_pose();
 
                 poses.push(PoseAndInverseBindPose {
@@ -177,7 +178,7 @@ impl PoseAndInverseBindPose {
                 |PoseAndInverseBindPose {
                      pose,
                      inverse_bind_pose,
-                 }| pose.transform(&inverse_bind_pose),
+                 }| pose.transform(inverse_bind_pose),
             )
             .collect()
     }
@@ -188,7 +189,7 @@ impl PoseAndInverseBindPose {
                 |PoseAndInverseBindPose {
                      pose,
                      inverse_bind_pose,
-                 }| deviation.transform(&pose).transform(&inverse_bind_pose),
+                 }| deviation.transform(pose).transform(inverse_bind_pose),
             )
             .collect()
     }

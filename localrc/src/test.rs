@@ -1,4 +1,5 @@
 use core::sync::atomic::{AtomicBool, Ordering};
+use std::hint::black_box;
 
 use crate::LocalRc;
 
@@ -10,23 +11,18 @@ fn drop() {
 
     impl Drop for HasDrop {
         fn drop(&mut self) {
-            assert!(DROPCK.fetch_or(true, Ordering::Relaxed), "multiple drops");
+            assert!(!DROPCK.fetch_or(true, Ordering::Relaxed), "multiple drops");
         }
     }
 
     let many_has_drop = LocalRc::new(HasDrop);
     let many_has_drop2 = many_has_drop.clone();
 
-    #[expect(
-        clippy::redundant_clone,
-        reason = "testing that the drop does not occur too early"
-    )]
-    let _many_has_drop3 = many_has_drop2.clone();
-    #[expect(
-        clippy::redundant_clone,
-        reason = "testing that the drop does not occur too early"
-    )]
-    let _many_has_drop4 = many_has_drop.clone();
+    let many_has_drop3 = black_box(many_has_drop2.clone());
+    let many_has_drop4 = black_box(many_has_drop.clone());
+
+    black_box(many_has_drop3);
+    black_box(many_has_drop4);
 }
 
 /// ``` no_compile

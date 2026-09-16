@@ -19,11 +19,12 @@ members = [
     "triangle_test",
     "get_or_extend",
     "partition",
-    "template_app"
-, "geometry", "zip_with"]
-default_members = ["game"]
-
-
+    "template_app",
+    "geometry",
+    "zip_with",
+    "float_eq",
+    "box_with_sun"
+]
 
 [workspace.lints.rust]
 #missing_docs = "warn"

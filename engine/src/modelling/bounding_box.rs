@@ -164,8 +164,8 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBox<V, T> {
         V2: ExtendedVertex<LEN = 3>,
         U,
         F: FnMut(&mut T, &mut U) -> bool,
-        P: Transform<Vector<3>>,
-        P2: Transform<Vector<3>>,
+        P: Transform<Vector<3>> + Clone,
+        P2: Transform<Vector<3>> + Clone,
     >(
         lhs: &Self,
         lhs_pose: &P,
@@ -217,7 +217,7 @@ where
 {
     pub(crate) fn draw<
         'a,
-        P: Transform<Vector<{ V::LEN }>>,
+        P: Transform<Vector<{ V::LEN }>> + Clone,
         D: FramebufferWithDepth<1, Tex = FlatTexture>,
         F: FnMut() -> ColourRGBA,
     >(

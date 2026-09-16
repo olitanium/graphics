@@ -5,6 +5,7 @@
 - Yeet instead of Err(...into()) or Err(...)?
 
 == Can Do Now
+- impl VertexHasTangent for others
 - Model auto-generated normals smooth option
 - Renderbuffer Objects (like textures for Framebuffer attachments. Might cause issues for shadows because they are unreadable)
 - Multisample FBs

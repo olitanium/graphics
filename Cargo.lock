@@ -177,6 +177,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6099cdc01846bc367c4e7dd630dc5966dccf36b652fae7a74e17b640411a91b2"
 
 [[package]]
+name = "box_with_sun"
+version = "0.1.0"
+dependencies = [
+ "engine",
+ "utils",
+]
+
+[[package]]
 name = "built"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -507,6 +515,10 @@ dependencies = [
  "crc32fast",
  "miniz_oxide",
 ]
+
+[[package]]
+name = "float_eq"
+version = "0.1.0"
 
 [[package]]
 name = "fnv"
@@ -1148,6 +1160,7 @@ version = "0.1.0"
 dependencies = [
  "array_vec",
  "fixed_point",
+ "float_eq",
  "multi_zip",
  "utils",
 ]

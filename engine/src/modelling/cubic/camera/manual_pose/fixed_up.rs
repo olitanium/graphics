@@ -1,4 +1,4 @@
-use geometry::{Orientation, Pose};
+use geometry::{Orientation, Pose, Transform};
 use graphics::linear_algebra::UnitVector;
 use triangle_intersection::Vector;
 
@@ -91,12 +91,12 @@ impl FixedUp {
         self.forward
     }
 
-    pub fn look_up(&mut self, angle: f32) {
-        let fdotu = Vector::dot(self.view_forward().v(), self.up.v());
-        if !((angle > 0.0 && fdotu > Self::COS_NO_CONE)
-            || (angle < 0.0 && fdotu < -Self::COS_NO_CONE))
+    pub fn look_up(&mut self, angle: f32, left: Option<UnitVector<3>>) {
+        let fdotu = self.view_forward().v().dot(self.motion_up().v());
+        if (angle > 0.0 && fdotu < Self::COS_NO_CONE) || (angle < 0.0 && fdotu > -Self::COS_NO_CONE)
         {
-            let look_up = Orientation::axis_angle(-UnitVector::X, angle);
+            let left = left.unwrap_or_else(|| self.left());
+            let look_up = Orientation::axis_angle(-left, angle);
             self.forward = look_up.act_on_unit(self.forward)
         }
     }
@@ -121,15 +121,25 @@ impl FixedUp {
     pub fn move_in(&mut self, displacement: Vector<3>) {
         self.position += displacement
     }
+
+    pub fn move_in_relative(&mut self, relative_displacement: Vector<3>) {
+        let displacement = self.get_orientation(&()).transform(relative_displacement);
+        self.move_in(displacement);
+    }
 }
 
 impl CameraPose for FixedUp {
     type Hint = ();
 
+    fn get_orientation(&self, _: &Self::Hint) -> Orientation {
+        Orientation::new_forward_up(self.forward, self.up).unwrap_or_default()
+    }
+
+    fn get_position(&self, _: &Self::Hint) -> Vector<3> {
+        self.position
+    }
+
     fn get_pose(&self, _: &Self::Hint) -> Pose {
-        Pose::new_from_orientation_translation(
-            Orientation::new_forward_up(self.forward, self.up).unwrap_or_default(),
-            self.position,
-        )
+        Pose::new_from_orientation_translation(self.get_orientation(&()), self.get_position(&()))
     }
 }

@@ -27,7 +27,7 @@ pub(crate) enum InnerChildrenOrMeta<'a, V: ExtendedVertex, T> {
 }
 
 impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
-    pub fn transform_by<P: Transform<Vector<{ V::LEN }>>>(
+    pub fn transform_by<P: Transform<Vector<{ V::LEN }>> + Clone>(
         &self,
         pose: &P,
     ) -> (Vector<{ V::LEN }>, Vector<{ V::LEN }>) {
@@ -35,7 +35,7 @@ impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
             permutations(self.lower_bound.into_inner(), self.upper_bound.into_inner())
                 .map(|arr| {
                     let vec = Vector::new(arr);
-                    pose.transform(&vec)
+                    pose.clone().transform(vec)
                 })
                 .collect();
 
@@ -100,8 +100,8 @@ impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
     pub fn overlaps_bounding_box_single<
         U,
         V2: ExtendedVertex<LEN = { V::LEN }>,
-        P: Transform<Vector<{ V::LEN }>>,
-        P2: Transform<Vector<{ V2::LEN }>>,
+        P: Transform<Vector<{ V::LEN }>> + Clone,
+        P2: Transform<Vector<{ V2::LEN }>> + Clone,
     >(
         &self,
         self_transform: &P,
@@ -148,7 +148,7 @@ impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
 impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
     pub fn intersects_triangle<P>(&self, transform: &P, triangle: &[Vector<3>; 3]) -> bool
     where
-        P: Transform<Vector<3>>,
+        P: Transform<Vector<3>> + Clone,
     {
         let Some((other_lower_bound, other_upper_bound)) = make_bound_inner(triangle) else {
             return false;
@@ -167,10 +167,10 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
     pub fn overlaps_bounding_box_and_children<
         V2: ExtendedVertex<LEN = { V::LEN }>,
         U,
-        P: Transform<Vector<3>>,
-        VP: Transform<V>,
-        P2: Transform<Vector<3>>,
-        VP2: Transform<V2>,
+        P: Transform<Vector<3>> + Clone,
+        VP: Transform<V> + Clone,
+        P2: Transform<Vector<3>> + Clone,
+        VP2: Transform<V2> + Clone,
         F: FnMut(&mut T, &mut U) -> bool,
     >(
         this: &Self,
@@ -271,10 +271,8 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
                     let other_iter = other_triangles
                         .iter()
                         .map(|tri| {
-                            let tri_transformed = tri
-                                .each_ref()
-                                .map(|vert| other_vertex_transform.transform(vert));
-
+                            let tri_transformed =
+                                tri.map(|vert| other_vertex_transform.clone().transform(vert));
                             let positions = tri_transformed.each_ref().map(|vert| vert.position());
 
                             (tri_transformed, positions)
@@ -284,10 +282,8 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
                     this_triangles
                         .iter()
                         .filter_map(|tri| {
-                            let tri_transformed = tri
-                                .each_ref()
-                                .map(|vert| this_vertex_transform.transform(vert));
-
+                            let tri_transformed =
+                                tri.map(|vert| this_vertex_transform.clone().transform(vert));
                             let positions = tri_transformed.each_ref().map(|vert| vert.position());
 
                             other

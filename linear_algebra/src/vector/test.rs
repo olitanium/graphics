@@ -2,7 +2,7 @@ use core::ops::Add;
 use core::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::vector::array_maths;
-use crate::{Vector, VectorPreferredFloat, unit_vector};
+use crate::{Vector, VectorPreferredFloat, unit_vector, vector};
 
 #[test]
 fn drop_check_array_manipulation() {
@@ -24,9 +24,9 @@ fn drop_check_array_manipulation() {
         }
     }
 
-    // On add, DropCheck only drops the second one. This means that after the add
-    // has occurred there will be one drop, and after the output is dropped there
-    // will be two drops.
+    // On add, DropCheck only drops the second one. This means that after the
+    // add has occurred there will be one drop, and after the output is
+    // dropped there will be two drops.
 
     let first = [const { DropCheck }; 3];
     let second = [const { DropCheck }; 3];
@@ -99,4 +99,9 @@ fn as_ref_test() {
 fn unit() {
     // let bad = unit_vector![0.0];
     let _x = unit_vector![1.0, 0.0];
+}
+
+#[test]
+fn colinear() {
+    vector![1.0, 1.0, 1.0_f32].colinear(vector![-0.5, -0.5, -0.5]);
 }

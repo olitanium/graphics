@@ -16,6 +16,8 @@ pub mod hash_match;
 
 pub mod binary_search;
 
+pub mod mem;
+
 /// A small macro to make the `Builder` pattern easier to implement.
 /// # Example
 ///
