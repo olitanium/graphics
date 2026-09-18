@@ -146,9 +146,9 @@ impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
 }
 
 impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
-    pub fn intersects_triangle<P>(&self, transform: &P, triangle: &[Vector<3>; 3]) -> bool
+    pub fn intersects_triangle<P>(&self, transform: &P, triangle: &[Vector<{ V::LEN }>; 3]) -> bool
     where
-        P: Transform<Vector<3>> + Clone,
+        P: Transform<Vector<{ V::LEN }>> + Clone,
     {
         let Some((other_lower_bound, other_upper_bound)) = make_bound_inner(triangle) else {
             return false;
@@ -167,9 +167,9 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
     pub fn overlaps_bounding_box_and_children<
         V2: ExtendedVertex<LEN = { V::LEN }>,
         U,
-        P: Transform<Vector<3>> + Clone,
+        P: Transform<Vector<{ V::LEN }>> + Clone,
         VP: Transform<V> + Clone,
-        P2: Transform<Vector<3>> + Clone,
+        P2: Transform<Vector<{ V::LEN }>> + Clone,
         VP2: Transform<V2> + Clone,
         F: FnMut(&mut T, &mut U) -> bool,
     >(
@@ -215,7 +215,8 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
                         accumulator,
                     )
                 }),
-                (_, InnerChildrenOrMeta::Children([otherleft, otherright])) => {
+                (meta, InnerChildrenOrMeta::Children([otherleft, otherright])) => {
+                    drop(meta);
                     [(this, otherleft), (this, otherright)]
                         .into_iter()
                         .for_each(|(new_this, new_other)| {
@@ -233,7 +234,8 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
                             )
                         })
                 }
-                (InnerChildrenOrMeta::Children([thisleft, thisright]), _) => {
+                (InnerChildrenOrMeta::Children([thisleft, thisright]), meta) => {
+                    drop(meta);
                     [(thisleft, other), (thisright, other)]
                         .into_iter()
                         .for_each(|(new_this, new_other)| {

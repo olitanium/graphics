@@ -25,4 +25,4 @@ pub use graphics::framebuffer::Builder as FrameBufferBuilder;
 pub use graphics::{types, *};
 pub use russimp::scene::PostProcess;
 
-pub type VecDraw = Vec<Box<dyn Draw>>;
+pub type VecDraw<'a> = Vec<Box<dyn Draw + 'a>>;

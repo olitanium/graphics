@@ -217,14 +217,14 @@ where
         }
     }
 
-    // fn split_off_inner<E: FromToAggregateEntity<T, Model = M>>(&mut self, index:
-    // AggregateModelIndex, animation: Option<AggregateCalcAnim>) -> Option<Self> {
-    // if index == AggregateModelIndex::ROOT_MODEL_INDEX {
+    // fn split_off_inner<E: FromToAggregateEntity<T, Model = M>>(&mut self,
+    // index: AggregateModelIndex, animation: Option<AggregateCalcAnim>) ->
+    // Option<Self> { if index == AggregateModelIndex::ROOT_MODEL_INDEX {
     // return None;
     // }
     //
-    // if let Some(Some(unit)) = self.children.get_mut(index.0 - 1).map(mem::take) {
-    // let offset = unit.offset;
+    // if let Some(Some(unit)) = self.children.get_mut(index.0 -
+    // 1).map(mem::take) { let offset = unit.offset;
     // let base_pose = if let Some(animation) = animation {animation.get(index)}
     // else {Pose::IDENTITY}; let aggregate_unit = Self {
     // base_model: unit.model,
@@ -509,7 +509,7 @@ where
         <M::BoundingBox<T> as Collision>::FuncInputs,
     );
     type Meta = <M::BoundingBox<T> as Collision>::Meta;
-    type Transform<'a> = &'a AggregateCalcAnim;
+    type Transform<'a> = AggregateCalcAnim;
     type Vertex = <M::BoundingBox<T> as Collision>::Vertex;
     type VertexTransform<'a> = ();
 

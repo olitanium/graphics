@@ -5,9 +5,8 @@ use engine::array_vec::{ArrayVec, arrvec};
 use engine::entity::{AggregateEntity, AggregateModelIndex, Mass};
 use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
+use engine::geometry::{Orientation, Pose};
 use engine::linear_algebra::{UnitVector, Vector};
-use engine::modelling::cubic::camera::ManualPose;
-use engine::modelling::cubic::geometry::{Orientation, Pose};
 use engine::modelling::cubic::lighting::shadow::{
     ShadowListLights,
     ShadowPointLight,
@@ -15,7 +14,13 @@ use engine::modelling::cubic::lighting::shadow::{
 };
 use engine::modelling::cubic::lighting::simple::{ListLights, PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{SimpleCubic, SkinningCubic, camera};
+use engine::modelling::cubic::{
+    Camera,
+    CameraBuilder,
+    ManualPoseFixedUp,
+    SimpleCubic,
+    SkinningCubic,
+};
 use engine::modelling::{Bloom, Line, Quad, SkeletonCubic, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
@@ -79,15 +84,16 @@ impl State {
         // .collect();
 
         let morgan = make_model("morgan").unwrap();
-        let mut morgan = SimpleEntity::from_simple_cubic(morgan, 20, Mass(1.0), |_| ());
-        morgan.pose = Pose::new_from_translation(Vector::new([0.0, 0.0, 6.0]));
+        let mut morgan =
+            SimpleEntity::from_simple_cubic(morgan, 20, Mass::new_inverse(1.0), |_| ());
+        morgan.physics.pose = Pose::new_from_translation(Vector::new([0.0, 0.0, 4.5]));
 
         let morgan = Morgan { inner: morgan };
 
         let origin_cube = SimpleEntity::from_simple_cubic(
             SimpleCubic::cube(1.0, Rc::new(Material::black())).build(),
             20,
-            Mass(3.0),
+            const { Mass::new(3.0) },
             |_| (),
         );
 
@@ -95,12 +101,8 @@ impl State {
 
         const START_LOC: Vector<3> = Vector::new([-3.0, 0.0, 0.0]);
 
-        let camera = camera::builder()
-            .pose(ManualPose::new_fixed_up_from_to(
-                START_LOC,
-                Vector::ZERO,
-                UnitVector::Y,
-            ))
+        let camera = CameraBuilder::new()
+            .pose(ManualPoseFixedUp::new_from_to(START_LOC, Vector::ZERO, UnitVector::Y).unwrap())
             .perspective(90.0, hdr_fb.aspect_ratio(), 0.01, 100.0)
             .build();
 
@@ -114,7 +116,7 @@ impl State {
                 diffuse: light_colour.map(|x| x * 0.5),
                 specular: light_colour,
             },
-            TexDim::from(NonZero::new(1000).unwrap()),
+            TexDim::from_non_zero(const { NonZero::new(1000).unwrap() }),
         );
 
         let ns_point_light = PointLight {
@@ -159,13 +161,10 @@ impl State {
                 cos_cut_off: 20f32.to_radians().cos(),
                 cos_outer_cut_off: 25f32.to_radians().cos(),
             },
-            const { TexDim::from(NonZero::new(1000).unwrap()) },
+            TexDim::from_non_zero(const { NonZero::new(1000).unwrap() }),
         );
 
-        let [dark_tex, light_tex] = hdr_fb.get_all_colour();
-        let bloom = Bloom::new(dark_tex, light_tex);
-
-        let quad_to_draw = Quad::screen([hdr_fb.get_colour(0).unwrap()]); //.downcast();
+        let bloom = Bloom::new(size);
 
         let light_material = {
             let light_emission = FlatTexture::monochrome(light_colour.to_rgba_with(1.0));
@@ -173,10 +172,11 @@ impl State {
             Material::builder().emission(light_emission).build()
         };
 
-        let _light = SkeletonCubic::cube(1.0, Rc::new(light_material))
+        let _light: SkeletonCubic = SimpleCubic::cube(1.0, Rc::new(light_material))
             .cull_face(CullFace::BackFace)
             .scale(0.2)
-            .build();
+            .build()
+            .into();
 
         let line = Line::new(vec![]);
 
@@ -188,7 +188,7 @@ impl State {
 
         let mut aggregate_tail = AggregateEntity::new(simpletail.clone(), 1, |_| ());
         let offset = Pose::new_from_orientation_translation(
-            Orientation::new_forward_up(UnitVector::Y, -UnitVector::Z),
+            Orientation::new_forward_up(UnitVector::Y, -UnitVector::Z).unwrap(),
             Vector::new([0.0, 0.5, 0.5]),
         );
         let _ = aggregate_tail
@@ -238,18 +238,9 @@ impl State {
             toggle_h: false,
             bloom,
 
-            light_group: ShadowListLights {
-                point: arrvec![point_light],
-                spot: arrvec![spotlight],
-                ..ShadowListLights::default()
-            },
-
-            ns_light_group: ListLights {
-                point: arrvec![ns_point_light],
-                ..ListLights::default()
-            },
-
-            quad_to_draw,
+            point_light,
+            spotlight,
+            ns_point_light,
         })
     }
 }

@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use crate::framebuffer::FramebufferContext;
 use crate::types::Query;
 use crate::{Draw, DrawOut, ShaderProgramContext, gl_call};
@@ -64,6 +66,10 @@ impl Drop for Query {
 impl Query {
     #[must_use]
     pub fn answer(self) -> bool {
+        self.answer_ref()
+    }
+
+    pub fn answer_ref(&self) -> bool {
         let mut did_succeed = 0;
         gl_call! {gl::GetQueryObjectiv(self.as_primitive(), gl::QUERY_RESULT, &raw mut did_succeed)}
 

@@ -2,6 +2,8 @@
 resolver = "3"
 members = [
     "game",
+    "box_with_sun",
+    "grappling_hook",
     "colour",
     "engine",
     "utils",
@@ -22,8 +24,7 @@ members = [
     "template_app",
     "geometry",
     "zip_with",
-    "float_eq",
-    "box_with_sun"
+    "float_eq"
 ]
 
 [workspace.lints.rust]

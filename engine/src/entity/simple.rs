@@ -121,6 +121,10 @@ impl<T> ToAggregateEntity<SimpleCubic> for SimpleEntity<T> {
         } = self;
         (model, bounding_box)
     }
+
+    fn root_pose(&self) -> Pose {
+        self.physics.pose
+    }
 }
 
 impl<T> ToAggregateEntity<SkeletonCubic> for SimpleEntity<T> {
@@ -138,6 +142,10 @@ impl<T> ToAggregateEntity<SkeletonCubic> for SimpleEntity<T> {
             ..
         } = self;
         (model.into(), bounding_box.map(Into::into))
+    }
+
+    fn root_pose(&self) -> Pose {
+        self.physics.pose
     }
 }
 

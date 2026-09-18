@@ -135,6 +135,10 @@ impl<T> ToAggregateEntity<SkeletonCubic> for SkeletonEntity<T> {
 
         (model, bounding_box)
     }
+
+    fn root_pose(&self) -> geometry::Pose {
+        self.physics.pose
+    }
 }
 
 impl<T> Physics for SkeletonEntity<T> {

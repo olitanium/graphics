@@ -1,20 +1,19 @@
 use std::rc::Rc;
 
+use engine::ColourRGBA;
 use engine::entity::{AggregateEntity, AggregateModelIndex, ToAggregateEntity};
+use engine::geometry::{Pose, Transform};
 use engine::linear_algebra::Vector;
-use engine::modelling::cubic::SkeletonBoneIndex;
-use engine::modelling::cubic::geometry::{
+use engine::modelling::cubic::material::Material;
+use engine::modelling::cubic::{
     AggregateCalcAnim,
     BoneAnimation,
-    Pose,
     SkeletalAnimation,
+    SkeletonBoneIndex,
 };
-use engine::modelling::cubic::material::Material;
-use engine::modelling::{Bone, Collision, Skeleton, SkeletonCubic, TempModelTransform};
-use engine::{ColourRGBA, Transform};
-
+use engine::modelling::{Bone, Collision, Skeleton, SkeletonCubic};
 pub struct GrapplingHook {
-    pub entity: AggregateEntity<(), SkeletonCubic>,
+    pub entity: AggregateEntity<SkeletonCubic, ()>,
     pub chain: AggregateModelIndex,
     pub chain_end_bone: SkeletonBoneIndex,
     pub hook: Option<AggregateModelIndex>,
@@ -59,8 +58,8 @@ impl GrapplingHook {
         let mut skeleton_builder = Skeleton::builder();
         let mut animation_builder = SkeletalAnimation::builder();
         let mut bones_root_to_tip = vec![SkeletonBoneIndex::SKELETON_ROOT_BONE];
-        // No chain link is bound to the root bone, so that the root of the origin cube
-        // and the
+        // No chain link is bound to the root bone, so that the root of the
+        // origin cube and the
         let white_material = Rc::new(Material::white());
 
         const EXPECT_MESSAGE: &str = "have not yet finished the animation";
@@ -123,8 +122,8 @@ impl GrapplingHook {
                 .expect(EXPECT_MESSAGE);
             // bone_animation
             // .push(
-            // Pose::new_from_translation(Vector::new([0.0, 0.0, CHAIN_LINK_SIZE])),
-            // SEC_PER_UNIT,
+            // Pose::new_from_translation(Vector::new([0.0, 0.0,
+            // CHAIN_LINK_SIZE])), SEC_PER_UNIT,
             // )
             // .expect(EXPECT_MESSAGE);
             // bone_animation
@@ -165,7 +164,8 @@ impl GrapplingHook {
         let animation = animation_builder.build();
         let chain = chain.skeleton(skeleton).build();
 
-        // `end_bone` now has the bone which I should attach the hook to (plus offset)
+        // `end_bone` now has the bone which I should attach the hook to (plus
+        // offset)
 
         const HOOK_SIZE: f32 = 2.0;
         let hook =
@@ -214,21 +214,21 @@ impl GrapplingHook {
 pub struct UpdateInput<'a, A, B, C>
 where
     A: Collision + 'a,
-    B: Collision + ToAggregateEntity<(), SkeletonCubic> + 'a,
+    B: Collision + ToAggregateEntity<SkeletonCubic> + 'a,
     C: Collision + 'a,
     A::Transform<'a>: Clone,
     B::Transform<'a>: Clone,
     C::Transform<'a>: Clone,
 {
-    pub grapple_points: Vec<(&'a A, A::Transform<'a>)>,
-    pub carryable_objects: Vec<Option<(B, B::Transform<'a>)>>,
-    pub other_entities: Vec<(&'a C, C::Transform<'a>)>,
+    pub grapple_points: Vec<(&'a A, A::Transform<'a>, A::VertexTransform<'a>)>,
+    pub carryable_objects: Vec<Option<(B, B::Transform<'a>, B::VertexTransform<'a>)>>,
+    pub other_entities: Vec<(&'a C, C::Transform<'a>, C::VertexTransform<'a>)>,
 }
 
 impl<'a, A, B, C> Default for UpdateInput<'a, A, B, C>
 where
     A: Collision + 'a,
-    B: Collision + ToAggregateEntity<(), SkeletonCubic> + 'a,
+    B: Collision + ToAggregateEntity<SkeletonCubic> + 'a,
     C: Collision + 'a,
     for<'b> A::Transform<'b>: Clone,
     for<'b> B::Transform<'b>: Clone,
@@ -253,7 +253,7 @@ impl GrapplingHook {
     ) -> AggregateCalcAnim
     where
         A: Collision + 'a,
-        B: Collision + ToAggregateEntity<(), SkeletonCubic> + 'a,
+        B: Collision + ToAggregateEntity<SkeletonCubic, BoundingBoxInner = ()> + 'a,
         C: Collision + 'a,
         for<'b> A::Transform<'b>: Clone,
         for<'b> B::Transform<'b>: Clone,
@@ -287,17 +287,22 @@ impl GrapplingHook {
                     )
                     .expect("chain_animation is well defined for the chain element");
 
-                for (grapple_targets, grapple_transform) in target.grapple_points.iter().cloned() {
+                for (grapple_targets, grapple_transform, vertex_transform) in
+                    target.grapple_points.iter()
+                {
                     let mut collided = false;
 
                     self.entity.collides(
                         &self_transform,
-                        grapple_targets,
-                        grapple_transform.clone(),
+                        &(),
+                        *grapple_targets,
+                        grapple_transform,
+                        vertex_transform,
                         |(ref self_aggr, _), _, _, _| {
                             if Some(self_aggr) == self.hook.as_ref() {
                                 collided = true;
                             }
+                            collided
                         },
                     );
 
@@ -320,22 +325,27 @@ impl GrapplingHook {
                 }
 
                 for opt_carry in target.carryable_objects.iter_mut() {
-                    if let Some((ref_target, target_transform)) = opt_carry.as_ref() {
+                    if let Some((ref_target, target_transform, vertex_transform)) =
+                        opt_carry.as_ref()
+                    {
                         let mut collided = false;
 
                         self.entity.collides(
                             &self_transform,
+                            &(),
                             ref_target,
-                            target_transform.clone(),
+                            target_transform,
+                            vertex_transform,
                             |(ref self_aggr, _), _, _, _| {
                                 if Some(self_aggr) == self.hook.as_ref() {
                                     collided = true;
                                 }
+                                collided
                             },
                         );
 
                         if collided {
-                            let (grapple_target, target_transform) =
+                            let (grapple_target, target_transform, vertex_transform) =
                                 opt_carry.take().expect("Asserted Some above");
 
                             let hook_pos = self_transform
@@ -343,9 +353,9 @@ impl GrapplingHook {
                                 .expect("hook still exists")
                                 .root();
 
-                            let target_pose = target_transform.get_root_pose();
+                            let target_pose: Pose = grapple_target.root_pose();
 
-                            let offset = target_pose.transform(&hook_pos.inverse());
+                            let offset = target_pose.transform(hook_pos.inverse());
 
                             let destination = self
                                 .entity
@@ -377,17 +387,20 @@ impl GrapplingHook {
                     }
                 }
 
-                for (other, other_tranform) in target.other_entities.iter().cloned() {
+                for (other, other_tranform, vertex_transform) in target.other_entities.iter() {
                     let mut collided = false;
 
                     self.entity.collides(
                         &self_transform,
-                        other,
-                        other_tranform.clone(),
+                        &(),
+                        *other,
+                        other_tranform,
+                        vertex_transform,
                         |(ref self_aggr, _), _, _, _| {
                             if Some(self_aggr) == self.hook.as_ref() {
                                 collided = true;
                             }
+                            collided
                         },
                     );
 

@@ -18,6 +18,8 @@ pub struct Player {
 }
 
 impl Player {
+    const UP: UnitVector<3> = UnitVector::Y;
+
     pub fn new() -> Self {
         const PLAYER_SIZE: f32 = 0.1;
         let mut player = SimpleEntity::from_simple_cubic(
@@ -50,10 +52,6 @@ impl Player {
         }
     }
 
-    // pub fn get_pair_model_bind_pose(&self) -> (&SkeletonCubic,
-    // CalculatedAnimation) { self.entity.get_pair_model_bind_pose()
-    // }
-
     pub fn get_pair_model(&self) -> (&SkeletonCubic, CalculatedAnimation) {
         self.entity.debug_get_pair_model_bind_pose()
     }
@@ -64,25 +62,6 @@ impl Player {
         keyboard: &HashSet<Key>,
         self_normal: Option<UnitVector<3>>,
     ) -> Vector<3> {
-        // let on_box = self
-        // .entity
-        // .collides(
-        // animation,
-        // &(),
-        // environment,
-        // env_anim,
-        // &(),
-        // no_alter_meta::<SkeletonEntity<()>, E>,
-        // )
-        // .is_some();
-        // let (_, on_box) = self
-        // .entity
-        // .move_collide_repel(animation, environment, env_anim);
-        // let (_, on_ground) = self
-        // .entity
-        // .move_collide_repel(animation, ground, ground_anim);
-
-        const UP: UnitVector<3> = UnitVector::Y;
         // gravity
         let mut force_accum = Vector::ZERO;
 
@@ -125,12 +104,15 @@ impl Player {
 
         let mass = self.entity.physics.mass.mass();
         const COEF_FRICTION: f32 = 1.0;
+
         // gravity
-        force_accum += -Vector::Y;
+        force_accum += -Self::UP.v();
 
         self.entity.physics.process(
             frame_time,
-            |vel, _pos| (Vector::Y * vel.dot(Vector::Y) - vel) * COEF_FRICTION * mass + force_accum,
+            |vel, _pos| {
+                (Self::UP.v() * vel.dot(Self::UP.v()) - vel) * COEF_FRICTION * mass + force_accum
+            },
             0.001,
         );
     }

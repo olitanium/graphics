@@ -1,12 +1,12 @@
 use std::collections::HashSet;
 use std::mem;
-use std::ops::{FromResidual, Try};
+use std::ops::{FromResidual, Residual, Try};
 
 use engine::entity::SkeletonEntity;
+use engine::geometry::Pose;
 use engine::linear_algebra::Vector;
 use engine::modelling::TestLineVertex;
-use engine::modelling::cubic::geometry::Pose;
-use engine::{ColourRGB, Key, PollResult};
+use engine::{ColourRGB, Draw, Key, PollResult};
 
 use crate::morgan::Morgan;
 use crate::state::{State, StateError};
@@ -36,6 +36,10 @@ impl<T> Try for ControlOutput<T> {
     }
 }
 
+impl<T> Residual<T> for ControlOutput<!> {
+    type TryType = ControlOutput<T>;
+}
+
 impl<T> FromResidual for ControlOutput<T> {
     fn from_residual(residual: <Self as Try>::Residual) -> Self {
         match residual {
@@ -53,7 +57,7 @@ impl<T, E: Into<StateError>> FromResidual<Result<!, E>> for ControlOutput<T> {
     }
 }
 
-impl FromResidual<ControlOutput<!>> for PollResult<'_, StateError> {
+impl<T: Draw> FromResidual<ControlOutput<!>> for PollResult<T, StateError> {
     fn from_residual(residual: ControlOutput<!>) -> Self {
         match residual {
             ControlOutput::Close => PollResult::Close,
@@ -79,16 +83,22 @@ impl State {
             return ControlOutput::Close;
         }
         if keyboard.contains(&Key::W) {
-            self.camera.pose.move_forward(self.speed[2] * frame_time);
+            self.camera
+                .pose
+                .move_forward(self.speed[2] * frame_time, None);
         }
         if keyboard.contains(&Key::A) {
-            self.camera.pose.move_left(self.speed[0] * frame_time);
+            self.camera.pose.move_left(self.speed[0] * frame_time, None);
         }
         if keyboard.contains(&Key::D) {
-            self.camera.pose.move_left(-self.speed[0] * frame_time)
+            self.camera
+                .pose
+                .move_left(-self.speed[0] * frame_time, None)
         }
         if keyboard.contains(&Key::S) {
-            self.camera.pose.move_forward(-self.speed[2] * frame_time);
+            self.camera
+                .pose
+                .move_forward(-self.speed[2] * frame_time, None);
         }
         if keyboard.contains(&Key::LeftShift) | keyboard.contains(&Key::RightShift) {
             self.camera.pose.move_up(-self.speed[2] * frame_time);
@@ -127,12 +137,12 @@ impl State {
         // if string.to_lowercase().contains('y') {
         // self.which_animation = (self.which_animation + 1) % 2
         // }
-        if keyboard.contains(&Key::Comma) {
-            self.camera.pose.roll_ccw(frame_time);
-        }
-        if keyboard.contains(&Key::Period) {
-            self.camera.pose.roll_ccw(-frame_time);
-        }
+        // if keyboard.contains(&Key::Comma) {
+        // self.camera.pose.roll_ccw(frame_time);
+        // }
+        // if keyboard.contains(&Key::Period) {
+        // self.camera.pose.roll_ccw(-frame_time);
+        // }
 
         if let Some(ch) = string.pop() {
             match ch {
@@ -196,7 +206,9 @@ impl State {
         self.camera
             .pose
             .look_left(-mouse_delta[0] * self.sensitivity);
-        self.camera.pose.look_up(mouse_delta[1] * self.sensitivity);
+        self.camera
+            .pose
+            .look_up(mouse_delta[1] * self.sensitivity, None);
 
         ControlOutput::Data(())
     }

@@ -119,6 +119,10 @@ impl<T> ToAggregateEntity<SkinningCubic> for SkinningEntity<T> {
 
         (model, bounding_box)
     }
+
+    fn root_pose(&self) -> geometry::Pose {
+        self.physics.pose
+    }
 }
 
 impl<T> Physics for SkinningEntity<T> {

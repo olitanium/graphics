@@ -1,6 +1,5 @@
 use engine::linear_algebra::Vector;
-use engine::modelling::Collision;
-use engine::modelling::cubic::geometry::AggregateCalcAnim;
+use engine::modelling::cubic::AggregateCalcAnim;
 
 use crate::grappling_hook::UpdateInput;
 use crate::morgan::Morgan;
@@ -16,24 +15,17 @@ impl State {
             5.0 * (time / 10.0).cos(),
         ]);
 
-        if let Some(light) = self.light_group.point.get_mut(0) {
-            light.light.position = light_pos;
-        }
+        self.point_light.light.position = light_pos;
 
-        if let Some(light) = self.light_group.spot.get_mut(0) {
-            light.light.direction = self.camera.direction(&());
-            light.light.position = self.camera.position(&());
-        }
+        self.spotlight.light.direction = self.camera.direction(&());
+        self.spotlight.light.position = self.camera.position(&());
 
-        self.morgan = None;
+        // self.morgan = None;
 
         let mut update_input: UpdateInput<'_, Morgan, Morgan, Morgan> = if self.toggle_b {
             let morgan = self.morgan.take();
 
-            let opt_morgan = morgan.map(|morg| {
-                let pose = morg.inner.pose;
-                (morg, pose)
-            });
+            let opt_morgan = morgan.map(|morg| (morg, (), ()));
             UpdateInput {
                 grapple_points: vec![],
                 carryable_objects: vec![opt_morgan],
@@ -41,8 +33,7 @@ impl State {
             }
         } else {
             let grapple_points = if let Some(morg) = self.morgan.as_ref() {
-                let pose = morg.inner.pose;
-                vec![(morg, pose)]
+                vec![(morg, (), ())]
             } else {
                 vec![]
             };
@@ -61,7 +52,7 @@ impl State {
                 .carryable_objects
                 .pop()
                 .flatten()
-                .map(|(morgan, _)| morgan)
+                .map(|(morgan, ..)| morgan)
                 .take();
         }
 

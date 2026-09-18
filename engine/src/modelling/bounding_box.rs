@@ -290,7 +290,7 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, TThis> {
             target,
             target_transform,
             target_vertex_transform,
-            |x, y| alter_meta((), x, y),
+            move |x, y| alter_meta((), x, y),
         )
     }
 

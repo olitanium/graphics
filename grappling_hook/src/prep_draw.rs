@@ -1,7 +1,16 @@
+use engine::array_vec::arrvec;
 use engine::entity::AggregateGroup;
 use engine::framebuffer::DefaultFramebuffer;
-use engine::modelling::cubic::geometry::AggregateCalcAnim;
-use engine::modelling::{BloomGroup, QuadGroup, SimpleCubicGroup, SkyBoxGroup};
+use engine::modelling::cubic::AggregateCalcAnim;
+use engine::modelling::cubic::lighting::simple::ListLights;
+use engine::modelling::{
+    BloomGroup,
+    FramebufferQuad,
+    QuadGroup,
+    ScreenQuadGroup,
+    SimpleCubicGroup,
+    SkyBoxGroup,
+};
 use engine::{PollResult, VecDraw, opengl_shaders};
 
 use crate::state::{State, StateError};
@@ -11,7 +20,7 @@ impl State {
         &'a mut self,
         default_framebuffer: &'a DefaultFramebuffer,
         grapple_animation: AggregateCalcAnim,
-    ) -> PollResult<'a, StateError> {
+    ) -> PollResult<VecDraw<'a>, StateError> {
         let _time = self.time;
 
         let mut out = VecDraw::new();
@@ -31,7 +40,10 @@ impl State {
                 &self.hdr_fb,
                 &self.camera,
                 &(),
-                &self.ns_light_group,
+                ListLights {
+                    point: arrvec![&self.ns_point_light],
+                    ..Default::default()
+                },
                 vec![(&self.grappling_hook.entity, grapple_animation)],
                 vec![],
             )
@@ -39,18 +51,18 @@ impl State {
         );
 
         if let Some(morgan) = &self.morgan {
-            out.push(
-                SimpleCubicGroup::new(
-                    opengl_shaders::hdr_simple(),
-                    &self.hdr_fb,
-                    &self.camera,
-                    &(),
-                    &self.ns_light_group,
-                    vec![morgan.inner.temp_as_simplecubic_and_anim()],
-                    vec![],
-                )
-                .unwrap(),
-            )
+            out.push(SimpleCubicGroup::new(
+                opengl_shaders::hdr_simple(),
+                &self.hdr_fb,
+                &self.camera,
+                &(),
+                ListLights {
+                    point: arrvec![&self.ns_point_light],
+                    ..Default::default()
+                },
+                vec![morgan.inner.temp_as_simplecubic_and_anim()],
+                vec![],
+            ))
         }
 
         // out.push(SimpleCubicGroup::new(
@@ -74,12 +86,17 @@ impl State {
         // )?);
 
         if self.toggle_g {
-            out.push(BloomGroup::new(default_framebuffer, &self.bloom));
-        } else {
-            out.push(QuadGroup::new(
-                engine::opengl_shaders::exposure(),
+            out.push(BloomGroup::new(
+                &self.hdr_fb,
                 default_framebuffer,
-                vec![&self.quad_to_draw],
+                &self.bloom,
+            ));
+        } else {
+            let fb = FramebufferQuad::new_from_framebuffer(&self.hdr_fb);
+            out.push(ScreenQuadGroup::new(
+                engine::opengl_shaders::exposure3(),
+                default_framebuffer,
+                vec![fb],
                 vec![(String::from("exposure"), &self.exposure)],
             ));
         }

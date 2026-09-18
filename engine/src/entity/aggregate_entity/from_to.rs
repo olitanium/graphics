@@ -1,3 +1,5 @@
+use geometry::Pose;
+
 use crate::entity::EntityInner;
 use crate::modelling::CubicVertex;
 
@@ -7,4 +9,5 @@ where
 {
     type BoundingBoxInner;
     fn to_pair_model_bbox(self) -> (M, Option<M::BoundingBox<Self::BoundingBoxInner>>);
+    fn root_pose(&self) -> Pose;
 }
