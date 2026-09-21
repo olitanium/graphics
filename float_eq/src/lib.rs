@@ -71,7 +71,7 @@ mod test {
 
     /// Negative large numbers
     #[test]
-    fn bigNeg() {
+    fn big_neg() {
         assert!(nearly_eq_chosen(-1000000.0, -1000001.0));
         assert!(nearly_eq_chosen(-1000001.0, -1000000.0));
         assert!(!nearly_eq_chosen(-10000.0, -10001.0));
@@ -89,7 +89,7 @@ mod test {
 
     /// Numbers around -1
     #[test]
-    fn midNeg() {
+    fn mid_neg() {
         assert!(nearly_eq_chosen(-1.000001, -1.000002));
         assert!(nearly_eq_chosen(-1.000002, -1.000001));
         assert!(!nearly_eq_chosen(-1.0001, -1.0002));
@@ -107,7 +107,7 @@ mod test {
 
     /// Numbers between -1 and 0
     #[test]
-    fn smallNeg() {
+    fn small_neg() {
         assert!(nearly_eq_chosen(-0.000000001000001, -0.000000001000002));
         assert!(nearly_eq_chosen(-0.000000001000002, -0.000000001000001));
         assert!(nearly_eq_chosen(-0.000000000001002, -0.000000000001001));
@@ -116,7 +116,7 @@ mod test {
 
     /// Small differences away from zero
     #[test]
-    fn smallDiffs() {
+    fn small_diffs() {
         assert!(nearly_eq_chosen(0.3, 0.30000003));
         assert!(nearly_eq_chosen(-0.3, -0.30000003));
     }
@@ -145,7 +145,7 @@ mod test {
 
     /// Comparisons involving extreme values (overflow potential)
     #[test]
-    fn extremeMax() {
+    fn extreme_max() {
         assert!(nearly_eq_chosen(f32::MAX, f32::MAX));
         assert!(!nearly_eq_chosen(f32::MAX, -f32::MAX));
         assert!(!nearly_eq_chosen(-f32::MAX, f32::MAX));

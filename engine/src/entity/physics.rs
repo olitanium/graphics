@@ -9,6 +9,7 @@ use crate::entity::Mass;
 use crate::modelling::bounding_box::no_alter_meta;
 use crate::modelling::{Collision, CubicVertex};
 
+#[expect(unused)]
 mod average_normal;
 
 #[derive(Debug, Default, Clone)]
