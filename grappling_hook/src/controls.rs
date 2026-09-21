@@ -8,7 +8,7 @@ use engine::linear_algebra::Vector;
 use engine::modelling::TestLineVertex;
 use engine::{ColourRGB, Draw, Key, PollResult};
 
-use crate::morgan::Morgan;
+use crate::bear::Bear;
 use crate::state::{State, StateError};
 
 pub enum ControlOutput<T> {
@@ -112,22 +112,6 @@ impl State {
         if keyboard.contains(&Key::E) {
             self.exposure += 1.2 * frame_time;
         }
-        // if keyboard.contains(&Key::Right) {
-        // let diff = Pose::new_from_translation(Vector::new([0.0, 0.0,
-        // frame_time * 0.5])); self.morgan.pose =
-        // self.morgan.pose.transform_by(&diff); }
-        // if keyboard.contains(&Key::Left) {
-        // let diff = Pose::new_from_translation(Vector::new([0.0, 0.0,
-        // -frame_time * 0.5])); self.morgan.pose =
-        // self.morgan.pose.transform_by(&diff); }
-        // if keyboard.contains(&Key::Up) {
-        // let diff = Pose::new_from_translation(Vector::new([0.0, frame_time *
-        // 0.5, 0.0])); self.morgan.pose =
-        // self.morgan.pose.transform_by(&diff); }
-        // if keyboard.contains(&Key::Down) {
-        // let diff = Pose::new_from_translation(Vector::new([0.0, -frame_time *
-        // 0.5, 0.0])); self.morgan.pose =
-        // self.morgan.pose.transform_by(&diff); }
         if keyboard.contains(&Key::U) {
             self.camera.radius_out(-0.5 * frame_time);
         }
@@ -169,10 +153,7 @@ impl State {
                     self.bounding_box_level = self.bounding_box_level.wrapping_sub(1);
                 }
                 't' => {
-                    if let Some(Morgan {
-                        inner: morgan_model,
-                    }) = mem::take(&mut self.morgan)
-                    {
+                    if let Some(Bear { inner: bear_model }) = mem::take(&mut self.bear) {
                         self.grappling_hook.entity.remove(
                             self.grappling_hook
                                 .hook
@@ -183,7 +164,7 @@ impl State {
                             .grappling_hook
                             .entity
                             .push(
-                                SkeletonEntity::from(morgan_model),
+                                SkeletonEntity::from(bear_model),
                                 Pose::new_from_translation(Vector::new([0.0, 0.0, 0.5])),
                                 &self.grappling_hook.chain,
                                 &self.grappling_hook.chain_end_bone,

@@ -13,8 +13,8 @@ use engine::types::TexDim;
 use engine::{ApiState, Draw, Event, PollResult};
 
 use crate::camera::GameCamera;
-use crate::morgan::Sun;
 use crate::player::Player;
+use crate::sun::Sun;
 
 pub struct State {
     pub game_camera: GameCamera,

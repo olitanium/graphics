@@ -8,7 +8,7 @@ use engine::Environment;
 
 mod controls;
 mod grappling_hook;
-mod morgan;
+mod bear;
 mod new;
 mod physics;
 mod prep_draw;

@@ -27,8 +27,8 @@ use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
 use engine::{ColourRGB, SimpleEntity};
 
+use crate::bear::Bear;
 use crate::grappling_hook::GrapplingHook;
-use crate::morgan::Morgan;
 use crate::state::{State, StateError};
 
 impl State {
@@ -83,12 +83,11 @@ impl State {
         // })
         // .collect();
 
-        let morgan = make_model("morgan").unwrap();
-        let mut morgan =
-            SimpleEntity::from_simple_cubic(morgan, 20, Mass::new_inverse(1.0), |_| ());
-        morgan.physics.pose = Pose::new_from_translation(Vector::new([0.0, 0.0, 4.5]));
+        let bear = make_model("bear").unwrap();
+        let mut bear = SimpleEntity::from_simple_cubic(bear, 20, Mass::new_inverse(1.0), |_| ());
+        bear.physics.pose = Pose::new_from_translation(Vector::new([0.0, 0.0, 4.5]));
 
-        let morgan = Morgan { inner: morgan };
+        let bear = Bear { inner: bear };
 
         let origin_cube = SimpleEntity::from_simple_cubic(
             SimpleCubic::cube(1.0, Rc::new(Material::black())).build(),
@@ -218,7 +217,7 @@ impl State {
 
             skybox,
 
-            morgan: Some(morgan),
+            bear: Some(bear),
             origin_cube,
             bounding_box_level,
             toggle_m: false,
@@ -248,7 +247,7 @@ impl State {
 pub fn make_model(which_model: &str) -> Result<SimpleCubic, StateError> {
     use engine::PostProcess as P;
     let model = match which_model {
-        "morgan" => SimpleCubic::import(
+        "bear" => SimpleCubic::import(
             "assets/Teddy Statue/Teddy Statue.obj",
             vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
             true,

@@ -50,7 +50,7 @@ impl State {
             .unwrap(),
         );
 
-        if let Some(morgan) = &self.morgan {
+        if let Some(bear) = &self.bear {
             out.push(SimpleCubicGroup::new(
                 opengl_shaders::hdr_simple(),
                 &self.hdr_fb,
@@ -60,7 +60,7 @@ impl State {
                     point: arrvec![&self.ns_point_light],
                     ..Default::default()
                 },
-                vec![morgan.inner.temp_as_simplecubic_and_anim()],
+                vec![bear.inner.temp_as_simplecubic_and_anim()],
                 vec![],
             ))
         }
@@ -71,7 +71,7 @@ impl State {
         // &self.camera,
         // &(),
         // &self.ns_light_group,
-        // vec![(&self.morgan.model, self.morgan.pose, None)],
+        // vec![(&self.bear.model, self.bear.pose, None)],
         // Vec::new(),
         // )?);
         //

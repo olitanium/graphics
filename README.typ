@@ -17,3 +17,7 @@ The very strict Clippy in the root `Cargo.toml` does not pass, this is also a cu
 = How to start using?
 
 There is a `template_app` which can be used to begin the development of a 3D render, this template shows a dummy implementation of the `ApiState` trait, reads events and submits a `DrawNothing` to the graphics environment.
+
+= Examples
+
+There are currently three examples of varying quality, use `nix develop` to enter the flake environment and `cargo run --release --bin` followed by `triangle_test`, `grappling_hook` or `box_with_sun`. `game` is a work in progress developement area for collision work.

@@ -1,8 +1,8 @@
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::AggregateCalcAnim;
 
+use crate::bear::Bear;
 use crate::grappling_hook::UpdateInput;
-use crate::morgan::Morgan;
 use crate::state::State;
 
 impl State {
@@ -20,20 +20,18 @@ impl State {
         self.spotlight.light.direction = self.camera.direction(&());
         self.spotlight.light.position = self.camera.position(&());
 
-        // self.morgan = None;
+        let mut update_input: UpdateInput<'_, Bear, Bear, Bear> = if self.toggle_b {
+            let bear = self.bear.take();
 
-        let mut update_input: UpdateInput<'_, Morgan, Morgan, Morgan> = if self.toggle_b {
-            let morgan = self.morgan.take();
-
-            let opt_morgan = morgan.map(|morg| (morg, (), ()));
+            let opt_bear = bear.map(|morg| (morg, (), ()));
             UpdateInput {
                 grapple_points: vec![],
-                carryable_objects: vec![opt_morgan],
+                carryable_objects: vec![opt_bear],
                 other_entities: vec![],
             }
         } else {
-            let grapple_points = if let Some(morg) = self.morgan.as_ref() {
-                vec![(morg, (), ())]
+            let grapple_points = if let Some(bear) = self.bear.as_ref() {
+                vec![(bear, (), ())]
             } else {
                 vec![]
             };
@@ -47,12 +45,12 @@ impl State {
 
         let grappling_hook_calc_anim = self.grappling_hook.update(frame_time, &mut update_input);
 
-        if self.toggle_b && self.morgan.is_none() {
-            self.morgan = update_input
+        if self.toggle_b && self.bear.is_none() {
+            self.bear = update_input
                 .carryable_objects
                 .pop()
                 .flatten()
-                .map(|(morgan, ..)| morgan)
+                .map(|(bear, ..)| bear)
                 .take();
         }
 

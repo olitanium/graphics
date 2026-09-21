@@ -17,9 +17,9 @@ use engine::types::TexDim;
 use engine::{ColourRGBA, SimpleEntity};
 
 use crate::camera::GameCamera;
-use crate::morgan::Sun;
 use crate::player::Player;
 use crate::state::{State, StateError};
+use crate::sun::Sun;
 
 impl State {
     pub fn new_internal(screen_dims: (TexDim, TexDim)) -> Result<Self, StateError> {
@@ -73,23 +73,23 @@ impl State {
         let player = Player::new();
         let game_camera = GameCamera::new(&hdr_fb);
 
-        let mut morgan = make_model("morgan").unwrap();
-        let morgan_colour = ColourRGBA::new([0.5, 0.0, 0.0, 1.0]);
-        morgan.temp_set_all_material(Rc::new(
+        let mut bear = make_model("bear").unwrap();
+        let bear_colour = ColourRGBA::new([0.5, 0.0, 0.0, 1.0]);
+        bear.temp_set_all_material(Rc::new(
             Material::builder()
-                .emission(FlatTexture::monochrome(morgan_colour))
+                .emission(FlatTexture::monochrome(bear_colour))
                 .build(),
         ));
-        let sun = SimpleEntity::from_simple_cubic(morgan, 20, Mass::new_inverse(1.0), |_| ());
+        let sun = SimpleEntity::from_simple_cubic(bear, 20, Mass::new_inverse(1.0), |_| ());
 
         let light_attenuation_array = [0.0, 0.0, 1.0];
 
         let inner_point_light = PointLight {
             position: Vector::default(),
             attenuation: light_attenuation_array,
-            ambient: morgan_colour.to_rgb().map(|x| x * 0.1),
-            diffuse: morgan_colour.to_rgb().map(|x| x * 0.5),
-            specular: morgan_colour.to_rgb(),
+            ambient: bear_colour.to_rgb().map(|x| x * 0.1),
+            diffuse: bear_colour.to_rgb().map(|x| x * 0.5),
+            specular: bear_colour.to_rgb(),
         };
 
         let point_light = ShadowPointLight::new(
@@ -136,7 +136,7 @@ impl State {
 pub fn make_model(which_model: &str) -> Result<SimpleCubic, StateError> {
     use engine::PostProcess as P;
     let model = match which_model {
-        "morgan" => SimpleCubic::import(
+        "bear" => SimpleCubic::import(
             "assets/Teddy Statue/Teddy Statue.obj",
             vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
             true,

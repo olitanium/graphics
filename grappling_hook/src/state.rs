@@ -14,8 +14,8 @@ use engine::modelling::{Bloom, Line, Quad, SkyBox, TestLineVertex};
 use engine::types::TexDim;
 use engine::{ApiState, ColourRGBA, Event, PollResult, SimpleEntity, VecDraw};
 
+use crate::bear::Bear;
 use crate::grappling_hook::GrapplingHook;
-use crate::morgan::Morgan;
 
 pub struct State {
     pub reset_time: f32,
@@ -39,7 +39,7 @@ pub struct State {
     pub spotlight: ShadowSpotLight,
     pub ns_point_light: PointLight,
 
-    pub morgan: Option<Morgan>,
+    pub bear: Option<Bear>,
     pub origin_cube: SimpleEntity<()>,
     pub simpletail: SkinningCubic,
     pub aggregate_tail: AggregateEntity<SkinningCubic, ()>,

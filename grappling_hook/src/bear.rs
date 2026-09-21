@@ -3,11 +3,11 @@ use engine::entity::{EntityInner, ToAggregateEntity};
 use engine::modelling::cubic::SimpleCubic;
 use engine::modelling::{Collision, SkeletonCubic};
 
-pub struct Morgan {
+pub struct Bear {
     pub inner: SimpleEntity<()>,
 }
 
-impl Collision for Morgan {
+impl Collision for Bear {
     type FuncInputs = <SimpleEntity<()> as Collision>::FuncInputs;
     type Meta = <SimpleEntity<()> as Collision>::Meta;
     type Transform<'a> = <SimpleEntity<()> as Collision>::Transform<'a>;
@@ -37,7 +37,7 @@ impl Collision for Morgan {
     }
 }
 
-impl ToAggregateEntity<SimpleCubic> for Morgan {
+impl ToAggregateEntity<SimpleCubic> for Bear {
     type BoundingBoxInner = ();
 
     fn to_pair_model_bbox(
@@ -54,7 +54,7 @@ impl ToAggregateEntity<SimpleCubic> for Morgan {
     }
 }
 
-impl ToAggregateEntity<SkeletonCubic> for Morgan {
+impl ToAggregateEntity<SkeletonCubic> for Bear {
     type BoundingBoxInner = ();
 
     fn to_pair_model_bbox(

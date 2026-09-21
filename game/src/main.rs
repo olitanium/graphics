@@ -7,7 +7,7 @@ use engine::Environment;
 
 mod camera;
 mod controls;
-mod morgan;
+mod sun;
 mod new;
 mod physics;
 mod player;
