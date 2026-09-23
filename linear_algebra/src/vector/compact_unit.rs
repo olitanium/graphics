@@ -1,6 +1,6 @@
 //! Module to define a compact `UnitVector` which is embedded in one fewer
 //! dimension and with smaller data types.
-use core::{array, iter};
+use core::{array, f64, iter};
 
 use crate::{UnitVector, Vector, VectorPreferredFloat};
 
@@ -56,14 +56,23 @@ where
             let ref_last = angles.last_mut()?;
             *ref_last = ref_last.copysign(*unit_vec.last()?);
 
+            #[expect(
+                clippy::allow_attributes,
+                reason = "`VectorPreferredFloat` may change type"
+            )]
+            #[allow(
+                clippy::cast_possible_truncation,
+                reason = "`VectorPreferredFloat` may change type, it is preferred to start with \
+                          the higher precision number"
+            )]
             let mut out_of_one = angles.map(|angle| {
                 let angle = if angle < 0.0 {
-                    angle + core::f64::consts::TAU as VectorPreferredFloat
+                    angle + const { f64::consts::TAU as VectorPreferredFloat }
                 } else {
                     angle
                 };
 
-                angle * const { core::f64::consts::FRAC_1_PI as VectorPreferredFloat }
+                angle * const { f64::consts::FRAC_1_PI as VectorPreferredFloat }
             });
 
             // angels[N-2] (the last element) is out of 2 Pi, so needs to be
@@ -85,7 +94,19 @@ where
     #[inline]
     pub fn unit(self) -> UnitVector<N, VectorPreferredFloat> {
         let mut as_float = self.0.map(|x| {
-            VectorPreferredFloat::from(x) * const { core::f64::consts::PI as VectorPreferredFloat }
+            VectorPreferredFloat::from(x)
+                * const {
+                    #[expect(
+                        clippy::allow_attributes,
+                        reason = "`VectorPreferredFloat` may change type"
+                    )]
+                    #[allow(
+                        clippy::cast_possible_truncation,
+                        reason = "`VectorPreferredFloat` may change type, it is preferred to \
+                                  start with the higher precision number"
+                    )]
+                    (f64::consts::PI as VectorPreferredFloat)
+                }
         });
         let Some(as_float_last) = as_float.last_mut() else {
             return UnitVector::X;
@@ -112,7 +133,6 @@ where
     }
 }
 
-#[expect(clippy::inline_modules, reason = "clippy bug")]
 #[cfg(test)]
 mod test {
     use core::cmp;

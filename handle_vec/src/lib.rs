@@ -1,4 +1,7 @@
+//! This crate is incomplete. Do not yet use it's contents.
 #![feature(phantom_variance_markers)]
+#![allow(clippy::restriction)]
+#![allow(clippy::pedantic)]
 
 use core::marker::{PhantomData, PhantomInvariantLifetime};
 
@@ -13,9 +16,9 @@ pub struct Heap<'a, T> {
 impl<T> Default for Heap<'_, T> {
     fn default() -> Self {
         Self {
-            data: Default::default(),
-            data_index: Default::default(),
-            id: Default::default(),
+            data: Vec::default(),
+            data_index: Vec::default(),
+            id: Vec::default(),
             _invariant: PhantomInvariantLifetime::new(),
         }
     }
@@ -31,7 +34,10 @@ pub struct HeapHandle<'a, T> {
 }
 
 impl<'a, T> Heap<'a, T> {
-    #[expect(clippy::new_ret_no_self)]
+    #[expect(
+        clippy::new_ret_no_self,
+        reason = "introduces a new branded scope where `func` is given the new `Heap`"
+    )]
     pub fn new<F>(func: F)
     where
         F: for<'b> FnOnce(Heap<'b, T>),

@@ -12,13 +12,7 @@ fn transpose() {
 
     y[(2, 1)] = 3.0;
 
-    #[expect(
-        clippy::float_cmp,
-        reason = "no floating point maths to change value from literal"
-    )]
-    {
-        assert_eq!(y[(2, 1)], 3.0);
-    }
+    assert_eq!(y[(2, 1)], 3.0);
 
     let larger = y.truncate::<5, 3>();
 

@@ -21,8 +21,10 @@ use crate::modelling::{
     Skeleton,
 };
 
-mod group;
-pub use group::Group as SkeletonBbGroup;
+// TODO: modernize and then release
+// mod group;
+// pub use group::Group as SkeletonBbGroup;
+pub type SkeletonBbGroup = !;
 
 #[derive(Debug, Clone)]
 pub struct SkeletonBb<V: CubicVertex, T> {
@@ -127,7 +129,7 @@ impl<V: CubicVertex, T: 'static> SkeletonBb<V, T> {
         active_shader: &mut ActiveShaderProgram<'a, '_, '_, VertexArray<Vector<3>>, (), D::Tex, 1>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
         skeleton: &Skeleton,
-        calculated_animation: CalculatedAnimation,
+        calculated_animation: &CalculatedAnimation,
         mut colour: F,
     ) -> Result<(), DrawError<'a>> {
         for (bone, bbox) in self.per_bone.iter().enumerate() {

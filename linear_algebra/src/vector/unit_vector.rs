@@ -17,6 +17,7 @@ macro_rules! unit_vector {
 
     ($($num:literal),+) => {
         // SAFETY: checked above for zero vector
+        #[expect(clippy::macro_metavars_in_unsafe, reason = "this is always safe as checked above")]
         unsafe { $crate::Vector::new([$($num),*]).try_normalize().unwrap_unchecked() }
     }
 }

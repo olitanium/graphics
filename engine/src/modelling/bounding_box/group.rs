@@ -80,11 +80,12 @@ where
 {
     fn draw_sized(
         self,
-        register: &mut FramebufferContext,
-        marker: &mut ShaderProgramContext,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
     ) -> DrawOut {
-        let mut active_framebuffer = self.framebuffer.bind(register);
-        let mut active_shader = BoundingBoxElement::<V, Bt>::shader_program().use_program(marker);
+        let mut active_framebuffer = self.framebuffer.bind(fb_context);
+        let mut active_shader =
+            BoundingBoxElement::<V, Bt>::shader_program().use_program(sp_context);
 
         active_shader
             .set_uniform("projtimesview", &self.look_at)

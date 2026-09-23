@@ -27,7 +27,7 @@ pub struct Group<
 > {
     framebuffer: &'a D,
     bounding_box: &'a SkeletonBb<V, T>,
-    calculated_animation: CalculatedAnimation,
+    calculated_animation: &'a CalculatedAnimation,
     skeleton: &'a Skeleton,
     look_at: Matrix<4, 4>,
     level: usize,

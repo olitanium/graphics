@@ -1,6 +1,6 @@
+#![feature(option_array_transpose)]
 use core::array;
 
-/// returns an array of references (or ref mut)
 #[derive(Debug)]
 pub struct InfiniteWindowIter<'a, T, const N: usize> {
     backing: &'a [T],
@@ -34,8 +34,11 @@ impl<'a, T, const N: usize> Iterator for InfiniteWindowIter<'a, T, N> {
             }
         }
 
-        let output =
-            array::from_fn(|index| &self.backing[short_modulo(index + self.current_index, len)]);
+        let output = array::from_fn(|index| {
+            self.backing
+                .get(short_modulo(index + self.current_index, len))
+        })
+        .transpose()?;
 
         self.current_index = short_modulo(self.current_index + 1, len);
 
@@ -81,7 +84,7 @@ mod test {
         let slice: &[i32; 0] = &[];
         let mut iterator = InfiniteWindowIter::<_, 1>::new(slice);
 
-        assert!(iterator.next().is_none())
+        assert!(iterator.next().is_none());
     }
 
     #[test]
