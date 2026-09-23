@@ -56,7 +56,27 @@ type_repetition_in_bounds = "allow"
 field_scoped_visibility_modifiers = "allow"
 as_conversions = "allow"
 pattern_type_mismatch = "allow"
+exhaustive_enums = "allow"
+exhaustive_structs = "allow"
+match_same_arms = "allow"
+unneeded_field_pattern = "allow"
+rest_pattern_accessible_field = "allow"
+partial_pub_fields = "allow"
 
 # not sure
 items_after_statements = "allow"
 arbitrary_source_item_ordering = "allow"
+multiple_inherent_impl = "allow"
+shadow_same = "allow"
+shadow_unrelated = "allow"
+module_name_repetitions = "allow"
+
+# temporary
+
+missing_inline_in_public_items = "allow"
+missing_docs_in_private_items = "allow"
+missing_errors_doc = "allow"
+result_unit_err = "allow"
+must_use_candidate = "allow"
+too_many_arguments = "allow"
+struct_excessive_bools = "allow"

@@ -1,6 +1,6 @@
 //! module for defining and storing matrix and methods.
 
-use core::fmt::Debug;
+use core::fmt::{self, Debug};
 use core::iter;
 use core::ops::{self, Index, IndexMut};
 
@@ -55,7 +55,7 @@ const impl<const R: usize, const C: usize> Default for Matrix<R, C> {
 
 impl<const R: usize, const C: usize> Debug for Matrix<R, C> {
     #[inline]
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for row in self.row_iter() {
             writeln!(f, "{row:?}")?;
         }
@@ -89,9 +89,6 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
         Matrix::from_col_major(input).transpose()
     }
 
-    /// # Panics
-    /// Panics if the length of the slice is not as given by the compile-time
-    /// constants
     #[inline]
     #[must_use]
     pub fn new_from_slice(input: &[[VectorPreferredFloat; R]]) -> Option<Self> {
@@ -140,7 +137,6 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
         self.inner_mut().iter_mut()
     }
 
-    #[expect(clippy::missing_panics_doc)]
     #[inline]
     #[must_use]
     pub fn col_major(&self) -> [VectorPreferredFloat; C * R] {

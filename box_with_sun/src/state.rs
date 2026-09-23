@@ -1,10 +1,10 @@
+use core::time::Duration;
 use std::collections::HashSet;
-use std::time::Duration;
 
 use engine::entity::SkeletonEntity;
 use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
-use engine::framebuffer::traits::FramebufferInternals;
+use engine::framebuffer::traits::FramebufferInternals as _;
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::CameraProjection;
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
@@ -13,8 +13,8 @@ use engine::types::TexDim;
 use engine::{ApiState, Draw, Event, PollResult};
 
 use crate::camera::GameCamera;
-use crate::sun::Sun;
 use crate::player::Player;
+use crate::sun::Sun;
 
 pub struct State {
     pub game_camera: GameCamera,
@@ -97,7 +97,7 @@ impl ApiState for State {
 
         self.controls(
             mouse_delta,
-            keyboard,
+            &keyboard,
             &mut string,
             frame_time,
             game_duration,
@@ -111,7 +111,7 @@ impl ApiState for State {
     }
 
     fn new(initial_size: (TexDim, TexDim)) -> Result<Self, Self::Error> {
-        let output = Self::new_internal(initial_size)?;
+        let output = Self::new_internal(initial_size);
         Ok(output)
     }
 }

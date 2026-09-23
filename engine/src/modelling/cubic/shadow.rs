@@ -52,8 +52,8 @@ impl<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> Group<'a, X> {
         opaque: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
         transparent: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
         uniforms: Vec<(String, &'a dyn Uniform)>,
-    ) -> Result<Box<Self>, SignaturesDoNotMatchError> {
-        Ok(Box::new(Self {
+    ) -> Box<Self> {
+        Box::new(Self {
             look_at: camera.look_at(hint),
             position: camera.position(hint),
 
@@ -62,11 +62,11 @@ impl<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> Group<'a, X> {
             opaque,
             transparent,
             uniforms,
-        }))
+        })
     }
 }
 
-impl<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> Draw for Group<'a, X> {
+impl<X: FramebufferWithDepth<3, Tex = FlatTexture>> Draw for Group<'_, X> {
     fn draw_sized(
         self,
         fb_context: &mut FramebufferContext,
@@ -78,15 +78,15 @@ impl<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> Draw for Group<'a, X> {
                 fb_context,
                 &self.opaque,
                 self.position,
-                self.uniforms.clone(),
+                &self.uniforms,
             )
             .unwrap();
 
         // At this point, all lights have their framebuffers filled with depth
         // information
         let mut active_shadow_shader = opengl_shaders::shadow().use_program(sp_context);
-        // SAFETY: because active_shadow_shader is dropped before the end of this
-        // function, the references stored cannot leak
+        // SAFETY: because active_shadow_shader is dropped before the end of
+        // this function, the references stored cannot leak
         unsafe {
             self.list_light
                 .bind(&mut active_shadow_shader, self.position)

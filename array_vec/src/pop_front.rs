@@ -80,9 +80,8 @@ impl<T, const N: usize> ArrayVecPopFront<T, N> {
         T: [const] Destruct,
     {
         while let Some(value) = self.pop_front() {
-            match other.push(value) {
-                Ok(_) => continue,
-                Err(_) => return,
+            if other.push(value).is_err() {
+                return;
             }
         }
     }
@@ -108,7 +107,6 @@ where
     }
 }
 
-#[expect(clippy::inline_modules, reason = "clippy bug")]
 #[cfg(test)]
 mod tests {
     use core::sync::atomic::{AtomicUsize, Ordering};

@@ -149,12 +149,12 @@ impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, 
         Ok(())
     }
 
-    pub fn get_uniform_location(
-        &self,
-        name: String,
-    ) -> Result<UniformLocation, GetUniformLocationError<'_>> {
-        self.shader_program.get_uniform_location(name)
-    }
+    // pub fn get_uniform_location(
+    // &self,
+    // name: String,
+    // ) -> Result<UniformLocation, GetUniformLocationError<'_>> {
+    // self.shader_program.get_uniform_location(name)
+    // }
 }
 
 #[derive(Debug)]
@@ -220,8 +220,8 @@ pub trait IsActiveShaderProgram<'a> {
     ) -> Result<UniformLocation, GetUniformLocationError<'a>>;
 }
 
-impl<'a, 'b, 'c, M: Model, O, T: Texture, const OUT: usize> IsActiveShaderProgram<'a>
-    for ActiveShaderProgram<'a, 'b, 'c, M, O, T, OUT>
+impl<'a, M: Model, O, T: Texture, const OUT: usize> IsActiveShaderProgram<'a>
+    for ActiveShaderProgram<'a, '_, '_, M, O, T, OUT>
 {
     fn get_uniform_location(
         &self,

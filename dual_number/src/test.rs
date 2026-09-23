@@ -1,3 +1,5 @@
+use core::ops;
+
 use crate::DualNumber;
 
 #[test]
@@ -13,7 +15,7 @@ fn mul() {
     let lhs = DualNumber::new(1, 2);
     let rhs = DualNumber::new(3, 5);
 
-    assert_eq!(lhs * rhs, DualNumber::new(3, 11))
+    assert_eq!(lhs * rhs, DualNumber::new(3, 11));
 }
 
 #[test]
@@ -21,7 +23,7 @@ fn mul_noncommut() {
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     struct NonCommutative(i32);
 
-    impl std::ops::Mul for NonCommutative {
+    impl ops::Mul for NonCommutative {
         type Output = Self;
 
         fn mul(self, rhs: Self) -> Self::Output {
@@ -29,7 +31,7 @@ fn mul_noncommut() {
         }
     }
 
-    impl std::ops::Add for NonCommutative {
+    impl ops::Add for NonCommutative {
         type Output = Self;
 
         fn add(self, rhs: Self) -> Self::Output {

@@ -1,6 +1,5 @@
 //! A utility crate. Modules in this crate really ought to be spun off into
 //! smaller manageable crates.
-#![warn(missing_docs)]
 #![feature(const_trait_impl)]
 #![feature(const_ops)]
 mod error;

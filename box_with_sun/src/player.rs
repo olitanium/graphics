@@ -1,6 +1,6 @@
+use alloc::rc::Rc;
+use core::fmt::Debug;
 use std::collections::HashSet;
-use std::fmt::Debug;
-use std::rc::Rc;
 
 use engine::entity::{Mass, Physics, SkeletonEntity};
 use engine::geometry::Pose;
@@ -30,12 +30,12 @@ impl Player {
         player.physics.pose =
             Pose::new_from_translation(Vector::new([0.25, PLAYER_SIZE * 0.5, 0.25]));
         player.physics.velocity = Vector::ZERO;
-        Player {
+        Self {
             entity: player.into(),
         }
     }
 
-    pub fn root(&self) -> Pose {
+    pub const fn root(&self) -> Pose {
         self.entity.physics.pose
     }
 

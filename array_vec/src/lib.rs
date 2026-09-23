@@ -14,7 +14,7 @@
 #![feature(const_iter)]
 #![feature(const_result_unwrap_unchecked)]
 
-use core::fmt::Debug;
+use core::fmt::{self, Debug, Formatter};
 use core::marker::Destruct;
 use core::mem::{self, MaybeUninit};
 use core::ops::{Deref, DerefMut, Index, IndexMut};
@@ -36,9 +36,6 @@ pub struct ArrayVec<T, const N: usize> {
     len: usize,
     array: [MaybeUninit<T>; N],
 }
-
-#[derive(Debug)]
-struct LengthError<const N: usize>;
 
 #[derive(Debug)]
 pub enum TryPushError {
@@ -70,9 +67,8 @@ impl<T, const N: usize> ArrayVec<T, N> {
         F: [const] FnMut() -> Option<T> + [const] Destruct,
     {
         if let Some(dest) = self.array.get_mut(self.len) {
-            let out = match func() {
-                Some(val) => val,
-                None => return Err(TryPushError::ReturnedNone),
+            let Some(out) = func() else {
+                return Err(TryPushError::ReturnedNone);
             };
             *dest = MaybeUninit::new(out);
             self.len += 1;
@@ -122,18 +118,11 @@ impl<T, const N: usize> ArrayVec<T, N> {
         out
     }
 
-    pub fn push_or_panic(&mut self, elem: T) {
-        self.push(elem).map_err(|_| LengthError::<N>).unwrap();
-    }
-
     pub const fn pop(&mut self) -> Option<T> {
-        if self.len == 0 {
-            return None;
-        }
-
         // for security, replaces with zeroes to obscure previous values
+        // `wrapping_sub` means `self.len == 0 => get_mut(usize::MAX) => None`
         let output = mem::replace(
-            &mut self.array[self.len - 1],
+            self.array.get_mut(self.len.wrapping_sub(1))?,
             const { MaybeUninit::zeroed() },
         );
         self.len -= 1;
@@ -144,11 +133,19 @@ impl<T, const N: usize> ArrayVec<T, N> {
     }
 
     pub const fn as_slice(&self) -> &[T] {
-        unsafe { self.array[..self.len].assume_init_ref() }
+        // SAFETY: self.len always points one past the end of the valid array,
+        // so it is safe to both `get_unchecked` and `assume_init_ref`
+        let slice = unsafe { self.array.get_unchecked(..self.len) };
+        // SAFETY: as above
+        unsafe { slice.assume_init_ref() }
     }
 
     pub const fn as_mut_slice(&mut self) -> &mut [T] {
-        unsafe { self.array[..self.len].assume_init_mut() }
+        // SAFETY: self.len always points one past the end of the valid array,
+        // so it is safe to both `get_unchecked` and `assume_init_ref`
+        let slice = unsafe { self.array.get_unchecked_mut(..self.len) };
+        // SAFETY: as above
+        unsafe { slice.assume_init_mut() }
     }
 
     const fn into_raw_parts(mut self) -> (usize, [MaybeUninit<T>; N]) {
@@ -166,6 +163,8 @@ impl<T, const N: usize> ArrayVec<T, N> {
         let (len, array) = self.into_raw_parts();
 
         if len == N {
+            // SAFETY:
+            // if len == N, the whole array is init
             Ok(unsafe { MaybeUninit::array_assume_init(array) })
         } else {
             Err(TryFromErr {
@@ -204,6 +203,10 @@ impl<T, const N: usize> ArrayVec<T, N> {
 
     pub const fn len(&self) -> usize {
         self.len
+    }
+
+    pub const fn is_empty(&self) -> bool {
+        self.len() == 0
     }
 
     pub fn iter(&self) -> <&Self as IntoIterator>::IntoIter {
@@ -266,6 +269,9 @@ where
     T: [const] Destruct,
 {
     fn drop(&mut self) {
+        // SAFETY:
+        // getting the mut_slice guarantees taking all init parts.
+        // and like Vec<T>, the slice is dropped in place.
         unsafe {
             ptr::drop_in_place(self.as_mut_slice());
         }
@@ -281,7 +287,7 @@ impl<T: Clone, const N: usize> Clone for ArrayVec<T, N> {
 }
 
 impl<T: Debug, const N: usize> Debug for ArrayVec<T, N> {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.debug_struct("ArrayVec")
             .field("capacity", &N)
             .field("len", &self.len())

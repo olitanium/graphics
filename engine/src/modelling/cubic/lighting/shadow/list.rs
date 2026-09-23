@@ -48,7 +48,7 @@ impl<'b, const MAX: usize> ShadowListLights<'b, MAX> {
         fb_context: &mut FramebufferContext,
         opaque_models: &[(&'a SkeletonCubic, CalculatedAnimation)],
         target_position: Vector<3>,
-        uniforms: Vec<(String, &dyn Uniform)>,
+        uniforms: &[(String, &dyn Uniform)],
     ) -> Result<(), GenDepthError<'a>> {
         for light in &self.far {
             /*let mut active_depth_only_shader =
@@ -75,7 +75,7 @@ impl<'b, const MAX: usize> ShadowListLights<'b, MAX> {
             }
 
             drop(active_depth_only_shader);*/
-            light.gen_depth(sp_context, fb_context, opaque_models, uniforms.clone(), target_position)?;
+            light.gen_depth(sp_context, fb_context, opaque_models, uniforms.to_vec(), target_position)?;
         }
 
         for light in &self.spot {
@@ -101,22 +101,25 @@ impl<'b, const MAX: usize> ShadowListLights<'b, MAX> {
             }
 
             drop(active_depth_only_shader);*/
-            light.gen_depth(sp_context, fb_context, opaque_models, uniforms.clone())?;
+            light.gen_depth(sp_context, fb_context, opaque_models, uniforms.to_vec())?;
         }
 
         for light in &self.point {
             // let mut active_depth_only_shader_point =
             // opengl_shaders::point_depth().use_program(sp_context);
-            // active_depth_only_shader_point.set_uniform_dyn(uniforms.clone())?;
+            // active_depth_only_shader_point.set_uniform_dyn(uniforms.clone())?
+            // ;
             //
-            // for (index, matrix) in light.get_look_at_matrices().into_iter().enumerate() {
-            // active_depth_only_shader_point.set_uniform(format!("matrix[{index}]"),
-            // &matrix)?; }
+            // for (index, matrix) in
+            // light.get_look_at_matrices().into_iter().enumerate() {
+            // active_depth_only_shader_point.set_uniform(format!("
+            // matrix[{index}]"), &matrix)?; }
             // active_depth_only_shader_point.set_uniform("light_position",
             // &light.light.position)?; active_depth_only_shader_point.
             // set_uniform("far_plane", &light.far_plane())?;
             //
-            // let mut active_light_framebuffer = light.framebuffer.bind(fb_context);
+            // let mut active_light_framebuffer =
+            // light.framebuffer.bind(fb_context);
             //
             // for (model, calculated_animation) in opaque_models {
             // model
@@ -127,7 +130,7 @@ impl<'b, const MAX: usize> ShadowListLights<'b, MAX> {
             // )
             // .map_err(|error| GenDepthError::Model { error, model })?;
             // }
-            light.gen_depth(sp_context, fb_context, opaque_models, uniforms.clone())?;
+            light.gen_depth(sp_context, fb_context, opaque_models, uniforms.to_vec())?;
         }
 
         // from this point, the depth buffers should be filled with depth data.

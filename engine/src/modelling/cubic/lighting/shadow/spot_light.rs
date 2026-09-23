@@ -118,10 +118,10 @@ impl ShadowSpotLight {
     ) -> Result<(), GenDepthError<'a>> {
         let mut active_depth_only_shader =
             opengl_shaders::farspot_light_depth().use_program(sp_context);
-        active_depth_only_shader.set_uniform_dyn(uniforms.clone())?;
+        active_depth_only_shader.set_uniform_dyn(uniforms.to_vec())?;
 
-        // Draw the scene from the lights perspective, saving to the light's internal
-        // framebuffer
+        // Draw the scene from the lights perspective, saving to the light's
+        // internal framebuffer
         active_depth_only_shader.set_uniform("projtimesview".to_string(), &self.projtimesview())?;
 
         let mut active_light_framebuffer = self.framebuffer.bind(fb_context);

@@ -1,5 +1,6 @@
 use core::ptr;
 
+/// DO NOT USE: There are some bugs in this impl when `map` panics
 /// Map a value without dereferencing a mut ref.
 ///
 /// This can be useful to implement methods such as `AddAssign` on non-clone
@@ -12,7 +13,9 @@ where
     // at the end.
     let input_copy = unsafe { ptr::read(input) };
     let new = map(input_copy);
-    // SAFETY This value has already been dropped in `map`.
+
+    // SAFETY:
+    // This value has already been dropped in `map`.
     unsafe {
         ptr::write(input, new);
     }
@@ -26,7 +29,7 @@ mod tests {
     use crate::mem;
 
     #[test]
-    fn test_drop() {
+    fn drop() {
         static DROPCOUNT: AtomicUsize = AtomicUsize::new(0);
 
         struct Value(usize);

@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use engine::Key;
 use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
-use engine::framebuffer::traits::FramebufferInternals;
+use engine::framebuffer::traits::FramebufferInternals as _;
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::{self, CameraBuilder, ManualPoseFixedUp};
 
@@ -19,7 +19,10 @@ impl GameCamera {
         const START_LOC: Vector<3> = Vector::new([0.0, 0.5, 1.0]);
 
         let camera = CameraBuilder::new()
-            .pose(ManualPoseFixedUp::new_from_to(START_LOC, Vector::ZERO, UnitVector::Y).unwrap())
+            .pose(
+                ManualPoseFixedUp::new_from_to(START_LOC, Vector::ZERO, UnitVector::Y)
+                    .expect("START LOC to ZERO is not the same as Y"),
+            )
             .perspective(90.0, hdr_fb.aspect_ratio(), 0.01, 100.0)
             .build();
         let sensitivity = 0.01;
@@ -60,12 +63,13 @@ impl GameCamera {
             if keyboard.contains(&Key::LeftShift) {
                 self.camera.pose.move_up(-distance);
             }
+            let [mouse_delta_0, mouse_delta_1] = mouse_delta.into_inner();
             self.camera
                 .pose
-                .look_left(-mouse_delta[0] * self.sensitivity);
+                .look_left(-mouse_delta_0 * self.sensitivity);
             self.camera
                 .pose
-                .look_up(mouse_delta[1] * self.sensitivity, None);
+                .look_up(mouse_delta_1 * self.sensitivity, None);
         }
     }
 }

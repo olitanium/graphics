@@ -14,7 +14,7 @@ use crate::VectorPreferredFloat;
 use crate::vector::array_maths::{div, mul};
 
 mod unit_vector;
-use float_eq::NearlyEq;
+use float_eq::NearlyEq as _;
 pub use unit_vector::UnitVector;
 
 #[cfg(test)]
@@ -70,7 +70,7 @@ impl<const N: usize> Ord for Vector<N, VectorPreferredFloat> {
         for (a, b) in iter::zip(self.iter(), other.iter()) {
             match a.total_cmp(b) {
                 a @ (Ordering::Greater | Ordering::Less) => return a,
-                Ordering::Equal => continue,
+                Ordering::Equal => {}
             }
         }
         Ordering::Equal
@@ -278,8 +278,8 @@ impl<const N: usize> Vector<N, VectorPreferredFloat> {
 
         // normalize all `-small` to `0.0`
         fn normalize_zero(val: &mut f32) {
-            if *val < 0.0 && *val > SMALLEST {
-                *val = 0.0
+            if *val < 0.0 && *val > -SMALLEST {
+                *val = 0.0;
             }
         }
 

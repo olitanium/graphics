@@ -1,6 +1,7 @@
+use core::ops;
+use core::ops::{FromResidual, Residual, Try};
+use core::time::Duration;
 use std::collections::HashSet;
-use std::ops::{FromResidual, Residual, Try};
-use std::time::Duration;
 
 use engine::linear_algebra::Vector;
 use engine::{ApiState, Key, PollResult};
@@ -22,12 +23,12 @@ impl<T> Try for ControlOutput<T> {
     type Output = T;
     type Residual = ControlOutput<!>;
 
-    fn branch(self) -> std::ops::ControlFlow<Self::Residual, Self::Output> {
+    fn branch(self) -> ops::ControlFlow<Self::Residual, Self::Output> {
         match self {
-            Self::Data(x) => std::ops::ControlFlow::Continue(x),
-            Self::Close => std::ops::ControlFlow::Break(ControlOutput::Close),
-            Self::Error(e) => std::ops::ControlFlow::Break(ControlOutput::Error(e)),
-            Self::Restart => std::ops::ControlFlow::Break(ControlOutput::Restart),
+            Self::Data(x) => ops::ControlFlow::Continue(x),
+            Self::Close => ops::ControlFlow::Break(ControlOutput::Close),
+            Self::Error(e) => ops::ControlFlow::Break(ControlOutput::Error(e)),
+            Self::Restart => ops::ControlFlow::Break(ControlOutput::Restart),
         }
     }
 
@@ -49,7 +50,7 @@ impl<T> FromResidual for ControlOutput<T> {
 impl<T, E: Into<StateError>> FromResidual<Result<!, E>> for ControlOutput<T> {
     fn from_residual(residual: Result<!, E>) -> Self {
         let Err(x) = residual;
-        ControlOutput::Error(x.into())
+        Self::Error(x.into())
     }
 }
 
@@ -69,7 +70,7 @@ impl State {
     pub fn controls(
         &mut self,
         mouse_delta: Vector<2>,
-        keyboard: HashSet<Key>,
+        keyboard: &HashSet<Key>,
         string: &mut String,
         frame_time: Duration,
         _time: Duration,
@@ -83,10 +84,10 @@ impl State {
             return ControlOutput::Close;
         }
         if keyboard.contains(&Key::R) {
-            self.exposure -= 1.2 * frame_time;
+            self.exposure = (-1.2_f32).mul_add(frame_time, self.exposure);
         }
         if keyboard.contains(&Key::E) {
-            self.exposure += 1.2 * frame_time;
+            self.exposure = (1.2_f32).mul_add(frame_time, self.exposure);
         }
 
         if let Some(ch) = string.pop() {
@@ -105,7 +106,7 @@ impl State {
             self.game_camera.move_lock = !self.game_camera.move_lock;
         }
         self.game_camera
-            .controls(&keyboard, string, mouse_delta, frame_time);
+            .controls(keyboard, string, mouse_delta, frame_time);
 
         let small_cube_anim = self.small_cube.debug_get_pair_model_bind_pose().1;
         let origin_cube_anim = self.origin_cube.debug_get_pair_model_bind_pose().1;
@@ -114,7 +115,7 @@ impl State {
             self.player.controls(
                 &self.player.get_pair_model().1,
                 &self.game_camera,
-                &keyboard,
+                keyboard,
                 frame_time,
                 &mut self.small_cube,
                 &small_cube_anim,

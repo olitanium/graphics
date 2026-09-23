@@ -246,24 +246,21 @@ fn embed_three_to_two(one: Triangle<3>, two: Triangle<3>) -> Option<(Triangle<2>
     #[inline]
     fn setx0(tri: Triangle<3>) -> Triangle<2> {
         tri.map(|vec| {
-            #[allow(unused)]
-            let [a, b, c] = vec.into_inner();
+            let [_, b, c] = vec.into_inner();
             vector![b, c]
         })
     }
     #[inline]
     fn sety0(tri: Triangle<3>) -> Triangle<2> {
         tri.map(|vec| {
-            #[allow(unused)]
-            let [a, b, c] = vec.into_inner();
+            let [a, _, c] = vec.into_inner();
             vector![a, c]
         })
     }
     #[inline]
     fn setz0(tri: Triangle<3>) -> Triangle<2> {
         tri.map(|vec| {
-            #[allow(unused)]
-            let [a, b, c] = vec.into_inner();
+            let [a, b, _] = vec.into_inner();
             vector![a, b]
         })
     }

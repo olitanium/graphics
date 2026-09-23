@@ -1,4 +1,4 @@
-use std::time::Duration;
+use core::time::Duration;
 
 use engine::geometry::{Orientation, Pose};
 use engine::linear_algebra::{UnitVector, Vector};

@@ -1,6 +1,6 @@
+use core::fmt::{self, Debug, Display};
+use core::{iter, mem};
 use std::collections::HashMap;
-use std::fmt::{Debug, Display};
-use std::{iter, mem};
 
 use geometry::Pose;
 use graphics::framebuffer::ActiveFramebuffer;
@@ -50,7 +50,7 @@ where
     M::BoundingBox<T>: Debug,
     T: Debug,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct(stringify!(AggregateEntity))
             .field("base_model", &self.base_model)
             .field("base_bounding_box", &self.base_bounding_box)
@@ -61,16 +61,16 @@ where
 }
 
 #[derive(Debug)]
-pub(crate) struct AggregateUnit<M: EntityInner, T>
+struct AggregateUnit<M: EntityInner, T>
 where
     M::Vertex: CubicVertex,
 {
-    pub(crate) model: M,
-    pub(crate) bounding_box: Option<M::BoundingBox<T>>,
-    pub(crate) offset: Pose,
-    pub(crate) skeleton_attachment_point: SkeletonBoneIndex,
-    pub(crate) parent_unit: AggregateModelIndex,
-    pub(crate) children: Vec<AggregateModelIndex>,
+    model: M,
+    bounding_box: Option<M::BoundingBox<T>>,
+    offset: Pose,
+    skeleton_attachment_point: SkeletonBoneIndex,
+    parent_unit: AggregateModelIndex,
+    children: Vec<AggregateModelIndex>,
 }
 
 #[derive(Debug, PartialEq, Eq, Hash)]
@@ -90,11 +90,10 @@ impl<M: EntityInner, T> AggregateEntity<M, T>
 where
     M::Vertex: CubicVertex,
 {
-    pub fn new<F: FnMut(&[(Vector<3>, [M::Vertex; 3])]) -> T>(
-        base_model: M,
-        depth: usize,
-        init: F,
-    ) -> Self {
+    pub fn new<F>(base_model: M, depth: usize, init: F) -> Self
+    where
+        F: FnMut(&[(Vector<3>, [M::Vertex; 3])]) -> T,
+    {
         let bounding_box = base_model.make_bounding_box(depth, init);
 
         Self {
@@ -110,7 +109,7 @@ impl<M: EntityInner, T> AggregateEntity<M, T>
 where
     M::Vertex: CubicVertex,
 {
-    pub fn push_model<F: FnMut(&[(Vector<3>, [M::Vertex; 3])]) -> T>(
+    pub fn push_model<F>(
         &mut self,
         other_model: M,
         offset: Pose,
@@ -119,7 +118,10 @@ where
 
         bounding_box_depth: usize,
         bounding_box_init: F,
-    ) -> Result<AggregateModelIndex, PushModelError> {
+    ) -> Result<AggregateModelIndex, PushModelError>
+    where
+        F: FnMut(&[(Vector<3>, [M::Vertex; 3])]) -> T,
+    {
         // check that the parent unit is Some and the bone exists
         self.check_parent_and_bone(attachment_point, parent_unit)?;
 

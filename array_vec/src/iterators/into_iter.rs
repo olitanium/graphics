@@ -11,20 +11,6 @@ impl<T, const N: usize> IntoIterator for ArrayVec<T, N> {
     }
 }
 
-// fn get_iter<T, const N: usize>(vec: ArrayVec<T, N>) -> IntoIter<T, N> {
-// let (len, array) = vec.into_raw_parts();
-// SAFETY: taking `len` ensures that only init values are assumed init
-// array
-// .into_iter()
-// .take(len)
-// .map(|init| unsafe { init.assume_init() })
-// }
-
-// pub type IntoIter<T, const N: usize> = core::iter::Map<
-// core::iter::Take<core::array::IntoIter<MaybeUninit<T>, N>>,
-// fn(MaybeUninit<T>) -> T,
-// >;
-
 /// `IntoIter` for `ArrayVec`.
 pub struct IntoIter<T, const N: usize> {
     inner: ArrayVecPopFront<T, N>,

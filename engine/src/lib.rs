@@ -13,6 +13,8 @@
 #![feature(iter_collect_into)]
 #![feature(const_destruct)]
 
+extern crate alloc;
+
 pub mod eng_state;
 pub mod entity;
 pub mod modelling;

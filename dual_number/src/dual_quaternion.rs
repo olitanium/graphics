@@ -102,7 +102,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_inverse() {
+    fn inverse() {
         let dual_quaternion = DualQuaternion::new(
             Quaternion::from_scalar_vec(1.0, Vector::new([1.0, 1.0, 1.0])),
             Quaternion::from_scalar_vec(2.0, Vector::new([2.0, 2.0, 2.0])),
@@ -112,6 +112,6 @@ mod test {
 
         let back = inverse.inverse();
 
-        assert_eq!(dual_quaternion, back)
+        assert_eq!(dual_quaternion, back);
     }
 }

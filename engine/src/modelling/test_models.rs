@@ -1,9 +1,9 @@
-use std::iter;
-use std::rc::Rc;
+use alloc::rc::Rc;
+use core::iter;
 use std::sync::LazyLock;
 
 use array_vec::arrvec;
-use geometry::{Orientation, Pose, TransformBy};
+use geometry::{Orientation, Pose, TransformBy as _};
 use graphics::linear_algebra::{UnitVector, Vector, unit_vector};
 use graphics::vertex_array::VertexArray;
 

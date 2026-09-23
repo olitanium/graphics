@@ -1,7 +1,7 @@
-use std::iter;
+use core::iter;
 
 use graphics::linear_algebra::{UnitVector, Vector, vector};
-use zip_with::ArrayZipWith;
+use zip_with::ArrayZipWith as _;
 
 use crate::modelling::CubicVertex;
 

@@ -1,5 +1,4 @@
-use std::fmt::Debug;
-use std::mem;
+use core::mem;
 
 use geometry::Pose;
 use graphics::linear_algebra::UnitVector;
@@ -9,7 +8,7 @@ use crate::entity::Mass;
 use crate::modelling::bounding_box::no_alter_meta;
 use crate::modelling::{Collision, CubicVertex};
 
-#[expect(unused)]
+#[expect(unused, reason = "not ready yet")]
 mod average_normal;
 
 #[derive(Debug, Default, Clone)]
@@ -21,11 +20,11 @@ pub struct SimplePhysics {
 }
 
 impl SimplePhysics {
-    pub(crate) fn append_to_collision_dir(&mut self, normal_max: NormalMax) {
+    fn append_to_collision_dir(&mut self, normal_max: NormalMax) {
         self.collision_push_direction.push(normal_max);
     }
 
-    pub(crate) fn get_clear_collision_dir(&mut self) -> Vec<NormalMax> {
+    fn get_clear_collision_dir(&mut self) -> Vec<NormalMax> {
         mem::take(&mut self.collision_push_direction)
     }
 
@@ -64,9 +63,9 @@ impl SimplePhysics {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct NormalMax {
-    pub(crate) normal: UnitVector<3>,
-    pub(crate) max_depth: f32,
+struct NormalMax {
+    normal: UnitVector<3>,
+    max_depth: f32,
 }
 
 pub trait Physics: for<'a> Collision<VertexTransform<'a> = ()> {
@@ -79,7 +78,7 @@ pub trait Physics: for<'a> Collision<VertexTransform<'a> = ()> {
         other_transform: &B::Transform<'_>,
     ) -> (Option<UnitVector<3>>, Option<UnitVector<3>>)
     where
-        B: Physics + ?Sized,
+        B: Physics,
         <Self as Collision>::Vertex: CubicVertex + PartialEq,
         <B as Collision>::Vertex: CubicVertex + PartialEq,
     {
@@ -96,10 +95,11 @@ pub trait Physics: for<'a> Collision<VertexTransform<'a> = ()> {
 
         let (mut first_tri, mut other_tri): (Vec<_>, Vec<_>) = collides.into_iter().unzip();
 
-        fn get_average_normal<V: CubicVertex + PartialEq>(
-            mut this: &mut [[V; 3]],
-        ) -> Option<UnitVector<3>> {
-            this.sort_by_cached_key(|pos1| pos1.each_ref().map(|vert| vert.position()));
+        fn get_average_normal<V>(mut this: &mut [[V; 3]]) -> Option<UnitVector<3>>
+        where
+            V: CubicVertex + PartialEq,
+        {
+            this.sort_by_cached_key(|pos1| pos1.each_ref().map(V::position));
             this = this.partition_dedup().0;
 
             let total_normals = this
@@ -110,10 +110,14 @@ pub trait Physics: for<'a> Collision<VertexTransform<'a> = ()> {
             total_normals.try_normalize()
         }
 
-        fn get_average_normal_and_depth_into_other<V: CubicVertex + PartialEq, V2: CubicVertex>(
+        fn get_average_normal_and_depth_into_other<V, V2>(
             this: &mut [[V; 3]],
             other: &[[V2; 3]],
-        ) -> Option<NormalMax> {
+        ) -> Option<NormalMax>
+        where
+            V: CubicVertex + PartialEq,
+            V2: CubicVertex,
+        {
             let normal = get_average_normal(this)?;
 
             let this_depth = this
@@ -133,13 +137,13 @@ pub trait Physics: for<'a> Collision<VertexTransform<'a> = ()> {
             Some(NormalMax { normal, max_depth })
         }
 
-        fn make_opt<A: ?Sized, B: ?Sized>(
+        fn make_opt<A, B>(
             this: &mut A,
             this_tri: &mut [[<A as Collision>::Vertex; 3]],
             other_tri: &[[B; 3]],
         ) -> Option<UnitVector<3>>
         where
-            A: Physics,
+            A: Physics + ?Sized,
             <A as Collision>::Vertex: CubicVertex + PartialEq,
             B: CubicVertex + PartialEq,
         {

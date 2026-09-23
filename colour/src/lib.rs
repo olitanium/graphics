@@ -52,6 +52,7 @@ impl ColourRGBA {
         &self.0
     }
 
+    #[must_use = "map returns a new colour, so needs to be either used or saved"]
     pub fn map_colour<F>(self, op: F) -> Self
     where
         F: FnMut(f32) -> f32,
@@ -108,10 +109,12 @@ impl ColourRGB {
     }
 
     #[must_use]
-    pub const fn to_rgba_with(&self, alpha: f32) -> ColourRGBA {
-        ColourRGBA::new([self.0[0], self.0[1], self.0[2], alpha])
+    pub const fn to_rgba_with(self, alpha: f32) -> ColourRGBA {
+        let Self([r, g, b]) = self;
+        ColourRGBA::new([r, g, b, alpha])
     }
 
+    #[must_use = "map returns a new colour, so needs to be either used or saved"]
     pub fn map<F>(&self, f: F) -> Self
     where
         F: Fn(f32) -> f32,

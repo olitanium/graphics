@@ -1,5 +1,5 @@
-use std::borrow::Cow;
-use std::rc::Rc;
+use alloc::borrow::Cow;
+use alloc::rc::Rc;
 
 mod builder;
 pub use builder::Builder as MeshBuilder;

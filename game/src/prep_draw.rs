@@ -1,13 +1,7 @@
 use engine::array_vec::arrvec;
 use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::lighting::shadow::{PointLightIlluminatesGroup, ShadowListLights};
-use engine::modelling::{
-    BloomGroup,
-    FramebufferQuad,
-    ScreenQuadGroup,
-    ShadowGroup,
-    SkyBoxGroup,
-};
+use engine::modelling::{BloomGroup, FramebufferQuad, ScreenQuadGroup, ShadowGroup, SkyBoxGroup};
 use engine::query::HasDrawnQuery;
 use engine::{Draw, PollResult, VecDraw};
 
@@ -30,21 +24,18 @@ impl State {
 
         let _sun = vec![self.sun.inner.debug_get_pair_model_bind_pose()];
 
-        out.push(
-            ShadowGroup::new(
-                &self.hdr_fb,
-                &self.game_camera.camera,
-                &(),
-                ShadowListLights {
-                    point: arrvec![&self.sun.light,],
-                    ..Default::default()
-                },
-                opaque.clone(),
-                vec![], // sun,
-                vec![],
-            )
-            .unwrap(),
-        );
+        out.push(ShadowGroup::new(
+            &self.hdr_fb,
+            &self.game_camera.camera,
+            &(),
+            ShadowListLights {
+                point: arrvec![&self.sun.light,],
+                ..Default::default()
+            },
+            opaque.clone(),
+            vec![], // sun,
+            vec![],
+        ));
 
         let mut opaque = vec![self.origin_slope.debug_get_pair_model_bind_pose()];
         if self.toggle_m {

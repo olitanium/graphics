@@ -5,13 +5,13 @@ use core::cmp::Ordering;
 use core::debug_assert_matches;
 
 /// Binary search to find the `T` on the boundary between `test` returning
-/// `Ordering::Greater` and 'Ordering::Less`.
+/// `Ordering::Greater` and `Ordering::Less`.
 ///
 /// Returns None if both `test(&lower) == test(&upper)`. i.e. they are both too
 /// low or too high.
 ///
 /// This function may switch `upper` and `lower` if they are the wrong way
-/// around, adding two more `test`s
+/// around, adding two more `test`s.
 pub fn binary_search<T, F, O>(
     mut lower: T,
     mut upper: T,
@@ -42,7 +42,7 @@ where
 }
 
 /// Binary search to find the `T` on the boundary between `test` returning
-/// `Ordering::Greater` and 'Ordering::Less`.
+/// `Ordering::Greater` and `Ordering::Less`.
 ///
 /// Undefined behavior if `test(&lower) != Ordering::Less` and
 /// `test(&upper) != Ordering::Greater`.
