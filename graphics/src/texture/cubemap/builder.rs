@@ -1,6 +1,6 @@
+use core::fmt::Debug;
+use core::marker::PhantomData;
 use core::ptr;
-use std::fmt::Debug;
-use std::marker::PhantomData;
 use std::path::Path;
 
 use colour::ColourRGB;

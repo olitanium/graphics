@@ -1,4 +1,4 @@
-use std::mem;
+use core::mem;
 
 use crate::gl_call;
 use crate::types::{ElementArrayElem, ElementArrayId, ElementArrayLen, GLsizeiptr};

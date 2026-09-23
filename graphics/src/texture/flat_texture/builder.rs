@@ -1,6 +1,6 @@
-use std::fmt::Debug;
-use std::marker::PhantomData;
-use std::ptr;
+use core::fmt::Debug;
+use core::marker::PhantomData;
+use core::ptr;
 
 use colour::ColourRGBA;
 use utils::{builder, new};
@@ -161,8 +161,8 @@ fn gen_tex_set_parameters<T>(builder: &Builder<T>) -> TexId {
 impl Builder<Image> {
     pub fn build(self) -> FlatTexture {
         let id = gen_tex_set_parameters(&self);
-        // let (internalformat, width, height, type_, pixels) = match &self.image {
-        // ImageType::Rgba(samples) => (
+        // let (internalformat, width, height, type_, pixels) = match
+        // &self.image { ImageType::Rgba(samples) => (
         // gl::RGBA as GLint,
         // TexDim::new(samples.layout.width as GLsizei),
         // TexDim::new(samples.layout.height as GLsizei),

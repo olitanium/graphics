@@ -4,11 +4,13 @@
 #![feature(try_trait_v2_residual)]
 #![feature(unwrap_infallible)]
 
+extern crate alloc;
+
 use engine::Environment;
 
+mod bear;
 mod controls;
 mod grappling_hook;
-mod bear;
 mod new;
 mod physics;
 mod prep_draw;

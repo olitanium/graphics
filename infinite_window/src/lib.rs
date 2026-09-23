@@ -25,7 +25,7 @@ impl<'a, T, const N: usize> Iterator for InfiniteWindowIter<'a, T, N> {
             x => x,
         };
 
-        /// valid when value is 0 <= value < 2*divisor
+        /// valid when value is 0 <= value < 2*divisor.
         const fn short_modulo(value: usize, divisor: usize) -> usize {
             if value >= divisor {
                 value - divisor

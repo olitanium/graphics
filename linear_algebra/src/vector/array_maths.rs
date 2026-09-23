@@ -44,26 +44,6 @@ pub const fn sum<const N: usize, T>(v1: [T; N]) -> Option<T>
 where
     T: [const] Add<Output = T> + [const] Destruct,
 {
-    // let mut index = 0;
-    // let mut accum = T::default();
-    // while let Some(value) = v1.get(index) {
-    // accum = accum.clone() + value.clone();
-    // index += 1;
-    // }
-    //
-    // accum;
-
-    // let mut array = ArrayVec::from_array(v1);
-    // if let Some(mut accum) = array.pop() {
-    // while let Some(value) = array.pop() {
-    // accum = accum + value;
-    // }
-    //
-    // Some(accum)
-    // } else {
-    // None
-    // }
-
     let mut array = ArrayVec::from_array(v1);
     let out = array.pop().map(const |mut accum| {
         while let Some(value) = array.pop() {
@@ -71,7 +51,12 @@ where
         }
         accum
     });
-    mem::forget(array);
+    // #[expect(
+    // clippy::mem_forget,
+    // reason = "array drained, but ArrayVec needs drop. Forgetting the ArrayVed
+    // removes [const] \ Drop requirement"
+    // )]
+    // mem::forget(array);
     out
 }
 
@@ -114,13 +99,11 @@ where
     true
 }
 
-#[expect(clippy::inline_modules, reason = "this is a clippy bug")]
 #[cfg(test)]
 mod test {
     use super::*;
 
     #[test]
-    #[expect(clippy::float_cmp, reason = "integer literals")]
     fn add() {
         assert_eq!(super::add([1.0, 2.0], [4.0, 8.0]), [5.0, 10.0]);
     }

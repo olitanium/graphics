@@ -1,6 +1,6 @@
+use core::mem;
+use core::ops::{FromResidual, Residual, Try};
 use std::collections::HashSet;
-use std::mem;
-use std::ops::{FromResidual, Residual, Try};
 
 use engine::entity::SkeletonEntity;
 use engine::geometry::Pose;
@@ -22,12 +22,12 @@ impl<T> Try for ControlOutput<T> {
     type Output = T;
     type Residual = ControlOutput<!>;
 
-    fn branch(self) -> std::ops::ControlFlow<Self::Residual, Self::Output> {
+    fn branch(self) -> core::ops::ControlFlow<Self::Residual, Self::Output> {
         match self {
-            Self::Data(x) => std::ops::ControlFlow::Continue(x),
-            Self::Close => std::ops::ControlFlow::Break(ControlOutput::Close),
-            Self::Error(e) => std::ops::ControlFlow::Break(ControlOutput::Error(e)),
-            Self::Restart => std::ops::ControlFlow::Break(ControlOutput::Restart),
+            Self::Data(x) => core::ops::ControlFlow::Continue(x),
+            Self::Close => core::ops::ControlFlow::Break(ControlOutput::Close),
+            Self::Error(e) => core::ops::ControlFlow::Break(ControlOutput::Error(e)),
+            Self::Restart => core::ops::ControlFlow::Break(ControlOutput::Restart),
         }
     }
 

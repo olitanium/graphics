@@ -1,4 +1,4 @@
-use geometry::{Pose, Transform};
+use geometry::{Pose, Transform as _};
 use utils::builder;
 
 use super::Bone;

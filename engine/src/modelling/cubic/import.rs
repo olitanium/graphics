@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
+use alloc::rc::Rc;
 
-use geometry::{Pose, Transform, TransformBy};
+use geometry::{Pose, Transform as _, TransformBy as _};
 use graphics::linear_algebra::{Matrix, UnitVector, Vector};
-use graphics::texture::{FlatTexture, Image, NewImageError, TextureHasBuilder};
+use graphics::texture::{FlatTexture, Image, NewImageError, TextureHasBuilder as _};
 use graphics::types::ElementArrayElem;
 use russimp::Matrix4x4;
 use russimp::material::{PropertyTypeInfo, TextureType};

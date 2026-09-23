@@ -12,6 +12,8 @@
 #![feature(array_try_map)]
 #![feature(const_trait_impl)]
 
+extern crate alloc;
+
 mod environment;
 pub mod shader_program;
 pub mod texture;
@@ -36,6 +38,7 @@ pub mod query;
 macro_rules! gl_call_inner {
     ($input:stmt) => {{
         // Skip all previous errors which have been ignored
+        // SAFETY: gl::GetError() does not do anything unsafe.
         while unsafe { gl::GetError() } != gl::NO_ERROR {}
         // perform the expression
         #[expect(
@@ -49,10 +52,14 @@ macro_rules! gl_call_inner {
         #[expect(clippy::undocumented_unsafe_blocks, reason = "FFI")]
         let output = unsafe { $input };
         // read through errors, returning Err if there are many.
-        let errors: Vec<$crate::types::GLError> =
-            core::iter::repeat_with(|| $crate::types::GLError(unsafe { gl::GetError() }))
-                .take_while(|error| error.0 != gl::NO_ERROR)
-                .collect();
+        let errors: Vec<$crate::types::GLError> = core::iter::repeat_with(|| {
+            $crate::types::GLError(
+                // SAFETY: gl::GetError() does not do anything unsafe.
+                unsafe { gl::GetError() },
+            )
+        })
+        .take_while(|error| error.0 != gl::NO_ERROR)
+        .collect();
         if errors.is_empty() {
             // Ok(output)
         } else {

@@ -1,4 +1,4 @@
-use geometry::{Pose, Transform, TransformBy};
+use geometry::{Pose, Transform as _, TransformBy as _};
 use utils::error_boilerplate;
 
 use crate::entity::EntityInner;

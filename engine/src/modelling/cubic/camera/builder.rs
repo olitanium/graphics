@@ -1,4 +1,4 @@
-use std::marker::Destruct;
+use core::marker::Destruct;
 
 use utils::{builder, new};
 

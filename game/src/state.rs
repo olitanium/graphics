@@ -1,10 +1,10 @@
+use core::time::Duration;
 use std::collections::HashSet;
-use std::time::Duration;
 
 use engine::entity::SkeletonEntity;
 use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
-use engine::framebuffer::traits::FramebufferInternals;
+use engine::framebuffer::traits::FramebufferInternals as _;
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::CameraProjection;
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;

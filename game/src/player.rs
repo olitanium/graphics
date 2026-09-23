@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::rc::Rc;
+use alloc::rc::Rc;
 
 use engine::entity::{Mass, Physics, SkeletonEntity};
 use engine::geometry::Pose;

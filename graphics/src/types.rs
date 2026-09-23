@@ -1,9 +1,13 @@
-use std::fmt::Debug;
-use std::io::Write;
-use std::num::{NonZero, NonZeroUsize};
+use core::fmt::{self, Debug};
+use core::num::{NonZero, NonZeroUsize};
+use std::io::Write as _;
 
 pub(crate) use gl::types::*;
 
+#[expect(
+    clippy::allow_attributes,
+    reason = "sometimes the macro released unused code"
+)]
 macro_rules! opaque {
     ($name:ident : $type:ident $(, $derives: ident)* $(,)?) => {
         #[derive(Debug, Hash, PartialEq, Eq $(, $derives)*)]
@@ -18,10 +22,10 @@ macro_rules! opaque {
         }
 
         impl $name {
-            #[allow(dead_code)]
+            #[allow(dead_code, reason = "May not be required on this invocation of the macro")]
             pub type Primitive = $type;
 
-            #[allow(dead_code)]
+            #[allow(dead_code, reason = "May not be required on this invocation of the macro")]
             pub(crate) const fn as_primitive(&self) -> Self::Primitive {
                 self.0
             }
@@ -101,7 +105,7 @@ nz_opaque!(Query: GLuint);
 pub struct GLError(pub(crate) gl::types::GLenum);
 
 impl Debug for GLError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let error;
         f.write_str(match self.0 {
             gl::INVALID_OPERATION => stringify!(gl::INVALID_OPERATION),

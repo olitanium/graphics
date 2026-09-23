@@ -1,6 +1,6 @@
-use std::rc::Rc;
+use alloc::rc::Rc;
 
-use geometry::{Pose, TransformBy};
+use geometry::{Pose, TransformBy as _};
 use graphics::shader_program::CullFace;
 use utils::{builder, new};
 

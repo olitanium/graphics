@@ -1,6 +1,6 @@
-use std::array;
-use std::cell::RefCell;
-use std::fmt::Debug;
+use core::array;
+use core::cell::RefCell;
+use core::fmt::Debug;
 
 use active_element::InnerChildrenOrMeta;
 use geometry::Transform;
@@ -12,7 +12,7 @@ use graphics::shader_program::ShaderSetUniformError;
 use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
 use graphics::{ActiveShaderProgram, Model};
 use utils::error_boilerplate;
-use zip_with::ArrayZipWith;
+use zip_with::ArrayZipWith as _;
 
 use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
 

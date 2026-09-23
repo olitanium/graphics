@@ -1,5 +1,5 @@
 use core::fmt;
-use std::fmt::Debug;
+use core::fmt::Debug;
 
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
@@ -104,13 +104,10 @@ where
         self.lights.bind(&mut active_shader).unwrap();
 
         active_shader
-            .set_uniform("projtimesview".to_string(), &self.camera_look_at)
+            .set_uniform("projtimesview".to_owned(), &self.camera_look_at)
             .unwrap();
         active_shader
-            .set_uniform(
-                "camera_position".to_string(),
-                &self.camera_pos.homogeneous(),
-            )
+            .set_uniform("camera_position".to_owned(), &self.camera_pos.homogeneous())
             .unwrap();
 
         active_shader.set_uniform_dyn(self.uniforms).unwrap();

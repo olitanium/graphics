@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use core::fmt::Debug;
 
 use geometry::Transform;
 use graphics::colour::ColourRGBA;
@@ -29,7 +29,7 @@ pub struct Group<
 {
     framebuffer: &'a D,
     bounding_box: &'a BoundingBox<V, Bt>,
-    transform: T,
+    transform: &'a T,
     look_at: Matrix<4, 4>,
     level: usize,
     colour: F,
@@ -51,7 +51,7 @@ where
     pub fn new<P: CameraPose>(
         framebuffer: &'a D,
         bounding_box: &'a BoundingBox<V, Bt>,
-        transform: T,
+        transform: &'a T,
         camera: &Camera<P>,
         hint: &P::Hint,
         level: usize,

@@ -1,6 +1,6 @@
-use std::fmt::Debug;
+use core::fmt::Debug;
 use std::path::Path;
-use std::rc::Rc;
+use alloc::rc::Rc;
 
 use geometry::Pose;
 use graphics::Model;

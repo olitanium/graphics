@@ -1,4 +1,4 @@
-use std::cell::{Ref, RefCell, RefMut};
+use core::cell::{Ref, RefCell, RefMut};
 
 use crate::framebuffer::traits::{
     AttachmentWithDepth,
@@ -40,7 +40,7 @@ use attachments::{CubeWithDepth, CubeWithoutExtra, WithStencil, WithoutExtra};
 // (or HDR buffer) which can be retreived with `Framebuffer::get_colour`
 
 /// The screen framebuffer, its size is that of the window. It cannot store
-/// colour values outside the range [0.0, 1.0]
+/// colour values outside the range [0.0, 1.0].
 #[derive(Debug)]
 pub struct DefaultFramebuffer {
     size: (TexDim, TexDim),

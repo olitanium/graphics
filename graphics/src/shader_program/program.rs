@@ -1,8 +1,8 @@
-use std::cell::RefCell;
+use core::cell::RefCell;
+use core::fmt::{self, Debug};
+use core::marker::PhantomData;
 use std::collections::HashMap;
 use std::ffi::{CString, NulError};
-use std::fmt::Debug;
-use std::marker::PhantomData;
 
 use crate::texture::Texture;
 use crate::types::{ShaderProgramId, UniformLocation};
@@ -40,7 +40,7 @@ pub struct ShaderProgram<M: Model, O, const OUT: usize, T: Texture> {
 }
 
 impl<M: Model, O, const OUT: usize, T: Texture> Debug for ShaderProgram<M, O, OUT, T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct(stringify!(ShaderProgram))
             .field("concat_all_text", &self.concat_all_text)
             .finish_non_exhaustive()

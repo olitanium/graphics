@@ -1,4 +1,4 @@
-use geometry::{Orientation, Pose, Transform};
+use geometry::{Orientation, Pose, Transform as _};
 use graphics::linear_algebra::UnitVector;
 use triangle_intersection::Vector;
 

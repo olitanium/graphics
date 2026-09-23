@@ -1,9 +1,9 @@
-use std::iter;
+use core::iter;
 
 use geometry::{Orientation, Pose};
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::attachments::WithDepth;
-use graphics::framebuffer::traits::FramebufferWithoutExtra;
+use graphics::framebuffer::traits::FramebufferWithoutExtra as _;
 use graphics::framebuffer::{Builder, Framebuffer, FramebufferContext};
 use graphics::linear_algebra::{Matrix, UnitVector, Vector};
 use graphics::shader_program::{ActiveShaderProgram, Uniform};

@@ -1,8 +1,8 @@
+use core::fmt::{self, Debug};
+use core::{iter, ptr};
 use std::collections::HashMap;
 use std::ffi::{CString, NulError};
-use std::fmt::Debug;
 use std::sync::LazyLock;
-use std::{iter, ptr};
 
 use utils::error_boilerplate;
 
@@ -24,7 +24,7 @@ pub struct ActiveShaderProgram<'a, 'b, 'c, M: Model, O, T: Texture, const OUT: u
 impl<M: Model + Debug, O, T: Texture + Debug, const OUT: usize> Debug
     for ActiveShaderProgram<'_, '_, '_, M, O, T, OUT>
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ActiveShaderProgram")
             .field("shader_program", self.shader_program)
             .field_with("texture_list", |f| {

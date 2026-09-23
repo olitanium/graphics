@@ -1,7 +1,8 @@
-use std::cell::RefMut;
+use core::cell::RefMut;
+use core::fmt::{self, Debug};
+use core::time::Duration;
 use std::collections::HashSet;
-use std::fmt::Debug;
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 mod draw;
 mod global_state;
@@ -34,7 +35,7 @@ impl<G: ApiState> Debug for NewError<G>
 where
     G::Error: Debug,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::GlfwInit(x) => f.debug_tuple("NewError::GlfwInit").field(x).finish(),
             Self::GlfwWindow(x) => f.debug_tuple("NewError::GlfwWindow").field(x).finish(),
@@ -44,7 +45,7 @@ where
 }
 error_boilerplate!({G: ApiState} NewError<G>);
 
-use std::ffi::{CStr, c_void};
+use core::ffi::{CStr, c_void};
 #[expect(unused_variables)]
 extern "system" fn debug_callback(
     source: u32,

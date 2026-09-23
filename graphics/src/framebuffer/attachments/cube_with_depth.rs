@@ -1,6 +1,6 @@
-use std::cell::RefCell;
-use std::fmt::Debug;
-use std::rc::Rc;
+use alloc::rc::Rc;
+use core::cell::RefCell;
+use core::fmt::{self, Debug};
 
 use super::WithDepth;
 use crate::framebuffer::traits::{
@@ -14,8 +14,8 @@ use crate::texture::{
     CubeFrameBufferAttachment,
     CubeMap,
     CubeMapBuilder,
-    Texture,
-    TextureHasBuilder,
+    Texture as _,
+    TextureHasBuilder as _,
 };
 use crate::types::TexDim;
 
@@ -25,7 +25,7 @@ pub struct CubeWithDepth {
 }
 
 impl Debug for CubeWithDepth {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct(stringify!(CubeWithDepth))
             .field("texture", &self.texture)
             .finish_non_exhaustive()
@@ -78,8 +78,8 @@ impl AttachmentWithoutExtra for CubeWithDepth {
 }
 
 impl AttachmentWithDepth for CubeWithDepth {
-    // fn get_texture(&self) -> Rc<RefCell<<Self as AttachmentWithoutExtra>::Tex>> {
-    // self.texture.clone()
+    // fn get_texture(&self) -> Rc<RefCell<<Self as
+    // AttachmentWithoutExtra>::Tex>> { self.texture.clone()
     // }
     //
     fn get_texture_ref(&self) -> &<Self as AttachmentWithoutExtra>::Tex {

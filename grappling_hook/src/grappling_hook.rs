@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use alloc::rc::Rc;
 
 use engine::ColourRGBA;
 use engine::entity::{AggregateEntity, AggregateModelIndex, ToAggregateEntity};

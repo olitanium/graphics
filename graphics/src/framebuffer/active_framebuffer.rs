@@ -1,6 +1,6 @@
-use std::cell::RefMut;
+use core::cell::RefMut;
+use core::marker::PhantomData;
 use std::collections::HashSet;
-use std::marker::PhantomData;
 use std::sync::Mutex;
 
 use super::{FramebufferWithDepth, FramebufferWithStencil};

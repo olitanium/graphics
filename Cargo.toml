@@ -70,7 +70,8 @@ multiple_inherent_impl = "allow"
 shadow_same = "allow"
 shadow_unrelated = "allow"
 module_name_repetitions = "allow"
-windcard_enum_match_arm = "allow"
+wildcard_enum_match_arm = "allow"
+eprintln = "allow"
 
 # temporary
 
@@ -83,4 +84,6 @@ too_many_arguments = "allow"
 struct_excessive_bools = "allow"
 inline_trait_bounds = "allow"
 type_complexity = "allow"
+inline_modules = "allow"
+
 

@@ -1,9 +1,10 @@
+use core::hint::black_box;
 use core::sync::atomic::{AtomicBool, Ordering};
-use std::hint::black_box;
 
 use crate::LocalRc;
 
 #[test]
+#[expect(clippy::redundant_clone, reason = "part of the test")]
 fn drop() {
     struct HasDrop;
 

@@ -53,7 +53,7 @@ pub trait Collision {
 }
 
 /// Convenience function to annotate that the bounding box metadata is not
-/// altered
+/// altered.
 #[inline]
 pub fn no_alter_meta<A: Collision + ?Sized, B: Collision + ?Sized>(
     _: A::FuncInputs,

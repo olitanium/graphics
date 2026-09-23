@@ -31,7 +31,7 @@ impl ApiState for State {
                 Event::FrameTime(in_ft) => frame_time = in_ft,
                 Event::WindowBuffer(in_buff) => opt_default = Some(in_buff),
                 Event::Keyboard { keys: in_keys, .. } => keys = in_keys,
-                _ => {}
+                Event::ElapsedTime(_) | Event::WindowResize(_) | Event::Mouse { .. } | Event::Query(_) | _ => {}
             }
         }
 

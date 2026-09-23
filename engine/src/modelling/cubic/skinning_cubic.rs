@@ -1,5 +1,5 @@
-use std::fmt::Debug;
-use std::iter;
+use core::fmt::Debug;
+use core::iter;
 
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;

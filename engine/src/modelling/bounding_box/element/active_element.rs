@@ -1,11 +1,11 @@
-use std::array;
-use std::cell::RefMut;
-use std::fmt::Debug;
+use core::array;
+use core::cell::RefMut;
+use core::fmt::Debug;
 
 use geometry::Transform;
 use graphics::linear_algebra::Vector;
 use multi_zip::MultiZip;
-use zip_with::ArrayZipWith;
+use zip_with::ArrayZipWith as _;
 
 use super::ChildrenOrMeta;
 use crate::modelling::BoundingBox;
@@ -18,7 +18,7 @@ use crate::modelling::extended_vertex::ExtendedVertex;
 // transform: &'a
 // }
 
-pub(crate) enum InnerChildrenOrMeta<'a, V: ExtendedVertex, T> {
+pub(super) enum InnerChildrenOrMeta<'a, V: ExtendedVertex, T> {
     Meta {
         meta: RefMut<'a, T>,
         triangles: &'a [[V; 3]],

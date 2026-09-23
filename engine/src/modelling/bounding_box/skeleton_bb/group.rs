@@ -6,7 +6,7 @@ use graphics::linear_algebra::Matrix;
 use graphics::texture::FlatTexture;
 use graphics::{Draw, DrawOut, ShaderProgramContext};
 
-use crate::modelling::bounding_box::BoundingBoxShaderProgram;
+use crate::modelling::bounding_box::BoundingBoxShaderProgram as _;
 use crate::modelling::cubic::{
     CalculatedAnimation,
     Camera,
@@ -64,20 +64,20 @@ impl<'a, D: FramebufferWithDepth<1, Tex = FlatTexture>, V: CubicVertex, T, F: Fn
 }
 
 impl<
-    'a,
     D: FramebufferWithDepth<1, Tex = FlatTexture>,
     V: CubicVertex,
     T: 'static,
     F: FnMut() -> ColourRGBA,
-> Draw for Group<'a, 1, D, V, T, F>
+> Draw for Group<'_, 1, D, V, T, F>
 {
     fn draw_sized(
         self,
-        register: &mut FramebufferContext,
-        marker: &mut ShaderProgramContext,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
     ) -> DrawOut {
-        let mut active_framebuffer = self.framebuffer.bind(register);
-        let mut active_shader = BoundingBoxElement::<V, T>::shader_program().use_program(marker);
+        let mut active_framebuffer = self.framebuffer.bind(fb_context);
+        let mut active_shader =
+            BoundingBoxElement::<V, T>::shader_program().use_program(sp_context);
 
         active_shader
             .set_uniform("projtimesview", &self.look_at)
@@ -102,7 +102,6 @@ impl<
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
     ) -> DrawOut {
-        let inner = *self;
-        inner.draw_sized(fb_context, sp_context)
+        self.draw_sized(fb_context, sp_context)
     }
 }

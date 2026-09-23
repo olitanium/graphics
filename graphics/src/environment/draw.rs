@@ -1,4 +1,4 @@
-use std::ops::{ControlFlow, FromResidual, Residual, Try};
+use core::ops::{ControlFlow, FromResidual, Residual, Try};
 
 use crate::framebuffer::FramebufferContext;
 use crate::shader_program::ShaderProgramContext;
@@ -32,7 +32,7 @@ impl<E, D: Draw> Try for PollResult<D, E> {
     type Output = D;
     type Residual = PollResultResidual<E>;
 
-    fn branch(self) -> std::ops::ControlFlow<Self::Residual, Self::Output> {
+    fn branch(self) -> core::ops::ControlFlow<Self::Residual, Self::Output> {
         match self {
             Self::Error(err) => ControlFlow::Break(PollResultResidual::Err(err)),
             Self::Close => ControlFlow::Break(PollResultResidual::Close),

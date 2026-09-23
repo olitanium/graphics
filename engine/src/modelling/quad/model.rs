@@ -1,5 +1,5 @@
-use std::array;
-use std::rc::Rc;
+use core::array;
+use alloc::rc::Rc;
 
 use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;

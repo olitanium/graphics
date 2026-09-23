@@ -1,5 +1,5 @@
 use std::array;
-use std::rc::Rc;
+use alloc::rc::Rc;
 
 use graphics::texture::FlatTexture;
 use graphics::vertex_array::VertexArray;

@@ -1,5 +1,5 @@
-use std::fmt::Debug;
-use std::rc::Rc;
+use core::fmt::Debug;
+use alloc::rc::Rc;
 
 use geometry::Pose;
 use graphics::Model;
@@ -92,7 +92,8 @@ impl SkeletonCubic {
     // post_process: Vec<PostProcess>,
     // load_tangent_space: bool,
     // ) -> Result<Builder, import::ImportError> {
-    // let import_output = import::import(path, post_process, load_tangent_space)?;
+    // let import_output = import::import(path, post_process,
+    // load_tangent_space)?;
     //
     // let mut out = Self::builder();
     // out.extend_meshes(

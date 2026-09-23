@@ -1,4 +1,4 @@
-use std::error::Error;
+use core::error::Error;
 
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;

@@ -1,4 +1,4 @@
-use std::iter;
+use core::iter;
 
 use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;

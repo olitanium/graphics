@@ -1,5 +1,5 @@
+use core::time::Duration;
 use std::collections::HashSet;
-use std::time::Duration;
 
 use engine::Key;
 use engine::geometry::{Orientation, Pose};

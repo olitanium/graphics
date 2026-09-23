@@ -1,6 +1,6 @@
-use std::cell::{RefCell, RefMut};
+use alloc::rc::Rc;
+use core::cell::{RefCell, RefMut};
 use std::collections::HashSet;
-use std::rc::Rc;
 
 pub use glfw::{Action, Key};
 

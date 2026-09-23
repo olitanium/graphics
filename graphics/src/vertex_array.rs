@@ -1,6 +1,6 @@
+use core::{iter, ptr};
 use std::borrow::Cow;
 use std::sync::LazyLock;
-use std::{iter, ptr};
 
 use builder::Builder;
 use utils::error_boilerplate;
@@ -172,8 +172,9 @@ impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
         // match texture_result {
         // Ok(()) => {}
         // Err(GenVertexArrayDrawError::BindTextures(BindTexturesError::SetUniform(
-        // SetUniformError::GetLocation(GetUniformLocationError::NotFound { c_name, ..
-        // }), ))) if c_name.to_string_lossy().contains("texture") => { /* do
+        // SetUniformError::GetLocation(GetUniformLocationError::NotFound {
+        // c_name, .. }), ))) if
+        // c_name.to_string_lossy().contains("texture") => { /* do
         // nothing */ } Err(x) => return Err(x),
         // }
 

@@ -1,5 +1,5 @@
-use std::cell::RefCell;
-use std::fmt::Debug;
+use core::cell::RefCell;
+use core::fmt::Debug;
 use std::sync::LazyLock;
 
 use geometry::{Pose, Transform};
@@ -77,7 +77,7 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
     }
 
     pub(crate) fn new_from_vec_indexes<F: FnMut(&[(Vector<{ V::LEN }>, [V; 3])]) -> T>(
-        vectors: Vec<V>,
+        vectors: &[V],
         triangles: &[[usize; 3]],
         depth: usize,
         init: F,
@@ -223,7 +223,7 @@ where
     >(
         &self,
         level: usize,
-        pose: P,
+        pose: &P,
         active_shader: &mut ActiveShaderProgram<
             'a,
             '_,
@@ -238,7 +238,7 @@ where
     ) -> Result<(), DrawRecursiveError<'a>> {
         self.root_element().draw_recursive(
             self,
-            &pose,
+            pose,
             level,
             active_shader,
             active_framebuffer,
@@ -350,7 +350,9 @@ impl<V: ExtendedVertex<LEN = 3>, T: 'static> BoundingBoxShaderProgram for Boundi
     }
 }
 
-mod test {
+mod tests {
+    use std::cell::RefCell;
+
     use graphics::linear_algebra::Vector;
 
     use crate::modelling::{BoundingBoxElement, ExtendedVertex};
@@ -361,7 +363,7 @@ mod test {
             lower_bound: -Vector::X,
             upper_bound: Vector::X,
             children_or_meta: super::element::ChildrenOrMeta::Meta {
-                meta: Default::default(),
+                meta: RefCell::default(),
                 triangle_len: 0,
                 triangle_start: 0,
             },
@@ -382,8 +384,7 @@ mod test {
 
         let triangles = [[0, 1, 2], [0, 2, 3]];
 
-        let bound =
-            BoundingBox::new_from_vec_indexes(coords.to_vec(), &triangles, 0, |_| ()).unwrap();
+        let bound = BoundingBox::new_from_vec_indexes(&coords, &triangles, 0, |_| ()).unwrap();
 
         let good_point = Vector::new([0.5, 0.5]);
         let good_point2 = Vector::new([1.0, 0.5]);

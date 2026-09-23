@@ -1,6 +1,6 @@
+use core::ops::{FromResidual, Residual, Try};
+use core::time::Duration;
 use std::collections::HashSet;
-use std::ops::{FromResidual, Residual, Try};
-use std::time::Duration;
 
 use engine::linear_algebra::Vector;
 use engine::{ApiState, Key, PollResult};
@@ -22,12 +22,12 @@ impl<T> Try for ControlOutput<T> {
     type Output = T;
     type Residual = ControlOutput<!>;
 
-    fn branch(self) -> std::ops::ControlFlow<Self::Residual, Self::Output> {
+    fn branch(self) -> core::ops::ControlFlow<Self::Residual, Self::Output> {
         match self {
-            Self::Data(x) => std::ops::ControlFlow::Continue(x),
-            Self::Close => std::ops::ControlFlow::Break(ControlOutput::Close),
-            Self::Error(e) => std::ops::ControlFlow::Break(ControlOutput::Error(e)),
-            Self::Restart => std::ops::ControlFlow::Break(ControlOutput::Restart),
+            Self::Data(x) => core::ops::ControlFlow::Continue(x),
+            Self::Close => core::ops::ControlFlow::Break(ControlOutput::Close),
+            Self::Error(e) => core::ops::ControlFlow::Break(ControlOutput::Error(e)),
+            Self::Restart => core::ops::ControlFlow::Break(ControlOutput::Restart),
         }
     }
 

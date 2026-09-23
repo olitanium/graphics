@@ -1,8 +1,8 @@
-use std::cell::Cell;
-use std::ptr;
-use std::rc::Rc;
+use alloc::rc::Rc;
+use core::cell::Cell;
+use core::ptr;
 
-use glfw::{Context, Glfw, GlfwReceiver, PWindow, WindowEvent};
+use glfw::{Context as _, Glfw, GlfwReceiver, PWindow, WindowEvent};
 use utils::{builder, error_boilerplate, new};
 
 use super::input::keyboard::Keyboard;

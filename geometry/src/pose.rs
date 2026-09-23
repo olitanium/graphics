@@ -143,7 +143,7 @@ mod test {
     use linear_algebra::UnitVector;
 
     use super::*;
-    use crate::Transform;
+    use crate::Transform as _;
 
     #[test]
     fn test_matrix() {

@@ -1,14 +1,19 @@
-use std::array;
-use std::cell::RefCell;
-use std::fmt::Debug;
-use std::marker::PhantomData;
+use core::cell::RefCell;
+use core::fmt::Debug;
+use core::marker::PhantomData;
+use core::{array, fmt};
 
 use super::attachments::{CubeWithoutExtra, WithDepth, WithStencil, WithoutExtra};
 use super::traits::OptTexBuilderMap;
 use super::{CubeWithDepth, Framebuffer};
 use crate::framebuffer::traits::AttachmentWithoutExtra;
 use crate::gl_call;
-use crate::texture::{TexBuilder, TexBuilderCanBuild, Texture, TextureHasBuilder};
+use crate::texture::{
+    TexBuilder as _,
+    TexBuilderCanBuild as _,
+    Texture as _,
+    TextureHasBuilder as _,
+};
 use crate::types::{self, FrameBufferId, TexDim};
 
 #[derive(Debug, Default)]
@@ -18,18 +23,18 @@ pub struct MissingSize;
 pub struct HasSize((TexDim, TexDim));
 
 /// Framebuffer builder type, used to select the number of colour buffers and
-/// types of depth testing
+/// types of depth testing.
 #[derive(Default)]
 pub struct Builder<const N: usize, S, B: AttachmentWithoutExtra> {
-    /// Size of the underlying texture
+    /// Size of the underlying texture.
     size: S,
-    /// What type of internal
+    /// What type of internal.
     _phantom_buffer: PhantomData<B>,
     map_attachment: OptTexBuilderMap<B>,
 }
 
 impl<const N: usize, S: Debug, B: AttachmentWithoutExtra + Debug> Debug for Builder<N, S, B> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Builder")
             .field("size", &self.size)
             .field("_phantom_buffer", &self._phantom_buffer)

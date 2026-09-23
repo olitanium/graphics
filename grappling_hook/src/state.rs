@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::rc::Rc;
+use alloc::rc::Rc;
 
 use engine::entity::AggregateEntity;
 use engine::framebuffer::Framebuffer;

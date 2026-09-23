@@ -1,5 +1,5 @@
-use std::fmt::Debug;
-use std::num::NonZero;
+use core::fmt::Debug;
+use core::num::NonZero;
 use std::sync::LazyLock;
 
 use colour::ColourRGBA;

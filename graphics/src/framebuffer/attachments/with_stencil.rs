@@ -1,4 +1,4 @@
-use std::fmt;
+use core::fmt;
 
 use crate::framebuffer::traits::{AttachmentTextureInfo, OptTexBuilderMap};
 use crate::framebuffer::{
@@ -13,8 +13,8 @@ use crate::texture::{
     FlatTexture,
     FlatTextureBuilder,
     FramebufferAttachment,
-    Texture,
-    TextureHasBuilder,
+    Texture as _,
+    TextureHasBuilder as _,
 };
 use crate::types::TexDim;
 

@@ -1,6 +1,6 @@
-use std::cell::{Cell, RefCell};
+use alloc::rc::Rc;
+use core::cell::{Cell, RefCell};
 use std::collections::HashSet;
-use std::rc::Rc;
 
 use glfw::PWindow;
 pub use glfw::{CursorMode, MouseButton as Button};

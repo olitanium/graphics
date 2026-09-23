@@ -1,7 +1,7 @@
-use std::marker::PhantomData;
-use std::rc::Rc;
+use core::marker::PhantomData;
+use alloc::rc::Rc;
 
-use geometry::TransformBy;
+use geometry::TransformBy as _;
 use graphics::vertex_array::VertexArray;
 use utils::{builder, new};
 

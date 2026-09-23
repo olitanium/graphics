@@ -1,5 +1,5 @@
-use std::mem::offset_of;
-use std::{array, iter};
+use core::mem::offset_of;
+use core::{array, iter};
 
 use dual_number::DualQuaternion;
 use geometry::{Pose, TransformBy};

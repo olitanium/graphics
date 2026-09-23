@@ -53,7 +53,7 @@ mod test {
         let test_outputs = [0.0, 0.1, 0.2, 0.3, 1.0];
         let test_inpus = test_outputs.map(|x| x * DURATION);
 
-        for (input, output) in std::iter::zip(test_inpus, test_outputs) {
+        for (input, output) in core::iter::zip(test_inpus, test_outputs) {
             assert_float_eq(lerp.get(input), output);
         }
     }

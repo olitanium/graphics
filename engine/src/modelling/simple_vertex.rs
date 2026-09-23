@@ -1,6 +1,6 @@
-use std::mem;
+use core::mem;
 
-use geometry::{Pose, Transform, TransformBy};
+use geometry::{Pose, Transform as _, TransformBy};
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;

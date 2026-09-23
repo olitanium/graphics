@@ -12,19 +12,19 @@ use crate::texture::{
     FlatTexture,
     FlatTextureBuilder,
     FramebufferAttachment,
-    Texture,
-    TextureHasBuilder,
+    Texture as _,
+    TextureHasBuilder as _,
 };
 use crate::types::TexDim;
 
-/// Marker type to hold a framebuffer's depth buffer
+/// Type to hold a framebuffer's depth buffer.
 pub struct WithDepth {
     texture: FlatTexture,
     builder_map: OptTexBuilderMap<Self>,
 }
 
 impl fmt::Debug for WithDepth {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct(stringify!(WithDepth))
             .field("texture", &self.texture)
             .finish_non_exhaustive()

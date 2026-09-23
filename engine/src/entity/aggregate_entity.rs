@@ -205,6 +205,11 @@ where
         child_at
     }
 
+    #[expect(
+        clippy::needless_pass_by_value,
+        reason = "I want to remove the `AggregateModelIndex` from the user to ensure that they do \
+                  not double drop"
+    )]
     pub fn remove(&mut self, index: AggregateModelIndex) {
         if index == AggregateModelIndex::ROOT_MODEL_INDEX {
             return;
@@ -432,7 +437,7 @@ where
     M::Vertex: CubicVertex,
     M::DrawError<'a>: Debug,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             DrawError::ModelDraw(err) => Debug::fmt(err, f),
         }
@@ -443,12 +448,12 @@ impl<'a, M: EntityInner + 'a> Display for DrawError<'a, M>
 where
     M::Vertex: CubicVertex,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         Debug::fmt(&self, f)
     }
 }
 
-impl<'a, M: EntityInner + 'a> std::error::Error for DrawError<'a, M> where M::Vertex: CubicVertex {}
+impl<'a, M: EntityInner + 'a> core::error::Error for DrawError<'a, M> where M::Vertex: CubicVertex {}
 
 impl<M: EntityInner, T> AggregateEntity<M, T>
 where
@@ -529,7 +534,7 @@ where
     ) -> Option<Vec<([Self::Vertex; 3], [Other::Vertex; 3])>> {
         let mut out = Vec::new();
         self.zip_calculated_animation_get_index(self_transform)
-            .flat_map(|(x, y, opt_z, t)| opt_z.map(|z| (x, y, z, t)))
+            .filter_map(|(x, y, opt_z, t)| opt_z.map(|z| (x, y, z, t)))
             .flat_map(|(index, model, bbox, animation)| {
                 bbox.collides(
                     &model.box_transform(animation),

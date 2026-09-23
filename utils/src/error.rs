@@ -9,7 +9,7 @@ macro_rules! error_boilerplate {
     ($pth:path) => {
         // Display IS debug
         impl core::fmt::Display for $pth where Self: core::fmt::Debug {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                 core::fmt::Debug::fmt(self, f)
             }
         }
@@ -26,7 +26,7 @@ macro_rules! error_boilerplate {
 
     (<$($lt:lifetime),*> $pth: path) => {
         impl<$($lt,)*> core::fmt::Display for $pth where Self: core::fmt::Debug {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
                 core::fmt::Debug::fmt(self, f)
             }
         }

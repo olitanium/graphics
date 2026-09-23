@@ -1,4 +1,4 @@
-use std::mem;
+use core::mem;
 
 use geometry::NoTransform;
 use graphics::linear_algebra::Vector;

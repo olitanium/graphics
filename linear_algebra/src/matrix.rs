@@ -225,7 +225,10 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     /// Map each element of the matrix with an operation.
     #[must_use]
     #[inline]
-    pub fn map(mut self, op: impl Fn(VectorPreferredFloat) -> VectorPreferredFloat) -> Self {
+    pub fn map<F>(mut self, op: F) -> Self
+    where
+        F: Fn(VectorPreferredFloat) -> VectorPreferredFloat,
+    {
         let x = self.inner_mut().map(|vec| vec.map(&op));
         Self::from_col_major(x)
     }

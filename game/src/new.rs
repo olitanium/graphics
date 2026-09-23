@@ -1,9 +1,9 @@
-use std::num::NonZero;
-use std::rc::Rc;
+use alloc::rc::Rc;
+use core::num::NonZero;
 
 use engine::entity::Mass;
 use engine::framebuffer::Builder;
-use engine::framebuffer::traits::FramebufferInternals;
+use engine::framebuffer::traits::FramebufferInternals as _;
 use engine::geometry::Pose;
 use engine::linear_algebra::{Vector, vector};
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
@@ -12,7 +12,7 @@ use engine::modelling::cubic::material::Material;
 use engine::modelling::cubic::{Mesh, SimpleCubic};
 use engine::modelling::{Bloom, IncompleteVertex, SkyBox};
 use engine::shader_program::CullFace;
-use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
+use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder as _};
 use engine::types::TexDim;
 use engine::{ColourRGBA, SimpleEntity};
 

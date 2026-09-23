@@ -1,8 +1,8 @@
-use std::iter;
+use core::iter;
 
 use geometry::{Orientation, Pose};
 use graphics::framebuffer::attachments::CubeWithDepth;
-use graphics::framebuffer::traits::FramebufferWithoutExtra;
+use graphics::framebuffer::traits::FramebufferWithoutExtra as _;
 use graphics::framebuffer::{Builder, Framebuffer, FramebufferContext};
 use graphics::linear_algebra::{Matrix, UnitVector, Vector};
 use graphics::shader_program::{ActiveShaderProgram, Uniform};
@@ -86,8 +86,8 @@ impl ShadowPointLight {
     {
         self.light.bind_to(shader, name, index)?;
         shader.set_uniform(format!("{name}[{index}].far_plane"), &self.far_plane())?;
-        // SAFETY: Reference must not live to a point where RefCell::borrow_mut can be
-        // called on the texture
+        // SAFETY: Reference must not live to a point where RefCell::borrow_mut
+        // can be called on the texture
         shader.register_texture(iter::once((
             format!("{name}[{index}].depth"),
             self.framebuffer.get_attachment_ref(),

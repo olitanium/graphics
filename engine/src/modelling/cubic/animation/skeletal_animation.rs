@@ -1,5 +1,6 @@
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::num::NonZeroUsize;
+use core::hash::{Hash as _, Hasher as _};
+use core::num::NonZeroUsize;
+use std::hash::DefaultHasher;
 
 use utils::new;
 
