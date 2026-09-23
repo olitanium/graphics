@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use core::fmt::Debug;
 
 use geometry::Pose;
 use graphics::linear_algebra::{UnitVector, Vector};
@@ -18,9 +18,9 @@ pub struct SimpleEntity<T> {
 impl<T> Default for SimpleEntity<T> {
     fn default() -> Self {
         Self {
-            model: Default::default(),
-            bounding_box: Default::default(),
-            physics: Default::default(),
+            model: SimpleCubic::default(),
+            bounding_box: Option::default(),
+            physics: SimplePhysics::default(),
         }
     }
 }
@@ -41,7 +41,6 @@ impl<T> SimpleEntity<T> {
             model,
             bounding_box,
             physics,
-            ..Self::default()
         }
     }
 
@@ -92,16 +91,14 @@ impl<TThis> Collision for SimpleEntity<TThis> {
         target_vertex_transform: &T::VertexTransform<'_>,
         alter_meta: F,
     ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>> {
-        self.bounding_box.as_ref().and_then(|bbox| {
-            bbox.collides(
-                &self.physics.pose,
-                &self.physics.pose,
-                target,
-                target_transform,
-                target_vertex_transform,
-                alter_meta,
-            )
-        })
+        self.bounding_box.as_ref()?.collides(
+            &self.physics.pose,
+            &self.physics.pose,
+            target,
+            target_transform,
+            target_vertex_transform,
+            alter_meta,
+        )
     }
 }
 

@@ -34,19 +34,16 @@ impl<
     }
 }
 
-impl<
-    'a,
-    X: FramebufferWithoutExtra<1, Tex = FlatTexture>,
-    Y: AttachmentWithoutExtra<Tex = FlatTexture>,
-> Draw for Group<'a, X, Y>
+impl<X: FramebufferWithoutExtra<1, Tex = FlatTexture>, Y: AttachmentWithoutExtra<Tex = FlatTexture>>
+    Draw for Group<'_, X, Y>
 {
     fn draw_sized(
         self,
-        register: &mut FramebufferContext,
-        marker: &mut ShaderProgramContext,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
     ) -> DrawOut {
-        let mut active_framebuffer_x = self.bloom.framebuffer_x.bind(register);
-        let mut active_blur_x = opengl_shaders::bloom_x().use_program(marker);
+        let mut active_framebuffer_x = self.bloom.framebuffer_x.bind(fb_context);
+        let mut active_blur_x = opengl_shaders::bloom_x().use_program(sp_context);
 
         let input_quad = FramebufferQuad::new_from_framebuffer(self.input_fb);
 
@@ -56,8 +53,8 @@ impl<
 
         drop(active_framebuffer_x);
 
-        let mut active_output_fb = self.output_fb.bind(register);
-        let mut active_blur_y = opengl_shaders::bloom_y().use_program(marker);
+        let mut active_output_fb = self.output_fb.bind(fb_context);
+        let mut active_blur_y = opengl_shaders::bloom_y().use_program(sp_context);
 
         let blur_x_quad = FramebufferQuad::new_from_framebuffer(&self.bloom.framebuffer_x);
 

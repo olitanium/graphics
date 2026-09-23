@@ -12,6 +12,7 @@ macro_rules! make_nearly_eq {
             epsilon: $Float,
             treat_lower_as_zero: $Float,
         ) -> bool {
+            #[expect(clippy::float_cmp, reason = "captures infinities and NaN")]
             if lhs == rhs {
                 return true;
             }
@@ -27,9 +28,10 @@ macro_rules! make_nearly_eq {
 make_nearly_eq!(nearly_eq_f32: f32);
 make_nearly_eq!(nearly_eq_f64: f64);
 
-/// Calculate whether two floats are "nearly equal" -> numbers which are
-/// proportionally between `proportion` of one another are equal, and any number
-/// between `[-smallest, smallest]` is treated as 0.0 and
+/// Calculate whether two floats are "nearly equal".
+///
+/// Numbers which are proportionally between `proportion` of one another are
+/// equal, and any number between `[-smallest, smallest]` is treated as 0.0 and
 /// compared appropriately.
 pub const trait NearlyEq {
     const SMALL_VALUE: Self;
@@ -60,43 +62,43 @@ mod test {
         crate::nearly_eq_f32(lhs, rhs, 0.00001, 0.00001)
     }
 
-    /// Regular large numbers - generally not problematic
+    /// Regular large numbers - generally not problematic.
     #[test]
     fn big() {
-        assert!(nearly_eq_chosen(1000000.0, 1000001.0));
-        assert!(nearly_eq_chosen(1000001.0, 1000000.0));
-        assert!(!nearly_eq_chosen(10000.0, 10001.0));
-        assert!(!nearly_eq_chosen(10001.0, 10000.0));
+        assert!(nearly_eq_chosen(1_000_000.0, 1000_001.0));
+        assert!(nearly_eq_chosen(1_000_001.0, 1000_000.0));
+        assert!(!nearly_eq_chosen(10_000.0, 10001.0));
+        assert!(!nearly_eq_chosen(10_001.0, 10000.0));
     }
 
-    /// Negative large numbers
+    /// Negative large numbers.
     #[test]
     fn big_neg() {
-        assert!(nearly_eq_chosen(-1000000.0, -1000001.0));
-        assert!(nearly_eq_chosen(-1000001.0, -1000000.0));
+        assert!(nearly_eq_chosen(-1_000_000.0, -1_000_001.0));
+        assert!(nearly_eq_chosen(-1_000_001.0, -1_000_000.0));
         assert!(!nearly_eq_chosen(-10000.0, -10001.0));
         assert!(!nearly_eq_chosen(-10001.0, -10000.0));
     }
 
-    /// Numbers around 1
+    /// Numbers around 1.
     #[test]
     fn mid() {
-        assert!(nearly_eq_chosen(1.0000001, 1.0000002));
-        assert!(nearly_eq_chosen(1.0000002, 1.0000001));
+        assert!(nearly_eq_chosen(1.000_000_1, 1.000_000_2));
+        assert!(nearly_eq_chosen(1.000_000_2, 1.000_000_1));
         assert!(!nearly_eq_chosen(1.0002, 1.0001));
         assert!(!nearly_eq_chosen(1.0001, 1.0002));
     }
 
-    /// Numbers around -1
+    /// Numbers around -1.
     #[test]
     fn mid_neg() {
-        assert!(nearly_eq_chosen(-1.000001, -1.000002));
-        assert!(nearly_eq_chosen(-1.000002, -1.000001));
+        assert!(nearly_eq_chosen(-1.000_001, -1.000_002));
+        assert!(nearly_eq_chosen(-1.000_002, -1.000_001));
         assert!(!nearly_eq_chosen(-1.0001, -1.0002));
         assert!(!nearly_eq_chosen(-1.0002, -1.0001));
     }
 
-    /// Numbers between 1 and 0
+    /// Numbers between 1 and 0.
     #[test]
     fn small() {
         assert!(nearly_eq_chosen(0.000000001000001, 0.000000001000002));
@@ -105,7 +107,7 @@ mod test {
         assert!(nearly_eq_chosen(0.000000000001001, 0.000000000001002));
     }
 
-    /// Numbers between -1 and 0
+    /// Numbers between -1 and 0.
     #[test]
     fn small_neg() {
         assert!(nearly_eq_chosen(-0.000000001000001, -0.000000001000002));
@@ -114,14 +116,14 @@ mod test {
         assert!(nearly_eq_chosen(-0.000000000001001, -0.000000000001002));
     }
 
-    /// Small differences away from zero
+    /// Small differences away from zero.
     #[test]
     fn small_diffs() {
         assert!(nearly_eq_chosen(0.3, 0.30000003));
         assert!(nearly_eq_chosen(-0.3, -0.30000003));
     }
 
-    /// Comparisons involving zero
+    /// Comparisons involving zero.
     #[test]
     fn zero() {
         assert!(nearly_eq_chosen(0.0, 0.0));
@@ -143,7 +145,7 @@ mod test {
         assert!(nearly_eq_f32(0.0, -1e-40, 0.00000001, 0.0000001));
     }
 
-    /// Comparisons involving extreme values (overflow potential)
+    /// Comparisons involving extreme values (overflow potential).
     #[test]
     fn extreme_max() {
         assert!(nearly_eq_chosen(f32::MAX, f32::MAX));
@@ -154,7 +156,7 @@ mod test {
         assert!(!nearly_eq_chosen(-f32::MAX, f32::MAX / 2.0));
     }
 
-    /// Comparisons involving infinities
+    /// Comparisons involving infinities.
     #[test]
     fn infinities() {
         assert!(nearly_eq_chosen(f32::INFINITY, f32::INFINITY));
@@ -186,7 +188,7 @@ mod test {
         assert!(!nearly_eq_chosen(-f32::MIN_POSITIVE, f32::NAN));
     }
 
-    /// Comparisons of numbers on opposite sides of 0
+    /// Comparisons of numbers on opposite sides of 0.
     #[test]
     fn opposite() {
         assert!(!nearly_eq_chosen(1.000000001, -1.0));

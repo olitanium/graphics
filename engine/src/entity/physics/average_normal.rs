@@ -78,9 +78,10 @@ pub(super) fn split_into_eight(
 ///             this partition counts for Some(recursive(number_of_vertices, this_partition));
 ///     return average the values of each partition
 /// ```
-pub(super) fn get_average_normal<V: CubicVertex + PartialEq>(
-    this: &mut [[V; 3]],
-) -> Option<UnitVector<3>> {
+pub(super) fn get_average_normal<V>(this: &[[V; 3]]) -> Option<UnitVector<3>>
+where
+    V: CubicVertex + PartialEq,
+{
     let mut x = this
         .iter()
         .flat_map(|tri| iter::zip(V::multi_position(tri), V::multi_normal(tri)))
@@ -112,13 +113,13 @@ pub(super) fn get_average_normal<V: CubicVertex + PartialEq>(
             .filter_map(|(new_upper, new_lower, partition)| {
                 let number_this_part = partition.len();
 
-                if number_this_part == 0 {
-                    return None;
-                } else if number_this_part == prev_length {
-                    let vec: Vector<3> = partition.iter().map(|(_, unit)| unit.v()).sum();
-                    vec.try_normalize()
-                } else {
-                    recursion(partition, new_upper, new_lower, number_this_part)
+                match number_this_part {
+                    0 => None,
+                    x if x == prev_length => {
+                        let vec: Vector<3> = partition.iter().map(|(_, unit)| unit.v()).sum();
+                        vec.try_normalize()
+                    }
+                    _ => recursion(partition, new_upper, new_lower, number_this_part),
                 }
             })
             .map(UnitVector::v)
@@ -133,14 +134,15 @@ pub(super) fn get_average_normal<V: CubicVertex + PartialEq>(
 mod test {
     use geometry::NoTransform;
     use graphics::linear_algebra::{UnitVector, Vector, vector};
+    use graphics::types::VertexAttrType;
     use graphics::vertex::Vertex;
 
     use super::{arrange, split, split_into_eight};
     use crate::entity::physics::average_normal::get_average_normal;
-    use crate::modelling::{CubicVertex, ExtendedVertex};
+    use crate::modelling::{CubicVertex, ExtendedVertex, IncompleteVertex};
 
     #[test]
-    fn test_arrange() {
+    fn get_arrange() {
         let mut test = [
             vector![-1.0, -1.0, -1.0],
             vector!(-1.0, -1.0, 1.0),
@@ -170,11 +172,11 @@ mod test {
                 vector!(1.0, 1.0, 1.0_f32),
             ]
             .map(|x| (x, UnitVector::X))
-        )
+        );
     }
 
     #[test]
-    fn test_split() {
+    fn get_split() {
         let mut test = [
             vector![-1.0, -1.0, -1.0],
             vector!(-1.0, -1.0, 1.0),
@@ -203,12 +205,12 @@ mod test {
                 &[(vector!(1.0, 1.0, -1.0), UnitVector::X)],
                 &[(vector!(1.0, 1.0, 1.0_f32), UnitVector::X)],
             ]
-        )
+        );
     }
 
     #[test]
     // TODO: add all the rows
-    fn test_split_into_eight() {
+    fn get_split_into_eight() {
         let mut test = [
             vector![-1.0, -1.0, -1.0],
             vector!(-1.0, -1.0, 1.0),
@@ -231,7 +233,7 @@ mod test {
                 vector![-1.0, -1.0, -1.0_f32],
                 [(vector![-1.0, -1.0, -1.0_f32], UnitVector::X)].as_mut_slice()
             ),
-        )
+        );
     }
 
     fn test_get_average() {
@@ -245,7 +247,7 @@ mod test {
                 []
             }
 
-            fn types_of() -> [graphics::types::VertexAttrType; Self::ELEMENT_COUNT] {
+            fn types_of() -> [VertexAttrType; Self::ELEMENT_COUNT] {
                 []
             }
         }
@@ -259,7 +261,7 @@ mod test {
             }
 
             fn from_incomplete_triangle(
-                triangle: [crate::modelling::IncompleteVertex<{ Self::LEN }>; 3],
+                triangle: [IncompleteVertex<{ Self::LEN }>; 3],
             ) -> Option<[Self; 3]> {
                 Some(triangle.map(|x| Self(x.position)))
             }
@@ -267,12 +269,11 @@ mod test {
         impl CubicVertex for TestVertex {
             fn triangle_normal(triangle: &[Self; 3]) -> UnitVector<3> {
                 let [first, ..] = triangle;
-                let unit = first.0.try_normalize().unwrap();
-                unit
+                first.0.try_normalize().unwrap()
             }
         }
 
-        let mut test = [
+        let test = [
             [TestVertex(vector![1.0, 0.0, 0.0]); 3],
             [TestVertex(vector![-1.0, 0.0, 0.0]); 3],
             [TestVertex(vector![0.0, 1.0, 0.0]); 3],
@@ -281,7 +282,7 @@ mod test {
             [TestVertex(vector![0.0, 0.0, -1.0]); 3],
         ];
 
-        let out = get_average_normal(&mut test);
+        let out = get_average_normal(&test);
 
         // assert_eq!(out, None);
         // assert_eq!(out, Some(UnitVector::Y))

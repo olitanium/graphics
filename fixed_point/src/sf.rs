@@ -135,7 +135,6 @@ macro_rules! make_sf {
 make_sf!(SignedUnitf8, crate::Unitf8, i8, u8);
 make_sf!(SignedUnitf16, crate::Unitf16, i16, u16);
 
-#[expect(clippy::inline_modules, reason = "clippy bug this is a test")]
 #[cfg(test)]
 mod test {
     use super::*;

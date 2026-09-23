@@ -80,3 +80,6 @@ result_unit_err = "allow"
 must_use_candidate = "allow"
 too_many_arguments = "allow"
 struct_excessive_bools = "allow"
+inline_trait_bounds = "allow"
+type_complexity = "allow"
+

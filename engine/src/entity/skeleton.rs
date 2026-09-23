@@ -16,9 +16,9 @@ pub struct SkeletonEntity<T> {
 impl<T> Default for SkeletonEntity<T> {
     fn default() -> Self {
         Self {
-            model: Default::default(),
-            bounding_box: Default::default(),
-            physics: Default::default(),
+            model: SkeletonCubic::default(),
+            bounding_box: Option::default(),
+            physics: SimplePhysics::default(),
         }
     }
 }
@@ -37,9 +37,8 @@ impl<T> SkeletonEntity<T> {
 
         Some(Self {
             model,
-            physics,
             bounding_box,
-            ..Self::default()
+            physics,
         })
     }
 }
@@ -110,7 +109,7 @@ impl<T> From<SimpleEntity<T>> for SkeletonEntity<T> {
         let model = model.into();
         let bounding_box = bounding_box.map(Into::into);
 
-        SkeletonEntity {
+        Self {
             model,
             bounding_box,
             physics,

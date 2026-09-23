@@ -88,6 +88,6 @@ mod tests {
             |&x| x.total_cmp(&0.3),
             4,
         );
-        assert_eq!(x, Some(0.3125))
+        assert_eq!(x, Some(0.3125));
     }
 }

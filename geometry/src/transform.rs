@@ -11,25 +11,27 @@ pub trait TransformBy<By>: Sized {
     /// multiplication, as `vec.transform_by(matrix)` is equal to matrix *
     /// vec.
     ///
-    /// Prefer implementing this trait over Transform
+    /// Prefer implementing this trait over Transform.
     ///
     /// A seperate trait `Transform<Target>` which takes `Target` and returns
     /// `Target` exists, and there is a blanket impl for all types which
-    /// implement `TransformBy`
+    /// implement `TransformBy`.
+    #[must_use = "this function returns a new transform, rather than modifying the original \
+                  in-place"]
     fn transform_by(self, operator: By) -> Self;
 }
 
 impl TransformBy<Pose> for Vector<3> {
-    fn transform_by(self, pose: Pose) -> Self {
+    fn transform_by(self, operator: Pose) -> Self {
         let translation_as_pose = Pose::new_from_translation(self);
-        let current_pos = translation_as_pose.transform_by(pose);
+        let current_pos = translation_as_pose.transform_by(operator);
         current_pos.translation()
     }
 }
 
 impl TransformBy<Pose> for UnitVector<3> {
-    fn transform_by(self, pose: Pose) -> Self {
-        let orientation = pose.orientation();
+    fn transform_by(self, operator: Pose) -> Self {
+        let orientation = operator.orientation();
         self.transform_by(orientation)
     }
 }

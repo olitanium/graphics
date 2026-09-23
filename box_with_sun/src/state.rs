@@ -91,7 +91,7 @@ impl ApiState for State {
             }
         }
 
-        let mut string = local_string.unwrap();
+        let mut string = local_string.expect("every time this should appear");
 
         frame_time = Duration::from_secs_f32(f32::min(frame_time.as_secs_f32(), 1.0 / 60.0));
 
@@ -107,7 +107,7 @@ impl ApiState for State {
 
         self.physics(frame_time, game_duration);
 
-        self.draw(default_fb.unwrap())
+        self.draw(default_fb.expect("there should be a default framebuffer to write to"))
     }
 
     fn new(initial_size: (TexDim, TexDim)) -> Result<Self, Self::Error> {

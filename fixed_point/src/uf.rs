@@ -136,7 +136,6 @@ macro_rules! make_uf {
 make_uf!(Unitf8, u8);
 make_uf!(Unitf16, u16);
 
-#[expect(clippy::inline_modules, reason = "clippy bug this is a test")]
 #[cfg(test)]
 mod tests {
     use super::*;

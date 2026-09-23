@@ -1,4 +1,4 @@
-use std::iter;
+use core::iter;
 
 use graphics::linear_algebra::Vector;
 
@@ -18,9 +18,9 @@ pub struct SkinningEntity<T> {
 impl<T> Default for SkinningEntity<T> {
     fn default() -> Self {
         Self {
-            model: Default::default(),
-            bounding_box: Default::default(),
-            physics: Default::default(),
+            model: SkinningCubic::default(),
+            bounding_box: Option::default(),
+            physics: SimplePhysics::default(),
         }
     }
 }
@@ -41,7 +41,6 @@ impl<T> SkinningEntity<T> {
             model,
             bounding_box,
             physics,
-            ..Self::default()
         })
     }
 }
@@ -55,6 +54,12 @@ pub fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [SkeletalVertex; 3])]) -> T>(
         &cubic.triangles(),
         |tri| {
             tri.iter().flat_map(|vertex| {
+                #[expect(clippy::cast_sign_loss, reason = "no problem, as the index >= 0")]
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "ideally this would u32 -> usize which safe. At the moment I cannot \
+                              use glAttribIPointer so must use an f32 as my bone index"
+                )]
                 iter::zip(vertex.bone_indices, vertex.bone_weights)
                     .filter_map(|(index, weight)| (weight != 0.0).then_some(index as usize))
             })

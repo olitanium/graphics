@@ -33,12 +33,12 @@ impl DualQuaternion {
     pub fn magnitude_sq(self) -> DualNumber<f32> {
         let magnitude = self * self.quaternion_conjugate();
 
-        assert!(
+        debug_assert!(
             magnitude.real.vector().is_zero(),
             "{:?}",
             magnitude.real.vector()
         );
-        assert!(
+        debug_assert!(
             magnitude.dual.vector().is_zero(),
             "{:?}",
             magnitude.dual.vector()

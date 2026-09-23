@@ -1,3 +1,4 @@
+use core::fmt;
 use std::fmt::Debug;
 
 use graphics::framebuffer::FramebufferContext;
@@ -34,17 +35,16 @@ pub struct Group<
 }
 
 impl<
-    'a,
     M: EntityInner,
     T,
     const MAX: usize,
     const OUT: usize,
     D: FramebufferWithDepth<OUT, Tex = FlatTexture>,
-> Debug for Group<'a, M, T, MAX, OUT, D>
+> Debug for Group<'_, M, T, MAX, OUT, D>
 where
     M::Vertex: CubicVertex,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct(stringify!(Group)).finish_non_exhaustive()
     }
 }
@@ -88,8 +88,8 @@ where
     }
 }
 
-impl<'a, M: EntityInner, T, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
-    for Group<'a, M, T, MAX, OUT, D>
+impl<M: EntityInner, T, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
+    for Group<'_, M, T, MAX, OUT, D>
 where
     M::Vertex: CubicVertex,
 {
@@ -116,7 +116,7 @@ where
         active_shader.set_uniform_dyn(self.uniforms).unwrap();
 
         for (model, animations) in self.opaque {
-            let _ = model.draw(&mut active_shader, &mut active_framebuffer, animations);
+            _ = model.draw(&mut active_shader, &mut active_framebuffer, animations);
         }
         DrawOut::OK
     }
