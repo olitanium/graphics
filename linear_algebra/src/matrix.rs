@@ -201,9 +201,9 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     pub fn transpose(self) -> Matrix<C, R> {
         let array = self
             .row_iter()
-            .collect::<ArrayVec<[VectorPreferredFloat; C], R>>()
-            .try_into_array()
-            .expect("RC matrix has as many elements as CR");
+            .collect::<ArrayVec<[_; C], R>>()
+            .into_array_with(|| [0.0; _]);
+
         Matrix::from_col_major(array)
     }
 
@@ -217,14 +217,12 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
             .chain(iter::repeat([0.0; _]))
             .collect::<ArrayVec<_, C2>>();
 
-        let array = x
-            .try_into_array()
-            .expect("ArrayVec filling from unlimited iterator");
+        let array = x.into_array_with(|| [0.0; _]);
 
         Matrix::from_col_major(array)
     }
 
-    /// Map each element of the matrix wit
+    /// Map each element of the matrix with an operation.
     #[must_use]
     #[inline]
     pub fn map(mut self, op: impl Fn(VectorPreferredFloat) -> VectorPreferredFloat) -> Self {

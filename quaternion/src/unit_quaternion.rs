@@ -15,7 +15,7 @@ impl UnitQuaternion {
     #[must_use]
     #[inline]
     pub fn normalize_quaternion(input: Quaternion) -> Self {
-        let one_magnitude = 1.0 / input.magnitude();
+        let one_magnitude = input.inverse_magnitude();
         let quaternion = input.scale(one_magnitude);
 
         Self(quaternion)

@@ -2,7 +2,7 @@ use dual_number::{DualNumber, DualQuaternion, UnitDualQuaternion};
 use linear_algebra::{Matrix, UnitVector, Vector};
 use quaternion::Quaternion;
 
-use crate::{Orientation, Transform as _, TransformBy};
+use crate::{Orientation, Transform as _, TransformBy as _};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Pose {

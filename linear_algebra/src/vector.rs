@@ -53,7 +53,7 @@ where
 const impl<const N: usize> PartialEq for Vector<N, VectorPreferredFloat> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
-        array_maths::nearly_eq(self.into_inner(), other.into_inner())
+        array_maths::nearly_eq(self.inner(), other.inner())
     }
 }
 
@@ -209,8 +209,8 @@ impl<const N: usize> Vector<N, VectorPreferredFloat> {
     /// zero.
     #[inline]
     #[must_use]
-    pub const fn is_zero(self) -> bool {
-        array_maths::is_zero(self.into_inner())
+    pub const fn is_zero(&self) -> bool {
+        array_maths::is_zero(self.inner())
     }
 
     /// Find the length of the vector.
@@ -218,6 +218,10 @@ impl<const N: usize> Vector<N, VectorPreferredFloat> {
     #[must_use]
     pub fn magnitude(self) -> VectorPreferredFloat {
         self.magnitude_sq().sqrt()
+    }
+
+    pub fn inverse_magnitude(&self) -> VectorPreferredFloat {
+        1.0 / self.magnitude()
     }
 
     /// # Panics
@@ -307,7 +311,7 @@ impl<const N: usize, T> Vector<N, T> {
     #[inline]
     pub const fn into_inner(self) -> [T; N]
     where
-        Self: [const] Destruct, // TODO: shouldn't be needed because it is destructured
+        Self: [const] Destruct,
     {
         let Self(out) = self;
         out
@@ -369,7 +373,7 @@ impl<const N: usize, T> Vector<N, T> {
     pub const fn magnitude_sq(self) -> T
     where
         T: [const] Add<Output = T> + [const] Mul<Output = T> + [const] Default + [const] Destruct,
-        // fixme Should only be clone, but [f32; 3] does not impl [const] Clone yet
+        // fixme: Should only be clone, but [f32; 3] does not impl [const] Clone yet
         Self: Copy,
     {
         let temp = self;

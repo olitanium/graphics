@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use alloc::rc::Rc;
 
 use engine::entity::Mass;
 use engine::geometry::{Orientation, Pose};
@@ -12,7 +12,7 @@ use engine::modelling::cubic::{
     MeshBuilder,
     SimpleCubic,
 };
-use engine::modelling::{Collision, IncompleteVertex, SimpleCubicGroup};
+use engine::modelling::{Collision as _, IncompleteVertex, SimpleCubicGroup};
 use engine::types::TexDim;
 use engine::{
     ApiState,

@@ -14,16 +14,7 @@ pub struct Flexible {
 }
 
 impl Flexible {
-    const COS_NO_CONE: f32 = 0.99;
-
     pub fn new_from_to(position: Vector<3>, to: Vector<3>, up: UnitVector<3>) -> Option<Self> {
-        // let forward = (to - position).try_normalize()?;
-        //
-        // (forward != up).then_some(Self {
-        // up,
-        // position,
-        // forward,
-        // })
         let pose = Pose::new_from_to_up(position, to, up)?;
         Some(Self { pose })
     }

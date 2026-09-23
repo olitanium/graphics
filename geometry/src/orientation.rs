@@ -64,9 +64,12 @@ impl Orientation {
         global_up: UnitVector<3>,
         up_two: UnitVector<3>,
     ) -> Option<Self> {
-        debug_assert_ne!(global_up, up_two);
-        // should never fail because the `Self::new_forward_up` only fails when forward
-        // == up;
+        debug_assert_ne!(
+            global_up, up_two,
+            "`global_up` and `up_two` are the same at {global_up:?}"
+        );
+        // should never fail because the `Self::new_forward_up` only fails when
+        // forward == up;
         Self::new_forward_up(forward, global_up).or_else(|| Self::new_forward_up(forward, up_two))
     }
 

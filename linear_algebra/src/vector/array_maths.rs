@@ -94,12 +94,12 @@ where
 
 /// Check whether all components of the vector are zero (or very close).
 #[inline]
-pub const fn is_zero<const N: usize>(v1: [VectorPreferredFloat; N]) -> bool {
-    nearly_eq(v1, [0.0; N])
+pub const fn is_zero<const N: usize>(v1: &[VectorPreferredFloat; N]) -> bool {
+    nearly_eq(v1, &[0.0; N])
 }
 
 /// Check whether all components are element-wise equal.
-pub const fn nearly_eq<const N: usize, T>(v1: [T; N], v2: [T; N]) -> bool
+pub const fn nearly_eq<const N: usize, T>(v1: &[T; N], v2: &[T; N]) -> bool
 where
     T: [const] NearlyEq + [const] Destruct,
 {
@@ -132,13 +132,13 @@ mod test {
 
     #[test]
     fn zero() {
-        assert!(is_zero([0.0, 0.0, 0.0]));
-        assert!(!is_zero([0.0, 0.0, 1.0]));
+        assert!(is_zero(&[0.0, 0.0, 0.0]));
+        assert!(!is_zero(&[0.0, 0.0, 1.0]));
     }
 
     #[test]
     fn equal() {
-        assert!(nearly_eq([1.0, 1.0], [1.0, 1.0]));
-        assert!(!nearly_eq([0.0, 0.0], [1.0, 1.0]));
+        assert!(nearly_eq(&[1.0, 1.0], &[1.0, 1.0]));
+        assert!(!nearly_eq(&[0.0, 0.0], &[1.0, 1.0]));
     }
 }

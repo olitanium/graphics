@@ -70,6 +70,7 @@ multiple_inherent_impl = "allow"
 shadow_same = "allow"
 shadow_unrelated = "allow"
 module_name_repetitions = "allow"
+windcard_enum_match_arm = "allow"
 
 # temporary
 

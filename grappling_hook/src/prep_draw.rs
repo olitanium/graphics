@@ -6,7 +6,6 @@ use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::{
     BloomGroup,
     FramebufferQuad,
-    QuadGroup,
     ScreenQuadGroup,
     SimpleCubicGroup,
     SkyBoxGroup,

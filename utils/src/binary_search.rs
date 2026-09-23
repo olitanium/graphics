@@ -84,7 +84,7 @@ mod tests {
         let x = binary_search(
             0.0_f32,
             1.0,
-            |&lb, &ub| 0.5 * (lb + ub),
+            |&lb, &ub| f32::midpoint(lb, ub),
             |&x| x.total_cmp(&0.3),
             4,
         );

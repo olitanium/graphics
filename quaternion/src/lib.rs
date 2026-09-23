@@ -112,6 +112,10 @@ impl Quaternion {
         self.magnitude_sq().sqrt()
     }
 
+    pub fn inverse_magnitude(&self) -> f32 {
+        1.0 / self.magnitude()
+    }
+
     #[must_use]
     pub fn normalize(self) -> UnitQuaternion {
         UnitQuaternion::normalize_quaternion(self)

@@ -1,4 +1,3 @@
-use std::ops::Deref;
 
 use crate::framebuffer::FramebufferContext;
 use crate::types::Query;

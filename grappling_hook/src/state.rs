@@ -10,7 +10,7 @@ use engine::modelling::cubic::lighting::shadow::{ShadowPointLight, ShadowSpotLig
 use engine::modelling::cubic::lighting::simple::PointLight;
 use engine::modelling::cubic::material::Material;
 use engine::modelling::cubic::{Camera, CameraProjection, SkeletalAnimation, SkinningCubic};
-use engine::modelling::{Bloom, Line, Quad, SkyBox, TestLineVertex};
+use engine::modelling::{Bloom, Line, SkyBox, TestLineVertex};
 use engine::types::TexDim;
 use engine::{ApiState, ColourRGBA, Event, PollResult, SimpleEntity, VecDraw};
 

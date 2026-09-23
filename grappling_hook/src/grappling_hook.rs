@@ -86,7 +86,7 @@ impl GrapplingHook {
                 Pose::IDENTITY,
                 white_material.clone(),
                 CHAIN_LINK_SIZE,
-                &bone,
+                bone,
             )
         }
 
@@ -149,10 +149,10 @@ impl GrapplingHook {
             .expect(EXPECT_MESSAGE);
 
         animation_builder
-            .push_animation(bone_animation, &end_of_chain)
+            .push_animation(bone_animation, end_of_chain)
             .expect("end bone exists");
 
-        let new_bone = Bone::builder(&end_of_chain).bind_pose_relative_to_parent(
+        let new_bone = Bone::builder(end_of_chain).bind_pose_relative_to_parent(
             Pose::new_from_translation(Vector::new([0.0, 0.0, CHAIN_LINK_SIZE * 0.5])),
         );
 
@@ -345,7 +345,7 @@ impl GrapplingHook {
                         );
 
                         if collided {
-                            let (grapple_target, target_transform, vertex_transform) =
+                            let (grapple_target, _target_transform, _vertex_transform) =
                                 opt_carry.take().expect("Asserted Some above");
 
                             let hook_pos = self_transform

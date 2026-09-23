@@ -1,27 +1,24 @@
 use std::num::NonZero;
 use std::rc::Rc;
 
-use engine::array_vec::{ArrayVec, arrvec};
 use engine::entity::{AggregateEntity, AggregateModelIndex, Mass};
 use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::geometry::{Orientation, Pose};
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::lighting::shadow::{
-    ShadowListLights,
     ShadowPointLight,
     ShadowSpotLight,
 };
-use engine::modelling::cubic::lighting::simple::{ListLights, PointLight, SpotLight};
+use engine::modelling::cubic::lighting::simple::{PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
 use engine::modelling::cubic::{
-    Camera,
     CameraBuilder,
     ManualPoseFixedUp,
     SimpleCubic,
     SkinningCubic,
 };
-use engine::modelling::{Bloom, Line, Quad, SkeletonCubic, SkyBox};
+use engine::modelling::{Bloom, Line, SkeletonCubic, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
 use engine::types::TexDim;
