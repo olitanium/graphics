@@ -21,11 +21,7 @@ where
     }
 
     pub fn get(self, time: f32) -> T {
-        if time == self.duration {
-            return self.finish;
-        }
-
-        let proportion = (time / self.duration) % 1.0;
+        let proportion = (time / self.duration).rem_euclid(1.0);
         let oneminusproportion = 1.0 - proportion;
 
         (self.start * oneminusproportion) + (self.finish * proportion)
@@ -34,6 +30,8 @@ where
 
 #[cfg(test)]
 mod test {
+    use core::iter;
+
     use super::*;
 
     fn float_eq(a: f32, b: f32) -> bool {
@@ -42,18 +40,18 @@ mod test {
     }
 
     fn assert_float_eq(a: f32, b: f32) {
-        assert!(float_eq(a, b))
+        assert!(float_eq(a, b));
     }
 
     #[test]
-    fn test_prop() {
+    fn prop() {
         const DURATION: f32 = 10.0;
         let lerp = Lerp::new(0.0, 1.0, DURATION);
 
         let test_outputs = [0.0, 0.1, 0.2, 0.3, 1.0];
         let test_inpus = test_outputs.map(|x| x * DURATION);
 
-        for (input, output) in core::iter::zip(test_inpus, test_outputs) {
+        for (input, output) in iter::zip(test_inpus, test_outputs) {
             assert_float_eq(lerp.get(input), output);
         }
     }

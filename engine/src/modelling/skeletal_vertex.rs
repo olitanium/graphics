@@ -53,7 +53,7 @@ impl<'a> TransformBy<(&'a Skeleton, &'a CalculatedAnimation)> for SkeletalVertex
             if weight == 0.0 {
                 break;
             }
-            let bone = bones.get(index).unwrap();
+            let bone = bones[index];
             let dual_quat = bone.into_inner().u();
             accum = accum + dual_quat;
         }

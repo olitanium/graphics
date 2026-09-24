@@ -1,3 +1,5 @@
+use core::f32;
+
 use linear_algebra::{Matrix, UnitVector, Vector};
 use quaternion::{Quaternion, UnitQuaternion};
 
@@ -89,7 +91,8 @@ impl Orientation {
             2.0 * w.mul_add(-x, y * z),
             2.0_f32.mul_add(-y.mul_add(y, x * x), 1.0),
         ])
-        .normalize_or_panic() // z
+        .try_normalize()
+        .unwrap_or_default()
     }
 
     #[must_use]
@@ -102,7 +105,8 @@ impl Orientation {
             2.0_f32.mul_add(-z.mul_add(z, x * x), 1.0),
             2.0 * w.mul_add(x, y * z),
         ])
-        .normalize_or_panic() // z
+        .try_normalize()
+        .unwrap_or_default() // y
     }
 
     #[must_use]
@@ -115,7 +119,8 @@ impl Orientation {
             2.0 * w.mul_add(z, x * y),
             2.0 * w.mul_add(-y, x * z),
         ])
-        .normalize_or_panic() // z
+        .try_normalize()
+        .unwrap_or_default() // x
     }
 
     pub fn look_left(&mut self, angle: f32) {
@@ -134,10 +139,8 @@ impl Orientation {
     }
 
     pub fn reverse_direction(&mut self) {
-        let rotation = Quaternion::axis_angle(
-            core::f32::consts::PI,
-            UnitVector::new_unchecked([0.0, 1.0, 0.0]),
-        );
+        let rotation =
+            Quaternion::axis_angle(f32::consts::PI, UnitVector::new_unchecked([0.0, 1.0, 0.0]));
         self.quaternion = (self.quaternion.q() * rotation.q()).normalize();
     }
 
@@ -175,18 +178,18 @@ impl Orientation {
 mod test {
     use super::*;
 
-    #[test]
-    fn get_values() {
-        let orient =
-            Orientation::new_from_to(Vector::ZERO, Vector::from([1.0, 1.0, 1.0]), UnitVector::Y)
-                .unwrap();
-        println!("matrix: {:?}", orient.as_matrix());
+    // #[test]
+    // fn get_values() {
+    // let orient =
+    // Orientation::new_from_to(Vector::ZERO, Vector::from([1.0, 1.0, 1.0]),
+    // UnitVector::Y) .unwrap();
+    // println!("matrix: {:?}", orient.as_matrix());
+    //
+    // println!("orientation: {:?}", orient.into_quaternion());*/
+    // }
 
-        println!("orientation: {:?}", orient.into_quaternion());
-    }
-
     #[test]
-    fn test_y() {
+    fn y() {
         fn is_similar_enough(one: Vector<3>, two: Vector<3>) -> bool {
             let diff = one - two;
             diff.into_iter().all(|x| x.abs() < 0.001)

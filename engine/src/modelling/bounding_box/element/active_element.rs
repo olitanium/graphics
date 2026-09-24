@@ -231,7 +231,7 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
                                 other_vertex_transform,
                                 alter_meta,
                                 accumulator,
-                            )
+                            );
                         })
                 }
                 (InnerChildrenOrMeta::Children([thisleft, thisright]), meta) => {
@@ -250,7 +250,7 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
                                 other_vertex_transform,
                                 alter_meta,
                                 accumulator,
-                            )
+                            );
                         })
                 }
                 (

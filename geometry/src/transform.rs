@@ -49,16 +49,16 @@ impl TransformBy<Orientation> for UnitVector<3> {
 }
 
 impl TransformBy<Self> for Pose {
-    fn transform_by(self, pose: Self) -> Self {
-        let dual_quaternion = (pose.dual_quaternion.u() * self.dual_quaternion.u()).normalize();
+    fn transform_by(self, operator: Self) -> Self {
+        let dual_quaternion = (operator.dual_quaternion.u() * self.dual_quaternion.u()).normalize();
 
         Self { dual_quaternion }
     }
 }
 
 impl<T: TransformBy<U>, U> TransformBy<Option<U>> for T {
-    fn transform_by(self, opt_operator: Option<U>) -> Self {
-        if let Some(operator) = opt_operator {
+    fn transform_by(self, operator: Option<U>) -> Self {
+        if let Some(operator) = operator {
             self.transform_by(operator)
         } else {
             self
@@ -75,10 +75,10 @@ impl<V: TransformBy<Pose>, const N: usize> TransformBy<Pose> for [V; N] {
 /// Transform takes an input and returns the transformed input.
 ///
 /// The operation order is reminiscent of matrix multiplication, in so far as
-/// `matrix.transform(vec) == matrix * vec`
+/// `matrix.transform(vec) == matrix * vec`.
 ///
 /// Do not implement this trait, instead implement `transform_by`, where private
-/// members of the output type can be accessed. A blanket transform exists
+/// members of the output type can be accessed. A blanket transform exists.
 pub trait Transform<T> {
     fn transform(self, input: T) -> T;
 }

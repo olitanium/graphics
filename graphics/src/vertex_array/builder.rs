@@ -2,7 +2,7 @@ use utils::{builder, new};
 
 use super::VertexArray;
 use crate::element_array_buffer::ElementArrayBuffer;
-use crate::types::ElementArrayElem;
+use crate::types::{self, ElementArrayElem};
 use crate::vertex::Vertex;
 use crate::vertex_buffer::VertexBuffer;
 
@@ -31,7 +31,7 @@ impl<V: Vertex> Builder<V> {
     pub fn push_triangle(&mut self, triangle: [V; 3]) {
         #[allow(clippy::cast_possible_truncation)]
         // vertices are not likely to have length greater than GLuint::MAX
-        let original_len = self.vertices.len() as crate::types::GLuint;
+        let original_len = self.vertices.len() as types::GLuint;
         self.vertices.extend(triangle);
         self.element_array
             .extend((original_len..=original_len + 2).map(ElementArrayElem::new));

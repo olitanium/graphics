@@ -1,5 +1,5 @@
-use core::{iter, ptr};
-use std::borrow::Cow;
+use alloc::borrow::Cow;
+use core::{ffi, iter, ptr};
 use std::sync::LazyLock;
 
 use builder::Builder;
@@ -7,7 +7,6 @@ use utils::error_boilerplate;
 
 use super::framebuffer::ActiveFramebuffer;
 use crate::element_array_buffer::ElementArrayBuffer;
-// use crate::error::ApiResult;
 use crate::framebuffer::traits::FramebufferWithoutExtra;
 use crate::shader_program::{ActiveShaderProgram, BindTexturesError, ValidateError};
 use crate::types::{ElementArrayLen, VertexArrayId, VertexAttrType};
@@ -63,14 +62,23 @@ impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
         }
 
         for (index, (offset, type_of)) in iter::zip(V::offsets(), V::types_of()).enumerate() {
-            #[allow(clippy::cast_possible_truncation)]
-            // there probably will not be more than GLuint::MAX components to a vertex,
-            // but usize is a more "Rust" type
+            #[expect(
+                clippy::cast_possible_truncation,
+                reason = "there probably will not be more than GLuint::MAX components to a \
+                          vertex, but usize is the `enumerate` type"
+            )]
             let index = index as types::GLuint;
 
-            #[allow(clippy::cast_possible_truncation)]
-            // there probably will not be more than GLsizei::MAX bytes in a vertex but usize is a
-            // more "Rust" type
+            #[expect(
+                clippy::cast_possible_truncation,
+                reason = "there probably will not be more than GLsizei::MAX bytes in a vertex but \
+                          usize is a more \"Rust\" type"
+            )]
+            #[expect(
+                clippy::cast_possible_wrap,
+                reason = "there probably will not be more than GLsizei::MAX bytes in a vertex but \
+                          usize is a more \"Rust\" type"
+            )]
             let stride = V::stride() as types::GLsizei;
             match type_of {
                 VertexAttrType::GLfloat(count) => gl_call! {
@@ -80,7 +88,7 @@ impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
                         type_of.get_enum(),
                         gl::FALSE,
                         stride,
-                        offset as *const _,
+                        offset as *const ffi::c_void,
                     );
                 },
                 VertexAttrType::GLint(count) => gl_call! {
@@ -89,7 +97,7 @@ impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
                         types::GLint::from(count),
                         type_of.get_enum(),
                         stride,
-                        offset as *const _,
+                        offset as *const ffi::c_void,
                     );
                 },
             }
@@ -100,12 +108,12 @@ impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
         }
 
         // Tidy in this order
-        GenVertexArray::<V>::unbind();
+        Self::unbind();
         ElementArrayBuffer::unbind();
         VertexBuffer::<V>::unbind();
 
         // Return object
-        GenVertexArray {
+        Self {
             id,
             vertex_buffer,
             element_array_buffer,
@@ -114,8 +122,9 @@ impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
 
     #[must_use]
     pub fn triangles(&self) -> Cow<'_, [[V; 3]]> {
-        match self.element_array_buffer.as_ref() {
-            Some(element) => {
+        self.element_array_buffer.as_ref().map_or_else(
+            || Cow::Borrowed(self.vertex_buffer.vertices().as_chunks().0),
+            |element| {
                 let triangles = element.triangles();
                 let vertices = self.vertex_buffer.vertices();
 
@@ -125,9 +134,8 @@ impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
                     .collect();
 
                 Cow::Owned(option_vec_triangles.unwrap_or_default())
-            }
-            None => Cow::Borrowed(self.vertex_buffer.vertices().as_chunks().0),
-        }
+            },
+        )
     }
 }
 
@@ -158,7 +166,7 @@ impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
     ///
     /// Errors when the active shader program is not correctly configured for
     /// drawing. This may be because the shader program as written does not line
-    /// up with the type provided to Rust
+    /// up with the type provided to Rust.
     pub fn draw<'a, M: Model<Vertex = V>, O, const OUT: usize, D: FramebufferWithoutExtra<OUT>>(
         &self,
         active_shader_program: &mut ActiveShaderProgram<'a, '_, '_, M, O, D::Tex, OUT>,
@@ -229,7 +237,7 @@ impl GenVertexArray<()> {
     ///
     /// Errors when the active shader program is not correctly configured for
     /// drawing. This may be because the shader program as written does not line
-    /// up with the type provided to Rust
+    /// up with the type provided to Rust.
     pub fn draw_len<
         'a,
         M: Model<Vertex = NoVertex>,

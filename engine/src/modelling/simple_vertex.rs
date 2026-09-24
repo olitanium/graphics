@@ -41,11 +41,11 @@ impl Vertex for SimpleVertex {
 }
 
 impl TransformBy<Pose> for SimpleVertex {
-    fn transform_by(self, pose: Pose) -> Self {
+    fn transform_by(self, operator: Pose) -> Self {
         Self {
-            position: pose.transform(self.position),
-            normal: pose.transform(self.normal),
-            tangent: pose.transform(self.tangent),
+            position: operator.transform(self.position),
+            normal: operator.transform(self.normal),
+            tangent: operator.transform(self.tangent),
             ..self
         }
     }
@@ -60,10 +60,8 @@ impl ExtendedVertex for SimpleVertex {
         self.position
     }
 
-    fn from_incomplete_triangle(
-        incomplete_triangle: [IncompleteVertex<3>; 3],
-    ) -> Option<[Self; 3]> {
-        let temp_incomplete_triangle = incomplete_triangle.clone();
+    fn from_incomplete_triangle(triangle: [IncompleteVertex<3>; 3]) -> Option<[Self; 3]> {
+        let temp_incomplete_triangle = triangle.clone();
 
         let new_normal = || {
             let ab = temp_incomplete_triangle[1].position - temp_incomplete_triangle[0].position;
@@ -78,22 +76,22 @@ impl ExtendedVertex for SimpleVertex {
         let new_tangent = || {
             let ab = temp_incomplete_triangle[1].position - temp_incomplete_triangle[0].position;
             let ac = temp_incomplete_triangle[2].position - temp_incomplete_triangle[0].position;
-            let z = temp_incomplete_triangle[1].texture? - temp_incomplete_triangle[0].texture?;
-            let g = temp_incomplete_triangle[2].texture? - temp_incomplete_triangle[0].texture?;
+            let z1 =
+                (temp_incomplete_triangle[1].texture? - temp_incomplete_triangle[0].texture?).y();
+            let g1 =
+                (temp_incomplete_triangle[2].texture? - temp_incomplete_triangle[0].texture?).y();
 
-            let out = (ab.scale(g[1]) - ac.scale(z[1])) // .scale(1.0/(g[1]*z[0] - g[0]*z[1]))
+            let out = (ab.scale(g1) - ac.scale(z1)) // .scale(1.0/(g[1]*z[0] - g[0]*z[1]))
                 .try_normalize(); // change of basis
+
             if out.is_none() {
-                eprintln!(
-                    "failed to make tangent: ab: {ab:?}, ac: {ac:?}, z[1]: {0:?}, g[1]: {1:?}",
-                    z[1], g[1]
-                )
+                eprintln!("failed to make tangent: ab: {ab:?}, ac: {ac:?}, z[1]: {z1}, g[1]: {g1}");
             }
 
             out
         };
 
-        incomplete_triangle.try_map(
+        triangle.try_map(
             |IncompleteVertex {
                  position,
                  texture,

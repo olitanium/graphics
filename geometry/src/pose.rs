@@ -143,10 +143,9 @@ mod test {
     use linear_algebra::UnitVector;
 
     use super::*;
-    use crate::Transform as _;
 
     #[test]
-    fn test_matrix() {
+    fn matrix() {
         let first_pose = Pose::new_from_orientation_translation(
             Orientation::new_from_to(Vector::ZERO, Vector::Z, UnitVector::Y).unwrap(),
             Vector::new([1.0, 1.0, 1.0]),
