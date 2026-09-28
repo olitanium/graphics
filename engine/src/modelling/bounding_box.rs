@@ -13,7 +13,7 @@ use graphics::{ActiveShaderProgram, Model, ShaderProgram};
 
 mod element;
 pub use element::BoundingBoxElement;
-use element::{ChildrenOrMeta, DrawRecursiveError};
+use element::{ChildrenOrMeta, DrawRecursiveError, Meta};
 use graphics::vertex::Vertex;
 
 mod group;
@@ -41,6 +41,7 @@ pub struct BoundingBox<V: ExtendedVertex, T> {
 }
 
 impl<V: ExtendedVertex, T> BoundingBox<V, T> {
+    #[must_use = "creates a new bounding box, rather than modifying the original in place"]
     pub fn new_test_trianges<F>(self, f: F) -> Self
     where
         F: FnOnce(&[[V; 3]]) -> T,
@@ -49,11 +50,11 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
         let triangles_len = self.triangles.len();
         let (upper_bound, lower_bound) = Volume::infinity();
         let meta = f(&self.triangles);
-        let children_or_meta = ChildrenOrMeta::Meta {
+        let children_or_meta = ChildrenOrMeta::Meta(Meta {
             triangle_start: 0,
             triangle_len: triangles_len,
-            meta: RefCell::new(meta),
-        };
+            data: RefCell::new(meta),
+        });
         let elem = BoundingBoxElement {
             lower_bound,
             upper_bound,
@@ -76,6 +77,8 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
             .expect("guaranteed at least one element, or the BB create function would return None")
     }
 
+    #[expect(clippy::allow_attributes, reason = "bleh")]
+    #[allow(unused, reason = "may be used in future")]
     pub(crate) fn new_from_vec_indexes<F: FnMut(&[(Vector<{ V::LEN }>, [V; 3])]) -> T>(
         vectors: &[V],
         triangles: &[[usize; 3]],
@@ -121,7 +124,7 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
             &mut init,
         )?;
 
-        Some(BoundingBox {
+        Some(Self {
             triangles,
             inner: accumulator,
         })
@@ -350,28 +353,26 @@ impl<V: ExtendedVertex<LEN = 3>, T: 'static> BoundingBoxShaderProgram for Boundi
     }
 }
 
+#[cfg(test)]
 mod tests {
-    use std::cell::RefCell;
+    use core::cell::RefCell;
 
     use graphics::linear_algebra::Vector;
 
+    use crate::modelling::bounding_box::ChildrenOrMeta;
+    use crate::modelling::bounding_box::element::Meta;
     use crate::modelling::{BoundingBoxElement, ExtendedVertex};
 
-    #[allow(dead_code)]
     fn default<V: ExtendedVertex, T: Default>() -> BoundingBoxElement<V, T> {
         BoundingBoxElement {
             lower_bound: -Vector::X,
             upper_bound: Vector::X,
-            children_or_meta: super::element::ChildrenOrMeta::Meta {
-                meta: RefCell::default(),
-                triangle_len: 0,
-                triangle_start: 0,
-            },
+            children_or_meta: ChildrenOrMeta::Meta(Meta::default()),
         }
     }
 
     #[test]
-    fn test_point_in_square() {
+    fn point_in_square() {
         use crate::linear_algebra::Vector;
         use crate::modelling::BoundingBox;
 
@@ -402,7 +403,7 @@ mod tests {
     }
 
     #[test]
-    fn test_overlap() {
+    fn overlap() {
         use geometry::NoTransform;
         use graphics::linear_algebra::Vector;
 

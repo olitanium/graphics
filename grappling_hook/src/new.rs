@@ -1,5 +1,5 @@
-use core::num::NonZero;
 use alloc::rc::Rc;
+use core::num::NonZero;
 
 use engine::entity::{AggregateEntity, AggregateModelIndex, Mass};
 use engine::framebuffer::Builder;
@@ -9,7 +9,13 @@ use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::lighting::shadow::{ShadowPointLight, ShadowSpotLight};
 use engine::modelling::cubic::lighting::simple::{PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{CameraBuilder, ManualPoseFixedUp, SimpleCubic, SkinningCubic};
+use engine::modelling::cubic::{
+    AggregateCalcAnim,
+    CameraBuilder,
+    ManualPoseFixedUp,
+    SimpleCubic,
+    SkinningCubic,
+};
 use engine::modelling::{Bloom, Line, SkeletonCubic, SkyBox};
 use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder};
@@ -191,6 +197,7 @@ impl State {
             .unwrap();
 
         let grappling_hook = GrapplingHook::new(3);
+        let grapple_animation = todo!();
 
         Ok(Self {
             toggle_b: false,
@@ -216,6 +223,7 @@ impl State {
             // join_pos,
             // hook_pos,
             grappling_hook,
+            grapple_animation,
 
             aggregate_tail,
             simpletail,

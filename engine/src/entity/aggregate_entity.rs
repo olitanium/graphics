@@ -453,6 +453,7 @@ where
     }
 }
 
+#[expect(clippy::absolute_paths, reason = "there already is a mod error;")]
 impl<'a, M: EntityInner + 'a> core::error::Error for DrawError<'a, M> where M::Vertex: CubicVertex {}
 
 impl<M: EntityInner, T> AggregateEntity<M, T>
@@ -463,9 +464,9 @@ where
         &'a self,
         active_sp: &mut ActiveShaderProgram<'b, '_, 'a, M, ListLights<MAX>, F::Tex, OUT>,
         active_fb: &mut ActiveFramebuffer<'_, '_, OUT, F>,
-        calculated_animation: AggregateCalcAnim,
+        calculated_animation: &AggregateCalcAnim,
     ) -> Result<(), DrawError<'b, M>> {
-        for (model, _, calc) in self.zip_calculated_animation(&calculated_animation) {
+        for (model, _, calc) in self.zip_calculated_animation(calculated_animation) {
             model
                 .draw(active_sp, active_fb, calc)
                 .map_err(|err| DrawError::<M>::ModelDraw(err))?;

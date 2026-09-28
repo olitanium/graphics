@@ -1,7 +1,6 @@
 use engine::array_vec::arrvec;
 use engine::entity::AggregateGroup;
 use engine::framebuffer::DefaultFramebuffer;
-use engine::modelling::cubic::AggregateCalcAnim;
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::{
     BloomGroup,
@@ -18,7 +17,6 @@ impl State {
     pub fn draw<'a>(
         &'a mut self,
         default_framebuffer: &'a DefaultFramebuffer,
-        grapple_animation: AggregateCalcAnim,
     ) -> PollResult<VecDraw<'a>, StateError> {
         let _time = self.time;
 
@@ -43,7 +41,7 @@ impl State {
                     point: arrvec![&self.ns_point_light],
                     ..Default::default()
                 },
-                vec![(&self.grappling_hook.entity, grapple_animation)],
+                vec![(&self.grappling_hook.entity, &self.grapple_animation)],
                 vec![],
             )
             .unwrap(),

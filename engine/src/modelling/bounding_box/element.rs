@@ -1,8 +1,8 @@
-use core::array;
 use core::cell::RefCell;
 use core::fmt::Debug;
+use core::{array, iter};
+use std::cell::RefMut;
 
-use active_element::InnerChildrenOrMeta;
 use geometry::Transform;
 use graphics::colour::ColourRGBA;
 use graphics::framebuffer::ActiveFramebuffer;
@@ -14,18 +14,48 @@ use graphics::{ActiveShaderProgram, Model};
 use utils::error_boilerplate;
 use zip_with::ArrayZipWith as _;
 
-use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
+use crate::modelling::{BoundingBox, ExtendedVertex, Volume, bounding_box};
 
 mod active_element;
 
+#[derive(Debug, Clone, Default)]
+pub(super) struct Meta<T> {
+    pub(super) data: RefCell<T>,
+    pub(super) triangle_start: usize,
+    pub(super) triangle_len: usize,
+}
+
+impl<T> Meta<T> {
+    pub(super) fn get_triangle_and_meta<'a, 'b, V: ExtendedVertex>(
+        &'b self,
+        bounding_box: &'a BoundingBox<V, T>,
+    ) -> (&'a [[V; 3]], RefMut<'b, T>) {
+        let refmut = self.data.borrow_mut();
+        let triangles =
+            &bounding_box.triangles[self.triangle_start..self.triangle_start + self.triangle_len];
+
+        (triangles, refmut)
+    }
+}
+
 #[derive(Debug, Clone)]
-pub(crate) enum ChildrenOrMeta<T> {
-    Meta {
-        meta: RefCell<T>,
-        triangle_start: usize,
-        triangle_len: usize,
-    },
-    Children([usize; 2]),
+pub(super) struct Children {
+    children: [usize; 2],
+}
+
+impl Children {
+    pub(super) fn get_children_elements<'a, V: ExtendedVertex, T>(
+        &self,
+        bounding_box: &'a BoundingBox<V, T>,
+    ) -> [&'a BoundingBoxElement<V, T>; 2] {
+        self.children.map(|index| bounding_box.get(index))
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(super) enum ChildrenOrMeta<T> {
+    Meta(Meta<T>),
+    Children(Children),
 }
 
 #[derive(Debug, Clone)]
@@ -33,7 +63,7 @@ pub struct BoundingBoxElement<V: ExtendedVertex, T> {
     pub(crate) lower_bound: Vector<{ V::LEN }>,
     pub(crate) upper_bound: Vector<{ V::LEN }>,
 
-    pub(crate) children_or_meta: ChildrenOrMeta<T>,
+    pub(super) children_or_meta: ChildrenOrMeta<T>,
 }
 
 fn make_bound_inner<'a, V, I>(iter: I) -> Option<(Vector<{ V::LEN }>, Vector<{ V::LEN }>)>
@@ -44,30 +74,39 @@ where
 {
     let iter = iter.into_iter().map(V::position);
 
-    let lower_bound = iter.clone().reduce(|array1, array2| {
-        Vector::new(array::from_fn(|index| {
-            f32::min(array1[index], array2[index])
-        }))
-    })?;
+    // let lower_bound = iter.clone().reduce(|array1, array2| {
+    // Vector::new(array::from_fn(|index| {
+    // f32::min(array1[index], array2[index])
+    // }))
+    // })?;
 
     let lower_bounds_new = iter
         .clone()
-        .map(|x| x.into_inner())
-        .reduce(|vec1, vec2| vec1.zip_with(vec2, |lhs, rhs| f32::min(lhs, rhs)))
-        .expect("DIMS > 0");
+        .map(Vector::into_inner)
+        .reduce(|vec1, vec2| vec1.zip_with(vec2, f32::min))?;
 
-    // TODO: if pass, implement lower_bounds_new for UB and replace
-    assert_eq!(lower_bound, Vector::new(lower_bounds_new));
+    // assert_eq!(
+    // lower_bound,
+    // Vector::new(lower_bounds_new),
+    // "TODO: if pass, implement lower_bounds_new for UB and replace"
+    // );
+    //
+    // let upper_bound = iter.clone().reduce(|array1, array2| {
+    // Vector::new(array::from_fn(|index| {
+    // f32::max(array1[index], array2[index])
+    // }))
+    // })?;
 
-    let upper_bound = iter.reduce(|array1, array2| {
-        Vector::new(array::from_fn(|index| {
-            f32::max(array1[index], array2[index])
-        }))
-    })?;
+    let upper_bounds_new = iter
+        .map(Vector::into_inner)
+        .reduce(|vec1, vec2| vec1.zip_with(vec2, f32::max))?;
 
-    assert!(core::iter::zip(upper_bound, lower_bound).all(|(x, y)| x >= y));
+    debug_assert!(
+        iter::zip(upper_bounds_new, lower_bounds_new).all(|(x, y)| x >= y),
+        "all upper bounts should be the same or higher than the LBs"
+    );
 
-    Some((lower_bound, upper_bound))
+    Some((Vector::new(lower_bounds_new), Vector::new(upper_bounds_new)))
 }
 
 fn make_bound<V: ExtendedVertex>(
@@ -89,7 +128,6 @@ impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
         let (lower_bounds, upper_bounds) = make_bound(triangles)?;
 
         let children_or_meta = if depth != 0 {
-            // so_far[destination_index].children =
             let opt_children = {
                 let dimensions = upper_bounds - lower_bounds;
                 let (max_index, _) = dimensions
@@ -108,7 +146,8 @@ impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
 
                 let mut new_partition: [_; CHILDRENPLUS1] = array::from_fn(|index| {
                     let partition_mult = (index) as f32 / CHILDREN as f32;
-                    let partition_value = partition_mult * upper_bounds[max_index] + (1.0 - partition_mult) * lower_bounds[max_index];
+                    //let partition_value = partition_mult * upper_bounds[max_index] + (1.0 - partition_mult) * lower_bounds[max_index];
+                    let partition_value =  (1.0 - partition_mult).mul_add(lower_bounds[max_index], partition_mult * upper_bounds[max_index]);
 
                     triangles.partition_point(|(centre, _)| centre[max_index] <= partition_value)
                 });
@@ -146,20 +185,22 @@ impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
                     .flatten()
             };
 
-            match opt_children {
-                Some(children) => ChildrenOrMeta::Children(children),
-                None => ChildrenOrMeta::Meta {
-                    meta: RefCell::new(init(triangles)),
-                    triangle_start: start_index,
-                    triangle_len: triangles.len(),
+            opt_children.map_or_else(
+                || {
+                    ChildrenOrMeta::Meta(Meta {
+                        data: RefCell::new(init(triangles)),
+                        triangle_start: start_index,
+                        triangle_len: triangles.len(),
+                    })
                 },
-            }
+                |children| ChildrenOrMeta::Children(Children { children }),
+            )
         } else {
-            ChildrenOrMeta::Meta {
-                meta: RefCell::new(init(triangles)),
+            ChildrenOrMeta::Meta(Meta {
+                data: RefCell::new(init(triangles)),
                 triangle_start: start_index,
                 triangle_len: triangles.len(),
-            }
+            })
         };
 
         let destination_index = so_far.len();
@@ -171,23 +212,6 @@ impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
         });
 
         Some(destination_index)
-    }
-
-    pub fn get_triangles<'a>(
-        &self,
-        bounding_box: &'a BoundingBox<V, T>,
-        // all_triangles: &'a [(Vector<DIMS>, [V; 3])],
-    ) -> Option<&'a [[V; 3]]> {
-        if let ChildrenOrMeta::Meta {
-            triangle_start,
-            triangle_len,
-            ..
-        } = self.children_or_meta
-        {
-            Some(&bounding_box.triangles[triangle_start..(triangle_start + triangle_len)])
-        } else {
-            None
-        }
     }
 }
 
@@ -227,9 +251,10 @@ where
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         colour: &mut F,
     ) -> Result<(), DrawRecursiveError<'a>> {
-        if let InnerChildrenOrMeta::Children([lhs, rhs]) = self.get_children(bounding_box)
+        if let ChildrenOrMeta::Children(children) = &self.children_or_meta
             && level != 0
         {
+            let [lhs, rhs] = children.get_children_elements(bounding_box);
             lhs.draw_recursive(
                 bounding_box,
                 pose,
@@ -246,7 +271,6 @@ where
                 active_framebuffer,
                 colour,
             )?;
-            Ok(())
         } else {
             let chosen_colour = colour();
 
@@ -267,9 +291,9 @@ where
             vertex_array
                 .draw(active_shader, active_framebuffer)
                 .map_err(DrawRecursiveError::VertexArrayDraw)?;
-
-            Ok(())
         }
+
+        Ok(())
     }
 }
 

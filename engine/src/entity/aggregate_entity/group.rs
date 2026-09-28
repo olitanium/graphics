@@ -30,7 +30,7 @@ pub struct Group<
     camera_look_at: Matrix<4, 4>,
 
     lights: ListLights<'a, MAX>,
-    opaque: Vec<(&'a AggregateEntity<M, T>, AggregateCalcAnim)>,
+    opaque: Vec<(&'a AggregateEntity<M, T>, &'a AggregateCalcAnim)>,
     uniforms: Vec<(String, &'a dyn Uniform)>,
 }
 
@@ -71,7 +71,7 @@ where
             &'a AggregateEntity<M, T>,
             // HashMap<AggregateModelIndex, (&'a SkeletalAnimation, f32)>, // time
             // Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,     // fix_anim
-            AggregateCalcAnim,
+            &'a AggregateCalcAnim,
         )>,
 
         uniforms: Vec<(String, &'a dyn Uniform)>,

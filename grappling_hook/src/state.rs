@@ -1,5 +1,5 @@
-use std::collections::HashSet;
 use alloc::rc::Rc;
+use std::collections::HashSet;
 
 use engine::entity::AggregateEntity;
 use engine::framebuffer::Framebuffer;
@@ -9,7 +9,13 @@ use engine::linear_algebra::Vector;
 use engine::modelling::cubic::lighting::shadow::{ShadowPointLight, ShadowSpotLight};
 use engine::modelling::cubic::lighting::simple::PointLight;
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{Camera, CameraProjection, SkeletalAnimation, SkinningCubic};
+use engine::modelling::cubic::{
+    AggregateCalcAnim,
+    Camera,
+    CameraProjection,
+    SkeletalAnimation,
+    SkinningCubic,
+};
 use engine::modelling::{Bloom, Line, SkyBox, TestLineVertex};
 use engine::types::TexDim;
 use engine::{ApiState, ColourRGBA, Event, PollResult, SimpleEntity, VecDraw};
@@ -46,6 +52,7 @@ pub struct State {
     pub skeletal_animation: SkeletalAnimation,
 
     pub grappling_hook: GrapplingHook,
+    pub grapple_animation: AggregateCalcAnim,
 
     pub bounding_box_level: usize,
     pub toggle_m: bool,
@@ -127,9 +134,9 @@ impl ApiState for State {
 
         self.controls(mouse_delta, keyboard, &mut string, frame_time, self.time)?;
 
-        let anim = self.physics(frame_time);
+        self.grapple_animation = self.physics(frame_time);
 
-        self.draw(default_fb.unwrap(), anim)
+        self.draw(default_fb.unwrap())
     }
 
     fn new(initial_size: (TexDim, TexDim)) -> Result<Self, Self::Error> {

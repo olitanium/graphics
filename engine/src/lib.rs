@@ -12,6 +12,10 @@
 #![feature(const_trait_impl)]
 #![feature(iter_collect_into)]
 #![feature(const_destruct)]
+#![feature(const_ops)]
+#![feature(const_clone)]
+#![feature(trivial_bounds)]
+#![feature(const_option_ops)]
 
 extern crate alloc;
 

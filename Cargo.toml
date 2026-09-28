@@ -75,6 +75,7 @@ eprintln = "allow"
 print_stderr = "allow"
 use_debug = "allow"
 similar_names = "allow"
+same_name_method = "allow"
 
 # temporary
 
@@ -88,6 +89,7 @@ struct_excessive_bools = "allow"
 inline_trait_bounds = "allow"
 type_complexity = "allow"
 inline_modules = "allow"
+missing_panics_doc = "allow"
 
 # remove_me_soon
 expect_used = "allow"

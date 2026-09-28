@@ -3,12 +3,14 @@ use core::mem;
 use crate::gl_call;
 use crate::types::{ElementArrayElem, ElementArrayId, ElementArrayLen, GLsizeiptr};
 
-/// Tells OpenGL in which order the vertices of the VertexBuffer should be
-/// drawn. Internally (inside GPU memory) is an array of ElementArrayElem.
-/// Three ElementArrayElem in a row form one triangle primitive.
+/// Tells OpenGL in which order the vertices of the `VertexBuffer` should be
+/// drawn.
+///
+/// Internally (inside GPU memory) is an array of `ElementArrayElem`.
+/// Three `ElementArrayElem` in a row form one triangle primitive.
 #[derive(Debug)]
 pub struct ElementArrayBuffer {
-    /// The OpenGL provided 'name'
+    /// The OpenGL provided 'name'.
     id: ElementArrayId,
     /// The length of the internal buffer.
     elements: Vec<usize>,
@@ -61,7 +63,7 @@ impl ElementArrayBuffer {
         }
     }
 
-    pub(crate) fn len(&self) -> ElementArrayLen {
+    pub(crate) const fn len(&self) -> ElementArrayLen {
         ElementArrayLen::new(self.elements.len() as i32)
     }
 
@@ -69,7 +71,7 @@ impl ElementArrayBuffer {
         self.elements.as_chunks().0
     }
 
-    /// Bind ElementArrayBuffer
+    /// Bind this buffer.
     pub(crate) fn bind(&self) {
         gl_call! {
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.id.as_primitive());

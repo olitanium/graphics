@@ -4,9 +4,9 @@ use utils::error_boilerplate;
 use crate::entity::AggregateModelIndex;
 use crate::modelling::Skeleton;
 use crate::modelling::cubic::SkeletonBoneIndex;
+use crate::modelling::cubic::animation::calculated_animation::CalcAnimUnitIndex;
 use crate::modelling::cubic::animation::{
     AnimationUnit,
-    CalcAnimUnitIndex,
     CalculatedAnimation,
     Parent,
     PoseAndInverseBindPose,
