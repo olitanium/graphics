@@ -1,7 +1,6 @@
 use alloc::rc::Rc;
 use std::collections::HashSet;
 
-use engine::entity::AggregateEntity;
 use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals;
@@ -9,14 +8,8 @@ use engine::linear_algebra::Vector;
 use engine::modelling::cubic::lighting::shadow::{ShadowPointLight, ShadowSpotLight};
 use engine::modelling::cubic::lighting::simple::PointLight;
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{
-    AggregateCalcAnim,
-    Camera,
-    CameraProjection,
-    SkeletalAnimation,
-    SkinningCubic,
-};
-use engine::modelling::{Bloom, Line, SkyBox, TestLineVertex};
+use engine::modelling::cubic::{AggregateCalcAnim, Camera, CameraProjection};
+use engine::modelling::{Bloom, SkyBox};
 use engine::types::TexDim;
 use engine::{ApiState, ColourRGBA, Event, PollResult, SimpleEntity, VecDraw};
 
@@ -24,7 +17,6 @@ use crate::bear::Bear;
 use crate::grappling_hook::GrapplingHook;
 
 pub struct State {
-    pub reset_time: f32,
     pub time: f32,
     pub game_start: Option<f32>,
     pub camera: Camera,
@@ -34,12 +26,8 @@ pub struct State {
 
     pub toggle_g: bool,
     pub toggle_b: bool,
-    pub toggle_h: bool,
 
     pub speed: [f32; 3],
-
-    pub line: Line<TestLineVertex>,
-    pub angle: f32,
 
     pub point_light: ShadowPointLight,
     pub spotlight: ShadowSpotLight,
@@ -47,9 +35,6 @@ pub struct State {
 
     pub bear: Option<Bear>,
     pub origin_cube: SimpleEntity<()>,
-    pub simpletail: SkinningCubic,
-    pub aggregate_tail: AggregateEntity<SkinningCubic, ()>,
-    pub skeletal_animation: SkeletalAnimation,
 
     pub grappling_hook: GrapplingHook,
     pub grapple_animation: AggregateCalcAnim,

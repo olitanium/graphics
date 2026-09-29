@@ -13,7 +13,7 @@ pub struct CalculatedAnimation {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) struct CalcAnimUnitIndex {
+pub struct CalcAnimUnitIndex {
     pub(crate) index: usize,
 }
 
@@ -53,7 +53,10 @@ impl CalculatedAnimation {
     }
 
     pub fn root(&self) -> Pose {
-        self.poses[0]
+        *self
+            .poses
+            .first()
+            .expect("should always be one pose, the root")
     }
 }
 
@@ -81,15 +84,15 @@ impl CalculatedAnimation {
 }
 
 #[derive(Debug)]
-pub(crate) struct Parent {
+pub struct Parent {
     pub(crate) index: CalcAnimUnitIndex,
     pub(crate) bone_attachment_point: SkeletonBoneIndex,
 }
 
 /// All Animation units can only refer to units before them in the heirarchy.
-/// This is enforced by the `push` method
+/// This is enforced by the `push` method.
 #[derive(Debug)]
-pub(crate) struct AnimationUnit<'a> {
+pub struct AnimationUnit<'a> {
     pub(crate) parent: Option<Parent>,
     pub(crate) local_transform: Pose,
     // invariant: Skeleton and Skeletal Animation have same signature
@@ -107,7 +110,7 @@ impl<'a> AnimationUnit<'a> {
         root_pose: Pose,
         root_skeleton: &'a Skeleton,
         root_animation: Option<(&'a SkeletalAnimation, f32)>,
-    ) -> Result<AnimationUnit<'a>, SignaturesDoNotMatchError> {
+    ) -> Result<Self, SignaturesDoNotMatchError> {
         match root_animation {
             Some((animation, _)) if animation.signature() != root_skeleton.signature() => {
                 Err(SignaturesDoNotMatchError)
@@ -166,7 +169,7 @@ impl<'a> AnimationUnit<'a> {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub(crate) struct PoseAndInverseBindPose {
+pub struct PoseAndInverseBindPose {
     pub(crate) pose: Pose,
     pub(crate) inverse_bind_pose: Pose,
 }
@@ -175,7 +178,7 @@ impl PoseAndInverseBindPose {
     pub(crate) fn process_vec(this: Vec<Self>) -> Vec<Pose> {
         this.into_iter()
             .map(
-                |PoseAndInverseBindPose {
+                |Self {
                      pose,
                      inverse_bind_pose,
                  }| pose.transform(inverse_bind_pose),
@@ -186,7 +189,7 @@ impl PoseAndInverseBindPose {
     pub(crate) fn process_vec_with_deviation(this: Vec<Self>, deviation: Pose) -> Vec<Pose> {
         this.into_iter()
             .map(
-                |PoseAndInverseBindPose {
+                |Self {
                      pose,
                      inverse_bind_pose,
                  }| deviation.transform(pose).transform(inverse_bind_pose),
@@ -195,7 +198,7 @@ impl PoseAndInverseBindPose {
     }
 }
 
-pub(crate) fn process_vec_noaggregate<'a, M: EntityInner>(
+pub fn process_vec_noaggregate<'a, M: EntityInner>(
     input: Vec<(&'a M, Pose, Option<(&'a SkeletalAnimation, f32)>)>,
 ) -> Result<Vec<(&'a M, CalculatedAnimation)>, SignaturesDoNotMatchError>
 where

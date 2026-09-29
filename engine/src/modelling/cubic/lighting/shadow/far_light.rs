@@ -1,3 +1,4 @@
+use alloc::ffi::CString;
 use core::iter;
 
 use geometry::{Orientation, Pose};
@@ -93,12 +94,12 @@ impl ShadowFarLight {
     {
         self.light.bind_to(shader, name, index)?;
         shader.set_uniform(
-            format!("{name}[{index}].matrix"),
+            &CString::new(format!("{name}[{index}].matrix")).expect("should be no Nul"),
             &self.projtimesview(target),
         )?;
 
         shader.register_texture(iter::once((
-            format!("{name}[{index}].depth"),
+            CString::new(format!("{name}[{index}].depth")).expect("should be no Nul"),
             self.framebuffer.get_attachment_ref(),
         )));
 
@@ -106,23 +107,20 @@ impl ShadowFarLight {
     }
 
     pub(crate) fn bind_to_ghost<
-        'a,
-        'b,
-        'c,
         const N: usize,
         const MAX: usize,
         L: ShadowLightCompatible<MAX>,
         T: Texture,
         M: Model,
     >(
-        shader: &mut ActiveShaderProgram<'a, 'b, 'c, M, L, T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
         name: &str,
         index: usize,
     ) where
         M::Vertex: VertexHasTangent,
     {
         shader.register_texture(iter::once((
-            format!("{name}[{index}].depth"),
+            CString::new(format!("{name}[{index}].depth")).expect("should be no Nul"),
             FlatTexture::dyn_blank(),
         )));
     }
@@ -136,7 +134,7 @@ impl ShadowFarLight {
         sp_context: &mut ShaderProgramContext,
         fb_context: &mut FramebufferContext,
         opaque_models: &[(&'a SkeletonCubic, CalculatedAnimation)],
-        uniforms: Vec<(String, &dyn Uniform)>,
+        uniforms: &[(CString, &dyn Uniform)],
         target: Vector<3>,
     ) -> Result<(), GenDepthError<'a>> {
         let mut active_depth_only_shader =
@@ -145,8 +143,7 @@ impl ShadowFarLight {
 
         // Draw the scene from the lights perspective, saving to the light's
         // internal framebuffer
-        active_depth_only_shader
-            .set_uniform("projtimesview".to_string(), &self.projtimesview(target))?;
+        active_depth_only_shader.set_uniform(&c"projtimesview", &self.projtimesview(target))?;
 
         let mut active_light_framebuffer = self.framebuffer.bind(fb_context);
 

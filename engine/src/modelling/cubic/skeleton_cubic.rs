@@ -1,5 +1,5 @@
-use core::fmt::Debug;
 use alloc::rc::Rc;
+use core::fmt::Debug;
 
 use geometry::Pose;
 use graphics::Model;
@@ -127,7 +127,7 @@ impl SkeletonCubic {
         for BoneAndMesh { bone, mesh } in self.meshes.iter() {
             active_shader
                 .set_uniform(
-                    "model",
+                    &c"model",
                     &calculated_animation
                         .get(bone, &self.skeleton)
                         .map_or_else(|_| Matrix::identity(), Pose::as_transformation_matrix),

@@ -1,3 +1,5 @@
+use alloc::ffi::CString;
+
 use graphics::Model;
 use graphics::colour::ColourRGB;
 use graphics::linear_algebra::Vector;
@@ -37,13 +39,25 @@ impl PointLight {
         M::Vertex: CubicVertex,
     {
         shader.set_uniform(
-            format!("{name}_vary[{index}].position"),
+            &CString::new(format!("{name}_vary[{index}].position"))?,
             &self.position.homogeneous(),
         )?;
-        shader.set_uniform(format!("{name}[{index}].attenuation"), &self.attenuation)?;
-        shader.set_uniform(format!("{name}[{index}].ambient"), &self.ambient)?;
-        shader.set_uniform(format!("{name}[{index}].diffuse"), &self.diffuse)?;
-        shader.set_uniform(format!("{name}[{index}].specular"), &self.specular)?;
+        shader.set_uniform(
+            &CString::new(format!("{name}[{index}].attenuation"))?,
+            &self.attenuation,
+        )?;
+        shader.set_uniform(
+            &CString::new(format!("{name}[{index}].ambient"))?,
+            &self.ambient,
+        )?;
+        shader.set_uniform(
+            &CString::new(format!("{name}[{index}].diffuse"))?,
+            &self.diffuse,
+        )?;
+        shader.set_uniform(
+            &CString::new(format!("{name}[{index}].specular"))?,
+            &self.specular,
+        )?;
 
         Ok(())
     }

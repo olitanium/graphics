@@ -101,7 +101,7 @@ impl<'a> AggregateCalcAnimBuilder<'a> {
     }
 }
 
-impl<'a> AggregateCalcAnimBuilder<'a> {
+impl AggregateCalcAnimBuilder<'_> {
     fn get_world_positions(self) -> Vec<(Vec<PoseAndInverseBindPose>, u64)> {
         let mut output: Vec<(Vec<PoseAndInverseBindPose>, u64)> = Vec::new();
 
@@ -137,7 +137,7 @@ pub enum BuildFixingBoneError {
 
 error_boilerplate!(BuildFixingBoneError);
 
-impl<'a> AggregateCalcAnimBuilder<'a> {
+impl AggregateCalcAnimBuilder<'_> {
     pub(crate) fn build_fixing_bone(
         self,
         unit: CalcAnimUnitIndex,

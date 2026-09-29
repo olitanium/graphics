@@ -1,5 +1,7 @@
 mod group;
 
+use alloc::ffi::CString;
+
 use graphics::ActiveShaderProgram;
 use graphics::framebuffer::traits::{AttachmentWithoutExtra, FramebufferWithoutExtra};
 use graphics::framebuffer::{ActiveFramebuffer, Framebuffer};
@@ -54,7 +56,12 @@ impl<'a, const N: usize, X: AttachmentWithoutExtra<Tex = FlatTexture>> Framebuff
                     .expect("cannot write to a framebuffer and read at the same time")
             })
             .enumerate()
-            .map(|(index, tex)| (format!("in_texture{index}"), tex as &dyn Texture));
+            .map(|(index, tex)| {
+                (
+                    CString::new(format!("in_texture{index}")).expect("should be no Nul"),
+                    tex as &dyn Texture,
+                )
+            });
 
         active_shader.register_texture(input);
 

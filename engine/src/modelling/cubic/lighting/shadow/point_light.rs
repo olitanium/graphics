@@ -1,3 +1,4 @@
+use alloc::ffi::CString;
 use core::iter;
 
 use geometry::{Orientation, Pose};
@@ -85,11 +86,13 @@ impl ShadowPointLight {
         M::Vertex: VertexHasTangent,
     {
         self.light.bind_to(shader, name, index)?;
-        shader.set_uniform(format!("{name}[{index}].far_plane"), &self.far_plane())?;
-        // SAFETY: Reference must not live to a point where RefCell::borrow_mut
-        // can be called on the texture
+        shader.set_uniform(
+            &CString::new(format!("{name}[{index}].far_plane")).expect("should be no Nul"),
+            &self.far_plane(),
+        )?;
+
         shader.register_texture(iter::once((
-            format!("{name}[{index}].depth"),
+            CString::new(format!("{name}[{index}].depth")).expect("should be no Nul"),
             self.framebuffer.get_attachment_ref(),
         )));
 
@@ -110,7 +113,7 @@ impl ShadowPointLight {
         M::Vertex: VertexHasTangent,
     {
         shader.register_texture(iter::once((
-            format!("{name}[{index}].depth"),
+            CString::new(format!("{name}[{index}].depth")).expect("should be no Nul"),
             CubeMap::dyn_blank(),
         )));
     }
@@ -120,17 +123,20 @@ impl ShadowPointLight {
         sp_context: &mut ShaderProgramContext,
         fb_context: &mut FramebufferContext,
         opaque_models: &[(&'a SkeletonCubic, CalculatedAnimation)],
-        uniforms: Vec<(String, &dyn Uniform)>,
+        uniforms: Vec<(CString, &dyn Uniform)>,
     ) -> Result<(), GenDepthError<'a>> {
         let mut active_depth_only_shader_point =
             opengl_shaders::point_depth().use_program(sp_context);
         active_depth_only_shader_point.set_uniform_dyn(uniforms)?;
 
         for (index, matrix) in self.get_look_at_matrices().into_iter().enumerate() {
-            active_depth_only_shader_point.set_uniform(format!("matrix[{index}]"), &matrix)?;
+            active_depth_only_shader_point.set_uniform(
+                &CString::new(format!("matrix[{index}]")).expect("should be no Nul"),
+                &matrix,
+            )?;
         }
-        active_depth_only_shader_point.set_uniform("light_position", &self.light.position)?;
-        active_depth_only_shader_point.set_uniform("far_plane", &self.far_plane())?;
+        active_depth_only_shader_point.set_uniform(&c"light_position", &self.light.position)?;
+        active_depth_only_shader_point.set_uniform(&c"far_plane", &self.far_plane())?;
 
         let mut active_light_framebuffer = self.framebuffer.bind(fb_context);
 

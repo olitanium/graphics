@@ -1,3 +1,4 @@
+use alloc::ffi::CString;
 use core::iter;
 
 use geometry::{Orientation, Pose};
@@ -76,10 +77,12 @@ impl ShadowSpotLight {
         M::Vertex: VertexHasTangent,
     {
         self.light.bind_to(shader, name, index)?;
-        shader.set_uniform(format!("{name}[{index}].matrix"), &self.projtimesview())?;
-        // SAFETY: Reference must not live to a point where the
+        shader.set_uniform(
+            &CString::new(format!("{name}[{index}].matrix")).expect("should be no Nul"),
+            &self.projtimesview(),
+        )?;
         shader.register_texture(iter::once((
-            format!("{name}[{index}].depth"),
+            CString::new(format!("{name}[{index}].depth")).expect("should be no Nul"),
             self.framebuffer.get_attachment_ref(),
         )));
 
@@ -100,7 +103,7 @@ impl ShadowSpotLight {
         M::Vertex: VertexHasTangent,
     {
         shader.register_texture(iter::once((
-            format!("{name}[{index}].depth"),
+            CString::new(format!("{name}[{index}].depth")).expect("should be no Nul"),
             FlatTexture::dyn_blank(),
         )));
     }
@@ -114,15 +117,15 @@ impl ShadowSpotLight {
         sp_context: &mut ShaderProgramContext,
         fb_context: &mut FramebufferContext,
         opaque_models: &[(&'a SkeletonCubic, CalculatedAnimation)],
-        uniforms: Vec<(String, &dyn Uniform)>,
+        uniforms: Vec<(CString, &dyn Uniform)>,
     ) -> Result<(), GenDepthError<'a>> {
         let mut active_depth_only_shader =
             opengl_shaders::farspot_light_depth().use_program(sp_context);
-        active_depth_only_shader.set_uniform_dyn(uniforms.to_vec())?;
+        active_depth_only_shader.set_uniform_dyn(uniforms)?;
 
         // Draw the scene from the lights perspective, saving to the light's
         // internal framebuffer
-        active_depth_only_shader.set_uniform("projtimesview".to_string(), &self.projtimesview())?;
+        active_depth_only_shader.set_uniform(&c"projtimesview", &self.projtimesview())?;
 
         let mut active_light_framebuffer = self.framebuffer.bind(fb_context);
 

@@ -1,6 +1,6 @@
+use alloc::rc::Rc;
 use core::fmt::Debug;
 use std::path::Path;
-use alloc::rc::Rc;
 
 use geometry::Pose;
 use graphics::Model;
@@ -89,7 +89,7 @@ impl SimpleCubic {
         // Ignore cull_face error
         _ = active_shader.cull_face(self.cull_face);
         active_shader
-            .set_uniform("model", &pose.as_transformation_matrix())
+            .set_uniform(&c"model", &pose.as_transformation_matrix())
             .map_err(DrawError::SetUniform)?;
 
         for mesh in self.meshes.iter() {

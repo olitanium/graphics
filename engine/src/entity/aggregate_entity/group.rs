@@ -1,3 +1,4 @@
+use alloc::ffi::CString;
 use core::fmt;
 use core::fmt::Debug;
 
@@ -31,7 +32,7 @@ pub struct Group<
 
     lights: ListLights<'a, MAX>,
     opaque: Vec<(&'a AggregateEntity<M, T>, &'a AggregateCalcAnim)>,
-    uniforms: Vec<(String, &'a dyn Uniform)>,
+    uniforms: Vec<(CString, &'a dyn Uniform)>,
 }
 
 impl<
@@ -74,7 +75,7 @@ where
             &'a AggregateCalcAnim,
         )>,
 
-        uniforms: Vec<(String, &'a dyn Uniform)>,
+        uniforms: Vec<(CString, &'a dyn Uniform)>,
     ) -> Result<Box<Self>, CalculateAnimationError<'a>> {
         Ok(Box::new(Self {
             shader,
@@ -104,10 +105,10 @@ where
         self.lights.bind(&mut active_shader).unwrap();
 
         active_shader
-            .set_uniform("projtimesview".to_owned(), &self.camera_look_at)
+            .set_uniform(&c"projtimesview", &self.camera_look_at)
             .unwrap();
         active_shader
-            .set_uniform("camera_position".to_owned(), &self.camera_pos.homogeneous())
+            .set_uniform(&c"camera_position", &self.camera_pos.homogeneous())
             .unwrap();
 
         active_shader.set_uniform_dyn(self.uniforms).unwrap();

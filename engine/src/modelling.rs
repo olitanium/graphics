@@ -9,8 +9,10 @@ pub use cubic::{
     SkeletonBuilder,
     SkeletonCubic,
 };
-mod line;
-pub use line::{DrawError as LineDrawError, Line, LineGroup, TestLineVertex};
+
+// TODO: modenise line
+// mod line;
+// pub use line::{DrawError as LineDrawError, Line, LineGroup, TestLineVertex};
 
 mod quad;
 pub use quad::{

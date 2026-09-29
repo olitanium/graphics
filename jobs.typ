@@ -10,6 +10,7 @@
 - Renderbuffer Objects (like textures for Framebuffer attachments. Might cause issues for shadows because they are unreadable)
 - Multisample FBs
 - Light uniform location cacheing without strings
+  - `UniformName` trait available
 - BoneAnimation don't store poses, store ScLERPS
 - Camera ManualPose use Pose
 - Camera ManualPose split into two structs

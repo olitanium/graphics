@@ -1,7 +1,7 @@
+use alloc::ffi::{CString, NulError};
 use core::fmt::{self, Debug};
 use core::{iter, ptr};
 use std::collections::HashMap;
-use std::ffi::{CString, NulError};
 use std::sync::LazyLock;
 
 use utils::error_boilerplate;
@@ -10,7 +10,7 @@ use super::uniform::Uniform;
 use super::{CullFace, ShaderProgram, ShaderProgramContext};
 use crate::shader_program::program::context::FaceCullingForcedByProgramError;
 use crate::shader_program::program::uniform::SetUniformError;
-use crate::shader_program::program::{GetUniformLocationError, uniform};
+use crate::shader_program::program::{GetUniformLocationError, UniformName};
 use crate::texture::Texture;
 use crate::types::{self, UniformLocation};
 use crate::{Model, gl_call};
@@ -18,7 +18,7 @@ use crate::{Model, gl_call};
 pub struct ActiveShaderProgram<'a, 'b, 'c, M: Model, O, T: Texture, const OUT: usize> {
     shader_program: &'a ShaderProgram<M, O, OUT, T>,
     context: &'b mut ShaderProgramContext,
-    texture_list: HashMap<String, &'c dyn Texture>,
+    texture_list: HashMap<CString, &'c dyn Texture>,
 }
 
 impl<M: Model + Debug, O, T: Texture + Debug, const OUT: usize> Debug
@@ -60,7 +60,7 @@ impl<'c, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 
         self.context
     }
 
-    pub fn register_texture<L: IntoIterator<Item = (String, &'c dyn Texture)>>(
+    pub fn register_texture<L: IntoIterator<Item = (CString, &'c dyn Texture)>>(
         &mut self,
         texture_list: L,
     ) {
@@ -124,37 +124,30 @@ fn match_result(res: Result<(), SetUniformError<'_>>) -> Result<(), ShaderSetUni
             c_name,
             shader_source,
         }),
-        Err(uniform::SetUniformError::GetLocation(GetUniformLocationError::NameNul(err))) => {
+        Err(SetUniformError::GetLocation(GetUniformLocationError::NameNul(err))) => {
             Err(ShaderSetUniformError::NameNul(err))
         }
     }
 }
 
 impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, '_, M, O, T, OUT> {
-    pub fn set_uniform<U: Uniform + ?Sized, S: Into<String>>(
+    pub fn set_uniform<N: UniformName, U: Uniform + ?Sized>(
         &mut self,
-        name: S,
+        name: &N,
         value: &U,
     ) -> Result<(), ShaderSetUniformError<'a>> {
-        match_result(value.set_uniform(name.into(), self))
+        match_result(value.set_uniform(name, self))
     }
 
     pub fn set_uniform_dyn(
         &mut self,
-        values: Vec<(String, &dyn Uniform)>,
+        values: Vec<(CString, &dyn Uniform)>,
     ) -> Result<(), ShaderSetUniformError<'a>> {
         for (name, value) in values {
-            match_result(value.set_uniform(name, self))?;
+            match_result(value.set_uniform(&name, self))?;
         }
         Ok(())
     }
-
-    // pub fn get_uniform_location(
-    // &self,
-    // name: String,
-    // ) -> Result<UniformLocation, GetUniformLocationError<'_>> {
-    // self.shader_program.get_uniform_location(name)
-    // }
 }
 
 #[derive(Debug)]
@@ -180,7 +173,7 @@ impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, 
 
             for (index, (name, tex)) in self.texture_list.clone().into_iter().enumerate() {
                 tex.bind_to(index as u32);
-                let result = self.set_uniform(name, &(index as i32));
+                let result = self.set_uniform(&name, &(index as i32));
                 if let Err(x) = result {
                     errors.push(x)
                 }
@@ -216,7 +209,7 @@ impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, 
 pub trait IsActiveShaderProgram<'a> {
     fn get_uniform_location(
         &self,
-        name: String,
+        name: &dyn UniformName,
     ) -> Result<UniformLocation, GetUniformLocationError<'a>>;
 }
 
@@ -225,7 +218,7 @@ impl<'a, M: Model, O, T: Texture, const OUT: usize> IsActiveShaderProgram<'a>
 {
     fn get_uniform_location(
         &self,
-        name: String,
+        name: &dyn UniformName,
     ) -> Result<UniformLocation, GetUniformLocationError<'a>> {
         self.shader_program.get_uniform_location(name)
     }

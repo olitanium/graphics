@@ -47,7 +47,7 @@ impl SkyBox {
             .cull_face(CullFace::DoNotCull)
             .map_err(DrawError::FaceCulling)?;
         active_shader.register_texture(iter::once((
-            "skybox".to_string(),
+            c"skybox".to_owned(),
             &self.texture as &dyn Texture,
         )));
 

@@ -1,4 +1,9 @@
+use alloc::ffi::{CString, NulError};
+use core::cell::OnceCell;
 use core::fmt::Debug;
+use core::slice;
+use std::ffi::CStr;
+use std::hash::Hash;
 
 use colour::{ColourRGB, ColourRGBA};
 use linear_algebra::{Matrix, UnitVector, Vector};
@@ -6,6 +11,7 @@ use utils::error_boilerplate;
 
 use crate::gl_call;
 use crate::shader_program::GetUniformLocationError;
+use crate::shader_program::program::UniformName;
 use crate::shader_program::program::active_shader::IsActiveShaderProgram;
 use crate::types::UniformLocation;
 
@@ -19,7 +25,7 @@ error_boilerplate!(<'a> SetUniformError<'a>);
 pub trait Uniform: Debug {
     fn set_uniform<'a>(
         &self,
-        name: String,
+        name: &dyn UniformName,
         shader_program: &dyn IsActiveShaderProgram<'a>,
     ) -> Result<(), SetUniformError<'a>>;
 }
@@ -29,7 +35,7 @@ macro_rules! define_uniform {
         impl Uniform for $typ {
             fn set_uniform<'a>(
                 &self,
-                name: String,
+                name: &dyn UniformName,
                 shader_program: &dyn IsActiveShaderProgram<'a>,
             ) -> Result<(), SetUniformError<'a>> {
                 match shader_program.get_uniform_location(name) {
@@ -50,10 +56,10 @@ macro_rules! named_define_uniform {
         impl Uniform for $typ {
             fn set_uniform<'a>(
                 &self,
-                name: String,
+                name: &dyn UniformName,
                 shader_program: &dyn IsActiveShaderProgram<'a>,
             ) -> Result<(), SetUniformError<'a>> {
-                (|$self: &Self, $name: String, $shader| $out)(self, name, shader_program)
+                (|$self: &Self, $name, $shader| $out)(self, name, shader_program)
             }
         }
     };
@@ -105,14 +111,45 @@ matrix!(4,4 => UniformMatrix4fv);
 named_define_uniform!(ColourRGB => |value, name, s| value.as_ref().set_uniform(name, s));
 named_define_uniform!(ColourRGBA => |value, name, s| value.as_ref().set_uniform(name, s));
 
+struct SliceValue<'a> {
+    uniform: &'a dyn UniformName,
+    index: usize,
+    c_string: OnceCell<CString>,
+}
+
+impl<'a> UniformName for SliceValue<'a> {
+    fn as_cstr(&self) -> &CStr {
+        self.c_string.get_or_init(|| {
+            let name = self.uniform.as_cstr().to_string_lossy();
+            let string = format!("{name}[{:0}]", self.index);
+            let c_string = CString::new(string)
+                .expect("name is from a CStr, and '[', ']' and '0'..'9' are all not Nul");
+            c_string
+        })
+    }
+
+    fn hash(&self) -> std::hash::DefaultHasher {
+        let mut hasher = self.uniform.hash();
+
+        self.index.hash(&mut hasher);
+
+        hasher
+    }
+}
+
 impl<U: Uniform> Uniform for [U] {
     fn set_uniform<'a>(
         &self,
-        name: String,
+        name: &dyn UniformName,
         shader_program: &dyn IsActiveShaderProgram<'a>,
     ) -> Result<(), SetUniformError<'a>> {
         for (index, value) in self.iter().enumerate() {
-            value.set_uniform(format!("{name}[{index}]"), shader_program)?;
+            let slice_value = SliceValue {
+                uniform: name,
+                index,
+                c_string: OnceCell::new(),
+            };
+            value.set_uniform(&slice_value, shader_program)?;
         }
 
         Ok(())
@@ -128,13 +165,3 @@ impl<U: Uniform> Uniform for [U] {
 // self.as_slice().set_uniform(name, shader_program)
 // }
 // }
-
-impl<U: Uniform> Uniform for &U {
-    fn set_uniform<'a>(
-        &self,
-        name: String,
-        shader_program: &dyn IsActiveShaderProgram<'a>,
-    ) -> Result<(), SetUniformError<'a>> {
-        (*self).set_uniform(name, shader_program)
-    }
-}

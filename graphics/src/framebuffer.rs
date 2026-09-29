@@ -184,7 +184,7 @@ impl<const N: usize, X: AttachmentWithoutExtra> Framebuffer<N, X> {
     pub fn get_all_refmut(&self) -> Option<[RefMut<'_, X::Tex>; N]> {
         self.textures
             .each_ref()
-            .try_map(|ref_rc| ref_rc.try_borrow_mut())
+            .try_map(RefCell::try_borrow_mut)
             .ok()
     }
 

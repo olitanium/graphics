@@ -19,7 +19,7 @@ pub struct Group<
     const OUT: usize,
     D: FramebufferWithDepth<OUT, Tex = FlatTexture>,
     V: ExtendedVertex,
-    T: Transform<Vector<{ V::LEN }>>,
+    T,
     Bt,
     F: FnMut() -> ColourRGBA,
 > where
@@ -69,7 +69,7 @@ where
     }
 }
 
-impl<'a, D, V, T, Bt, F> Draw for Group<'a, 1, D, V, T, Bt, F>
+impl<D, V, T, Bt, F> Draw for Group<'_, 1, D, V, T, Bt, F>
 where
     V: ExtendedVertex,
     F: FnMut() -> ColourRGBA,
@@ -88,7 +88,7 @@ where
             BoundingBoxElement::<V, Bt>::shader_program().use_program(sp_context);
 
         active_shader
-            .set_uniform("projtimesview", &self.look_at)
+            .set_uniform(&c"projtimesview", &self.look_at)
             .unwrap();
 
         self.bounding_box

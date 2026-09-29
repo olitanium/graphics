@@ -1,3 +1,5 @@
+use alloc::ffi::CString;
+
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::{AttachmentWithoutExtra, FramebufferWithoutExtra};
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
@@ -20,7 +22,7 @@ pub struct Group<
     framebuffer: &'a D,
 
     quads: Vec<FramebufferQuad<'a, N, X>>,
-    uniforms: Vec<(String, &'a dyn Uniform)>,
+    uniforms: Vec<(CString, &'a dyn Uniform)>,
 }
 
 impl<
@@ -37,7 +39,7 @@ impl<
         framebuffer: &'a D,
 
         quads: Vec<FramebufferQuad<'a, N, X>>,
-        uniforms: Vec<(String, &'a dyn Uniform)>,
+        uniforms: Vec<(CString, &'a dyn Uniform)>,
     ) -> Box<Self> {
         Box::new(Self {
             shader,

@@ -55,6 +55,7 @@ impl BoneAnimation {
             (&[], _) => Pose::default(),
             (&[(_, single)], _) => single,
             (slice, Some(duration)) => {
+                #[expect(clippy::modulo_arithmetic, reason = "duration never negative")]
                 let local_time = time % duration;
                 let [&(start_time, start_pose), &(mut end_time, end_pose)] =
                     InfiniteWindowIter::new(slice)

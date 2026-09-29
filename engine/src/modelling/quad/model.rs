@@ -1,5 +1,6 @@
-use core::array;
+use alloc::ffi::CString;
 use alloc::rc::Rc;
+use core::array;
 
 use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
@@ -72,12 +73,17 @@ impl<const N: usize> Quad<N> {
     ) -> Result<(), DrawError<'a>> {
         _ = active_shader.cull_face(CullFace::BackFace);
 
-        let input = self.texture
+        let input = self
+            .texture
             .iter()
-            //.map(|tex| /*SAFETY: ref only lives for this function call*/ unsafe { tex.try_borrow_unguarded().expect("the only borrow") as &dyn Texture} ) 
-            .map(|tex| &**tex as &dyn Texture )
+            .map(|tex| &**tex as &dyn Texture)
             .enumerate()
-            .map(|(index, tex)| (format!("in_texture{index}"), tex));
+            .map(|(index, tex)| {
+                (
+                    CString::new(format!("in_texture{index}")).expect("should be no Nul"),
+                    tex,
+                )
+            });
 
         active_shader.register_texture(input);
 

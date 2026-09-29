@@ -1,3 +1,5 @@
+use alloc::ffi::CString;
+
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Matrix;
@@ -14,7 +16,7 @@ pub struct Group<'a, const OUT: usize, O, D: FramebufferWithDepth<OUT>> {
 
     skybox: &'a SkyBox,
     look_at: Matrix<4, 4>,
-    uniforms: Vec<(String, &'a dyn Uniform)>,
+    uniforms: Vec<(CString, &'a dyn Uniform)>,
 }
 
 impl<'a, const OUT: usize, O, X: FramebufferWithDepth<OUT>> Group<'a, OUT, O, X> {
@@ -24,7 +26,7 @@ impl<'a, const OUT: usize, O, X: FramebufferWithDepth<OUT>> Group<'a, OUT, O, X>
         skybox: &'a SkyBox,
         camera: &Camera<P>,
         camera_hint: &P::Hint,
-        uniforms: Vec<(String, &'a dyn Uniform)>,
+        uniforms: Vec<(CString, &'a dyn Uniform)>,
     ) -> Box<Self> {
         let proj = camera.projection;
         let view = {
@@ -57,7 +59,7 @@ impl<'a, const OUT: usize, O, D: FramebufferWithDepth<OUT>> Draw for Group<'a, O
 
         active_shader.drawing_skybox(true);
         active_shader
-            .set_uniform("projtimesview".to_string(), &self.look_at)
+            .set_uniform(&c"projtimesview", &self.look_at)
             .unwrap();
 
         active_shader.set_uniform_dyn(self.uniforms).unwrap();

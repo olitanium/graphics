@@ -119,6 +119,8 @@ pub enum DrawError<'a> {
 error_boilerplate!(<'a> DrawError<'a>);
 
 impl<V: CubicVertex, T: 'static> SkeletonBb<V, T> {
+    #[allow(clippy::allow_attributes, reason = "technical")]
+    #[allow(unused, reason = "to be used in a modernised `SkeletonBbGroup`")]
     pub(crate) fn draw<
         'a,
         D: FramebufferWithDepth<1, Tex = FlatTexture>,
@@ -139,7 +141,7 @@ impl<V: CubicVertex, T: 'static> SkeletonBb<V, T> {
                 .get(bone, skeleton)
                 .map_err(DrawError::GetAnimation)?;
             bbox.draw(level, &pose, active_shader, active_framebuffer, &mut colour)
-                .map_err(DrawError::DrawRecursive)?
+                .map_err(DrawError::DrawRecursive)?;
         }
 
         Ok(())

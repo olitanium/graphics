@@ -1,3 +1,5 @@
+use std::ffi::CString;
+
 use graphics::Model;
 use graphics::colour::{ColourRGB, ColourRGBA};
 use graphics::shader_program::{ActiveShaderProgram, ShaderSetUniformError};
@@ -69,14 +71,32 @@ impl Material {
         M::Vertex: CubicVertex,
     {
         shader
-            .set_uniform(format!("{name}.shininess"), &self.shininess)
+            .set_uniform(
+                &CString::new(format!("{name}.shininess")).expect("should be no Nul"),
+                &self.shininess,
+            )
             .map_err(RegisterToError::SetUniformError)?;
         shader.register_texture(vec![
-            (format!("{name}.diffuse"), &self.diffuse as &dyn Texture),
-            (format!("{name}.specular_map"), &self.specular_map),
-            (format!("{name}.emission"), &self.emission),
-            (format!("{name}.normal_map"), &self.normal_map),
-            (format!("{name}.ambient_occlusion"), &self.ambient_occlusion),
+            (
+                CString::new(format!("{name}.diffuse")).expect("should be no Nul"),
+                &self.diffuse as &dyn Texture,
+            ),
+            (
+                CString::new(format!("{name}.specular_map")).expect("should be no Nul"),
+                &self.specular_map,
+            ),
+            (
+                CString::new(format!("{name}.emission")).expect("should be no Nul"),
+                &self.emission,
+            ),
+            (
+                CString::new(format!("{name}.normal_map")).expect("should be no Nul"),
+                &self.normal_map,
+            ),
+            (
+                CString::new(format!("{name}.ambient_occlusion")).expect("should be no Nul"),
+                &self.ambient_occlusion,
+            ),
         ]);
 
         Ok(())

@@ -79,7 +79,7 @@ impl Flexible {
 impl CameraPose for Flexible {
     type Hint = ();
 
-    fn get_pose(&self, _: &Self::Hint) -> Pose {
+    fn get_pose(&self, (): &Self::Hint) -> Pose {
         self.pose
     }
 }

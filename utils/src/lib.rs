@@ -4,6 +4,8 @@
 #![feature(const_ops)]
 mod error;
 
+mod cstr;
+
 mod ref_or_owned;
 
 pub use ref_or_owned::RefOwned;

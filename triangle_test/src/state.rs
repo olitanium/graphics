@@ -1,4 +1,6 @@
 use alloc::rc::Rc;
+use core::time::Duration;
+use std::collections::HashSet;
 
 use engine::entity::Mass;
 use engine::geometry::{Orientation, Pose};
@@ -38,9 +40,7 @@ impl ApiState for State {
     type DrawOutput<'a> = Box<dyn Draw + 'a>;
     type Error = ();
 
-    fn new(
-        initial_size: (engine::types::TexDim, engine::types::TexDim),
-    ) -> Result<Self, Self::Error> {
+    fn new(initial_size: (TexDim, TexDim)) -> Result<Self, Self::Error> {
         let aspect = TexDim::aspect_ratio(initial_size.0, initial_size.1);
         let camera = CameraBuilder::new()
             .perspective(90_f32.to_radians(), aspect, 0.1, 10.0)
@@ -96,8 +96,8 @@ impl ApiState for State {
         events: Vec<engine::Event<'a>>,
     ) -> engine::PollResult<Self::DrawOutput<'a>, Self::Error> {
         let mut opt_default = None;
-        let mut frame_time = Default::default();
-        let mut keys = Default::default();
+        let mut frame_time = Duration::default();
+        let mut keys = HashSet::default();
 
         for event in events {
             match event {
@@ -135,7 +135,9 @@ impl ApiState for State {
 
         let test_collision =
             self.triangle_one
-                .collides(&(), &(), &self.triangle_two, &(), &(), |_, _, _, _| true);
+                .collides(&(), &(), &self.triangle_two, &(), &(), |(), (), (), ()| {
+                    true
+                });
 
         if test_collision.is_some() {
             self.triangle_one

@@ -1,3 +1,4 @@
+use alloc::ffi::CString;
 use core::iter;
 
 use graphics::framebuffer::FramebufferContext;
@@ -40,7 +41,7 @@ pub struct Group<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> {
         CalculatedAnimation,
     )>,
 
-    uniforms: Vec<(String, &'a dyn Uniform)>,
+    uniforms: Vec<(CString, &'a dyn Uniform)>,
 }
 
 impl<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> Group<'a, X> {
@@ -51,7 +52,7 @@ impl<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> Group<'a, X> {
         list_light: ShadowListLights<'a, 2>,
         opaque: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
         transparent: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
-        uniforms: Vec<(String, &'a dyn Uniform)>,
+        uniforms: Vec<(CString, &'a dyn Uniform)>,
     ) -> Box<Self> {
         Box::new(Self {
             look_at: camera.look_at(hint),
@@ -94,10 +95,10 @@ impl<X: FramebufferWithDepth<3, Tex = FlatTexture>> Draw for Group<'_, X> {
         }
 
         active_shadow_shader
-            .set_uniform("projtimesview".to_string(), &self.look_at)
+            .set_uniform(&c"projtimesview", &self.look_at)
             .unwrap();
         active_shadow_shader
-            .set_uniform("camera_position".to_string(), &self.position.homogeneous())
+            .set_uniform(&c"camera_position", &self.position.homogeneous())
             .unwrap();
         active_shadow_shader.set_uniform_dyn(self.uniforms).unwrap();
 

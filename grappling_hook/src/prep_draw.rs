@@ -18,8 +18,6 @@ impl State {
         &'a mut self,
         default_framebuffer: &'a DefaultFramebuffer,
     ) -> PollResult<VecDraw<'a>, StateError> {
-        let _time = self.time;
-
         let mut out = VecDraw::new();
 
         out.push(SkyBoxGroup::new(
@@ -62,26 +60,6 @@ impl State {
             ))
         }
 
-        // out.push(SimpleCubicGroup::new(
-        // opengl_shaders::hdr(),
-        // &self.hdr_fb,
-        // &self.camera,
-        // &(),
-        // &self.ns_light_group,
-        // vec![(&self.bear.model, self.bear.pose, None)],
-        // Vec::new(),
-        // )?);
-        //
-        // out.push(SimpleCubicGroup::new(
-        // opengl_shaders::hdr(),
-        // &self.hdr_fb,
-        // &self.camera,
-        // &(),
-        // &self.ns_light_group,
-        // vec![(&self.origin_cube.model, Pose::IDENTITY, None)],
-        // Vec::new(),
-        // )?);
-
         if self.toggle_g {
             out.push(BloomGroup::new(
                 &self.hdr_fb,
@@ -94,7 +72,7 @@ impl State {
                 engine::opengl_shaders::exposure3(),
                 default_framebuffer,
                 vec![fb],
-                vec![(String::from("exposure"), &self.exposure)],
+                vec![(c"exposure".to_owned(), &self.exposure)],
             ));
         }
 

@@ -1,3 +1,5 @@
+use alloc::ffi::CString;
+
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
@@ -11,7 +13,7 @@ pub struct Group<'a, const N: usize, const OUT: usize, O, D: FramebufferWithoutE
     framebuffer: &'a D,
 
     quads: Vec<&'a Quad<N>>,
-    uniforms: Vec<(String, &'a dyn Uniform)>,
+    uniforms: Vec<(CString, &'a dyn Uniform)>,
 }
 
 impl<'a, const N: usize, const OUT: usize, O, X: FramebufferWithoutExtra<OUT>>
@@ -22,7 +24,7 @@ impl<'a, const N: usize, const OUT: usize, O, X: FramebufferWithoutExtra<OUT>>
         framebuffer: &'a X,
 
         quads: Vec<&'a Quad<N>>,
-        uniforms: Vec<(String, &'a dyn Uniform)>,
+        uniforms: Vec<(CString, &'a dyn Uniform)>,
     ) -> Box<Self> {
         Box::new(Self {
             shader,

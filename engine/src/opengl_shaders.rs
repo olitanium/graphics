@@ -6,7 +6,7 @@ use graphics::texture::{CubeMap, FlatTexture};
 use crate::modelling::cubic::lighting::shadow::ShadowListLights;
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::cubic::{SimpleCubic, SkinningCubic};
-use crate::modelling::{Line, Quad, SkeletonCubic, SkyBox, TestLineVertex};
+use crate::modelling::{Quad, SkeletonCubic, SkyBox};
 
 static ERROR_MESSAGE: &str = "Engine defined shader should exist and not have errors";
 
@@ -135,12 +135,12 @@ make_included! {
     cull_face: CullFace::FrontFace,
 }
 
-make_included! {
-    ShaderProgram<Line<TestLineVertex>, (), 1, FlatTexture>,
-    line_test,
-    "shaders/line/line.vert",
-    "shaders/line/line.frag",
-}
+// make_included! {
+// ShaderProgram<Line<TestLineVertex>, (), 1, FlatTexture>,
+// line_test,
+// "shaders/line/line.vert",
+// "shaders/line/line.frag",
+// }
 
 pub const LINE_SHADER_MAX_VERTICES: usize = 100;
 

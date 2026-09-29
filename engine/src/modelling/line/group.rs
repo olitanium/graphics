@@ -44,7 +44,7 @@ impl<'a, F: FramebufferWithoutExtra<1, Tex = FlatTexture>> Draw
         let mut active_shader = opengl_shaders::line_test().use_program(shader_context);
 
         active_shader
-            .set_uniform("projtimesview".to_string(), &self.look_at)
+            .set_uniform(&c"projtimesview", &self.look_at)
             .unwrap();
 
         self.line

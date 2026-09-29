@@ -1,7 +1,6 @@
-use core::cell::RefCell;
+use core::cell::{RefCell, RefMut};
 use core::fmt::Debug;
 use core::{array, iter};
-use std::cell::RefMut;
 
 use geometry::Transform;
 use graphics::colour::ColourRGBA;
@@ -14,7 +13,7 @@ use graphics::{ActiveShaderProgram, Model};
 use utils::error_boilerplate;
 use zip_with::ArrayZipWith as _;
 
-use crate::modelling::{BoundingBox, ExtendedVertex, Volume, bounding_box};
+use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
 
 mod active_element;
 
@@ -26,21 +25,28 @@ pub(super) struct Meta<T> {
 }
 
 impl<T> Meta<T> {
-    pub(super) fn get_triangle_and_meta<'a, 'b, V: ExtendedVertex>(
-        &'b self,
+    pub(super) fn get_triangle_and_meta<'a, V: ExtendedVertex>(
+        &'a self,
         bounding_box: &'a BoundingBox<V, T>,
-    ) -> (&'a [[V; 3]], RefMut<'b, T>) {
+    ) -> (&'a [[V; 3]], RefMut<'a, T>) {
         let refmut = self.data.borrow_mut();
-        let triangles =
-            &bounding_box.triangles[self.triangle_start..self.triangle_start + self.triangle_len];
+        let triangles = bounding_box
+            .triangles
+            .get(self.triangle_start..self.triangle_start + self.triangle_len)
+            .expect(
+                "the `Meta` should be contained within a `BoundingBoxElement` contained within a \
+                 relevant `BoundingBox`",
+            );
 
         (triangles, refmut)
     }
 }
 
+type const NUMBER_OF_CHILDREN: usize = 2;
+
 #[derive(Debug, Clone)]
 pub(super) struct Children {
-    children: [usize; 2],
+    children: [usize; NUMBER_OF_CHILDREN],
 }
 
 impl Children {
@@ -133,19 +139,19 @@ impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
                 let (max_index, _) = dimensions
                     .into_iter()
                     .enumerate()
-                    .max_by(|(_, size), (_, size2)| f32::total_cmp(size, size2))
-                    .expect("input vector const DIMS > 0");
+                    // input vector const DIMS > 0
+                    .max_by(|(_, size), (_, size2)| f32::total_cmp(size, size2))?;
 
                 // sort on the dimension given by max_index
                 triangles.sort_unstable_by(|(lhs, _), (rhs, _)| {
                     f32::total_cmp(&lhs[max_index], &rhs[max_index])
                 });
 
-                type const CHILDREN: usize = 2;
-                type const CHILDRENPLUS1: usize = const { CHILDREN + 1 };
+                const CHILDREN_FLOAT: f32 = NUMBER_OF_CHILDREN as f32;
+                type const CHILDRENPLUS1: usize = const { NUMBER_OF_CHILDREN + 1 };
 
                 let mut new_partition: [_; CHILDRENPLUS1] = array::from_fn(|index| {
-                    let partition_mult = (index) as f32 / CHILDREN as f32;
+                    let partition_mult = (index) as f32 / CHILDREN_FLOAT;
                     //let partition_value = partition_mult * upper_bounds[max_index] + (1.0 - partition_mult) * lower_bounds[max_index];
                     let partition_value =  (1.0 - partition_mult).mul_add(lower_bounds[max_index], partition_mult * upper_bounds[max_index]);
 
@@ -153,7 +159,8 @@ impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
                 });
 
                 //ensure that no floating point errors happened above
-                *new_partition.last_mut().unwrap() = triangles.len();
+                // CHILDRENPLUS1 always at least 1, so there is always a last
+                *new_partition.last_mut()? = triangles.len();
 
                 /*let points = number_of_partitions.map(|mult| {
                     mult * upper_bounds[max_index] + (1.0 - mult) * lower_bounds[max_index]
@@ -163,7 +170,7 @@ impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
                     triangles.partition_point(|(centre, _)| centre[max_index] <= centre_point)
                 });*/
 
-                let partitions: [_; CHILDREN] =
+                let partitions: [_; NUMBER_OF_CHILDREN] =
                     array::from_fn(|index| (new_partition[index], new_partition[index + 1]));
 
                 let node_not_leaf = partitions.iter().all(|(lower, upper)| lower != upper);
@@ -282,10 +289,10 @@ where
             let vertex_array = vertex_array_builder.build();
 
             active_shader
-                .set_uniform("colour", &chosen_colour)
+                .set_uniform(&c"colour", &chosen_colour)
                 .map_err(DrawRecursiveError::SetUniform)?;
             active_shader
-                .set_uniform("model", &Matrix::<4, 4>::identity())
+                .set_uniform(&c"model", &Matrix::<4, 4>::identity())
                 .map_err(DrawRecursiveError::SetUniform)?;
 
             vertex_array

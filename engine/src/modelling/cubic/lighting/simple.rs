@@ -1,4 +1,6 @@
 mod far_light;
+use alloc::ffi::NulError;
+
 pub use far_light::FarLight;
 mod list;
 use graphics::shader_program::ShaderSetUniformError;
@@ -13,11 +15,18 @@ use utils::error_boilerplate;
 #[non_exhaustive]
 pub enum SimpleBindError<'a> {
     SetUniform(ShaderSetUniformError<'a>),
+    NulError(NulError),
 }
 error_boilerplate!(<'a> SimpleBindError<'a>);
 
 impl<'a> From<ShaderSetUniformError<'a>> for SimpleBindError<'a> {
     fn from(value: ShaderSetUniformError<'a>) -> Self {
         Self::SetUniform(value)
+    }
+}
+
+impl From<NulError> for SimpleBindError<'_> {
+    fn from(value: NulError) -> Self {
+        Self::NulError(value)
     }
 }

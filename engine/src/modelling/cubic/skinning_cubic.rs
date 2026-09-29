@@ -79,13 +79,13 @@ impl SkinningCubic {
             .iter()
             .map(|pose| pose.as_transformation_matrix())
             .collect();
-        let matrices_res = active_shader.set_uniform("bones", matrices.as_slice());
+        let matrices_res = active_shader.set_uniform(&c"bones", matrices.as_slice());
 
         let matrices_quat: Vec<_> = poses
             .iter()
             .map(|pose| pose.as_matrix_for_shader())
             .collect();
-        let quat_res = active_shader.set_uniform("bones_quat", matrices_quat.as_slice());
+        let quat_res = active_shader.set_uniform(&c"bones_quat", matrices_quat.as_slice());
 
         match (matrices_res, quat_res) {
             (Err(mat_err), Err(quat_err)) => {

@@ -5,8 +5,7 @@ use std::collections::HashSet;
 use engine::entity::SkeletonEntity;
 use engine::geometry::Pose;
 use engine::linear_algebra::Vector;
-use engine::modelling::TestLineVertex;
-use engine::{ColourRGB, Draw, Key, PollResult};
+use engine::{Draw, Key, PollResult};
 
 use crate::bear::Bear;
 use crate::state::{State, StateError};
@@ -118,34 +117,15 @@ impl State {
         if keyboard.contains(&Key::J) {
             self.camera.radius_out(0.5 * frame_time);
         }
-        // if string.to_lowercase().contains('y') {
-        // self.which_animation = (self.which_animation + 1) % 2
-        // }
-        // if keyboard.contains(&Key::Comma) {
-        // self.camera.pose.roll_ccw(frame_time);
-        // }
-        // if keyboard.contains(&Key::Period) {
-        // self.camera.pose.roll_ccw(-frame_time);
-        // }
-
         if let Some(ch) = string.pop() {
             match ch {
                 'Q' => string.clear(),
-                'l' => {
-                    self.line.get_mut().push(TestLineVertex {
-                        position: Vector::new([self.angle.cos(), 0.0, self.angle.sin()]),
-                        colour: ColourRGB::new([self.angle.cos(), 0.0, self.angle.sin()]),
-                    });
-                    self.angle += 0.1;
-                }
                 'b' | 'B' => self.toggle_b = !self.toggle_b,
                 'm' | 'M' => {
                     self.toggle_m = !self.toggle_m;
                     self.grappling_hook.start();
-                    // self.reset_time = time;
                 }
                 'g' | 'G' => self.toggle_g = !self.toggle_g,
-                'h' | 'H' => self.toggle_h = !self.toggle_h,
                 'o' => {
                     self.bounding_box_level = self.bounding_box_level.wrapping_add(1);
                 }

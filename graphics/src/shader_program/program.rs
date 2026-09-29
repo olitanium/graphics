@@ -2,7 +2,9 @@ use core::cell::RefCell;
 use core::fmt::{self, Debug};
 use core::marker::PhantomData;
 use std::collections::HashMap;
-use std::ffi::{CString, NulError};
+use std::ffi::{CStr, CString, NulError};
+use std::hash::{DefaultHasher, Hash, Hasher};
+use std::ptr::hash;
 
 use crate::texture::Texture;
 use crate::types::{ShaderProgramId, UniformLocation};
@@ -26,6 +28,8 @@ pub use builder::Builder;
 use builder::{MissingFragmentShader, MissingVertexShader};
 mod uniform;
 pub use uniform::{SetUniformError, Uniform};
+mod uniform_name;
+pub use uniform_name::UniformName;
 
 mod cull_face;
 use ::utils::error_boilerplate;
@@ -34,7 +38,7 @@ pub use cull_face::CullFace;
 pub struct ShaderProgram<M: Model, O, const OUT: usize, T: Texture> {
     pub(crate) id: ShaderProgramId,
     concat_all_text: String,
-    uniform_locations: RefCell<HashMap<CString, i32>>,
+    uniform_locations: RefCell<HashMap<u64, i32>>,
     force_cull_face: Option<CullFace>,
     _phantom_model: PhantomData<fn(M, T) -> O>,
 }
@@ -85,26 +89,24 @@ error_boilerplate!(<'a> GetUniformLocationError<'a>);
 impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
     pub(crate) fn get_uniform_location(
         &self,
-        name: String,
+        name: &dyn UniformName,
     ) -> Result<UniformLocation, GetUniformLocationError<'_>> {
-        let c_name = CString::new(name).map_err(GetUniformLocationError::NameNul)?;
+        let hash = name.hash().finish();
 
         let out = *self
             .uniform_locations
             .borrow_mut()
-            .entry(c_name.clone())
-            .or_insert_with_key(|c_name| {
+            .entry(hash)
+            .or_insert_with(|| {
+                let c_name = name.as_cstr();
                 let mut location =
                     gl_call! { gl::GetUniformLocation(self.id.as_primitive(), c_name.as_ptr()) };
                 if location == -1 {
-                    let is_it_in_the_source = self.concat_all_text.contains(&{
-                        let name = c_name.to_string_lossy();
-                        let opt_name_before_list_index = name.split('[').next();
+                    let name = c_name.to_string_lossy();
+                    let split_on_index = name.split('[').next();
 
-                        opt_name_before_list_index
-                            .unwrap_or(name.as_ref())
-                            .to_owned()
-                    });
+                    let name_before_index = split_on_index.unwrap_or(name.as_ref());
+                    let is_it_in_the_source = self.concat_all_text.contains(name_before_index);
                     location = if is_it_in_the_source { -2 } else { -1 };
                 }
                 location
@@ -114,7 +116,7 @@ impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
         match out {
             -2 => Err(GetUniformLocationError::OptimizedOut),
             -1 => Err(GetUniformLocationError::NotFound {
-                c_name,
+                c_name: name.as_cstr().to_owned(),
                 shader_source: &self.concat_all_text,
             }),
             other => Ok(UniformLocation::new(other)),

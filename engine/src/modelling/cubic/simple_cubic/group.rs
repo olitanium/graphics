@@ -1,3 +1,5 @@
+use alloc::ffi::CString;
+
 use geometry::Pose;
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
@@ -21,7 +23,7 @@ pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth
     lights: ListLights<'a, MAX>,
     opaque: Vec<(&'a SimpleCubic, Pose)>,
 
-    uniforms: Vec<(String, &'a dyn Uniform)>,
+    uniforms: Vec<(CString, &'a dyn Uniform)>,
 }
 
 impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = FlatTexture>>
@@ -36,7 +38,7 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
         lights: ListLights<'a, MAX>,
         opaque: Vec<(&'a SimpleCubic, Pose)>,
 
-        uniforms: Vec<(String, &'a dyn Uniform)>,
+        uniforms: Vec<(CString, &'a dyn Uniform)>,
     ) -> Box<Self> {
         Box::new(Self {
             shader,
@@ -64,13 +66,10 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
         self.lights.bind(&mut active_shader).unwrap();
 
         active_shader
-            .set_uniform("projtimesview".to_string(), &self.camera_look_at)
+            .set_uniform(&c"projtimesview", &self.camera_look_at)
             .unwrap();
         active_shader
-            .set_uniform(
-                "camera_position".to_string(),
-                &self.camera_pos.homogeneous(),
-            )
+            .set_uniform(&c"camera_position", &self.camera_pos.homogeneous())
             .unwrap();
 
         active_shader.set_uniform_dyn(self.uniforms).unwrap();

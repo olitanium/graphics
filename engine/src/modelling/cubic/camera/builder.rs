@@ -9,6 +9,7 @@ use crate::modelling::cubic::camera::CameraPose;
 pub struct MissingPose;
 
 #[derive(Default, Debug)]
+#[must_use = "The camera must be built with `build`"]
 pub struct Builder<P> {
     pose: P,
     radius: f32,

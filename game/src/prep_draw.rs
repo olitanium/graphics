@@ -79,7 +79,7 @@ impl State {
                 engine::opengl_shaders::exposure3(),
                 default_framebuffer,
                 vec![FramebufferQuad::new_from_framebuffer(&self.hdr_fb)],
-                vec![(String::from("exposure"), &self.exposure)],
+                vec![(c"exposure".to_owned(), &self.exposure)],
             ));
         }
 

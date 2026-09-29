@@ -1,3 +1,5 @@
+use alloc::ffi::CString;
+
 use graphics::Model;
 use graphics::colour::ColourRGB;
 use graphics::linear_algebra::UnitVector;
@@ -34,10 +36,22 @@ impl FarLight {
     where
         M::Vertex: CubicVertex,
     {
-        shader.set_uniform(format!("{name}_vary[{index}].direction"), &self.direction)?;
-        shader.set_uniform(format!("{name}[{index}].ambient"), &self.ambient)?;
-        shader.set_uniform(format!("{name}[{index}].diffuse"), &self.diffuse)?;
-        shader.set_uniform(format!("{name}[{index}].specular"), &self.specular)?;
+        shader.set_uniform(
+            &CString::new(format!("{name}_vary[{index}].direction"))?,
+            &self.direction,
+        )?;
+        shader.set_uniform(
+            &CString::new(format!("{name}[{index}].ambient"))?,
+            &self.ambient,
+        )?;
+        shader.set_uniform(
+            &CString::new(format!("{name}[{index}].diffuse"))?,
+            &self.diffuse,
+        )?;
+        shader.set_uniform(
+            &CString::new(format!("{name}[{index}].specular"))?,
+            &self.specular,
+        )?;
 
         Ok(())
     }
