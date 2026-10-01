@@ -74,15 +74,7 @@ impl ShadowFarLight {
             .build()
     }
 
-    pub(crate) fn bind_to<
-        'a,
-        'c,
-        const N: usize,
-        const MAX: usize,
-        L: ShadowLightCompatible<MAX>,
-        T: Texture,
-        M: Model,
-    >(
+    pub(crate) fn bind_to<'a, 'c, const N: usize, const MAX: usize, L, T, M>(
         &'c self,
         shader: &mut ActiveShaderProgram<'a, '_, 'c, M, L, T, N>,
         name: &str,
@@ -90,7 +82,10 @@ impl ShadowFarLight {
         target: Vector<3>,
     ) -> Result<(), ShadowBindError<'a>>
     where
+        M: Model,
         M::Vertex: VertexHasTangent,
+        L: ShadowLightCompatible<MAX>,
+        T: Texture,
     {
         self.light.bind_to(shader, name, index)?;
         shader.set_uniform(
@@ -106,18 +101,15 @@ impl ShadowFarLight {
         Ok(())
     }
 
-    pub(crate) fn bind_to_ghost<
-        const N: usize,
-        const MAX: usize,
-        L: ShadowLightCompatible<MAX>,
-        T: Texture,
-        M: Model,
-    >(
+    pub(crate) fn bind_to_ghost<const N: usize, const MAX: usize, L, T, M>(
         shader: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
         name: &str,
         index: usize,
     ) where
+        M: Model,
         M::Vertex: VertexHasTangent,
+        L: ShadowLightCompatible<MAX>,
+        T: Texture,
     {
         shader.register_texture(iter::once((
             CString::new(format!("{name}[{index}].depth")).expect("should be no Nul"),

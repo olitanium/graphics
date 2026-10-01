@@ -37,8 +37,9 @@ impl CalculatedAnimation {
         Ok(Self { poses, signature })
     }
 
-    pub fn bind_pose<M: EntityInner>(model: &M, root: Pose) -> Self
+    pub fn bind_pose<M>(model: &M, root: Pose) -> Self
     where
+        M: EntityInner,
         M::Vertex: CubicVertex,
     {
         Self::new(root, model.skeleton(), None).expect("no animation")
@@ -198,10 +199,11 @@ impl PoseAndInverseBindPose {
     }
 }
 
-pub fn process_vec_noaggregate<'a, M: EntityInner>(
+pub fn process_vec_noaggregate<'a, M>(
     input: Vec<(&'a M, Pose, Option<(&'a SkeletalAnimation, f32)>)>,
 ) -> Result<Vec<(&'a M, CalculatedAnimation)>, SignaturesDoNotMatchError>
 where
+    M: EntityInner,
     M::Vertex: CubicVertex,
 {
     input

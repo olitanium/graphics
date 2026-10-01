@@ -17,11 +17,14 @@ use crate::modelling::extended_vertex::ExtendedVertex;
 // transform: &'a
 // }
 
-impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
-    pub fn transform_by<P: Transform<Vector<{ V::LEN }>> + Clone>(
-        &self,
-        pose: &P,
-    ) -> (Vector<{ V::LEN }>, Vector<{ V::LEN }>) {
+impl<V, T> BoundingBoxElement<V, T>
+where
+    V: ExtendedVertex,
+{
+    pub fn transform_by<P>(&self, pose: &P) -> (Vector<{ V::LEN }>, Vector<{ V::LEN }>)
+    where
+        P: Transform<Vector<{ V::LEN }>> + Clone,
+    {
         let all_vertices: Vec<_> =
             permutations(self.lower_bound.into_inner(), self.upper_bound.into_inner())
                 .map(|arr| {
@@ -92,17 +95,17 @@ fn collides_with_upper_lower<const N: usize>(
 }
 
 impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
-    pub fn overlaps_bounding_box_single<
-        U,
-        V2: ExtendedVertex<LEN = { V::LEN }>,
-        P: Transform<Vector<{ V::LEN }>> + Clone,
-        P2: Transform<Vector<{ V2::LEN }>> + Clone,
-    >(
+    pub fn overlaps_bounding_box_single<U, V2, P, P2>(
         &self,
         self_transform: &P,
         other: &BoundingBoxElement<V2, U>,
         other_transform: &P2,
-    ) -> bool {
+    ) -> bool
+    where
+        V2: ExtendedVertex<LEN = { V::LEN }>,
+        P: Transform<Vector<{ V::LEN }>> + Clone,
+        P2: Transform<Vector<{ V2::LEN }>> + Clone,
+    {
         let (self_lower_bound, self_upper_bound) = self.transform_by(self_transform);
         let (other_lower_bound, other_upper_bound) = other.transform_by(other_transform);
 
@@ -160,15 +163,7 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
         )
     }
 
-    pub fn overlaps_bounding_box_and_children<
-        V2: ExtendedVertex<LEN = { V::LEN }>,
-        U,
-        P: Transform<Vector<{ V::LEN }>> + Clone,
-        VP: Transform<V> + Clone,
-        P2: Transform<Vector<{ V::LEN }>> + Clone,
-        VP2: Transform<V2> + Clone,
-        F: FnMut(&mut T, &mut U) -> bool,
-    >(
+    pub fn overlaps_bounding_box_and_children<V2, U, P, VP, P2, VP2, F>(
         this: &Self,
         this_boundingbox: &BoundingBox<V, T>,
         this_transform: &P,
@@ -179,7 +174,14 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
         other_vertex_transform: &VP2,
         alter_meta: &mut F,
         accumulator: &mut Vec<([V; 3], [V2; 3])>,
-    ) {
+    ) where
+        V2: ExtendedVertex<LEN = { V::LEN }>,
+        P: Transform<Vector<{ V::LEN }>> + Clone,
+        VP: Transform<V> + Clone,
+        P2: Transform<Vector<{ V::LEN }>> + Clone,
+        VP2: Transform<V2> + Clone,
+        F: FnMut(&mut T, &mut U) -> bool,
+    {
         let is_overlap = this.overlaps_bounding_box_single(this_transform, other, other_transform);
 
         if is_overlap {
@@ -314,10 +316,13 @@ fn line_overlap(
     !fail
 }
 
-pub fn permutations<T: Clone, const DIMS: usize>(
+pub fn permutations<T, const DIMS: usize>(
     input_vec_1: [T; DIMS],
     input_vec_2: [T; DIMS],
-) -> impl Iterator<Item = [T; DIMS]> {
+) -> impl Iterator<Item = [T; DIMS]>
+where
+    T: Clone,
+{
     (0..(1_usize << DIMS)).map(move |bin| {
         array::from_fn(|index| {
             let mask = 1 << index;

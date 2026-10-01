@@ -32,12 +32,10 @@ impl<'a> Builder<'a> {
         self.mesh_builders.push((bone, mesh));
     }
 
-    pub fn extend_meshes<
+    pub fn extend_meshes<I>(&mut self, meshes: I)
+    where
         I: IntoIterator<Item = (&'a SkeletonBoneIndex, MeshBuilder<SimpleVertex>)>,
-    >(
-        &mut self,
-        meshes: I,
-    ) {
+    {
         self.mesh_builders.extend(meshes);
     }
 

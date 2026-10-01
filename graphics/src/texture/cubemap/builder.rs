@@ -64,7 +64,10 @@ pub enum LoadImageError {
 }
 error_boilerplate!(LoadImageError);
 
-fn load_image<P: AsRef<Path>>(path: P) -> Result<DynamicImage, LoadImageError> {
+fn load_image<P>(path: P) -> Result<DynamicImage, LoadImageError>
+where
+    P: AsRef<Path>,
+{
     let image = image::ImageReader::open(&path)
         .map_err(LoadImageError::Io)?
         .decode()
@@ -98,7 +101,7 @@ impl<T> Builder<T> {
 impl Builder<MissingData> {
     new!();
 
-    pub fn image<P: AsRef<Path>>(
+    pub fn image<P>(
         self,
         positive_x: P,
         negative_x: P,
@@ -106,7 +109,10 @@ impl Builder<MissingData> {
         negative_y: P,
         positive_z: P,
         negative_z: P,
-    ) -> Result<Builder<HasSomeImage>, LoadImageError> {
+    ) -> Result<Builder<HasSomeImage>, LoadImageError>
+    where
+        P: AsRef<Path>,
+    {
         let data = HasSomeImage {
             positive_x: load_image(positive_x)?,
             negative_x: load_image(negative_x)?,

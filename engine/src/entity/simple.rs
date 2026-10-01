@@ -26,12 +26,10 @@ impl<T> Default for SimpleEntity<T> {
 }
 
 impl<T> SimpleEntity<T> {
-    pub fn from_simple_cubic<F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
-        model: SimpleCubic,
-        depth: usize,
-        mass: Mass,
-        init: F,
-    ) -> Self {
+    pub fn from_simple_cubic<F>(model: SimpleCubic, depth: usize, mass: Mass, init: F) -> Self
+    where
+        F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T,
+    {
         let bounding_box = model.make_bounding_box(depth, init);
 
         let mut physics = SimplePhysics::default();
@@ -60,13 +58,14 @@ impl<T> SimpleEntity<T> {
     }
 
     #[inline]
-    pub fn move_collide_repel<B: Physics>(
+    pub fn move_collide_repel<B>(
         &mut self,
         other: &mut B,
         other_transform: &B::Transform<'_>,
     ) -> (Option<UnitVector<3>>, Option<UnitVector<3>>)
     where
         <B as Collision>::Vertex: CubicVertex + PartialEq + Debug,
+        B: Physics,
     {
         <Self as Physics>::move_collide_repel(self, &(), other, other_transform)
     }
@@ -79,10 +78,7 @@ impl<TThis> Collision for SimpleEntity<TThis> {
     type Vertex = <BoundingBox<SimpleVertex, TThis> as Collision>::Vertex;
     type VertexTransform<'a> = ();
 
-    fn collides<
-        T: Collision + ?Sized,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
-    >(
+    fn collides<T, F>(
         &self,
         _self_transform: &Self::Transform<'_>,
         _self_vertex_transform: &Self::VertexTransform<'_>,
@@ -90,7 +86,11 @@ impl<TThis> Collision for SimpleEntity<TThis> {
         target_transform: &T::Transform<'_>,
         target_vertex_transform: &T::VertexTransform<'_>,
         alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>> {
+    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>
+    where
+        T: Collision + ?Sized,
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
+    {
         self.bounding_box.as_ref()?.collides(
             &self.physics.pose,
             &self.physics.pose,

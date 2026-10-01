@@ -20,14 +20,17 @@ pub struct Group<'a, const OUT: usize, O, D: FramebufferWithDepth<OUT>> {
 }
 
 impl<'a, const OUT: usize, O, X: FramebufferWithDepth<OUT>> Group<'a, OUT, O, X> {
-    pub fn new<P: CameraPose>(
+    pub fn new<P>(
         shader: &'a ShaderProgram<SkyBox, O, OUT, X::Tex>,
         framebuffer: &'a X,
         skybox: &'a SkyBox,
         camera: &Camera<P>,
         camera_hint: &P::Hint,
         uniforms: Vec<(CString, &'a dyn Uniform)>,
-    ) -> Box<Self> {
+    ) -> Box<Self>
+    where
+        P: CameraPose,
+    {
         let proj = camera.projection;
         let view = {
             let old_view: Matrix<3, 3> = camera.view(camera_hint).truncate();

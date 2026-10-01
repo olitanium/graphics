@@ -26,12 +26,15 @@ impl<T> Default for SkinningEntity<T> {
 }
 
 impl<T> SkinningEntity<T> {
-    pub fn from_skeletoncubic<F: FnMut(&[(Vector<3>, [SkeletalVertex; 3])]) -> T>(
+    pub fn from_skeletoncubic<F>(
         model: SkinningCubic,
         depth: usize,
         mass: Mass,
         init: F,
-    ) -> Option<Self> {
+    ) -> Option<Self>
+    where
+        F: FnMut(&[(Vector<3>, [SkeletalVertex; 3])]) -> T,
+    {
         let bounding_box = make_bounding_box(&model, depth, init);
 
         let mut physics = SimplePhysics::default();
@@ -45,11 +48,14 @@ impl<T> SkinningEntity<T> {
     }
 }
 
-pub fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [SkeletalVertex; 3])]) -> T>(
+pub fn make_bounding_box<T, F>(
     cubic: &SkinningCubic,
     depth: usize,
     init: F,
-) -> Option<SkeletonBb<SkeletalVertex, T>> {
+) -> Option<SkeletonBb<SkeletalVertex, T>>
+where
+    F: FnMut(&[(Vector<3>, [SkeletalVertex; 3])]) -> T,
+{
     let per_mesh = partition::partition(
         &cubic.triangles(),
         |tri| {
@@ -84,10 +90,7 @@ impl<TThis> Collision for SkinningEntity<TThis> {
     type VertexTransform<'a> =
         <SkeletonBb<SkeletalVertex, TThis> as Collision>::VertexTransform<'a>;
 
-    fn collides<
-        T: Collision + ?Sized,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
-    >(
+    fn collides<T, F>(
         &self,
         self_transform: &Self::Transform<'_>,
         self_vertex_transform: &Self::VertexTransform<'_>,
@@ -95,7 +98,11 @@ impl<TThis> Collision for SkinningEntity<TThis> {
         target_transform: &T::Transform<'_>,
         target_vertex_transform: &T::VertexTransform<'_>,
         alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>> {
+    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>
+    where
+        T: Collision + ?Sized,
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
+    {
         self.bounding_box.as_ref()?.collides(
             self_transform,
             self_vertex_transform,

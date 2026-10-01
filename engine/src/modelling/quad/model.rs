@@ -66,11 +66,14 @@ pub enum DrawError<'a> {
 error_boilerplate!(<'a> DrawError<'a>);
 
 impl<const N: usize> Quad<N> {
-    pub(crate) fn draw<'a, 'b, const OUT: usize, O, I: FramebufferWithoutExtra<OUT>>(
+    pub(crate) fn draw<'a, 'b, const OUT: usize, O, I>(
         &'b self,
         active_shader: &mut ActiveShaderProgram<'a, '_, 'b, Self, O, I::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, I>,
-    ) -> Result<(), DrawError<'a>> {
+    ) -> Result<(), DrawError<'a>>
+    where
+        I: FramebufferWithoutExtra<OUT>,
+    {
         _ = active_shader.cull_face(CullFace::BackFace);
 
         let input = self

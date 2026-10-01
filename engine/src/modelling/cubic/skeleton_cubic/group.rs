@@ -29,7 +29,7 @@ pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth
 impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = FlatTexture>>
     Group<'a, MAX, OUT, D>
 {
-    pub fn new<O: CameraPose>(
+    pub fn new<O>(
         shader: &'a ShaderProgram<SkeletonCubic, ListLights<'a, MAX>, OUT, FlatTexture>,
         framebuffer: &'a D,
 
@@ -39,7 +39,10 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
         opaque: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
 
         uniforms: Vec<(CString, &'a dyn Uniform)>,
-    ) -> Result<Box<Self>, SignaturesDoNotMatchError> {
+    ) -> Result<Box<Self>, SignaturesDoNotMatchError>
+    where
+        O: CameraPose,
+    {
         Ok(Box::new(Self {
             shader,
             framebuffer,

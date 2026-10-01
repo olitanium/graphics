@@ -34,7 +34,10 @@ impl Builder {
         self.mesh_builders.push(mesh);
     }
 
-    pub fn extend_meshes<I: IntoIterator<Item = MeshBuilder<SimpleVertex>>>(&mut self, meshes: I) {
+    pub fn extend_meshes<I>(&mut self, meshes: I)
+    where
+        I: IntoIterator<Item = MeshBuilder<SimpleVertex>>,
+    {
         self.mesh_builders.extend(meshes);
     }
 

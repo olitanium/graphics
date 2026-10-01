@@ -50,7 +50,10 @@ impl<V: Vertex> Builder<V> {
         VertexArray::new(vertex_buffer, Some(element_array_buffer))
     }
 
-    pub fn extend_triangles<I: IntoIterator<Item = [V; 3]>>(&mut self, iter: I) {
+    pub fn extend_triangles<I>(&mut self, iter: I)
+    where
+        I: IntoIterator<Item = [V; 3]>,
+    {
         for triangle in iter {
             self.push_triangle(triangle);
         }

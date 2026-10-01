@@ -53,11 +53,15 @@ pub struct ImportOutput<V: CubicVertex> {
     pub meshes: Vec<MeshBuilder<V>>,
 }
 
-pub(super) fn import<P: AsRef<Path>, V: CubicVertex>(
+pub(super) fn import<P, V>(
     path: P,
     post_process: Vec<PostProcess>,
     load_tangent_space: bool,
-) -> Result<ImportOutput<V>, ImportError> {
+) -> Result<ImportOutput<V>, ImportError>
+where
+    P: AsRef<Path>,
+    V: CubicVertex,
+{
     let path = path.as_ref();
 
     let dir = path
@@ -103,14 +107,17 @@ fn assimp_matrix_to_pose(matrix: Matrix4x4) -> Pose {
     Pose::new_from_matrix(matrix)
 }
 
-fn process_node<V: CubicVertex>(
+fn process_node<V>(
     scene: &Scene,
     node: &Node,
     dir: &Path,
     current_mat: &mut HashMap<u32, Result<Rc<Material>, Rc<ParseMaterialError>>>,
     accum_transform: Pose,
     load_tangent_space: bool,
-) -> Result<Vec<MeshBuilder<V>>, ImportError> {
+) -> Result<Vec<MeshBuilder<V>>, ImportError>
+where
+    V: CubicVertex,
+{
     // process current node and recursively process each in node.children.
     let node_transform = assimp_matrix_to_pose(node.transformation);
     let accum_transform = node_transform.transform(accum_transform);

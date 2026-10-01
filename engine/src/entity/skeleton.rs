@@ -24,12 +24,10 @@ impl<T> Default for SkeletonEntity<T> {
 }
 
 impl<T> SkeletonEntity<T> {
-    pub fn from_cubic<F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
-        model: SkeletonCubic,
-        depth: usize,
-        mass: Mass,
-        init: F,
-    ) -> Option<Self> {
+    pub fn from_cubic<F>(model: SkeletonCubic, depth: usize, mass: Mass, init: F) -> Option<Self>
+    where
+        F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T,
+    {
         let bounding_box = make_bounding_box(&model, depth, init);
 
         let mut physics = SimplePhysics::default();
@@ -43,11 +41,14 @@ impl<T> SkeletonEntity<T> {
     }
 }
 
-pub fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
+pub fn make_bounding_box<T, F>(
     cubic: &SkeletonCubic,
     depth: usize,
     init: F,
-) -> Option<SkeletonBb<SimpleVertex, T>> {
+) -> Option<SkeletonBb<SimpleVertex, T>>
+where
+    F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T,
+{
     let per_mesh = partition::partition(
         &cubic.triangles(),
         |&&(bone, _)| vec![bone.0],
@@ -75,10 +76,7 @@ impl<TThis> Collision for SkeletonEntity<TThis> {
     type Vertex = <SkeletonBb<SimpleVertex, TThis> as Collision>::Vertex;
     type VertexTransform<'a> = ();
 
-    fn collides<
-        T: Collision + ?Sized,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
-    >(
+    fn collides<T, F>(
         &self,
         self_transform: &Self::Transform<'_>,
         _self_vertex_transform: &(),
@@ -86,7 +84,11 @@ impl<TThis> Collision for SkeletonEntity<TThis> {
         target_transform: &T::Transform<'_>,
         target_vertex_transform: &T::VertexTransform<'_>,
         alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>> {
+    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>
+    where
+        T: Collision + ?Sized,
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
+    {
         self.bounding_box.as_ref()?.collides(
             &(&self.model.skeleton, self_transform),
             &(),

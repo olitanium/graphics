@@ -15,7 +15,7 @@ macro_rules! error_boilerplate {
         }
 
         // Derive Error for Error
-        impl std::error::Error for $pth where Self: core::fmt::Display + core::fmt::Debug {}
+        impl core::error::Error for $pth where Self: core::fmt::Display + core::fmt::Debug {}
 
         impl From<!> for $pth {
             fn from(value: !) -> Self {

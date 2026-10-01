@@ -39,10 +39,13 @@ impl FramebufferContext {
         })
     }
 
-    pub fn register<'a, 'b, const OUT: usize, D: FramebufferWithoutExtra<OUT>>(
+    pub fn register<'a, 'b, const OUT: usize, D>(
         &'b mut self,
         framebuffer: &'a D,
-    ) -> ActiveFramebuffer<'a, 'b, OUT, D> {
+    ) -> ActiveFramebuffer<'a, 'b, OUT, D>
+    where
+        D: FramebufferWithoutExtra<OUT>,
+    {
         if self.cleared.insert(framebuffer.id().as_primitive()) {
             let mut active = ActiveFramebuffer::new(framebuffer, self);
             active.clear();

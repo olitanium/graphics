@@ -2,6 +2,7 @@
 //! smaller manageable crates.
 #![feature(const_trait_impl)]
 #![feature(const_ops)]
+
 mod error;
 
 mod iter_with_cloned;

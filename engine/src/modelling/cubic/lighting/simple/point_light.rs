@@ -22,20 +22,16 @@ pub struct PointLight {
 }
 
 impl PointLight {
-    pub(crate) fn bind_to<
-        'a,
-        const N: usize,
-        const MAX: usize,
-        L: ListLightCompatible<MAX>,
-        T: Texture,
-        M: Model,
-    >(
+    pub(crate) fn bind_to<'a, const N: usize, const MAX: usize, L, T, M>(
         &self,
         shader: &mut ActiveShaderProgram<'a, '_, '_, M, L, T, N>,
         name: &str,
         index: usize,
     ) -> Result<(), SimpleBindError<'a>>
     where
+        L: ListLightCompatible<MAX>,
+        T: Texture,
+        M: Model,
         M::Vertex: CubicVertex,
     {
         shader.set_uniform(

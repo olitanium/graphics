@@ -39,18 +39,15 @@ pub enum DrawError<'a> {
 error_boilerplate!(<'a> DrawError<'a>);
 
 impl<V: CubicVertex> Mesh<V> {
-    pub(crate) fn draw<
-        'a,
-        'b,
-        M: Model<Vertex = V>,
-        O,
-        const OUT: usize,
-        D: FramebufferWithDepth<OUT>,
-    >(
+    pub(crate) fn draw<'a, 'b, O, const OUT: usize, D, M>(
         &'b self,
         active_shader: &mut ActiveShaderProgram<'a, '_, 'b, M, O, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-    ) -> Result<(), DrawError<'a>> {
+    ) -> Result<(), DrawError<'a>>
+    where
+        D: FramebufferWithDepth<OUT>,
+        M: Model<Vertex = V>,
+    {
         _ = self.material.register_to(active_shader, "material");
 
         self.vertex_array

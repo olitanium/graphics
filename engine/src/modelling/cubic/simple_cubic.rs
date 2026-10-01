@@ -57,11 +57,14 @@ impl SimpleCubic {
             .collect()
     }
 
-    pub fn import<P: AsRef<Path>>(
+    pub fn import<P>(
         path: P,
         post_process: Vec<PostProcess>,
         load_tangent_space: bool,
-    ) -> Result<Builder, import::ImportError> {
+    ) -> Result<Builder, import::ImportError>
+    where
+        P: AsRef<Path>,
+    {
         let import_output = import::import(path, post_process, load_tangent_space)?;
 
         let mut out = Self::builder();
@@ -80,12 +83,15 @@ pub enum DrawError<'a> {
 error_boilerplate!(<'a> DrawError<'a>);
 
 impl SimpleCubic {
-    pub(crate) fn draw<'a, 'c, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
+    pub(crate) fn draw<'a, 'c, const OUT: usize, D, L>(
         &'c self,
         active_shader: &mut ActiveShaderProgram<'a, '_, 'c, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         pose: Pose,
-    ) -> Result<(), DrawError<'a>> {
+    ) -> Result<(), DrawError<'a>>
+    where
+        D: FramebufferWithDepth<OUT>,
+    {
         // Ignore cull_face error
         _ = active_shader.cull_face(self.cull_face);
         active_shader
@@ -105,11 +111,10 @@ impl EntityInner for SimpleCubic {
     type BoundingBox<T> = BoundingBox<<Self as Model>::Vertex, T>;
     type DrawError<'a> = DrawError<'a>;
 
-    fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [Self::Vertex; 3])]) -> T>(
-        &self,
-        depth: usize,
-        init: F,
-    ) -> Option<Self::BoundingBox<T>> {
+    fn make_bounding_box<T, F>(&self, depth: usize, init: F) -> Option<Self::BoundingBox<T>>
+    where
+        F: FnMut(&[(Vector<3>, [Self::Vertex; 3])]) -> T,
+    {
         let triangles = self.triangles();
         Self::BoundingBox::new_from_triangles(triangles, depth, init)
     }
@@ -132,12 +137,15 @@ impl EntityInner for SimpleCubic {
         calc_anim.root()
     }
 
-    fn draw<'a, 'b, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
+    fn draw<'a, 'b, const OUT: usize, D, L>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'b, '_, 'a, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         calculated_animation: &CalculatedAnimation,
-    ) -> Result<(), Self::DrawError<'b>> {
+    ) -> Result<(), Self::DrawError<'b>>
+    where
+        D: FramebufferWithDepth<OUT>,
+    {
         self.draw(
             active_shader,
             active_framebuffer,

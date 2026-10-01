@@ -68,12 +68,14 @@ impl From<NulError> for RegisterToError<'_> {
 }
 
 impl Material {
-    pub fn register_to<'a, 'b, const N: usize, T: Texture, M: Model, O>(
+    pub fn register_to<'a, 'b, const N: usize, T, M, O>(
         &'a self,
         shader: &mut ActiveShaderProgram<'b, '_, 'a, M, O, T, N>,
         name: &str,
     ) -> Result<(), RegisterToError<'b>>
     where
+        T: Texture,
+        M: Model,
         M::Vertex: CubicVertex,
     {
         shader

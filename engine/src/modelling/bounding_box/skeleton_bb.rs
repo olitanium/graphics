@@ -32,11 +32,14 @@ pub struct SkeletonBb<V: CubicVertex, T> {
 }
 
 impl<V: CubicVertex, T> SkeletonBb<V, T> {
-    pub fn from_vec_triangle<F: FnMut(&[(Vector<3>, [V; 3])]) -> T>(
+    pub fn from_vec_triangle<F>(
         per_mesh: Vec<Vec<[V; 3]>>,
         depth: usize,
         mut init: F,
-    ) -> Option<Self> {
+    ) -> Option<Self>
+    where
+        F: FnMut(&[(Vector<3>, [V; 3])]) -> T,
+    {
         let opt_per_mesh: Option<Vec<_>> = per_mesh
             .into_iter()
             .map(|mesh| BoundingBox::new_from_triangles(mesh, depth, &mut init))
@@ -121,11 +124,7 @@ error_boilerplate!(<'a> DrawError<'a>);
 impl<V: CubicVertex, T: 'static> SkeletonBb<V, T> {
     #[allow(clippy::allow_attributes, reason = "technical")]
     #[allow(unused, reason = "to be used in a modernised `SkeletonBbGroup`")]
-    pub(crate) fn draw<
-        'a,
-        D: FramebufferWithDepth<1, Tex = FlatTexture>,
-        F: FnMut() -> ColourRGBA,
-    >(
+    pub(crate) fn draw<'a, D, F>(
         &self,
         level: usize,
         active_shader: &mut ActiveShaderProgram<'a, '_, '_, VertexArray<Vector<3>>, (), D::Tex, 1>,
@@ -133,7 +132,11 @@ impl<V: CubicVertex, T: 'static> SkeletonBb<V, T> {
         skeleton: &Skeleton,
         calculated_animation: &CalculatedAnimation,
         mut colour: F,
-    ) -> Result<(), DrawError<'a>> {
+    ) -> Result<(), DrawError<'a>>
+    where
+        D: FramebufferWithDepth<1, Tex = FlatTexture>,
+        F: FnMut() -> ColourRGBA,
+    {
         for (bone, bbox) in self.per_bone.iter().enumerate() {
             let bone = &SkeletonBoneIndex(bone);
 
@@ -186,10 +189,7 @@ where
     type Vertex = VThis;
     type VertexTransform<'a> = ();
 
-    fn collides<
-        T: Collision + ?Sized,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
-    >(
+    fn collides<T, F>(
         &self,
         self_transform: &Self::Transform<'_>,
         &(): &Self::VertexTransform<'_>,
@@ -197,7 +197,11 @@ where
         target_transform: &T::Transform<'_>,
         target_vertex_transform: &T::VertexTransform<'_>,
         mut alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>> {
+    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>
+    where
+        T: Collision + ?Sized,
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
+    {
         let out = self
             .per_bone
             .iter()

@@ -61,10 +61,10 @@ impl<'c, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 
         self.context
     }
 
-    pub fn register_texture<L: IntoIterator<Item = (CString, &'c dyn Texture)>>(
-        &mut self,
-        texture_list: L,
-    ) {
+    pub fn register_texture<L>(&mut self, texture_list: L)
+    where
+        L: IntoIterator<Item = (CString, &'c dyn Texture)>,
+    {
         for (string, texture) in texture_list {
             self.texture_list.insert(string, texture);
         }
@@ -140,11 +140,15 @@ fn match_result(res: Result<(), SetUniformError<'_>>) -> Result<(), ShaderSetUni
 }
 
 impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, '_, M, O, T, OUT> {
-    pub fn set_uniform<N: UniformName, U: Uniform + ?Sized>(
+    pub fn set_uniform<N, U>(
         &mut self,
         name: &N,
         value: &U,
-    ) -> Result<(), ShaderSetUniformError<'a>> {
+    ) -> Result<(), ShaderSetUniformError<'a>>
+    where
+        N: UniformName,
+        U: Uniform + ?Sized,
+    {
         match_result(value.set_uniform(name, self))
     }
 

@@ -48,7 +48,7 @@ where
     T: Transform<Vector<{ V::LEN }>>,
     Vector<{ V::LEN }>: Volume,
 {
-    pub fn new<P: CameraPose>(
+    pub fn new<P>(
         framebuffer: &'a D,
         bounding_box: &'a BoundingBox<V, Bt>,
         transform: &'a T,
@@ -56,7 +56,10 @@ where
         hint: &P::Hint,
         level: usize,
         colour: F,
-    ) -> Box<Self> {
+    ) -> Box<Self>
+    where
+        P: CameraPose,
+    {
         let look_at = camera.look_at(hint);
         Box::new(Self {
             framebuffer,

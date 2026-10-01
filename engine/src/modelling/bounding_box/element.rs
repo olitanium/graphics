@@ -25,10 +25,13 @@ pub(super) struct Meta<T> {
 }
 
 impl<T> Meta<T> {
-    pub(super) fn get_triangle_and_meta<'a, V: ExtendedVertex>(
+    pub(super) fn get_triangle_and_meta<'a, V>(
         &'a self,
         bounding_box: &'a BoundingBox<V, T>,
-    ) -> (&'a [[V; 3]], RefMut<'a, T>) {
+    ) -> (&'a [[V; 3]], RefMut<'a, T>)
+    where
+        V: ExtendedVertex,
+    {
         let refmut = self.data.borrow_mut();
         let triangles = bounding_box
             .triangles
@@ -50,10 +53,13 @@ pub(super) struct Children {
 }
 
 impl Children {
-    pub(super) fn get_children_elements<'a, V: ExtendedVertex, T>(
+    pub(super) fn get_children_elements<'a, V, T>(
         &self,
         bounding_box: &'a BoundingBox<V, T>,
-    ) -> [&'a BoundingBoxElement<V, T>; 2] {
+    ) -> [&'a BoundingBoxElement<V, T>; 2]
+    where
+        V: ExtendedVertex,
+    {
         self.children.map(|index| bounding_box.get(index))
     }
 }
@@ -115,22 +121,31 @@ where
     Some((Vector::new(lower_bounds_new), Vector::new(upper_bounds_new)))
 }
 
-fn make_bound<V: ExtendedVertex>(
+fn make_bound<V>(
     vectors: &[(Vector<{ V::LEN }>, [V; 3])],
-) -> Option<(Vector<{ V::LEN }>, Vector<{ V::LEN }>)> {
+) -> Option<(Vector<{ V::LEN }>, Vector<{ V::LEN }>)>
+where
+    V: ExtendedVertex,
+{
     let iter = vectors.iter().flat_map(|(_, vec)| vec.iter());
 
     make_bound_inner(iter)
 }
 
-impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
-    pub fn new_from_many_inner<F: FnMut(&[(Vector<{ V::LEN }>, [V; 3])]) -> T>(
+impl<V, T> BoundingBoxElement<V, T>
+where
+    V: ExtendedVertex,
+{
+    pub fn new_from_many_inner<F>(
         so_far: &mut Vec<Self>,
         triangles: &mut [(Vector<{ V::LEN }>, [V; 3])],
         start_index: usize,
         depth: usize,
         init: &mut F,
-    ) -> Option<usize> {
+    ) -> Option<usize>
+    where
+        F: FnMut(&[(Vector<{ V::LEN }>, [V; 3])]) -> T,
+    {
         let (lower_bounds, upper_bounds) = make_bound(triangles)?;
 
         // TODO: rewrite completely.
@@ -233,17 +248,12 @@ pub enum DrawRecursiveError<'a> {
 
 error_boilerplate!(<'a> DrawRecursiveError<'a>);
 
-impl<V: ExtendedVertex, T> BoundingBoxElement<V, T>
+impl<V, T> BoundingBoxElement<V, T>
 where
+    V: ExtendedVertex,
     Vector<{ V::LEN }>: Volume,
 {
-    pub fn draw_recursive<
-        'a,
-        D: FramebufferWithDepth<OUT>,
-        P: Transform<Vector<{ V::LEN }>> + Clone,
-        const OUT: usize,
-        F: FnMut() -> ColourRGBA,
-    >(
+    pub fn draw_recursive<'a, D, P, const OUT: usize, F>(
         &self,
         bounding_box: &BoundingBox<V, T>,
         pose: &P,
@@ -259,7 +269,12 @@ where
         >,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         colour: &mut F,
-    ) -> Result<(), DrawRecursiveError<'a>> {
+    ) -> Result<(), DrawRecursiveError<'a>>
+    where
+        D: FramebufferWithDepth<OUT>,
+        P: Transform<Vector<{ V::LEN }>> + Clone,
+        F: FnMut() -> ColourRGBA,
+    {
         if let ChildrenOrMeta::Children(children) = &self.children_or_meta
             && level != 0
         {

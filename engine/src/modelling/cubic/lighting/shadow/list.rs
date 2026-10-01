@@ -150,19 +150,15 @@ impl<const MAX: usize> ShadowListLights<'_, MAX> {
     /// # Safety
     /// `active_shader` must be dropped before any changes to the light's
     /// internal framebuffers is applied.
-    pub(crate) unsafe fn bind<
-        'a,
-        'c,
-        const N: usize,
-        L: ShadowLightCompatible<MAX>,
-        T: Texture,
-        M: Model,
-    >(
+    pub(crate) unsafe fn bind<'a, 'c, const N: usize, L, T, M>(
         &'c self,
         active_shader: &mut ActiveShaderProgram<'a, '_, 'c, M, L, T, N>,
         target: Vector<3>,
     ) -> Result<(), ShadowBindError<'a>>
     where
+        L: ShadowLightCompatible<MAX>,
+        T: Texture,
+        M: Model,
         M::Vertex: VertexHasTangent,
     {
         const FAR_LIGHT_NAME: &str = "far";

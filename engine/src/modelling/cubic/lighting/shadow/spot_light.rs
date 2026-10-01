@@ -59,21 +59,16 @@ impl ShadowSpotLight {
             .build()
     }
 
-    pub(crate) fn bind_to<
-        'a,
-        'c,
-        const N: usize,
-        const MAX: usize,
-        L: ShadowLightCompatible<MAX>,
-        T: Texture,
-        M: Model,
-    >(
+    pub(crate) fn bind_to<'a, 'c, const N: usize, const MAX: usize, L, T, M>(
         &'c self,
         shader: &mut ActiveShaderProgram<'a, '_, 'c, M, L, T, N>,
         name: &str,
         index: usize,
     ) -> Result<(), ShadowBindError<'a>>
     where
+        L: ShadowLightCompatible<MAX>,
+        T: Texture,
+        M: Model,
         M::Vertex: VertexHasTangent,
     {
         self.light.bind_to(shader, name, index)?;
@@ -89,17 +84,14 @@ impl ShadowSpotLight {
         Ok(())
     }
 
-    pub(crate) fn bind_to_ghost<
-        const N: usize,
-        const MAX: usize,
-        L: ShadowLightCompatible<MAX>,
-        T: Texture,
-        M: Model,
-    >(
+    pub(crate) fn bind_to_ghost<const N: usize, const MAX: usize, L, T, M>(
         shader: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
         name: &str,
         index: usize,
     ) where
+        L: ShadowLightCompatible<MAX>,
+        T: Texture,
+        M: Model,
         M::Vertex: VertexHasTangent,
     {
         shader.register_texture(iter::once((

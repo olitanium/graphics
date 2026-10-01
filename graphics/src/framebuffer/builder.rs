@@ -115,10 +115,10 @@ impl<const N: usize, S> Builder<N, S, WithDepth> {
 
 impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, HasSize, B> {
     #[must_use]
-    pub fn map_attachment<F: Fn(B::TexBuilder) -> B::TexBuilder + 'static>(
-        self,
-        map_attachment: F,
-    ) -> Self {
+    pub fn map_attachment<F>(self, map_attachment: F) -> Self
+    where
+        F: Fn(B::TexBuilder) -> B::TexBuilder + 'static,
+    {
         Self {
             map_attachment: Some(Box::new(map_attachment)),
             ..self

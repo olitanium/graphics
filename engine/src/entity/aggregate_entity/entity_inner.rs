@@ -29,11 +29,9 @@ where
     where
         Self: 'a;
 
-    fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [Self::Vertex; 3])]) -> T>(
-        &self,
-        depth: usize,
-        init: F,
-    ) -> Option<Self::BoundingBox<T>>;
+    fn make_bounding_box<T, F>(&self, depth: usize, init: F) -> Option<Self::BoundingBox<T>>
+    where
+        F: FnMut(&[(Vector<3>, [Self::Vertex; 3])]) -> T;
 
     fn skeleton(&self) -> &Skeleton;
 
@@ -47,10 +45,12 @@ where
         calc_anim: &'a CalculatedAnimation,
     ) -> <Self::BoundingBox<T> as Collision>::VertexTransform<'a>;
 
-    fn draw<'a, 'b, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
+    fn draw<'a, 'b, const OUT: usize, D, L>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'b, '_, 'a, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         calculated_animation: &CalculatedAnimation,
-    ) -> Result<(), Self::DrawError<'b>>;
+    ) -> Result<(), Self::DrawError<'b>>
+    where
+        D: FramebufferWithDepth<OUT>;
 }

@@ -18,11 +18,14 @@ pub struct ListLights<'a, const MAX: usize> {
 }
 
 impl<const MAX: usize> ListLights<'_, MAX> {
-    pub(crate) fn bind<'a, const N: usize, L: ListLightCompatible<MAX>, T: Texture, M: Model>(
+    pub(crate) fn bind<'a, const N: usize, L, T, M>(
         &self,
         shader_program: &mut ActiveShaderProgram<'a, '_, '_, M, L, T, N>,
     ) -> Result<(), SimpleBindError<'a>>
     where
+        L: ListLightCompatible<MAX>,
+        T: Texture,
+        M: Model,
         M::Vertex: CubicVertex,
     {
         shader_program.set_uniform(&c"num_point", &u32::try_from(self.point.len())?)?;

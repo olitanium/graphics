@@ -45,7 +45,7 @@ pub struct Group<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> {
 }
 
 impl<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> Group<'a, X> {
-    pub fn new<O: CameraPose>(
+    pub fn new<O>(
         output_framebuffer: &'a X,
         camera: &Camera<O>,
         hint: &O::Hint,
@@ -53,7 +53,10 @@ impl<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> Group<'a, X> {
         opaque: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
         transparent: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
         uniforms: Vec<(CString, &'a dyn Uniform)>,
-    ) -> Box<Self> {
+    ) -> Box<Self>
+    where
+        O: CameraPose,
+    {
         Box::new(Self {
             look_at: camera.look_at(hint),
             position: camera.position(hint),

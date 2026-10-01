@@ -27,9 +27,10 @@ pub enum NewImageError {
 }
 error_boilerplate!(NewImageError);
 
-fn new_from_file<P: AsRef<Path>>(
-    path: P,
-) -> Result<((TexDim, TexDim), Vec<ColourRGBA>), NewImageError> {
+fn new_from_file<P>(path: P) -> Result<((TexDim, TexDim), Vec<ColourRGBA>), NewImageError>
+where
+    P: AsRef<Path>,
+{
     let path_ref = path.as_ref();
 
     fn new_from_file_path(
@@ -63,7 +64,10 @@ fn new_from_file<P: AsRef<Path>>(
 
 macro_rules! new_from_file {
     ($name:ident $enum_name:ident) => {
-        pub fn $name<P: AsRef<Path>>(path: P) -> Result<Self, NewImageError> {
+        pub fn $name<P>(path: P) -> Result<Self, NewImageError>
+        where
+            P: AsRef<Path>,
+        {
             let (size, buffer) = new_from_file(path)?;
             Ok(Self {
                 size,

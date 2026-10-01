@@ -79,12 +79,15 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
 
     #[expect(clippy::allow_attributes, reason = "bleh")]
     #[allow(unused, reason = "may be used in future")]
-    pub(crate) fn new_from_vec_indexes<F: FnMut(&[(Vector<{ V::LEN }>, [V; 3])]) -> T>(
+    pub(crate) fn new_from_vec_indexes<F>(
         vectors: &[V],
         triangles: &[[usize; 3]],
         depth: usize,
         init: F,
-    ) -> Option<Self> {
+    ) -> Option<Self>
+    where
+        F: FnMut(&[(Vector<{ V::LEN }>, [V; 3])]) -> T,
+    {
         let new_triangles: Option<Vec<_>> = triangles
             .iter()
             .map(|arr| arr.map(|index| vectors.get(index).copied()).transpose())
@@ -93,14 +96,11 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
         Self::new_from_triangles(new_triangles, depth, init)
     }
 
-    pub(crate) fn new_from_triangles<
+    pub(crate) fn new_from_triangles<I, F>(triangles: I, depth: usize, mut init: F) -> Option<Self>
+    where
         I: IntoIterator<Item = [V; 3]>,
         F: FnMut(&[(Vector<{ V::LEN }>, [V; 3])]) -> T,
-    >(
-        triangles: I,
-        depth: usize,
-        mut init: F,
-    ) -> Option<Self> {
+    {
         let triangles: Vec<_> = triangles.into_iter().collect();
 
         let mut triangles_with_mid: Vec<_> = triangles
@@ -163,13 +163,7 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
 }
 
 impl<V: ExtendedVertex<LEN = 3>, T> BoundingBox<V, T> {
-    fn detect_collision<
-        V2: ExtendedVertex<LEN = 3>,
-        U,
-        F: FnMut(&mut T, &mut U) -> bool,
-        P: Transform<Vector<3>> + Clone,
-        P2: Transform<Vector<3>> + Clone,
-    >(
+    fn detect_collision<V2, U, F, P, P2>(
         lhs: &Self,
         lhs_pose: &P,
         lhs_vertex_transform: &<V as ExtendedVertex>::PreferredTransform<'_>,
@@ -178,7 +172,12 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBox<V, T> {
         rhs_vertex_transform: &<V2 as ExtendedVertex>::PreferredTransform<'_>,
         mut alter_meta: F,
     ) -> Option<Vec<([V; 3], [V2; 3])>>
-where {
+    where
+        V2: ExtendedVertex<LEN = 3>,
+        F: FnMut(&mut T, &mut U) -> bool,
+        P: Transform<Vector<3>> + Clone,
+        P2: Transform<Vector<3>> + Clone,
+    {
         let mut output = Vec::new();
         BoundingBoxElement::overlaps_bounding_box_and_children(
             lhs.root_element(),
@@ -218,12 +217,7 @@ where
     Vector<{ <BoundingBoxElement<V, T> as BoundingBoxShaderProgram>::DIMS }>: Vertex,
     Vector<{ V::LEN }>: Volume,
 {
-    pub(crate) fn draw<
-        'a,
-        P: Transform<Vector<{ V::LEN }>> + Clone,
-        D: FramebufferWithDepth<1, Tex = FlatTexture>,
-        F: FnMut() -> ColourRGBA,
-    >(
+    pub(crate) fn draw<'a, P, D, F>(
         &self,
         level: usize,
         pose: &P,
@@ -238,7 +232,12 @@ where
         >,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
         mut colour: F,
-    ) -> Result<(), DrawRecursiveError<'a>> {
+    ) -> Result<(), DrawRecursiveError<'a>>
+    where
+        P: Transform<Vector<{ V::LEN }>> + Clone,
+        D: FramebufferWithDepth<1, Tex = FlatTexture>,
+        F: FnMut() -> ColourRGBA,
+    {
         self.root_element().draw_recursive(
             self,
             pose,
@@ -251,11 +250,10 @@ where
 }
 
 impl<T> BoundingBox<SimpleVertex, T> {
-    pub fn from_cubic<F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T>(
-        model: &SkeletonCubic,
-        depth: usize,
-        init: F,
-    ) -> Option<Self> {
+    pub fn from_cubic<F>(model: &SkeletonCubic, depth: usize, init: F) -> Option<Self>
+    where
+        F: FnMut(&[(Vector<3>, [SimpleVertex; 3])]) -> T,
+    {
         let triangles = model.triangles().into_iter().map(|(_, triangle)| triangle);
         Self::new_from_triangles(triangles, depth, init)
     }
@@ -268,11 +266,7 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, TThis> {
     type Vertex = VThis;
     type VertexTransform<'a> = VThis::PreferredTransform<'a>;
 
-    fn collides_with_cubic_primitive<
-        V: CubicVertex,
-        T,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, &mut T) -> bool,
-    >(
+    fn collides_with_cubic_primitive<V, T, F>(
         &self,
         self_transform: &Self::Transform<'_>,
         self_vertex_transform: &Self::VertexTransform<'_>,
@@ -285,7 +279,11 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, TThis> {
             [Self::Vertex; 3],
             [<BoundingBox<V, T> as Collision>::Vertex; 3],
         )>,
-    > {
+    >
+    where
+        V: CubicVertex,
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, &mut T) -> bool,
+    {
         Self::detect_collision(
             self,
             self_transform,
@@ -297,10 +295,7 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, TThis> {
         )
     }
 
-    fn collides<
-        T: Collision + ?Sized,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
-    >(
+    fn collides<T, F>(
         &self,
         self_transform: &Self::Transform<'_>,
         self_vertex_transform: &Self::VertexTransform<'_>,
@@ -308,7 +303,11 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, TThis> {
         target_transform: &T::Transform<'_>,
         target_vertex_transform: &T::VertexTransform<'_>,
         mut alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>> {
+    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>
+    where
+        T: Collision + ?Sized,
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
+    {
         target
             .collides_with_cubic_primitive(
                 target_transform,
@@ -361,7 +360,11 @@ mod tests {
     use crate::modelling::bounding_box::element::Meta;
     use crate::modelling::{BoundingBoxElement, ExtendedVertex};
 
-    fn default<V: ExtendedVertex, T: Default>() -> BoundingBoxElement<V, T> {
+    fn default<V, T>() -> BoundingBoxElement<V, T>
+    where
+        V: ExtendedVertex,
+        T: Default,
+    {
         BoundingBoxElement {
             lower_bound: -Vector::X,
             upper_bound: Vector::X,

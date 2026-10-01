@@ -1,5 +1,5 @@
-use core::marker::PhantomData;
 use alloc::rc::Rc;
+use core::marker::PhantomData;
 
 use geometry::TransformBy as _;
 use graphics::vertex_array::VertexArray;
@@ -41,18 +41,18 @@ impl<V: CubicVertex> Builder<V> {
         self.triangles.push(triangle);
     }
 
-    pub fn extend_triangle<I: IntoIterator<Item = [IncompleteVertex<3>; 3]>>(
-        &mut self,
-        triangles: I,
-    ) -> &mut Self {
+    pub fn extend_triangle<I>(&mut self, triangles: I) -> &mut Self
+    where
+        I: IntoIterator<Item = [IncompleteVertex<3>; 3]>,
+    {
         self.triangles.extend(triangles);
         self
     }
 
-    pub fn extend_complete_triangle<I: IntoIterator<Item = [SimpleVertex; 3]>>(
-        &mut self,
-        triangles: I,
-    ) {
+    pub fn extend_complete_triangle<I>(&mut self, triangles: I)
+    where
+        I: IntoIterator<Item = [SimpleVertex; 3]>,
+    {
         self.extend_triangle(triangles.into_iter().map(|arr| {
             arr.map(
                 |SimpleVertex {

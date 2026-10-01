@@ -40,11 +40,14 @@ pub enum DrawError<'a> {
 error_boilerplate!(<'a> DrawError<'a>);
 
 impl<'a, const N: usize, X: AttachmentWithoutExtra<Tex = FlatTexture>> FramebufferQuad<'a, N, X> {
-    pub(crate) fn draw<const OUT: usize, O, I: FramebufferWithoutExtra<OUT>>(
+    pub(crate) fn draw<const OUT: usize, O, I>(
         self,
         active_shader: &mut ActiveShaderProgram<'a, '_, 'a, Quad<N>, O, I::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, I>,
-    ) -> Result<(), DrawError<'a>> {
+    ) -> Result<(), DrawError<'a>>
+    where
+        I: FramebufferWithoutExtra<OUT>,
+    {
         _ = active_shader.cull_face(CullFace::BackFace);
 
         let input = self

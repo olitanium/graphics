@@ -23,7 +23,10 @@ pub enum NewShaderError {
 error_boilerplate!(NewShaderError);
 
 impl Shader {
-    pub fn new<P: AsRef<Path>>(shader_type: GLenum, source: P) -> Result<Self, NewShaderError> {
+    pub fn new<P>(shader_type: GLenum, source: P) -> Result<Self, NewShaderError>
+    where
+        P: AsRef<Path>,
+    {
         let source = source.as_ref();
 
         let shader_source = fs::read_to_string(source).map_err(NewShaderError::Io)?;

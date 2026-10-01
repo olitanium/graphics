@@ -29,10 +29,11 @@ impl ShaderProgramContext {
         })
     }
 
-    pub fn use_program<M: Model, O, const OUT: usize, T: Texture>(
-        &mut self,
-        program: &ShaderProgram<M, O, OUT, T>,
-    ) {
+    pub fn use_program<M, O, const OUT: usize, T>(&mut self, program: &ShaderProgram<M, O, OUT, T>)
+    where
+        M: Model,
+        T: Texture,
+    {
         if let Some(curr_program_id) = self.current_program
             && curr_program_id == program.id().as_primitive()
         {

@@ -19,17 +19,17 @@ where
 
         let next_next_item = self.into_iter.next();
         match next_next_item {
-            Some(value) => {
+            Some(next_next_value) => {
                 // we need to take a clone of the T in next_item and bundle it
                 // with this.
                 let clone = {
-                    let (_, clone) = self.next_item.as_ref()?;
-                    clone.clone()
+                    let (_, original) = self.next_item.as_ref()?;
+                    original.clone()
                 };
 
-                let new_next = Some((value, clone));
+                let next_next_option = Some((next_next_value, clone));
 
-                mem::replace(&mut self.next_item, new_next)
+                mem::replace(&mut self.next_item, next_next_option)
             }
             None => self.next_item.take(),
         }
@@ -41,7 +41,10 @@ where
     I: Iterator,
     T: Clone,
 {
-    pub fn new<Z: IntoIterator<IntoIter = I>>(iter: Z, cloneable: T) -> Self {
+    pub fn new<Z>(iter: Z, cloneable: T) -> Self
+    where
+        Z: IntoIterator<IntoIter = I>,
+    {
         let mut into_iter = iter.into_iter().fuse();
         let next_item = into_iter.next().map(|elem| (elem, cloneable));
 
@@ -53,7 +56,10 @@ where
 }
 
 pub trait HasIterWithCloned: Iterator + Sized {
-    fn with_cloned<T: Clone>(self, cloneable: T) -> IterWithCloned<Self, T> {
+    fn with_cloned<T>(self, cloneable: T) -> IterWithCloned<Self, T>
+    where
+        T: Clone,
+    {
         IterWithCloned::new(self, cloneable)
     }
 }

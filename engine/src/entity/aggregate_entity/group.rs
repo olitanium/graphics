@@ -61,7 +61,7 @@ impl<
 where
     M::Vertex: CubicVertex,
 {
-    pub fn new<O: CameraPose>(
+    pub fn new<O>(
         shader: &'a ShaderProgram<M, ListLights<'a, MAX>, OUT, FlatTexture>,
         framebuffer: &'a D,
 
@@ -76,7 +76,10 @@ where
         )>,
 
         uniforms: Vec<(CString, &'a dyn Uniform)>,
-    ) -> Result<Box<Self>, CalculateAnimationError<'a>> {
+    ) -> Result<Box<Self>, CalculateAnimationError<'a>>
+    where
+        O: CameraPose,
+    {
         Ok(Box::new(Self {
             shader,
             framebuffer,

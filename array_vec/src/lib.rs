@@ -31,6 +31,7 @@ mod initmacro;
 
 mod pop_front;
 pub use pop_front::ArrayVecPopFront;
+use utils::error_boilerplate;
 
 pub struct ArrayVec<T, const N: usize> {
     len: usize,
@@ -38,10 +39,16 @@ pub struct ArrayVec<T, const N: usize> {
 }
 
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum TryPushError {
     ReturnedNone,
     NoSpace,
 }
+error_boilerplate!(TryPushError);
+
+#[derive(Debug)]
+pub struct PushWithError;
+error_boilerplate!(PushWithError);
 
 impl<T, const N: usize> ArrayVec<T, N> {
     #[must_use]
@@ -79,7 +86,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
     }
 
-    pub const fn push_with<F>(&mut self, mut func: F) -> Result<&mut T, ()>
+    pub const fn push_with<F>(&mut self, mut func: F) -> Result<&mut T, PushWithError>
     where
         F: [const] FnMut() -> T + [const] Destruct,
     {
@@ -89,7 +96,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
             // SAFETY: just filled above
             unsafe { Ok(dest.assume_init_mut()) }
         } else {
-            Err(())
+            Err(PushWithError)
         }
     }
 

@@ -23,8 +23,9 @@ impl Builder<MissingPose> {
 impl<P> Builder<P> {
     builder!(radius: f32);
 
-    pub const fn pose<PN: CameraPose>(self, pose: PN) -> Builder<PN>
+    pub const fn pose<PN>(self, pose: PN) -> Builder<PN>
     where
+        PN: CameraPose,
         Self: [const] Destruct,
     {
         Builder { pose, ..self }

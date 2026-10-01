@@ -63,12 +63,15 @@ pub enum DrawError<'a> {
 error_boilerplate!(<'a> DrawError<'a>);
 
 impl SkinningCubic {
-    pub(crate) fn draw<'b, 'a, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
+    pub(crate) fn draw<'b, 'a, const OUT: usize, D, L>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'b, '_, 'a, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         calculated_animation: &CalculatedAnimation,
-    ) -> Result<(), DrawError<'b>> {
+    ) -> Result<(), DrawError<'b>>
+    where
+        D: FramebufferWithDepth<OUT>,
+    {
         // Ignore cull_face error
         _ = active_shader.cull_face(self.cull_face);
 
@@ -108,11 +111,10 @@ impl EntityInner for SkinningCubic {
     type BoundingBox<T> = SkeletonBb<SkeletalVertex, T>;
     type DrawError<'a> = DrawError<'a>;
 
-    fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [Self::Vertex; 3])]) -> T>(
-        &self,
-        depth: usize,
-        init: F,
-    ) -> Option<Self::BoundingBox<T>> {
+    fn make_bounding_box<T, F>(&self, depth: usize, init: F) -> Option<Self::BoundingBox<T>>
+    where
+        F: FnMut(&[(Vector<3>, [Self::Vertex; 3])]) -> T,
+    {
         let per_mesh = partition::partition(
             self.triangles(),
             |&tri| {
@@ -149,12 +151,15 @@ impl EntityInner for SkinningCubic {
         (&self.skeleton, calc_anim)
     }
 
-    fn draw<'a, 'b, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(
+    fn draw<'a, 'b, const OUT: usize, D, L>(
         &'a self,
         active_shader: &mut ActiveShaderProgram<'b, '_, 'a, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         calculated_animation: &CalculatedAnimation,
-    ) -> Result<(), Self::DrawError<'b>> {
+    ) -> Result<(), Self::DrawError<'b>>
+    where
+        D: FramebufferWithDepth<OUT>,
+    {
         self.draw(active_shader, active_framebuffer, calculated_animation)
     }
 }

@@ -460,12 +460,15 @@ impl<M: EntityInner, T> AggregateEntity<M, T>
 where
     M::Vertex: CubicVertex,
 {
-    pub(crate) fn draw<'a, 'b, const MAX: usize, const OUT: usize, F: FramebufferWithDepth<OUT>>(
+    pub(crate) fn draw<'a, 'b, const MAX: usize, const OUT: usize, F>(
         &'a self,
         active_sp: &mut ActiveShaderProgram<'b, '_, 'a, M, ListLights<MAX>, F::Tex, OUT>,
         active_fb: &mut ActiveFramebuffer<'_, '_, OUT, F>,
         calculated_animation: &AggregateCalcAnim,
-    ) -> Result<(), DrawError<'b, M>> {
+    ) -> Result<(), DrawError<'b, M>>
+    where
+        F: FramebufferWithDepth<OUT>,
+    {
         for (model, _, calc) in self.zip_calculated_animation(calculated_animation) {
             model
                 .draw(active_sp, active_fb, calc)
@@ -521,10 +524,7 @@ where
     type Vertex = <M::BoundingBox<T> as Collision>::Vertex;
     type VertexTransform<'a> = ();
 
-    fn collides<
-        Other: Collision + ?Sized,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, Other::FuncInputs, &mut Other::Meta) -> bool,
-    >(
+    fn collides<Other, F>(
         &self,
         self_transform: &Self::Transform<'_>,
         _self_vertex_transform: &Self::VertexTransform<'_>,
@@ -532,7 +532,11 @@ where
         target_transform: &Other::Transform<'_>,
         target_vertex_transform: &Other::VertexTransform<'_>,
         mut alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [Other::Vertex; 3])>> {
+    ) -> Option<Vec<([Self::Vertex; 3], [Other::Vertex; 3])>>
+    where
+        Other: Collision + ?Sized,
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, Other::FuncInputs, &mut Other::Meta) -> bool,
+    {
         let mut out = Vec::new();
         self.zip_calculated_animation_get_index(self_transform)
             .filter_map(|(x, y, opt_z, t)| opt_z.map(|z| (x, y, z, t)))

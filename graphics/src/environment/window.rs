@@ -6,7 +6,7 @@ use glfw::{Context as _, Glfw, GlfwReceiver, PWindow, WindowEvent};
 use utils::{builder, error_boilerplate, new};
 
 use super::input::keyboard::Keyboard;
-use super::input::mouse::{CursorMode, Mouse};
+use super::input::mouse::Mouse;
 use crate::framebuffer::DefaultFramebuffer;
 use crate::types::TexDim;
 use crate::{Event, environment, gl_call};
@@ -67,10 +67,6 @@ impl Window {
         event_buffer.push(Event::WindowBuffer(&self.default_framebuffer));
 
         event_buffer
-    }
-
-    pub fn set_cursor_mode(&mut self, mode: CursorMode) {
-        self.os_handle.set_cursor_mode(mode);
     }
 
     #[expect(

@@ -29,7 +29,7 @@ pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth
 impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = FlatTexture>>
     Group<'a, MAX, OUT, D>
 {
-    pub fn new<O: CameraPose>(
+    pub fn new<O>(
         shader: &'a ShaderProgram<SimpleCubic, ListLights<'a, MAX>, OUT, FlatTexture>,
         framebuffer: &'a D,
 
@@ -39,7 +39,10 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
         opaque: Vec<(&'a SimpleCubic, Pose)>,
 
         uniforms: Vec<(CString, &'a dyn Uniform)>,
-    ) -> Box<Self> {
+    ) -> Box<Self>
+    where
+        O: CameraPose,
+    {
         Box::new(Self {
             shader,
             framebuffer,

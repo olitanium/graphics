@@ -53,10 +53,13 @@ impl<M: Model, O, T: Texture, const OUT: usize>
 impl<M: Model, O, T: Texture, const OUT: usize, V, F> Builder<M, O, T, OUT, V, F> {
     builder!(force_cull_face: Option<CullFace>);
 
-    pub fn vertex_shader<P: AsRef<Path>>(
+    pub fn vertex_shader<P>(
         self,
         source: P,
-    ) -> Result<Builder<M, O, T, OUT, VertexShader, F>, NewShaderError> {
+    ) -> Result<Builder<M, O, T, OUT, VertexShader, F>, NewShaderError>
+    where
+        P: AsRef<Path>,
+    {
         let shader = Shader::new(gl::VERTEX_SHADER, source)?;
         Ok(Builder {
             vertex_shader: VertexShader(shader),
@@ -75,10 +78,13 @@ impl<M: Model, O, T: Texture, const OUT: usize, V, F> Builder<M, O, T, OUT, V, F
         })
     }
 
-    pub fn fragment_shader<P: AsRef<Path>>(
+    pub fn fragment_shader<P>(
         self,
         source: P,
-    ) -> Result<Builder<M, O, T, OUT, V, FragmentShader>, NewShaderError> {
+    ) -> Result<Builder<M, O, T, OUT, V, FragmentShader>, NewShaderError>
+    where
+        P: AsRef<Path>,
+    {
         let shader = Shader::new(gl::FRAGMENT_SHADER, source)?;
         Ok(Builder {
             fragment_shader: FragmentShader(shader),
@@ -97,7 +103,10 @@ impl<M: Model, O, T: Texture, const OUT: usize, V, F> Builder<M, O, T, OUT, V, F
         })
     }
 
-    pub fn geometry_shader<P: AsRef<Path>>(self, source: P) -> Result<Self, NewShaderError> {
+    pub fn geometry_shader<P>(self, source: P) -> Result<Self, NewShaderError>
+    where
+        P: AsRef<Path>,
+    {
         let shader = Shader::new(gl::GEOMETRY_SHADER, source)?;
         Ok(Self {
             geometry_shader: Some(shader),

@@ -167,11 +167,15 @@ impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
     /// Errors when the active shader program is not correctly configured for
     /// drawing. This may be because the shader program as written does not line
     /// up with the type provided to Rust.
-    pub fn draw<'a, M: Model<Vertex = V>, O, const OUT: usize, D: FramebufferWithoutExtra<OUT>>(
+    pub fn draw<'a, M, O, const OUT: usize, D>(
         &self,
         active_shader_program: &mut ActiveShaderProgram<'a, '_, '_, M, O, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-    ) -> Result<(), VertexArrayDrawError<'a>> {
+    ) -> Result<(), VertexArrayDrawError<'a>>
+    where
+        M: Model<Vertex = V>,
+        D: FramebufferWithoutExtra<OUT>,
+    {
         self.bind();
         let texture_result = active_shader_program
             .bind_textures()
@@ -238,18 +242,16 @@ impl GenVertexArray<()> {
     /// Errors when the active shader program is not correctly configured for
     /// drawing. This may be because the shader program as written does not line
     /// up with the type provided to Rust.
-    pub fn draw_len<
-        'a,
-        M: Model<Vertex = NoVertex>,
-        O,
-        const OUT: usize,
-        D: FramebufferWithoutExtra<OUT>,
-    >(
+    pub fn draw_len<'a, M, O, const OUT: usize, D>(
         &self,
         active_shader_program: &mut ActiveShaderProgram<'a, '_, '_, M, O, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         len: ElementArrayLen,
-    ) -> Result<(), VertexArrayDrawError<'a>> {
+    ) -> Result<(), VertexArrayDrawError<'a>>
+    where
+        M: Model<Vertex = NoVertex>,
+        D: FramebufferWithoutExtra<OUT>,
+    {
         self.bind();
 
         #[cfg(debug_assertions)]

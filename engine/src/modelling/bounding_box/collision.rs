@@ -8,11 +8,7 @@ pub trait Collision {
     type VertexTransform<'a>;
 
     #[doc(hidden)]
-    fn collides_with_cubic_primitive<
-        V: CubicVertex,
-        T,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, &mut T) -> bool,
-    >(
+    fn collides_with_cubic_primitive<V, T, F>(
         &self,
         self_transform: &Self::Transform<'_>,
         self_vertex_transform: &Self::VertexTransform<'_>,
@@ -25,7 +21,11 @@ pub trait Collision {
             [Self::Vertex; 3],
             [<BoundingBox<V, T> as Collision>::Vertex; 3],
         )>,
-    > {
+    >
+    where
+        V: CubicVertex,
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, &mut T) -> bool,
+    {
         self.collides(
             self_transform,
             self_vertex_transform,
@@ -38,10 +38,7 @@ pub trait Collision {
         )
     }
 
-    fn collides<
-        T: Collision + ?Sized,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
-    >(
+    fn collides<T, F>(
         &self,
         self_transform: &Self::Transform<'_>,
         self_vertex_transform: &Self::VertexTransform<'_>,
@@ -49,17 +46,24 @@ pub trait Collision {
         target_transform: &T::Transform<'_>,
         target_vertex_transform: &T::VertexTransform<'_>,
         alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>;
+    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>
+    where
+        T: Collision + ?Sized,
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool;
 }
 
 /// Convenience function to annotate that the bounding box metadata is not
 /// altered.
 #[inline]
-pub fn no_alter_meta<A: Collision + ?Sized, B: Collision + ?Sized>(
+pub fn no_alter_meta<A, B>(
     _: A::FuncInputs,
     _: &mut A::Meta,
     _: B::FuncInputs,
     _: &mut B::Meta,
-) -> bool {
+) -> bool
+where
+    A: Collision + ?Sized,
+    B: Collision + ?Sized,
+{
     true
 }
