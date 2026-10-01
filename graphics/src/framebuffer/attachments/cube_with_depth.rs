@@ -1,5 +1,3 @@
-use alloc::rc::Rc;
-use core::cell::RefCell;
 use core::fmt::{self, Debug};
 
 use super::WithDepth;
@@ -20,7 +18,7 @@ use crate::texture::{
 use crate::types::TexDim;
 
 pub struct CubeWithDepth {
-    texture: Rc<RefCell<CubeMap>>,
+    texture: CubeMap,
     builder_map: OptTexBuilderMap<Self>,
 }
 
@@ -46,7 +44,7 @@ impl AttachmentWithoutExtra for CubeWithDepth {
         let cube_map = builder.build().expect("Contains Depth");
 
         Self {
-            texture: Rc::new(RefCell::new(cube_map)),
+            texture: cube_map,
             builder_map,
         }
     }
@@ -65,7 +63,7 @@ impl AttachmentWithoutExtra for CubeWithDepth {
     }
 
     fn size(&self) -> (TexDim, TexDim) {
-        self.texture.borrow().size()
+        self.texture.size()
     }
 
     fn new_framebuffer<const N: usize>(&mut self, size: (TexDim, TexDim)) -> Framebuffer<N, Self> {
@@ -78,11 +76,7 @@ impl AttachmentWithoutExtra for CubeWithDepth {
 }
 
 impl AttachmentWithDepth for CubeWithDepth {
-    // fn get_texture(&self) -> Rc<RefCell<<Self as
-    // AttachmentWithoutExtra>::Tex>> { self.texture.clone()
-    // }
-    //
     fn get_texture_ref(&self) -> &<Self as AttachmentWithoutExtra>::Tex {
-        unsafe { self.texture.try_borrow_unguarded() }.unwrap()
+        &self.texture
     }
 }

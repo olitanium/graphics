@@ -1,4 +1,4 @@
-use std::sync::Mutex;
+use core::sync::atomic::{AtomicBool, Ordering};
 
 use utils::error_boilerplate;
 
@@ -15,22 +15,18 @@ pub struct ShaderProgramContext {
 
     forced_cull_face: Option<CullFace>,
 }
-static IS_INIT: Mutex<bool> = Mutex::new(false);
+static IS_INIT: AtomicBool = AtomicBool::new(false);
 
 impl ShaderProgramContext {
     pub fn new() -> Option<Self> {
-        let mut is_init = IS_INIT.lock().ok()?;
-        if *is_init {
-            None
-        } else {
-            *is_init = true;
-            Some(ShaderProgramContext {
-                current_program: None,
-                forced_cull_face: None,
-                current_cull_face: CullFace::DoNotCull,
-                current_drawing_skybox: false,
-            })
-        }
+        let is_init = IS_INIT.swap(false, Ordering::Relaxed);
+
+        (!is_init).then_some(Self {
+            current_program: None,
+            forced_cull_face: None,
+            current_cull_face: CullFace::DoNotCull,
+            current_drawing_skybox: false,
+        })
     }
 
     pub fn use_program<M: Model, O, const OUT: usize, T: Texture>(
@@ -48,7 +44,7 @@ impl ShaderProgramContext {
             }
 
             self.force_cull_face(program.force_cull_face);
-            self.current_program = Some(program.id().as_primitive())
+            self.current_program = Some(program.id().as_primitive());
         }
     }
 
@@ -95,14 +91,23 @@ impl ShaderProgramContext {
         &mut self,
         cull_face: CullFace,
     ) -> Result<(), FaceCullingForcedByProgramError> {
-        match self.forced_cull_face {
-            None => {
+        self.forced_cull_face.map_or_else(
+            || {
                 self.cull_face_after_check(cull_face);
 
                 Ok(())
-            }
-            Some(forced) => Err(FaceCullingForcedByProgramError::Forced(forced)),
-        }
+            },
+            |forced| Err(FaceCullingForcedByProgramError::Forced(forced)),
+        )
+
+        // match self.forced_cull_face {
+        // None => {
+        // self.cull_face_after_check(cull_face);
+        //
+        // Ok(())
+        // }
+        // Some(forced) => Err(FaceCullingForcedByProgramError::Forced(forced)),
+        // }
     }
 }
 

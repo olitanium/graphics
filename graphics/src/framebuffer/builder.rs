@@ -81,7 +81,7 @@ impl<const N: usize, S> Builder<N, S, CubeWithoutExtra> {
 }
 
 impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, MissingSize, B> {
-    /// Set the framebuffer size
+    /// Set the framebuffer size.
     pub fn size(self, size: (TexDim, TexDim)) -> Builder<N, HasSize, B> {
         Builder {
             size: HasSize(size),
@@ -91,7 +91,7 @@ impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, MissingSize, B> {
 }
 
 impl<const N: usize, S> Builder<N, S, WithoutExtra> {
-    /// enable depth testing
+    /// enable depth testing.
     pub fn depth(self) -> Builder<N, S, WithDepth> {
         Builder {
             _phantom_buffer: PhantomData,
@@ -103,7 +103,7 @@ impl<const N: usize, S> Builder<N, S, WithoutExtra> {
 
 impl<const N: usize, S> Builder<N, S, WithDepth> {
     /// enable stencil testing. This method is only available after enabling
-    /// depth testing with Builder::depth
+    /// depth testing with `Builder::depth`.
     pub fn stencil(self) -> Builder<N, S, WithStencil> {
         Builder {
             _phantom_buffer: PhantomData,
@@ -149,6 +149,10 @@ impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, HasSize, B> {
             )
         });
 
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "There will not be more than GLenum::MAX colour attachments"
+        )]
         for (index, texture) in colour.iter().enumerate() {
             gl_call! {
                 gl::FramebufferTexture2D(
@@ -164,10 +168,21 @@ impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, HasSize, B> {
         if N == 0 {
             gl_call! { gl::DrawBuffer(gl::NONE); }
         } else {
+            #[expect(
+                clippy::cast_possible_truncation,
+                reason = "There will not be more than GLenum::MAX colour attachments"
+            )]
             let draw_buffers: [_; N] =
                 array::from_fn(|x| gl::COLOR_ATTACHMENT0 + x as types::GLenum);
 
-            gl_call! { gl::DrawBuffers(N as types::GLsizei, draw_buffers.as_ptr()); }
+            gl_call! {
+                gl::DrawBuffers(
+                    #[expect( clippy::cast_possible_truncation, reason = "There will not be more than GLenum::MAX colour attachments")]
+                    #[expect( clippy::cast_possible_wrap, reason = "There will not be more than GLenum::MAX colour attachments")]
+                    (N as types::GLsizei),
+                    draw_buffers.as_ptr()
+                );
+            }
         }
 
         let stencil_or_depth = B::new(self.size.0, self.map_attachment);

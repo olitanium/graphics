@@ -36,7 +36,7 @@ enum HookState {
     },
     GrabbedObject {
         length: f32,
-        attachment: AggregateModelIndex,
+        _attachment: AggregateModelIndex,
         velocity: f32,
     },
 }
@@ -370,7 +370,7 @@ impl GrapplingHook {
 
                             self.hook_state = HookState::GrabbedObject {
                                 length,
-                                attachment: destination,
+                                _attachment: destination,
                                 velocity: VELOCITY,
                             };
 

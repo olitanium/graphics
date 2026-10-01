@@ -1,9 +1,9 @@
-use alloc::ffi::{CString, NulError};
+use alloc::ffi::CString;
 use core::cell::OnceCell;
+use core::ffi::CStr;
 use core::fmt::Debug;
-use core::slice;
-use std::ffi::CStr;
-use std::hash::Hash;
+use core::hash::Hash as _;
+use std::hash::DefaultHasher;
 
 use colour::{ColourRGB, ColourRGBA};
 use linear_algebra::{Matrix, UnitVector, Vector};
@@ -66,18 +66,23 @@ macro_rules! named_define_uniform {
 }
 
 define_uniform!(i32 => |value, location, _s| { gl_call!{ gl::Uniform1i(location.as_primitive(), *value); } } );
+define_uniform!(u32 => |value, location, _s| { gl_call!{ gl::Uniform1ui(location.as_primitive(), *value); } } );
 define_uniform!(f32 => |value, location, _s| { gl_call!{ gl::Uniform1f(location.as_primitive(), *value); } } );
 define_uniform!(f64 => |value, location, _s| { gl_call!{ gl::Uniform1d(location.as_primitive(), *value); } } );
 named_define_uniform!([i32; 1] => |value, name, s| value[0].set_uniform(name, s));
+named_define_uniform!([u32; 1] => |value, name, s| value[0].set_uniform(name, s));
 named_define_uniform!([f32; 1] => |value, name, s| value[0].set_uniform(name, s));
 named_define_uniform!([f64; 1] => |value, name, s| value[0].set_uniform(name, s));
 define_uniform!([i32; 2] => |value, location, _s| gl_call! { gl::Uniform2i(location.as_primitive(), value[0], value[1]); });
+define_uniform!([u32; 2] => |value, location, _s| gl_call! { gl::Uniform2ui(location.as_primitive(), value[0], value[1]); });
 define_uniform!([f32; 2] => |value, location, _s| gl_call! { gl::Uniform2f(location.as_primitive(), value[0], value[1]); });
 define_uniform!([f64; 2] => |value, location, _s| gl_call! { gl::Uniform2d(location.as_primitive(), value[0], value[1]); });
 define_uniform!([i32; 3] => |value, location, _s| gl_call! { gl::Uniform3i(location.as_primitive(), value[0], value[1], value[2]); });
+define_uniform!([u32; 3] => |value, location, _s| gl_call! { gl::Uniform3ui(location.as_primitive(), value[0], value[1], value[2]); });
 define_uniform!([f32; 3] => |value, location, _s| gl_call! { gl::Uniform3f(location.as_primitive(), value[0], value[1], value[2]); });
 define_uniform!([f64; 3] => |value, location, _s| gl_call! { gl::Uniform3d(location.as_primitive(), value[0], value[1], value[2]); });
 define_uniform!([i32; 4] => |value, location, _s| gl_call! { gl::Uniform4i(location.as_primitive(), value[0], value[1], value[2], value[3]); });
+define_uniform!([u32; 4] => |value, location, _s| gl_call! { gl::Uniform4ui(location.as_primitive(), value[0], value[1], value[2], value[3]); });
 define_uniform!([f32; 4] => |value, location, _s| gl_call! { gl::Uniform4f(location.as_primitive(), value[0], value[1], value[2], value[3]); });
 define_uniform!([f64; 4] => |value, location, _s| gl_call! { gl::Uniform4d(location.as_primitive(), value[0], value[1], value[2], value[3]); });
 
@@ -117,18 +122,17 @@ struct SliceValue<'a> {
     c_string: OnceCell<CString>,
 }
 
-impl<'a> UniformName for SliceValue<'a> {
+impl UniformName for SliceValue<'_> {
     fn as_cstr(&self) -> &CStr {
         self.c_string.get_or_init(|| {
             let name = self.uniform.as_cstr().to_string_lossy();
             let string = format!("{name}[{:0}]", self.index);
-            let c_string = CString::new(string)
-                .expect("name is from a CStr, and '[', ']' and '0'..'9' are all not Nul");
-            c_string
+            CString::new(string)
+                .expect("name is from a CStr, and '[', ']' and '0'..'9' are all not Nul")
         })
     }
 
-    fn hash(&self) -> std::hash::DefaultHasher {
+    fn hash(&self) -> DefaultHasher {
         let mut hasher = self.uniform.hash();
 
         self.index.hash(&mut hasher);

@@ -10,7 +10,7 @@ pub enum WrapType {
 }
 
 impl WrapType {
-    pub(crate) fn get_enum(&self) -> GLint {
+    pub(crate) const fn get_enum(&self) -> GLint {
         match self {
             Self::ClampToEdge => gl::CLAMP_TO_EDGE as GLint,
             Self::ClampToBorder(_) => gl::CLAMP_TO_BORDER as GLint,
@@ -37,7 +37,7 @@ pub enum MipMapInfo {
 }
 
 impl Minification {
-    pub(crate) fn get_enum(&self) -> GLint {
+    pub(crate) const fn get_enum(&self) -> GLint {
         match self {
             Self::Nearest => gl::NEAREST as GLint,
             Self::Bilinear => gl::LINEAR as GLint,
@@ -50,7 +50,7 @@ impl Minification {
     }
 }
 
-fn get_mipmap_enum(sample_type: &MipMapInfo, mipmap_choice: &MipMapInfo) -> GLint {
+const fn get_mipmap_enum(sample_type: &MipMapInfo, mipmap_choice: &MipMapInfo) -> GLint {
     use MipMapInfo as M;
     let out = match (sample_type, mipmap_choice) {
         (M::Linear, M::Linear) => gl::LINEAR_MIPMAP_LINEAR,
@@ -72,7 +72,7 @@ pub enum Magnification {
 }
 
 impl Magnification {
-    pub(crate) fn get_enum(&self) -> GLint {
+    pub(crate) const fn get_enum(&self) -> GLint {
         match self {
             Self::Nearest => gl::NEAREST as GLint,
             Self::Linear => gl::LINEAR as GLint,

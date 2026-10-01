@@ -1,6 +1,7 @@
 use core::fmt::Debug;
 use core::marker::PhantomData;
 use core::ptr;
+use std::io;
 use std::path::Path;
 
 use colour::ColourRGB;
@@ -58,7 +59,7 @@ impl TexBuilder for Builder<MissingData> {
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum LoadImageError {
-    Io(std::io::Error),
+    Io(io::Error),
     Parse(image::ImageError),
 }
 error_boilerplate!(LoadImageError);

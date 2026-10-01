@@ -1,5 +1,5 @@
-use std::collections::HashSet;
 use alloc::rc::Rc;
+use std::collections::HashSet;
 
 use engine::entity::{Mass, Physics, SkeletonEntity};
 use engine::geometry::Pose;
@@ -28,15 +28,18 @@ impl Player {
             Mass::new_inverse(1.0),
             |_| (),
         );
-        player.physics.pose =
-            Pose::new_from_translation(Vector::new([0.25, 0.5 + PLAYER_SIZE * 0.5, 0.25]));
+        player.physics.pose = Pose::new_from_translation(Vector::new([
+            0.25,
+            const { 0.5 + PLAYER_SIZE * 0.5 },
+            0.25,
+        ]));
         player.physics.velocity = Vector::ZERO;
-        Player {
+        Self {
             entity: player.into(),
         }
     }
 
-    pub fn root(&self) -> Pose {
+    pub const fn root(&self) -> Pose {
         self.entity.physics.pose
     }
 

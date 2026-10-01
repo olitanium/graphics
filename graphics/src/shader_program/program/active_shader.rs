@@ -1,6 +1,7 @@
 use alloc::ffi::{CString, NulError};
+use core::ffi::c_char;
 use core::fmt::{self, Debug};
-use core::{iter, ptr};
+use core::ptr;
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
@@ -56,7 +57,7 @@ impl<'a, 'b, M: Model, O, T: Texture, const OUT: usize>
 }
 
 impl<'c, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, O, T, OUT> {
-    pub fn context(&self) -> &ShaderProgramContext {
+    pub const fn context(&self) -> &ShaderProgramContext {
         self.context
     }
 
@@ -77,26 +78,34 @@ pub enum ValidateError {
 }
 error_boilerplate!(ValidateError);
 
-impl<'c, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 'c, M, O, T, OUT> {
+impl<M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, '_, M, O, T, OUT> {
     pub fn validate(&self) -> Result<(), ValidateError> {
         gl_call! { gl::ValidateProgram(self.shader_program.id.as_primitive()); }
 
         let mut error = 0;
         gl_call! { gl::GetProgramiv(self.shader_program.id.as_primitive(), gl::VALIDATE_STATUS, &raw mut error); }
 
-        if error == gl::TRUE as types::GLint {
+        if error == types::GLint::from(gl::TRUE) {
             Ok(())
         } else {
             let mut error_length = 0;
             gl_call! { gl::GetProgramiv(self.shader_program.id.as_primitive(), gl::INFO_LOG_LENGTH, &raw mut error_length); }
 
-            let mut error_message: Vec<i8> = iter::repeat_n(0, error_length as usize).collect(); // Vec::with_capacity(error_length as usize);
+            // let mut error_message: Vec<i8> = iter::repeat_n(0, error_length
+            // as usize).collect(); // Vec::with_capacity(error_length as
+            // usize);
+            #[expect(clippy::cast_sign_loss, reason = "message will not be negative")]
+            let mut error_message = vec![0; error_length as usize];
 
             gl_call! { gl::GetProgramInfoLog(self.shader_program.id.as_primitive(), error_length, ptr::null_mut(), error_message.as_mut_ptr()); }
 
-            let message =
-                CString::from_vec_with_nul(error_message.into_iter().map(|x| x as u8).collect())
-                    .unwrap_or_else(|_| c"no useful message".into());
+            let message = CString::from_vec_with_nul(
+                error_message
+                    .into_iter()
+                    .map(c_char::cast_unsigned)
+                    .collect(),
+            )
+            .unwrap_or_else(|_| c"no useful message".into());
 
             Err(ValidateError::Message(message))
         }
@@ -165,17 +174,22 @@ impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, 
             gl_call! {
                 gl::GetIntegerv(gl::MAX_COMBINED_TEXTURE_IMAGE_UNITS, &raw mut out);
             }
-            out as usize
+            usize::try_from(out).expect("will not be negative")
         });
 
         if self.texture_list.len() <= *MAX_TEX_UNITS {
             let mut errors = Vec::new();
 
             for (index, (name, tex)) in self.texture_list.clone().into_iter().enumerate() {
-                tex.bind_to(index as u32);
-                let result = self.set_uniform(&name, &(index as i32));
+                #[expect(
+                    clippy::cast_possible_truncation,
+                    reason = "index <= u32::MAX because MAX_TEX_UNITS < u32::MAX"
+                )]
+                let i32_index = index as i32;
+                tex.bind_to(i32_index.cast_unsigned());
+                let result = self.set_uniform(&name, &i32_index);
                 if let Err(x) = result {
-                    errors.push(x)
+                    errors.push(x);
                 }
                 //.map_err(|err| BindTexturesError::SetUniform(err))?;
             }
@@ -192,7 +206,7 @@ impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, 
     }
 }
 
-impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, '_, M, O, T, OUT> {
+impl<M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, '_, M, O, T, OUT> {
     pub fn cull_face(
         &mut self,
         cull_face: CullFace,

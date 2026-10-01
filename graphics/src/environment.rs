@@ -46,7 +46,10 @@ where
 error_boilerplate!({G: ApiState} NewError<G>);
 
 use core::ffi::{CStr, c_void};
-#[expect(unused_variables)]
+#[expect(
+    unused_variables,
+    reason = "naming is important, this is an extern function"
+)]
 extern "system" fn debug_callback(
     source: u32,
     gltype: u32,
@@ -56,6 +59,8 @@ extern "system" fn debug_callback(
     message: *const i8,
     user_param: *mut c_void,
 ) {
+    // SAFETY:
+    // This pointer came from the OpenGL API, so must be assumed well formed.
     let message = unsafe { CStr::from_ptr(message) };
     let source = match source {
         gl::DEBUG_SOURCE_API => "DEBUG_SOURCE_API",
@@ -142,7 +147,7 @@ impl<G: ApiState> Environment<G> {
             .suppress_config(true)
             .dims(screen_dims)
             .mouse_fix_to_centre(mouse_fix_to_centre)
-            .title(title.to_string())
+            .title(title.to_owned())
             .raw_motion(true)
             .glfw(&mut glfw)
             .build()
@@ -155,6 +160,9 @@ impl<G: ApiState> Environment<G> {
         gl::load_with(|s| glfw.get_proc_address_raw(s));
 
         let version_ptr = gl_call! { gl::GetString(gl::VERSION) };
+        // SAFETY:
+        // The pointer returned is guaranteed to be from the GPU and have a Nul
+        // terminator.
         let version_cstring = unsafe { CStr::from_ptr(version_ptr.cast()) };
 
         eprintln!("OpenGL Version: {version_cstring:?}");
@@ -205,7 +213,7 @@ impl<G: ApiState> Environment<G> {
             }
 
             let framebuffer_size = self.window.get_framebuffer_size();
-            self.global_state = G::new(framebuffer_size)?
+            self.global_state = G::new(framebuffer_size)?;
         }
     }
 
@@ -229,8 +237,11 @@ impl<G: ApiState> Environment<G> {
         self.global_state.poll(events)
     }
 
-    #[expect(clippy::iter_not_returning_iterator)]
-    fn iter(&mut self) -> FrameIter<'_, G> {
+    #[expect(
+        clippy::iter_not_returning_iterator,
+        reason = "this is a `BorrowingIterator`"
+    )]
+    const fn iter(&mut self) -> FrameIter<'_, G> {
         FrameIter::new(self)
     }
 }
@@ -240,7 +251,7 @@ struct FrameIter<'a, G: ApiState> {
 }
 
 impl<'env, G: ApiState> FrameIter<'env, G> {
-    fn new(env: &'env mut Environment<G>) -> Self {
+    const fn new(env: &'env mut Environment<G>) -> Self {
         Self { env }
     }
 }
@@ -250,15 +261,15 @@ impl<G: ApiState> FrameIter<'_, G> {
         &mut self,
         queries: Option<Vec<(usize, Query)>>,
     ) -> PollResult<G::DrawOutput<'_>, G::Error> {
-        if !self.env.window.should_close() {
+        if self.env.window.should_close() {
+            PollResult::Close
+        } else {
             // Poll for and process events
             self.env.glfw.poll_events();
             // Swap front and back buffers
             self.env.window.swap_buffers();
 
             self.env.poll(queries)
-        } else {
-            PollResult::Close
         }
     }
 }

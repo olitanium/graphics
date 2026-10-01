@@ -78,7 +78,7 @@ impl ElementArrayBuffer {
         }
     }
 
-    /// Unbind any/all ElementArrayBuffer
+    /// Unbind any/all `ElementArrayBuffer`.
     pub(crate) fn unbind() {
         gl_call! {
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);

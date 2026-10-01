@@ -8,7 +8,7 @@ use engine::framebuffer::traits::FramebufferInternals as _;
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::CameraProjection;
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
-use engine::modelling::{Bloom, SkyBox};
+use engine::modelling::{Bloom, ImportError, SkyBox};
 use engine::types::TexDim;
 use engine::{ApiState, Draw, Event, PollResult};
 
@@ -39,7 +39,10 @@ pub struct State {
 }
 
 #[derive(Debug)]
-pub struct StateError;
+pub enum StateError {
+    Unknown,
+    Import(ImportError),
+}
 
 utils::error_boilerplate!(StateError);
 
@@ -115,7 +118,7 @@ impl ApiState for State {
     }
 
     fn new(initial_size: (TexDim, TexDim)) -> Result<Self, Self::Error> {
-        let output = Self::new_internal(initial_size)?;
+        let output = Self::new_internal(initial_size);
         Ok(output)
     }
 }

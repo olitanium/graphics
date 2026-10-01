@@ -1,6 +1,8 @@
+use std::io;
 use std::path::Path;
 
 use colour::ColourRGBA;
+use image::ImageError;
 use utils::error_boilerplate;
 
 use crate::types::{self, TexDim};
@@ -20,8 +22,8 @@ pub enum ImageType {
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum NewImageError {
-    Io(std::io::Error),
-    Parse(image::error::ImageError),
+    Io(io::Error),
+    Parse(ImageError),
 }
 error_boilerplate!(NewImageError);
 
@@ -71,7 +73,7 @@ macro_rules! new_from_file {
     };
 }
 
-pub(crate) struct TexInternalFormat<'a> {
+pub struct TexInternalFormat<'a> {
     pub(crate) internal_format: types::GLint,
     pub(crate) size: (TexDim, TexDim),
     pub(crate) type_: types::GLenum,
@@ -90,7 +92,7 @@ impl Image {
         }
     }
 
-    pub(crate) fn get_opengl_params(&self) -> TexInternalFormat<'_> {
+    pub(crate) const fn get_opengl_params(&self) -> TexInternalFormat<'_> {
         let internal_format = match &self.data {
             ImageType::Linear(_) => gl::RGBA,
             ImageType::Srgba(_) => gl::SRGB_ALPHA,

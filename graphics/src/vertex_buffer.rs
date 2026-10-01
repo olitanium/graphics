@@ -27,8 +27,7 @@ impl<V: Vertex> VertexBuffer<V> {
 
         gl_call! { gl::BufferData(
             gl::ARRAY_BUFFER,
-            #[allow(clippy::cast_possible_wrap)]
-            // slice not allowed to be bigger than isize for non-zero types anyway
+            #[expect(clippy::cast_possible_wrap, reason = "slice not allowed to be bigger than isize for non-zero types anyway")]
             (mem::size_of_val(vertices.as_slice()) as types::GLsizeiptr),
             vertices.as_ptr().cast(),
             gl::STATIC_DRAW,
@@ -37,8 +36,11 @@ impl<V: Vertex> VertexBuffer<V> {
         Self { id, vertices }
     }
 
-    pub(crate) fn len(&self) -> VertexBufferLen {
-        #[allow(clippy::cast_possible_truncation)]
+    pub(crate) const fn len(&self) -> VertexBufferLen {
+        #[expect(
+            clippy::cast_possible_truncation,
+            reason = "should not be more than `VertexBufferLen::MAX`"
+        )]
         // vertices len is unlikely to be greater than 4 billion
         VertexBufferLen::new(self.vertices.len() as VertexBufferLen::Primitive)
     }

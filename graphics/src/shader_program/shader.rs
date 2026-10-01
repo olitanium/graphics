@@ -1,3 +1,5 @@
+use alloc::string::FromUtf8Error;
+use core::num::TryFromIntError;
 use std::path::Path;
 use std::{fs, io};
 
@@ -34,8 +36,9 @@ impl Shader {
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum NewFromSliceError {
-    SourceTooLong,
-    CompileError,
+    SourceTooLong(TryFromIntError),
+    CompileUtf8Lossy(FromUtf8Error),
+    Compile(String),
 }
 error_boilerplate!(NewFromSliceError);
 
@@ -49,7 +52,7 @@ impl Shader {
         let len = cstr
             .len()
             .try_into()
-            .map_err(|_| NewFromSliceError::SourceTooLong)?;
+            .map_err(NewFromSliceError::SourceTooLong)?;
 
         let ptr_len = &raw const len;
         let ptr_cstr = cstr.as_ptr().cast();
@@ -70,19 +73,38 @@ impl Shader {
             );
         }
 
-        if is_success != gl::TRUE.into() {
-            // TODO: find error reasons
-            Err(NewFromSliceError::CompileError)
-        } else {
+        if is_success == gl::TRUE.into() {
             let source = String::from_utf8_lossy_owned(cstr.to_vec());
             Ok(Self {
                 id: shader_id,
                 source,
             })
+        } else {
+            let mut log_size = 0;
+            gl_call! {gl::GetShaderiv(shader_id.as_primitive(), gl::INFO_LOG_LENGTH, &raw mut log_size); }
+
+            #[expect(
+                clippy::cast_sign_loss,
+                reason = "`gl::GetShaderiv` will never return a negative"
+            )]
+            let mut log = vec![0_u8; log_size as usize];
+            let mut actual_written = 0;
+            gl_call! {gl::GetShaderInfoLog(shader_id.as_primitive(), log_size, &raw mut actual_written, log.as_mut_ptr().cast())};
+
+            #[expect(
+                clippy::cast_sign_loss,
+                reason = "`gl::GetShaderiv` will never return a negative"
+            )]
+            log.truncate(actual_written as usize);
+
+            let string_error =
+                String::from_utf8(log).map_err(NewFromSliceError::CompileUtf8Lossy)?;
+            // TODO: find error reasons
+            Err(NewFromSliceError::Compile(string_error))
         }
     }
 
-    pub fn id(&self) -> &ShaderId {
+    pub const fn id(&self) -> &ShaderId {
         &self.id
     }
 }

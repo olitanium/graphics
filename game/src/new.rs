@@ -22,7 +22,7 @@ use crate::state::{State, StateError};
 use crate::sun::Sun;
 
 impl State {
-    pub fn new_internal(screen_dims: (TexDim, TexDim)) -> Result<Self, StateError> {
+    pub fn new_internal(screen_dims: (TexDim, TexDim)) -> Self {
         let exposure = 1.0;
 
         let hdr_fb = Builder::new_flat().depth().size(screen_dims).build();
@@ -132,7 +132,7 @@ impl State {
 
         let bloom = Bloom::new(hdr_fb.size());
 
-        Ok(Self {
+        Self {
             toggle_b: true,
 
             game_camera,
@@ -152,7 +152,7 @@ impl State {
             toggle_g: true,
             toggle_h: true,
             bloom,
-        })
+        }
     }
 }
 
@@ -164,7 +164,7 @@ pub fn make_model(which_model: &str) -> Result<SimpleCubic, StateError> {
             vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
             true,
         )
-        .unwrap()
+        .map_err(StateError::Import)?
         .cull_face(CullFace::BackFace)
         .apply_transformation(Pose::new_from_translation(Vector::new([0.0, -133.0, 43.0])))
         .scale(0.006)
@@ -179,61 +179,9 @@ pub fn make_model(which_model: &str) -> Result<SimpleCubic, StateError> {
             ],
             false,
         )
-        .unwrap()
+        .map_err(StateError::Import)?
         .material(Rc::new(Material::white()))
         .build(),
-        "bigguy" => SimpleCubic::import(
-            "assets/vamp.fbx",
-            vec![
-                P::Triangulate,
-                P::FlipUVs,
-                P::OptimizeGraph,
-                P::OptimizeMeshes,
-            ],
-            true,
-        )
-        .unwrap()
-        .scale(0.01)
-        .build(),
-        // "oliver" => {
-        // let material = Rc::new(
-        // Material::builder()
-        // .diffuse(FlatTexture::monochrome(ColourRGBA::new([
-        // 1.0, 0.0, 0.0, 1.0,
-        // ])))
-        // .build(),
-        // );
-        //
-        // let mut builder = SimpleCubic::builder();
-        // const LENGTH_TAIL: usize = 10;
-        // let cube_push = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.0]));
-        // let mut cube_pose = Pose::IDENTITY;
-        //
-        // builder.push_cube(cube_pose, material, 1.0, SkeletonBoneIndex::SKELETON_ROOT_BONE);
-        //
-        // for current_bone in 1..LENGTH_TAIL {
-        // cube_pose = cube_pose.transform_by(&cube_push);
-        //
-        // let material = Rc::new(
-        // Material::builder()
-        // .diffuse(FlatTexture::grayscale(
-        // current_bone as f32 / LENGTH_TAIL as f32,
-        // 1.0,
-        // ))
-        // .build(),
-        // );
-        //
-        // builder.push_cube(cube_pose, material, 1.0, current_bone);
-        // }
-        // let (skeleton, _, animation_1) = test_models::tail_animation(LENGTH_TAIL);
-        // (
-        // Some(animation_1),
-        // builder
-        // .cull_face(CullFace::BackFace)
-        // .skeleton(skeleton)
-        // .build(),
-        // )
-        // }
         _ => SimpleCubic::empty(),
     };
     Ok(model)

@@ -1,7 +1,7 @@
 use core::cell::RefMut;
 
 /// Helpful traits to ensure that certain draw operations cannot be applied to
-/// framebuffer's which are missing particular attachments
+/// framebuffers which are missing particular attachments.
 use super::{ActiveFramebuffer, Framebuffer, FramebufferContext};
 use crate::texture::{Texture, TextureHasBuilder};
 use crate::types::{self, FrameBufferId, TexDim};
@@ -30,7 +30,7 @@ pub trait AttachmentWithoutExtra: Sized {
     fn new_framebuffer<const N: usize>(&mut self, size: (TexDim, TexDim)) -> Framebuffer<N, Self>;
 
     /// Get size of the internal buffer, as a fallback if there is no
-    /// colourSized buffer. Ideally this would move into WithDepthTrait
+    /// colourSized buffer. Ideally this would move into `WithDepthTrait`
     /// along with `aspect_ratio`.
     fn size(&self) -> (TexDim, TexDim);
 
@@ -47,10 +47,10 @@ pub trait AttachmentWithDepth: AttachmentWithoutExtra {
     }
 }
 
-/// Marker trait for attachments which provide a depth-stencil buffer
+/// Marker trait for attachments which provide a depth-stencil buffer.
 pub trait AttachmentWithStencil: AttachmentWithDepth {
     fn stencil_testing(stencil_testing: bool, context: &mut FramebufferContext) {
-        context.stencil_testing(stencil_testing)
+        context.stencil_testing(stencil_testing);
     }
 }
 
@@ -60,7 +60,10 @@ pub trait FramebufferInternals: Sized {
     fn size(&self) -> (TexDim, TexDim);
     fn aspect_ratio(&self) -> f32 {
         let (x, y) = self.size();
-        #[allow(clippy::cast_precision_loss)]
+        #[expect(
+            clippy::cast_precision_loss,
+            reason = "unlikely to have screen so large"
+        )]
         (x.as_primitive() as f32 / y.as_primitive() as f32)
     }
     fn id(&self) -> &FrameBufferId;

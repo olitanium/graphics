@@ -1,17 +1,17 @@
 use core::cell::RefMut;
 use core::marker::PhantomData;
+use core::sync::atomic::{AtomicBool, Ordering};
 use std::collections::HashSet;
-use std::sync::Mutex;
 
 use super::{FramebufferWithDepth, FramebufferWithStencil};
 use crate::framebuffer::traits::FramebufferWithoutExtra;
-use crate::gl_call;
+use crate::{gl_call, types};
 
 #[derive(Debug)]
 pub struct FramebufferContext {
-    cleared: HashSet<gl::types::GLuint>,
+    cleared: HashSet<types::GLuint>,
 }
-static IS_INIT: Mutex<bool> = Mutex::new(false);
+static IS_INIT: AtomicBool = AtomicBool::new(false);
 
 macro_rules! enable_disable {
     ($name:ident, $glenum:ident) => {
@@ -33,15 +33,10 @@ impl FramebufferContext {
     enable_disable!(srgb_framebuffer, FRAMEBUFFER_SRGB);
 
     pub fn new() -> Option<Self> {
-        let mut is_init = IS_INIT.lock().ok()?;
-        if *is_init {
-            None
-        } else {
-            *is_init = true;
-            Some(Self {
-                cleared: HashSet::new(),
-            })
-        }
+        let is_init = IS_INIT.swap(false, Ordering::Relaxed);
+        (!is_init).then(|| Self {
+            cleared: HashSet::new(),
+        })
     }
 
     pub fn register<'a, 'b, const OUT: usize, D: FramebufferWithoutExtra<OUT>>(
@@ -61,7 +56,7 @@ impl FramebufferContext {
         self.cleared.clear();
     }
 
-    /// Clear the currently bound Framebuffer and ALL buffer bits
+    /// Clear the currently bound Framebuffer and ALL buffer bits.
     pub fn clear_current_framebuffer(&mut self) {
         gl_call! {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT | gl::STENCIL_BUFFER_BIT);
@@ -100,9 +95,9 @@ impl<'a, 'b, const OUT: usize, D: FramebufferWithoutExtra<OUT>> ActiveFramebuffe
         }
     }
 
-    /// Clear the currently bound Framebuffer and ALL buffer bits
+    /// Clear the currently bound Framebuffer and ALL buffer bits.
     pub fn clear(&mut self) {
-        self.context.clear_current_framebuffer()
+        self.context.clear_current_framebuffer();
     }
 }
 

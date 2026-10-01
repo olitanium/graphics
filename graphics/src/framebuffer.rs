@@ -49,10 +49,6 @@ pub struct DefaultFramebuffer {
 
 pub static DEFAULT_FB_ID: FrameBufferId = FrameBufferId::new(0);
 
-impl Drop for DefaultFramebuffer {
-    fn drop(&mut self) {}
-}
-
 impl FramebufferInternals for DefaultFramebuffer {
     type Tex = FlatTexture;
 
@@ -90,13 +86,14 @@ impl FramebufferWithStencil<1> for DefaultFramebuffer {
 }
 
 /// A Framebuffer for drawing anything onto. Can be any size (rectangle). As an
-/// HDR buffer it can store any value in it's four channels (rgba)
+/// HDR buffer it can store any value in it's four channels (rgba).
 #[derive(Debug)]
 pub struct Framebuffer<const OUT: usize, X: AttachmentWithoutExtra> {
-    /// OpenGL ID for this Framebuffer
+    /// OpenGL ID for this Framebuffer.
     id: FrameBufferId,
     /// Holder for Stencil and/or Depth buffers.
-    /// To ensure no Stencil without depth (which would be an incomplete buffer)
+    /// To ensure no Stencil without depth (which would be an incomplete
+    /// buffer).
     stencil_or_depth: X,
     /// A default screen-size quad whose texture(s) are those drawn onto.
     textures: [RefCell<X::Tex>; OUT],
@@ -150,7 +147,7 @@ impl<const OUT: usize, X: AttachmentWithStencil> FramebufferWithStencil<OUT>
 }
 
 impl DefaultFramebuffer {
-    /// Internal function to generate the default (screen) `FrameBuffer`
+    /// Internal function to generate the default (screen) `FrameBuffer`.
     pub(crate) fn new(size: (TexDim, TexDim)) -> Self {
         Self {
             size,
@@ -192,7 +189,7 @@ impl<const N: usize, X: AttachmentWithoutExtra> Framebuffer<N, X> {
         self.textures.each_ref().map(|ref_rc| ref_rc.borrow())
     }
 
-    pub fn get_textures_raw(&self) -> &[RefCell<X::Tex>] {
+    pub const fn get_textures_raw(&self) -> &[RefCell<X::Tex>] {
         &self.textures
     }
 }

@@ -3,13 +3,13 @@ use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::lighting::shadow::{PointLightIlluminatesGroup, ShadowListLights};
 use engine::modelling::{BloomGroup, FramebufferQuad, ScreenQuadGroup, ShadowGroup, SkyBoxGroup};
 use engine::query::HasDrawnQuery;
-use engine::{Draw, PollResult, VecDraw};
+use engine::{Draw, PollResult, VecDraw, opengl_shaders};
 
 use crate::state::{State, StateError};
 
 impl State {
     pub fn draw<'a>(
-        &'a mut self,
+        &'a self,
         default_framebuffer: &'a DefaultFramebuffer,
     ) -> PollResult<Vec<Box<dyn Draw + 'a>>, StateError> {
         let mut out = VecDraw::new();
@@ -22,7 +22,7 @@ impl State {
             opaque.push(self.small_cube.debug_get_pair_model_bind_pose());
         }
 
-        let _sun = vec![self.sun.inner.debug_get_pair_model_bind_pose()];
+        // let _sun = vec![self.sun.inner.debug_get_pair_model_bind_pose()];
 
         out.push(ShadowGroup::new(
             &self.hdr_fb,
@@ -51,7 +51,7 @@ impl State {
         out.push(HasDrawnQuery::new(0, player_illuminates));
 
         out.push(SkyBoxGroup::new(
-            engine::opengl_shaders::skybox_hdr(),
+            opengl_shaders::skybox_hdr(),
             &self.hdr_fb,
             &self.skybox,
             &self.game_camera.camera,
@@ -68,18 +68,18 @@ impl State {
         // 20,
         // || ColourRGBA::grayscale(1.0, 0.5),
         // ));
-        if !self.toggle_g {
+        if self.toggle_g {
+            out.push(ScreenQuadGroup::new(
+                opengl_shaders::exposure3(),
+                default_framebuffer,
+                vec![FramebufferQuad::new_from_framebuffer(&self.hdr_fb)],
+                vec![(c"exposure".to_owned(), &self.exposure)],
+            ));
+        } else {
             out.push(BloomGroup::new(
                 &self.hdr_fb,
                 default_framebuffer,
                 &self.bloom,
-            ));
-        } else {
-            out.push(ScreenQuadGroup::new(
-                engine::opengl_shaders::exposure3(),
-                default_framebuffer,
-                vec![FramebufferQuad::new_from_framebuffer(&self.hdr_fb)],
-                vec![(c"exposure".to_owned(), &self.exposure)],
             ));
         }
 

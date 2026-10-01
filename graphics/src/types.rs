@@ -1,13 +1,10 @@
 use core::fmt::{self, Debug};
 use core::num::{NonZero, NonZeroUsize};
+use std::fs;
 use std::io::Write as _;
 
 pub(crate) use gl::types::*;
 
-#[expect(
-    clippy::allow_attributes,
-    reason = "sometimes the macro released unused code"
-)]
 macro_rules! opaque {
     ($name:ident : $type:ident $(, $derives: ident)* $(,)?) => {
         #[derive(Debug, Hash, PartialEq, Eq $(, $derives)*)]
@@ -21,6 +18,10 @@ macro_rules! opaque {
             }
         }
 
+        #[expect(
+            clippy::allow_attributes,
+            reason = "sometimes the macro released unused code"
+        )]
         impl $name {
             #[allow(dead_code, reason = "May not be required on this invocation of the macro")]
             pub type Primitive = $type;
@@ -58,8 +59,13 @@ macro_rules! nz_opaque {
             }
         }*/
 
+
+        #[expect(
+            clippy::allow_attributes,
+            reason = "sometimes the macro released unused code"
+        )]
         impl $name {
-            #[expect(dead_code)]
+            #[allow(dead_code, reason = "May not be required on this invocation of the macro")]
             pub(crate) type Primitive = $type;
 
             pub(crate) const  fn as_primitive(&self) -> Self::Primitive {
@@ -75,9 +81,13 @@ nz_opaque!(TexDim: GLsizei, Clone, Copy);
 
 impl TexDim {
     pub const fn from_non_zero(value: NonZeroUsize) -> Self {
-        Self(NonZero::new(value.get() as _).unwrap())
+        Self(NonZero::new(value.get() as Self::Primitive).unwrap())
     }
 
+    #[expect(
+        clippy::cast_precision_loss,
+        reason = "unlikely that screen size is 24 bit long"
+    )]
     pub const fn aspect_ratio(x: Self, y: Self) -> f32 {
         x.as_primitive() as f32 / y.as_primitive() as f32
     }
@@ -89,7 +99,7 @@ nz_opaque!(ElementArrayId: GLuint);
 opaque!(ElementArrayElem: GLuint, Clone, Copy);
 
 impl ElementArrayElem {
-    pub fn as_usize(self) -> usize {
+    pub const fn as_usize(self) -> usize {
         self.0 as usize
     }
 }
@@ -102,24 +112,22 @@ nz_opaque!(ShaderProgramId: GLuint);
 nz_opaque!(Query: GLuint);
 
 #[derive(Clone, Copy)]
-pub struct GLError(pub(crate) gl::types::GLenum);
+pub struct GLError(pub(crate) GLenum);
 
 impl Debug for GLError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let error;
-        f.write_str(match self.0 {
-            gl::INVALID_OPERATION => stringify!(gl::INVALID_OPERATION),
-            x => {
-                let mut file = std::fs::OpenOptions::new()
-                    .append(true)
-                    .create(true)
-                    .open("error_codes.log")
-                    .unwrap();
-                let _ = writeln!(file, "{x}");
-                error = format!("unknown error: {}", self.0);
-                &error
-            }
-        })
+        let string = if self.0 == gl::INVALID_OPERATION {
+            "gl::INVALID_OPERATION"
+        } else {
+            let mut file = fs::File::options()
+                .append(true)
+                .create(true)
+                .open("error_codes.log")
+                .map_err(|_err| fmt::Error)?;
+            writeln!(file, "{}", self.0).map_err(|_err| fmt::Error)?;
+            &format!("unknown error: {}", self.0)
+        };
+        f.write_str(string)
     }
 }
 
@@ -132,7 +140,7 @@ pub enum VertexAttrType {
 }
 
 impl VertexAttrType {
-    pub(crate) fn get_enum(self) -> gl::types::GLenum {
+    pub(crate) const fn get_enum(self) -> GLenum {
         match self {
             Self::GLfloat(_) => gl::FLOAT,
             Self::GLint(_) => gl::INT,
@@ -144,13 +152,13 @@ pub const trait VertexAttr: Copy {
     fn attr(val: u8) -> VertexAttrType;
 }
 
-const impl VertexAttr for gl::types::GLfloat {
+const impl VertexAttr for GLfloat {
     fn attr(val: u8) -> VertexAttrType {
         VertexAttrType::GLfloat(val)
     }
 }
 
-const impl VertexAttr for gl::types::GLint {
+const impl VertexAttr for GLint {
     fn attr(val: u8) -> VertexAttrType {
         VertexAttrType::GLint(val)
     }

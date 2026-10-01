@@ -4,7 +4,8 @@
 #![feature(const_ops)]
 mod error;
 
-mod cstr;
+mod iter_with_cloned;
+pub use iter_with_cloned::{HasIterWithCloned, IterWithCloned};
 
 mod ref_or_owned;
 

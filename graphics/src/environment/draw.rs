@@ -17,7 +17,7 @@ pub enum PollResultResidual<E> {
     Restart,
 }
 
-impl<'a, E, D: Draw + 'a> Residual<D> for PollResultResidual<E> {
+impl<E, D: Draw> Residual<D> for PollResultResidual<E> {
     type TryType = PollResult<D, E>;
 }
 
@@ -32,7 +32,7 @@ impl<E, D: Draw> Try for PollResult<D, E> {
     type Output = D;
     type Residual = PollResultResidual<E>;
 
-    fn branch(self) -> core::ops::ControlFlow<Self::Residual, Self::Output> {
+    fn branch(self) -> ControlFlow<Self::Residual, Self::Output> {
         match self {
             Self::Error(err) => ControlFlow::Break(PollResultResidual::Err(err)),
             Self::Close => ControlFlow::Break(PollResultResidual::Close),
@@ -88,7 +88,7 @@ impl DrawOut {
         inner: DrawOutInner::Draw,
     };
 
-    pub(crate) fn make_query(name: usize, query_object: Query) -> Self {
+    pub(crate) const fn make_query(name: usize, query_object: Query) -> Self {
         Self {
             inner: DrawOutInner::QueryOutput { name, query_object },
         }
@@ -125,7 +125,7 @@ impl DrawOut {
 // }
 // }
 
-impl<'a> Draw for Box<dyn Draw + 'a> {
+impl Draw for Box<dyn Draw + '_> {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
@@ -148,24 +148,22 @@ impl<'a> Draw for Box<dyn Draw + 'a> {
     }
 }
 
-impl<'a, T: Draw + 'a> Draw for [T] {
+impl<T: Draw> Draw for [T] {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
-        shader_marker: &mut ShaderProgramContext,
+        sp_context: &mut ShaderProgramContext,
     ) -> DrawOut {
         let mut outputs = Vec::new();
         for group in self {
-            match group.draw_sized(fb_context, shader_marker).inner {
-                DrawOutInner::QueryOutput {
-                    name, query_object, ..
-                } => {
+            match group.draw_sized(fb_context, sp_context).inner {
+                DrawOutInner::QueryOutput { name, query_object } => {
                     outputs.push((name, query_object));
                 }
-                DrawOutInner::MultiQueryOutput { values, .. } => {
+                DrawOutInner::MultiQueryOutput { values } => {
                     outputs.extend(values);
                 }
-                _ => {}
+                DrawOutInner::Draw => {}
             }
         }
 
@@ -179,7 +177,7 @@ impl<'a, T: Draw + 'a> Draw for [T] {
     }
 }
 
-impl<'a, T: Draw + 'a> Draw for Vec<T> {
+impl<T: Draw> Draw for Vec<T> {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
@@ -206,8 +204,8 @@ impl<'a, T: Draw + 'a> Draw for Vec<T> {
 pub struct DrawNothing;
 
 impl DrawNothing {
-    pub fn new() -> Self {
-        DrawNothing
+    pub const fn new() -> Self {
+        Self
     }
 }
 

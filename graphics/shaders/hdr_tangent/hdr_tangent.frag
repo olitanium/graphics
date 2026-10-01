@@ -76,15 +76,15 @@ uniform float time = 0.0;
 
 in PointLightVarying out_point_vary[MAX_LIGHTS];
 uniform PointLight point[MAX_LIGHTS];
-uniform int num_point = 0;
+uniform uint num_point = 0u;
 
 in FarLightVarying out_far_vary[MAX_LIGHTS];
 uniform FarLight far[MAX_LIGHTS];
-uniform int num_far = 0;
+uniform uint num_far = 0u;
 
 in SpotLightVarying out_spot_vary[MAX_LIGHTS];
 uniform SpotLight spot[MAX_LIGHTS];
-uniform int num_spot = 0;
+uniform uint num_spot = 0u;
 
 in vec3 tangent_view_direction;
 
@@ -105,13 +105,13 @@ void main() {
     
     vec4 illumination = vec4(0);
     
-    for (int x = 0; x < num_point; ++x) {
+    for (uint x = 0u; x < num_point; ++x) {
         illumination += PointLight_illuminate(point[x], out_point_vary[x]);
     }
-    for (int x = 0; x < num_far; ++x) {
+    for (uint x = 0u; x < num_far; ++x) {
         illumination += FarLight_illuminate(far[x], out_far_vary[x]);
     }
-    for (int x = 0; x < num_spot; ++x) {
+    for (uint x = 0u; x < num_spot; ++x) {
         illumination += SpotLight_illuminate(spot[x], out_spot_vary[x]);
     }
 

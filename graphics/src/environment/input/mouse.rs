@@ -41,11 +41,19 @@ pub struct Mouse(Rc<Inner>);
 
 impl Mouse {
     pub(crate) fn new(window: &mut PWindow, fix_to_centre: bool) -> Self {
-        let out = Mouse(Rc::default());
-        let state_ptr = out.0.clone();
+        let out = Self(Rc::default());
+        let state_ptr = Rc::clone(&out.0);
 
         window.set_cursor_pos_callback(move |_, x, y| {
+            #[expect(
+                clippy::cast_possible_truncation,
+                reason = "no need for such precision"
+            )]
             let y = -y as f32;
+            #[expect(
+                clippy::cast_possible_truncation,
+                reason = "no need for such precision"
+            )]
             let x = x as f32;
 
             let new = match state_ptr.state.get() {
@@ -75,7 +83,7 @@ impl Mouse {
             state_ptr.state.set(new);
         });
 
-        let buttons_ptr = out.0.clone();
+        let buttons_ptr = Rc::clone(&out.0);
 
         window.set_mouse_button_callback(move |_, mouse_button, action, _| match action {
             Action::Press => {

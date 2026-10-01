@@ -3,7 +3,7 @@ use crate::framebuffer::{self, Framebuffer, FramebufferContext};
 use crate::texture::FlatTexture;
 use crate::types::TexDim;
 
-/// Marker type to hold no extra depth or stencil buffer
+/// Marker type to hold no extra depth or stencil buffer.
 #[derive(Debug, Default)]
 pub struct WithoutExtra;
 

@@ -1,10 +1,9 @@
+use alloc::ffi::{CString, NulError};
 use core::cell::RefCell;
 use core::fmt::{self, Debug};
+use core::hash::Hasher as _;
 use core::marker::PhantomData;
 use std::collections::HashMap;
-use std::ffi::{CStr, CString, NulError};
-use std::hash::{DefaultHasher, Hash, Hasher};
-use std::ptr::hash;
 
 use crate::texture::Texture;
 use crate::types::{ShaderProgramId, UniformLocation};
@@ -51,9 +50,9 @@ impl<M: Model, O, const OUT: usize, T: Texture> Debug for ShaderProgram<M, O, OU
     }
 }
 
-/// # SAFETY
-/// This is safe because only one ActiveShaderProgram can exist,
-/// which is the only way of accessing the internal RefCell
+// SAFETY:
+// This is safe because only one `ActiveShaderProgram` can exist.
+// which is the only way of accessing the internal `RefCell`.
 unsafe impl<M: Model, O, const OUT: usize, T: Texture> Sync for ShaderProgram<M, O, OUT, T> {}
 
 impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
@@ -61,7 +60,7 @@ impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
         Builder::new()
     }
 
-    pub fn id(&self) -> &ShaderProgramId {
+    pub const fn id(&self) -> &ShaderProgramId {
         &self.id
     }
 
@@ -105,7 +104,7 @@ impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
                     let name = c_name.to_string_lossy();
                     let split_on_index = name.split('[').next();
 
-                    let name_before_index = split_on_index.unwrap_or(name.as_ref());
+                    let name_before_index = split_on_index.unwrap_or_else(|| name.as_ref());
                     let is_it_in_the_source = self.concat_all_text.contains(name_before_index);
                     location = if is_it_in_the_source { -2 } else { -1 };
                 }

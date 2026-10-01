@@ -9,15 +9,15 @@ use super::input::keyboard::Keyboard;
 use super::input::mouse::{CursorMode, Mouse};
 use crate::framebuffer::DefaultFramebuffer;
 use crate::types::TexDim;
-use crate::{Event, gl_call};
+use crate::{Event, environment, gl_call};
 
-#[expect(dead_code)]
+#[expect(dead_code, reason = "will be used later")]
 #[derive(Debug)]
 pub struct Window {
-    glfw_window: PWindow,
+    os_handle: PWindow,
     default_framebuffer: DefaultFramebuffer,
     events: GlfwReceiver<(f64, WindowEvent)>,
-    pub(crate) window_resized: Rc<Cell<bool>>,
+    pub(crate) resized: Rc<Cell<bool>>,
     pub(crate) keyboard: Keyboard,
     pub(crate) mouse: Mouse,
 }
@@ -28,23 +28,23 @@ impl Window {
     }
 
     pub(crate) fn get_framebuffer_size(&self) -> (TexDim, TexDim) {
-        let (width, height) = self.glfw_window.get_framebuffer_size();
+        let (width, height) = self.os_handle.get_framebuffer_size();
         (TexDim::new(width), TexDim::new(height))
     }
 
     pub(crate) fn window_resized(&self) -> bool {
-        self.window_resized.get()
+        self.resized.get()
     }
 
     pub(crate) fn should_close(&self) -> bool {
-        self.glfw_window.should_close()
+        self.os_handle.should_close()
     }
 
     pub(crate) fn swap_buffers(&mut self) {
-        self.glfw_window.swap_buffers();
+        self.os_handle.swap_buffers();
     }
 
-    pub(crate) fn poll_events(&mut self) -> Vec<Event<'_>> {
+    pub(crate) fn poll_events(&self) -> Vec<Event<'_>> {
         let mut event_buffer = Vec::new();
 
         let mouse = Event::Mouse {
@@ -70,9 +70,17 @@ impl Window {
     }
 
     pub fn set_cursor_mode(&mut self, mode: CursorMode) {
-        self.glfw_window.set_cursor_mode(mode);
+        self.os_handle.set_cursor_mode(mode);
     }
 
+    #[expect(
+        clippy::unused_self,
+        reason = "I cannot use this function until I have a `Window` instance"
+    )]
+    #[expect(
+        clippy::needless_pass_by_ref_mut,
+        reason = "I cannot use this function until I have a `Window` instance"
+    )]
     pub(crate) fn configure(&mut self) {
         gl_call! {
             gl::Enable(gl::BLEND);
@@ -85,7 +93,7 @@ impl Window {
             gl::Enable(gl::DEBUG_OUTPUT);
         };
         gl_call! {
-            gl::DebugMessageCallback(Some(crate::environment::debug_callback), ptr::null());
+            gl::DebugMessageCallback(Some(environment::debug_callback), ptr::null());
         };
 
         gl_call! {
@@ -175,12 +183,12 @@ impl Builder<HasGlfw<'_>> {
                 },
             )
             .ok_or(GlfwError)?;
-        Ok(make_window(self, glfw_window, events))
+        Ok(make_window(&self, glfw_window, events))
     }
 }
 
 fn make_window<T>(
-    builder: Builder<T>,
+    builder: &Builder<T>,
     mut glfw_window: PWindow,
     events: GlfwReceiver<(f64, WindowEvent)>,
 ) -> Window {
@@ -189,7 +197,7 @@ fn make_window<T>(
 
     let window_resized = Rc::new(Cell::new(false));
 
-    let resized_ptr = window_resized.clone();
+    let resized_ptr = Rc::clone(&window_resized);
     glfw_window
         .set_framebuffer_size_callback(move |_window, _width, _height| resized_ptr.set(true));
 
@@ -205,10 +213,10 @@ fn make_window<T>(
     let default_framebuffer = DefaultFramebuffer::new(size);
 
     let mut window = Window {
-        window_resized,
+        os_handle: glfw_window,
         default_framebuffer,
         events,
-        glfw_window,
+        resized: window_resized,
         keyboard,
         mouse,
     };

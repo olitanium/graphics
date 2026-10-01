@@ -49,8 +49,6 @@ impl TextureHasBuilder for CubeMap {
 }
 
 impl Texture for CubeMap {
-    /// # Safety
-    /// The id returned must not be allowed to drop the graphics card texture
     fn id(&self) -> &TexId {
         &self.id
     }

@@ -1,6 +1,6 @@
 use alloc::ffi::CString;
 use core::ffi::CStr;
-use core::hash::{Hash, Hasher};
+use core::hash::Hash;
 use std::hash::DefaultHasher;
 
 pub trait UniformName {

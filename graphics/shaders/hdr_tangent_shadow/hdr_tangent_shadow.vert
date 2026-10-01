@@ -61,15 +61,15 @@ uniform vec4 camera_position;
 
 uniform PointLightVarying point_vary[MAX_LIGHTS];
 uniform PointLight point[MAX_LIGHTS];
-uniform int num_point = 0;
+uniform uint num_point;
 
 uniform FarLightVarying far_vary[MAX_LIGHTS];
 uniform FarLight far[MAX_LIGHTS];
-uniform int num_far = 0;
+uniform uint num_far = 0u;
 
 uniform SpotLightVarying spot_vary[MAX_LIGHTS];
 uniform SpotLight spot[MAX_LIGHTS];
-uniform int num_spot = 0;
+uniform uint num_spot = 0u;
 
 out PointLightVarying out_point_vary[MAX_LIGHTS];
 out FarLightVarying out_far_vary[MAX_LIGHTS];
@@ -120,19 +120,19 @@ void main() {
     // Translate all vectors to tangent-space for fragment shader
     
     // lighting
-    for (int x = 0; x < num_point; ++x) {
+    for (uint x = 0u; x < num_point; ++x) {
         out_point_vary[x].position = to_tangent * point_vary[x].position; 
         // SHADOW
         out_point_vary[x].frag_to_light = (model * vec4(in_position, 1.0)).xyz - point_vary[x].position.xyz;
     }
 
-    for (int x = 0; x < num_far; ++x) {
+    for (uint x = 0u; x < num_far; ++x) {
         out_far_vary[x].direction = rotate_to_tangent * far_vary[x].direction;
         // SHADOW
         out_far_vary[x].frag_pos_light_space = far[x].matrix * vertex_position;
     }
 
-    for (int x = 0; x < num_spot; ++x) {
+    for (uint x = 0u; x < num_spot; ++x) {
         out_spot_vary[x].position = to_tangent * spot_vary[x].position;
         out_spot_vary[x].direction = rotate_to_tangent * spot_vary[x].direction;
         // SHADOW

@@ -15,11 +15,11 @@ pub struct Keyboard(Rc<RefCell<Inner>>);
 
 impl Keyboard {
     pub(crate) fn new(window: &mut glfw::Window) -> Self {
-        let out = Self(Default::default());
+        let out = Self(Rc::default());
 
-        let key_ptr = out.0.clone();
-        let backspace_ptr = out.0.clone();
-        let buffer_ptr = out.0.clone();
+        let key_ptr = Rc::clone(&out.0);
+        let backspace_ptr = Rc::clone(&out.0);
+        let buffer_ptr = Rc::clone(&out.0);
 
         window.set_key_callback(move |_, key, _, action, _| {
             match action {
@@ -29,8 +29,8 @@ impl Keyboard {
                 Action::Release => {
                     key_ptr.borrow_mut().keys.remove(&key);
                 }
-                _ => {}
-            };
+                Action::Repeat => {}
+            }
 
             match (key, action) {
                 // Perfom on Press or Repeat
@@ -52,7 +52,7 @@ impl Keyboard {
         out
     }
 
-    pub(crate) fn get_buffer(&mut self) -> RefMut<'_, String> {
+    pub(crate) fn get_buffer(&self) -> RefMut<'_, String> {
         RefMut::map(self.0.borrow_mut(), |inner| &mut inner.buffer)
     }
 

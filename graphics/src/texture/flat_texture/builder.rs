@@ -48,8 +48,8 @@ impl TexBuilder for Builder<MissingData> {
     type ExpectedFinal = FlatTexture;
     type ReadyToBuild = Builder<Dimensions>;
 
-    fn size(self, dims: (TexDim, TexDim)) -> <Self as TexBuilder>::ReadyToBuild {
-        let image = Dimensions(dims);
+    fn size(self, size: (TexDim, TexDim)) -> <Self as TexBuilder>::ReadyToBuild {
+        let image = Dimensions(size);
 
         Builder { image, ..self }
     }

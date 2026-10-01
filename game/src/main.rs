@@ -1,4 +1,4 @@
-#![expect(incomplete_features)]
+#![expect(incomplete_features, reason = "nightly features used")]
 #![feature(generic_const_exprs)]
 #![feature(try_trait_v2)]
 #![feature(try_trait_v2_residual)]

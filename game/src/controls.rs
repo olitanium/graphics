@@ -1,4 +1,4 @@
-use core::ops::{FromResidual, Residual, Try};
+use core::ops::{ControlFlow, FromResidual, Residual, Try};
 use core::time::Duration;
 use std::collections::HashSet;
 
@@ -22,12 +22,12 @@ impl<T> Try for ControlOutput<T> {
     type Output = T;
     type Residual = ControlOutput<!>;
 
-    fn branch(self) -> core::ops::ControlFlow<Self::Residual, Self::Output> {
+    fn branch(self) -> ControlFlow<Self::Residual, Self::Output> {
         match self {
-            Self::Data(x) => core::ops::ControlFlow::Continue(x),
-            Self::Close => core::ops::ControlFlow::Break(ControlOutput::Close),
-            Self::Error(e) => core::ops::ControlFlow::Break(ControlOutput::Error(e)),
-            Self::Restart => core::ops::ControlFlow::Break(ControlOutput::Restart),
+            Self::Data(x) => ControlFlow::Continue(x),
+            Self::Close => ControlFlow::Break(ControlOutput::Close),
+            Self::Error(e) => ControlFlow::Break(ControlOutput::Error(e)),
+            Self::Restart => ControlFlow::Break(ControlOutput::Restart),
         }
     }
 
@@ -49,7 +49,7 @@ impl<T> FromResidual for ControlOutput<T> {
 impl<T, E: Into<StateError>> FromResidual<Result<!, E>> for ControlOutput<T> {
     fn from_residual(residual: Result<!, E>) -> Self {
         let Err(x) = residual;
-        ControlOutput::Error(x.into())
+        Self::Error(x.into())
     }
 }
 
@@ -83,10 +83,10 @@ impl State {
             return ControlOutput::Close;
         }
         if keyboard.contains(&Key::R) {
-            self.exposure -= 1.2 * frame_time;
+            self.exposure = (-1.2_f32).mul_add(frame_time, self.exposure);
         }
         if keyboard.contains(&Key::E) {
-            self.exposure += 1.2 * frame_time;
+            self.exposure = (1.2_f32).mul_add(frame_time, self.exposure);
         }
 
         if let Some(ch) = string.pop() {
@@ -104,7 +104,7 @@ impl State {
             _ = string.pop();
         }
         self.game_camera
-            .controls(&keyboard, string, mouse_delta, frame_time);
+            .controls(keyboard, string, mouse_delta, frame_time);
 
         // if !self.game_camera.move_lock {
         // self.player.controls(

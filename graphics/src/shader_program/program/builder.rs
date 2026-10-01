@@ -1,3 +1,5 @@
+use alloc::string::FromUtf8Error;
+use core::cell::RefCell;
 use core::marker::PhantomData;
 use std::path::Path;
 
@@ -97,7 +99,7 @@ impl<M: Model, O, T: Texture, const OUT: usize, V, F> Builder<M, O, T, OUT, V, F
 
     pub fn geometry_shader<P: AsRef<Path>>(self, source: P) -> Result<Self, NewShaderError> {
         let shader = Shader::new(gl::GEOMETRY_SHADER, source)?;
-        Ok(Builder {
+        Ok(Self {
             geometry_shader: Some(shader),
             ..self
         })
@@ -105,7 +107,7 @@ impl<M: Model, O, T: Texture, const OUT: usize, V, F> Builder<M, O, T, OUT, V, F
 
     pub fn geometry_shader_raw(self, source: &[u8]) -> Result<Self, NewFromSliceError> {
         let shader = Shader::new_from_slice(gl::GEOMETRY_SHADER, source)?;
-        Ok(Builder {
+        Ok(Self {
             geometry_shader: Some(shader),
             ..self
         })
@@ -113,9 +115,16 @@ impl<M: Model, O, T: Texture, const OUT: usize, V, F> Builder<M, O, T, OUT, V, F
 }
 
 #[derive(Debug)]
-pub struct LinkError {
+pub struct Log {
     pub info_log: String,
     pub total_string: String,
+}
+
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum LinkError {
+    Log(Log),
+    MalformedLog(FromUtf8Error),
 }
 error_boilerplate!(LinkError);
 
@@ -149,28 +158,34 @@ impl<M: Model, O, T: Texture, const OUT: usize>
             gl::GetProgramiv(program_id.as_primitive(), gl::LINK_STATUS, &raw mut number);
         }
 
-        if number != gl::TRUE as i32 {
+        if number == gl::TRUE.into() {
+            Ok(ShaderProgram {
+                id: program_id,
+                concat_all_text: total_string,
+                uniform_locations: RefCell::default(),
+                force_cull_face: self.force_cull_face,
+                _phantom_model: PhantomData,
+            })
+        } else {
             const BUFF_SIZE: types::GLsizei = 1000;
             let mut v = vec![0; BUFF_SIZE as usize + 1];
             let ptr = v.as_mut_ptr().cast();
             let mut len = 0;
             gl_call! { gl::GetProgramInfoLog(program_id.as_primitive(), BUFF_SIZE, &raw mut len, ptr); }
 
+            #[expect(
+                clippy::cast_sign_loss,
+                reason = "OpenGL will not return a negative size"
+            )]
             v.truncate(len as usize);
-            let info_log = String::from_utf8(v).expect("ascii is a subset of UTF-8");
+            let info_log = String::from_utf8(v).map_err(LinkError::MalformedLog)?;
 
-            Err(LinkError {
+            let log = Log {
                 info_log,
                 total_string,
-            })
-        } else {
-            Ok(ShaderProgram {
-                id: program_id,
-                concat_all_text: total_string,
-                uniform_locations: Default::default(),
-                force_cull_face: self.force_cull_face,
-                _phantom_model: PhantomData,
-            })
+            };
+
+            Err(LinkError::Log(log))
         }
     }
 }
