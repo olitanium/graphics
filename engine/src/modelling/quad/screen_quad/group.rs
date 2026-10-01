@@ -51,13 +51,12 @@ impl<
 }
 
 impl<
-    'a,
     const N: usize,
     const OUT: usize,
     O,
     X: AttachmentWithoutExtra<Tex = FlatTexture>,
     D: FramebufferWithoutExtra<OUT>,
-> Draw for Group<'a, N, OUT, O, D, X>
+> Draw for Group<'_, N, OUT, O, D, X>
 {
     fn draw_sized(
         self,

@@ -20,7 +20,7 @@ impl TransformBy<Pose> for IncompleteVertex<3> {
             texture: self.texture,
             normal: self.normal.map(|unit| unit.transform_by(operator)),
             tangent: self.tangent.map(|unit| unit.transform_by(operator)),
-            weights: self.weights.clone(),
+            weights: self.weights,
         }
     }
 }

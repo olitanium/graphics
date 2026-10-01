@@ -1,5 +1,5 @@
-use std::array;
 use alloc::rc::Rc;
+use core::array;
 
 use graphics::texture::FlatTexture;
 use graphics::vertex_array::VertexArray;
@@ -29,7 +29,7 @@ impl<const N: usize> Builder<N> {
             ),
             texture: self
                 .texture
-                .unwrap_or(array::from_fn(|_| Default::default())),
+                .unwrap_or_else(|| array::from_fn(|_| Rc::default())),
         }
     }
 }

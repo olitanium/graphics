@@ -49,10 +49,16 @@ impl<'a> TransformBy<(&'a Skeleton, &'a CalculatedAnimation)> for SkeletalVertex
         let mut accum = DualQuaternion::ZERO;
         let bones = animation.poses(skeleton).unwrap();
         for (weight, index) in iter::zip(self.bone_weights, self.bone_indices) {
-            let index = index as usize;
             if weight == 0.0 {
                 break;
             }
+            #[expect(
+                clippy::cast_sign_loss,
+                reason = "index would ideally be u32, will fix when I have worked out \
+                          `SetAttribIPointer`"
+            )]
+            let index = index as usize;
+
             let bone = bones[index];
             let dual_quat = bone.into_inner().u();
             accum = accum + dual_quat;
@@ -87,8 +93,6 @@ impl ExtendedVertex for SkeletalVertex {
             const NO_WEIGHT: (usize, f32) = (0, 0.0);
             const ONLY_ROOT: (usize, f32) = (0, 1.0);
             weight.map_or([ONLY_ROOT, NO_WEIGHT, NO_WEIGHT, NO_WEIGHT], |vec| {
-                // while vec.push((0, 0.0)).is_ok() {}
-                // vec.try_into_array().expect("filled above")
                 vec.into_array_with(|| NO_WEIGHT)
             })
         });
@@ -101,22 +105,14 @@ impl ExtendedVertex for SkeletalVertex {
             normal: simple_vertex[index].normal,
             tangent: simple_vertex[index].tangent,
             bone_weights: weights[index].map(|(_, weight)| weight),
-            bone_indices: weights[index].map(|(index, _)| index as f32),
+            #[expect(
+                clippy::cast_precision_loss,
+                reason = "`bone` would ideally be u32, will fix when I have worked out \
+                          `SetAttribIPointer`"
+            )]
+            bone_indices: weights[index].map(|(bone, _)| bone as f32),
         }))
     }
 }
-
-// impl TransformBy<Pose> for SkeletalVertex {
-// fn transform_by(&self, operator: &Pose) -> Self {
-// Self {
-// position: self.position.transform_by(operator),
-// normal: self.normal.transform_by(operator),
-// texture: self.texture,
-// tangent: self.tangent.transform_by(operator),
-// bone_indices: self.bone_indices,
-// bone_weights: self.bone_weights,
-// }
-// }
-// }
 
 impl CubicVertex for SkeletalVertex {}

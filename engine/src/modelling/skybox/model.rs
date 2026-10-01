@@ -40,7 +40,7 @@ error_boilerplate!(<'a> DrawError<'a>);
 impl SkyBox {
     pub(crate) fn draw<'a, 'b, const OUT: usize, O, D: FramebufferWithDepth<OUT>>(
         &'b self,
-        active_shader: &mut ActiveShaderProgram<'a, '_, 'b, SkyBox, O, D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'a, '_, 'b, Self, O, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
     ) -> Result<(), DrawError<'a>> {
         active_shader

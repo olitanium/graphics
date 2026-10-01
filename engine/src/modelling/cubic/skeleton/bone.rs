@@ -21,7 +21,7 @@ impl Clone for Bone {
 }
 
 impl Bone {
-    pub fn builder(parent: &SkeletonBoneIndex) -> BoneBuilder<'_> {
+    pub const fn builder(parent: &SkeletonBoneIndex) -> BoneBuilder<'_> {
         BoneBuilder::new(parent)
     }
 

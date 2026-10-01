@@ -8,7 +8,7 @@ impl ExtendedVertex for Vector<2> {
 
     type const LEN: usize = 2;
 
-    fn position(&self) -> Vector<2> {
+    fn position(&self) -> Self {
         *self
     }
 
@@ -26,7 +26,7 @@ impl ExtendedVertex for Vector<3> {
         Some(triangle.map(|incomplete_vertex| incomplete_vertex.position))
     }
 
-    fn position(&self) -> Vector<3> {
+    fn position(&self) -> Self {
         *self
     }
 }

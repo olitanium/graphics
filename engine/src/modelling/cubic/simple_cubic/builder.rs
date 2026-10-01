@@ -2,7 +2,7 @@ use alloc::rc::Rc;
 
 use geometry::{Pose, TransformBy as _};
 use graphics::shader_program::CullFace;
-use utils::{builder, new};
+use utils::{HasIterWithCloned as _, builder, new};
 
 use super::SimpleCubic;
 use crate::modelling::cubic::material::Material;
@@ -10,6 +10,7 @@ use crate::modelling::cubic::mesh::MeshBuilder;
 use crate::modelling::{SimpleVertex, test_models};
 
 #[derive(Debug, Clone, Default)]
+#[must_use = "SimpleCubic must by built with the `build method"]
 pub struct Builder {
     mesh_builders: Vec<MeshBuilder<SimpleVertex>>,
     transforms: Vec<TransformType>,
@@ -19,7 +20,7 @@ pub struct Builder {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub(crate) enum TransformType {
+pub enum TransformType {
     ByPose(Pose),
     Scale(f32),
 }
@@ -46,8 +47,8 @@ impl Builder {
     }
 
     pub fn material(mut self, material: Rc<Material>) -> Self {
-        for mesh in &mut self.mesh_builders {
-            mesh.material = material.clone();
+        for (mesh, material) in self.mesh_builders.iter_mut().with_cloned(material) {
+            mesh.material = material;
         }
         self
     }

@@ -5,16 +5,16 @@ use geometry::Pose;
 use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
-use graphics::linear_algebra::Matrix;
+use graphics::linear_algebra::{Matrix, Vector};
 use graphics::shader_program::{ActiveShaderProgram, CullFace, ShaderSetUniformError};
-use utils::error_boilerplate;
+use utils::{HasIterWithCloned as _, error_boilerplate};
 
 use super::material::Material;
 use super::{Mesh, Skeleton};
 use crate::entity::EntityInner;
 use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
 use crate::modelling::cubic::{CalculatedAnimation, SimpleCubic, SkeletalAnimation, mesh};
-use crate::modelling::{SimpleVertex, SkeletonBb, test_models};
+use crate::modelling::{Collision, SimpleVertex, SkeletonBb, test_models};
 
 mod group;
 pub use group::Group;
@@ -64,15 +64,15 @@ impl SkeletonCubic {
         out
     }
 
-    pub fn tail(max_len: usize) -> (Self, SkeletalAnimation) {
+    pub fn tail(max_len: u8) -> (Self, SkeletalAnimation) {
         let (a, _, b) = test_models::tail_simplecubic(max_len);
         (a, b)
     }
 
     pub fn temp_set_all_material(&mut self, mat: Rc<Material>) {
-        self.meshes
-            .iter_mut()
-            .for_each(|BoneAndMesh { mesh, .. }| mesh.material = mat.clone());
+        for (mesh, material) in self.meshes.iter_mut().with_cloned(mat) {
+            mesh.mesh.material = material;
+        }
     }
 
     pub fn triangles(&self) -> Vec<(&SkeletonBoneIndex, [SimpleVertex; 3])> {
@@ -124,7 +124,7 @@ impl SkeletonCubic {
     ) -> Result<(), DrawError<'a>> {
         // Ignore cull_face error
         _ = active_shader.cull_face(self.cull_face);
-        for BoneAndMesh { bone, mesh } in self.meshes.iter() {
+        for BoneAndMesh { bone, mesh } in &self.meshes {
             active_shader
                 .set_uniform(
                     &c"model",
@@ -143,13 +143,10 @@ impl SkeletonCubic {
 }
 
 impl EntityInner for SkeletonCubic {
-    type BoundingBox<T> = SkeletonBb<<SkeletonCubic as Model>::Vertex, T>;
+    type BoundingBox<T> = SkeletonBb<<Self as Model>::Vertex, T>;
     type DrawError<'a> = DrawError<'a>;
 
-    fn make_bounding_box<
-        T,
-        F: FnMut(&[(graphics::linear_algebra::Vector<3>, [Self::Vertex; 3])]) -> T,
-    >(
+    fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [Self::Vertex; 3])]) -> T>(
         &self,
         depth: usize,
         init: F,
@@ -167,15 +164,14 @@ impl EntityInner for SkeletonCubic {
     fn box_transform<'a, T>(
         &'a self,
         calc_anim: &'a CalculatedAnimation,
-    ) -> <Self::BoundingBox<T> as crate::modelling::Collision>::Transform<'a> {
+    ) -> <Self::BoundingBox<T> as Collision>::Transform<'a> {
         (&self.skeleton, calc_anim)
     }
 
     fn vertex_transform<'a, T>(
         &'a self,
         _calc_anim: &'a CalculatedAnimation,
-    ) -> <Self::BoundingBox<T> as crate::modelling::Collision>::VertexTransform<'a> {
-        ()
+    ) -> <Self::BoundingBox<T> as Collision>::VertexTransform<'a> {
     }
 
     fn draw<'a, 'b, const OUT: usize, D: FramebufferWithDepth<OUT>, L>(

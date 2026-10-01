@@ -68,7 +68,7 @@ impl ShadowPointLight {
         })
     }
 
-    pub(crate) unsafe fn bind_to<
+    pub(crate) fn bind_to<
         'c,
         'a,
         const N: usize,
@@ -87,12 +87,12 @@ impl ShadowPointLight {
     {
         self.light.bind_to(shader, name, index)?;
         shader.set_uniform(
-            &CString::new(format!("{name}[{index}].far_plane")).expect("should be no Nul"),
+            &CString::new(format!("{name}[{index}].far_plane"))?,
             &self.far_plane(),
         )?;
 
         shader.register_texture(iter::once((
-            CString::new(format!("{name}[{index}].depth")).expect("should be no Nul"),
+            CString::new(format!("{name}[{index}].depth"))?,
             self.framebuffer.get_attachment_ref(),
         )));
 
@@ -130,10 +130,8 @@ impl ShadowPointLight {
         active_depth_only_shader_point.set_uniform_dyn(uniforms)?;
 
         for (index, matrix) in self.get_look_at_matrices().into_iter().enumerate() {
-            active_depth_only_shader_point.set_uniform(
-                &CString::new(format!("matrix[{index}]")).expect("should be no Nul"),
-                &matrix,
-            )?;
+            active_depth_only_shader_point
+                .set_uniform(&CString::new(format!("matrix[{index}]"))?, &matrix)?;
         }
         active_depth_only_shader_point.set_uniform(&c"light_position", &self.light.position)?;
         active_depth_only_shader_point.set_uniform(&c"far_plane", &self.far_plane())?;
@@ -177,7 +175,7 @@ impl<'a> PointLightIlluminatesGroup<'a> {
     }
 }
 
-impl<'a> Draw for PointLightIlluminatesGroup<'a> {
+impl Draw for PointLightIlluminatesGroup<'_> {
     fn draw_sized(
         self,
         fb_context: &mut FramebufferContext,

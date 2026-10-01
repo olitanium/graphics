@@ -355,8 +355,6 @@ impl<V: ExtendedVertex<LEN = 3>, T: 'static> BoundingBoxShaderProgram for Boundi
 
 #[cfg(test)]
 mod tests {
-    use core::cell::RefCell;
-
     use graphics::linear_algebra::Vector;
 
     use crate::modelling::bounding_box::ChildrenOrMeta;

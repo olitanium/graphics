@@ -1,4 +1,7 @@
 mod far_light;
+use alloc::ffi::NulError;
+use core::num::TryFromIntError;
+
 pub use far_light::ShadowFarLight;
 mod spot_light;
 use graphics::shader_program::ShaderSetUniformError;
@@ -16,6 +19,8 @@ use crate::modelling::cubic::lighting::simple::SimpleBindError;
 pub enum ShadowBindError<'a> {
     BindSimpleLight(SimpleBindError<'a>),
     SetUniform(ShaderSetUniformError<'a>),
+    NulError(NulError),
+    TooLong(<i32 as TryFrom<usize>>::Error),
 }
 error_boilerplate!(<'a> ShadowBindError<'a>);
 
@@ -28,5 +33,17 @@ impl<'a> From<ShaderSetUniformError<'a>> for ShadowBindError<'a> {
 impl<'a> From<SimpleBindError<'a>> for ShadowBindError<'a> {
     fn from(value: SimpleBindError<'a>) -> Self {
         Self::BindSimpleLight(value)
+    }
+}
+
+impl From<NulError> for ShadowBindError<'_> {
+    fn from(value: NulError) -> Self {
+        Self::NulError(value)
+    }
+}
+
+impl From<TryFromIntError> for ShadowBindError<'_> {
+    fn from(value: <i32 as TryFrom<usize>>::Error) -> Self {
+        Self::TooLong(value)
     }
 }

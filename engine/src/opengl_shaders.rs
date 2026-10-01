@@ -15,11 +15,11 @@ macro_rules! make_included {
         pub fn $fn_name() -> &'static $typ {
             static PROGRAM: LazyLock<$typ> = LazyLock::new(|| {
                     ShaderProgram::builder()
-                    .vertex_shader($vertex).expect(ERROR_MESSAGE)
-                    .fragment_shader($fragment).expect(ERROR_MESSAGE)
-                    $(.geometry_shader($geometry).expect(ERROR_MESSAGE))?
+                    .vertex_shader($vertex).expect(&format!( concat!(stringify!($vertex), " {}"), ERROR_MESSAGE))
+                    .fragment_shader($fragment).expect(&format!( concat!(stringify!($fragment), " {}"), ERROR_MESSAGE))
+                    $(.geometry_shader($geometry).expect(&format!( concat!(stringify!($geometry), " {}"), ERROR_MESSAGE)) )?
                     $(.force_cull_face($cull_face))?
-                    .build().expect(ERROR_MESSAGE)
+                    .build().expect(&format!( concat!(stringify!($vertex), " {}"), ERROR_MESSAGE))
             });
 
             &PROGRAM

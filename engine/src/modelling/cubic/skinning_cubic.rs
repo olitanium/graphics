@@ -3,6 +3,7 @@ use core::iter;
 
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
+use graphics::linear_algebra::Vector;
 use graphics::shader_program::{CullFace, ShaderSetUniformError};
 use graphics::{ActiveShaderProgram, Model};
 use utils::error_boilerplate;
@@ -16,7 +17,7 @@ use crate::modelling::cubic::{
     SkeletalAnimation,
     SkeletonBoneIndex,
 };
-use crate::modelling::{SkeletalVertex, Skeleton, SkeletonBb, test_models};
+use crate::modelling::{Collision, SkeletalVertex, Skeleton, SkeletonBb, test_models};
 
 mod group;
 pub use group::Group;
@@ -87,15 +88,11 @@ impl SkinningCubic {
             .collect();
         let quat_res = active_shader.set_uniform(&c"bones_quat", matrices_quat.as_slice());
 
-        match (matrices_res, quat_res) {
-            (Err(mat_err), Err(quat_err)) => {
-                return Err(DrawError::SetUniform {
-                    mat: mat_err,
-                    quat: quat_err,
-                });
-            }
-            _ => { //if one or both succeed, we're happy
-            }
+        if let (Err(mat_err), Err(quat_err)) = (matrices_res, quat_res) {
+            return Err(DrawError::SetUniform {
+                mat: mat_err,
+                quat: quat_err,
+            });
         }
 
         for mesh in &self.meshes {
@@ -111,10 +108,7 @@ impl EntityInner for SkinningCubic {
     type BoundingBox<T> = SkeletonBb<SkeletalVertex, T>;
     type DrawError<'a> = DrawError<'a>;
 
-    fn make_bounding_box<
-        T,
-        F: FnMut(&[(graphics::linear_algebra::Vector<3>, [Self::Vertex; 3])]) -> T,
-    >(
+    fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [Self::Vertex; 3])]) -> T>(
         &self,
         depth: usize,
         init: F,
@@ -123,6 +117,11 @@ impl EntityInner for SkinningCubic {
             self.triangles(),
             |&tri| {
                 tri.into_iter().flat_map(|vertex| {
+                    #[expect(
+                        clippy::cast_sign_loss,
+                        reason = "index would ideally be u32, will fix when I have worked out \
+                                  `SetAttribIPointer`"
+                    )]
                     iter::zip(vertex.bone_indices, vertex.bone_weights)
                         .filter_map(|(index, weight)| (weight != 0.0).then_some(index as usize))
                 })
@@ -140,13 +139,13 @@ impl EntityInner for SkinningCubic {
     fn vertex_transform<'a, T>(
         &'a self,
         _calc_anim: &'a CalculatedAnimation,
-    ) -> <Self::BoundingBox<T> as crate::modelling::Collision>::VertexTransform<'a> {
+    ) -> <Self::BoundingBox<T> as Collision>::VertexTransform<'a> {
     }
 
     fn box_transform<'a, T>(
         &'a self,
         calc_anim: &'a CalculatedAnimation,
-    ) -> <Self::BoundingBox<T> as crate::modelling::Collision>::Transform<'a> {
+    ) -> <Self::BoundingBox<T> as Collision>::Transform<'a> {
         (&self.skeleton, calc_anim)
     }
 

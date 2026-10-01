@@ -1,4 +1,4 @@
-use std::ffi::CString;
+use alloc::ffi::{CString, NulError};
 
 use graphics::Model;
 use graphics::colour::{ColourRGB, ColourRGBA};
@@ -10,7 +10,7 @@ use crate::modelling::CubicVertex;
 
 #[derive(Debug)]
 pub struct Material {
-    pub _translucent: bool,
+    _translucent: bool,
     pub shininess: f32,
     pub diffuse: FlatTexture,
     pub specular_map: FlatTexture,
@@ -58,8 +58,14 @@ impl Material {
 #[non_exhaustive]
 pub enum RegisterToError<'a> {
     SetUniformError(ShaderSetUniformError<'a>),
+    Nul(NulError),
 }
 error_boilerplate!(<'a> RegisterToError<'a>);
+impl From<NulError> for RegisterToError<'_> {
+    fn from(value: NulError) -> Self {
+        Self::Nul(value)
+    }
+}
 
 impl Material {
     pub fn register_to<'a, 'b, const N: usize, T: Texture, M: Model, O>(
@@ -71,30 +77,24 @@ impl Material {
         M::Vertex: CubicVertex,
     {
         shader
-            .set_uniform(
-                &CString::new(format!("{name}.shininess")).expect("should be no Nul"),
-                &self.shininess,
-            )
+            .set_uniform(&CString::new(format!("{name}.shininess"))?, &self.shininess)
             .map_err(RegisterToError::SetUniformError)?;
         shader.register_texture(vec![
             (
-                CString::new(format!("{name}.diffuse")).expect("should be no Nul"),
+                CString::new(format!("{name}.diffuse"))?,
                 &self.diffuse as &dyn Texture,
             ),
             (
-                CString::new(format!("{name}.specular_map")).expect("should be no Nul"),
+                CString::new(format!("{name}.specular_map"))?,
                 &self.specular_map,
             ),
+            (CString::new(format!("{name}.emission"))?, &self.emission),
             (
-                CString::new(format!("{name}.emission")).expect("should be no Nul"),
-                &self.emission,
-            ),
-            (
-                CString::new(format!("{name}.normal_map")).expect("should be no Nul"),
+                CString::new(format!("{name}.normal_map"))?,
                 &self.normal_map,
             ),
             (
-                CString::new(format!("{name}.ambient_occlusion")).expect("should be no Nul"),
+                CString::new(format!("{name}.ambient_occlusion"))?,
                 &self.ambient_occlusion,
             ),
         ]);

@@ -134,8 +134,8 @@ pub fn screen_quad() -> &'static VertexArray<QuadVertex> {
     &SCREEN_QUAD
 }
 
-/// You need max_len number of bones. One of which is the
-pub fn tail_with_bone(max_len: usize) -> impl Iterator<Item = [IncompleteVertex<3>; 3]> {
+/// You need `max_len` number of bones. One of which is the.
+pub fn tail_with_bone(max_len: u8) -> impl Iterator<Item = [IncompleteVertex<3>; 3]> {
     const fn make_long_slice(z: f32) -> [Vector<3>; 4] {
         [
             Vector::new([-0.5, -0.5, z]),
@@ -146,57 +146,65 @@ pub fn tail_with_bone(max_len: usize) -> impl Iterator<Item = [IncompleteVertex<
     }
 
     (0..=max_len)
-        .map(|z| (z, make_long_slice(z as f32)))
-        .map_windows(move |&[(bone1, slice1), (bone2, slice2)]| {
-            struct BoneVertexTexture {
-                bone: usize,
-                position: Vector<3>,
-                texture: Vector<2>,
-            }
+        .map(|z| (z, make_long_slice(f32::from(z))))
+        .map_windows(
+            move |&[
+                (bone1, [slice10, slice11, slice12, slice13]),
+                (bone2, [slice20, slice21, slice22, slice23]),
+            ]| {
+                struct BoneVertexTexture {
+                    bone: u8,
+                    position: Vector<3>,
+                    texture: Vector<2>,
+                }
 
-            let vertices_in_order = [
-                BoneVertexTexture {
-                    bone: bone1,
-                    position: slice1[0],
-                    texture: Vector::new([bone1 as f32 / max_len as f32, 0.0]),
-                },
-                BoneVertexTexture {
-                    bone: bone1,
-                    position: slice1[1],
-                    texture: Vector::new([bone1 as f32 / max_len as f32, 1.0]),
-                },
-                BoneVertexTexture {
-                    bone: bone1,
-                    position: slice1[2],
-                    texture: Vector::new([bone1 as f32 / max_len as f32, 0.0]),
-                },
-                BoneVertexTexture {
-                    bone: bone1,
-                    position: slice1[3],
-                    texture: Vector::new([bone1 as f32 / max_len as f32, 1.0]),
-                },
-                BoneVertexTexture {
-                    bone: bone2,
-                    position: slice2[0],
-                    texture: Vector::new([bone2 as f32 / max_len as f32, 0.0]),
-                },
-                BoneVertexTexture {
-                    bone: bone2,
-                    position: slice2[1],
-                    texture: Vector::new([bone2 as f32 / max_len as f32, 1.0]),
-                },
-                BoneVertexTexture {
-                    bone: bone2,
-                    position: slice2[2],
-                    texture: Vector::new([bone2 as f32 / max_len as f32, 0.0]),
-                },
-                BoneVertexTexture {
-                    bone: bone2,
-                    position: slice2[3],
-                    texture: Vector::new([bone2 as f32 / max_len as f32, 1.0]),
-                },
-            ];
-            #[rustfmt::skip]
+                let max_len = f32::from(max_len);
+                let fbone1 = f32::from(bone1);
+                let fbone2 = f32::from(bone2);
+
+                let vertices_in_order = [
+                    BoneVertexTexture {
+                        bone: bone1,
+                        position: slice10,
+                        texture: Vector::new([fbone1 / max_len, 0.0]),
+                    },
+                    BoneVertexTexture {
+                        bone: bone1,
+                        position: slice11,
+                        texture: Vector::new([fbone1 / max_len, 1.0]),
+                    },
+                    BoneVertexTexture {
+                        bone: bone1,
+                        position: slice12,
+                        texture: Vector::new([fbone1 / max_len, 0.0]),
+                    },
+                    BoneVertexTexture {
+                        bone: bone1,
+                        position: slice13,
+                        texture: Vector::new([fbone1 / max_len, 1.0]),
+                    },
+                    BoneVertexTexture {
+                        bone: bone2,
+                        position: slice20,
+                        texture: Vector::new([fbone2 / max_len, 0.0]),
+                    },
+                    BoneVertexTexture {
+                        bone: bone2,
+                        position: slice21,
+                        texture: Vector::new([fbone2 / max_len, 1.0]),
+                    },
+                    BoneVertexTexture {
+                        bone: bone2,
+                        position: slice22,
+                        texture: Vector::new([fbone2 / max_len, 0.0]),
+                    },
+                    BoneVertexTexture {
+                        bone: bone2,
+                        position: slice23,
+                        texture: Vector::new([fbone2 / max_len, 1.0]),
+                    },
+                ];
+                #[rustfmt::skip]
             let triangles = [
                 [5, 1, 4], [4, 1, 0],
                 [1, 5, 2], [2, 5, 6],
@@ -206,18 +214,19 @@ pub fn tail_with_bone(max_len: usize) -> impl Iterator<Item = [IncompleteVertex<
             .map(|triangle| {
                 triangle.map(|index| {
                     let BoneVertexTexture{ bone, position, texture} = vertices_in_order[index];
-                    let weights = arrvec![(bone, 1.0)];
+                    let weights = arrvec![(usize::from(bone), 1.0)];
                     IncompleteVertex::new(position).weights(weights).texture(texture)
                 })
             });
 
-            triangles
-        })
+                triangles
+            },
+        )
         .flatten()
 }
 
 // num_bones does not include the root bone.
-pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletonBoneIndex, SkeletalAnimation) {
+pub fn tail_animation(num_bones: u8) -> (Skeleton, SkeletonBoneIndex, SkeletalAnimation) {
     let animation1 = {
         let mut animation = BoneAnimation::new();
         animation
@@ -270,9 +279,7 @@ pub fn tail_animation(num_bones: usize) -> (Skeleton, SkeletonBoneIndex, Skeleta
     (skeleton.build(), current_bone, animation_1.build())
 }
 
-pub fn tail_skeleton_cubic(
-    max_len: usize,
-) -> (SkinningCubic, SkeletonBoneIndex, SkeletalAnimation) {
+pub fn tail_skeleton_cubic(max_len: u8) -> (SkinningCubic, SkeletonBoneIndex, SkeletalAnimation) {
     // MESHES
     let triangles = tail_with_bone(max_len);
 
@@ -292,7 +299,7 @@ pub fn tail_skeleton_cubic(
     )
 }
 
-pub fn tail_simplecubic(max_len: usize) -> (SkeletonCubic, SkeletonBoneIndex, SkeletalAnimation) {
+pub fn tail_simplecubic(max_len: u8) -> (SkeletonCubic, SkeletonBoneIndex, SkeletalAnimation) {
     let triangles = tail_with_bone(max_len);
 
     let mut mesh_builder = MeshBuilder::new().material(Rc::new(Material::white()));

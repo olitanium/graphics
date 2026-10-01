@@ -1,4 +1,4 @@
-use alloc::ffi::CString;
+use alloc::ffi::{CString, NulError};
 
 use array_vec::ArrayVec;
 use graphics::Model;
@@ -34,6 +34,7 @@ pub enum GenDepthError<'a> {
         model: &'a SkeletonCubic,
     },
     SetUniform(ShaderSetUniformError<'static>),
+    NulError(NulError),
 }
 error_boilerplate!(<'a> GenDepthError<'a>);
 
@@ -43,7 +44,13 @@ impl From<ShaderSetUniformError<'static>> for GenDepthError<'_> {
     }
 }
 
-impl<'b, const MAX: usize> ShadowListLights<'b, MAX> {
+impl From<NulError> for GenDepthError<'_> {
+    fn from(value: NulError) -> Self {
+        Self::NulError(value)
+    }
+}
+
+impl<const MAX: usize> ShadowListLights<'_, MAX> {
     pub(crate) fn gen_depth<'a>(
         &self,
         sp_context: &mut ShaderProgramContext,
@@ -142,7 +149,7 @@ impl<'b, const MAX: usize> ShadowListLights<'b, MAX> {
 
     /// # Safety
     /// `active_shader` must be dropped before any changes to the light's
-    /// internal framebuffers is applied
+    /// internal framebuffers is applied.
     pub(crate) unsafe fn bind<
         'a,
         'c,
@@ -160,13 +167,11 @@ impl<'b, const MAX: usize> ShadowListLights<'b, MAX> {
     {
         const FAR_LIGHT_NAME: &str = "far";
         active_shader.set_uniform(
-            &CString::new(format!("num_{FAR_LIGHT_NAME}")).expect("should be no Nul"),
-            &(self.far.len() as i32),
+            &CString::new(format!("num_{FAR_LIGHT_NAME}"))?,
+            &u32::try_from(self.far.len())?,
         )?;
         for (index, light) in self.far.iter().enumerate() {
-            unsafe {
-                light.bind_to(active_shader, FAR_LIGHT_NAME, index, target)?;
-            }
+            light.bind_to(active_shader, FAR_LIGHT_NAME, index, target)?;
         }
         for index in self.far.len()..MAX {
             ShadowFarLight::bind_to_ghost(active_shader, FAR_LIGHT_NAME, index);
@@ -174,13 +179,11 @@ impl<'b, const MAX: usize> ShadowListLights<'b, MAX> {
 
         const SPOT_LIGHT_NAME: &str = "spot";
         active_shader.set_uniform(
-            &CString::new(format!("num_{SPOT_LIGHT_NAME}")).expect("should be no Nul"),
-            &(self.spot.len() as i32),
+            &CString::new(format!("num_{SPOT_LIGHT_NAME}"))?,
+            &u32::try_from(self.spot.len())?,
         )?;
         for (index, light) in self.spot.iter().enumerate() {
-            unsafe {
-                light.bind_to(active_shader, SPOT_LIGHT_NAME, index)?;
-            }
+            light.bind_to(active_shader, SPOT_LIGHT_NAME, index)?;
         }
 
         for index in self.spot.len()..MAX {
@@ -189,13 +192,11 @@ impl<'b, const MAX: usize> ShadowListLights<'b, MAX> {
 
         const POINT_LIGHT_NAME: &str = "point";
         active_shader.set_uniform(
-            &CString::new(format!("num_{POINT_LIGHT_NAME}")).expect("should be no Nul"),
-            &(self.point.len() as i32),
+            &CString::new(format!("num_{POINT_LIGHT_NAME}"))?,
+            &u32::try_from(self.point.len())?,
         )?;
         for (index, light) in self.point.iter().enumerate() {
-            unsafe {
-                light.bind_to(active_shader, POINT_LIGHT_NAME, index)?;
-            }
+            light.bind_to(active_shader, POINT_LIGHT_NAME, index)?;
         }
         for index in self.point.len()..MAX {
             ShadowPointLight::bind_to_ghost(active_shader, POINT_LIGHT_NAME, index);

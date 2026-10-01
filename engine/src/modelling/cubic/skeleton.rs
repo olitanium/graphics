@@ -9,6 +9,7 @@ use bone::BoneBuilder;
 use utils::new;
 
 #[derive(Debug, Clone, Default)]
+#[must_use = "Model must be created with the `build` method"]
 pub struct SkeletonBuilder {
     // All accesses to `values` is offset by -1, where 0 means accessing the root node (given in
     // functions), 1 means accessing values[0], 2 => values[1] etc...
@@ -30,19 +31,18 @@ impl SkeletonBuilder {
     }
 
     pub(crate) fn get<'a>(&'a self, index: &SkeletonBoneIndex) -> GetBone<'a> {
-        if index.0 != 0 {
-            match self.bones.get(index.0 - 1) {
-                Some(bone) => GetBone::Bone { bone },
-                None => GetBone::NoBone,
-            }
-        } else {
-            // i.e. index == 0
+        if index.0 == 0 {
             GetBone::RootBone
+        } else {
+            self.bones
+                .get(index.0 - 1)
+                .map_or(GetBone::NoBone, |bone| GetBone::Bone { bone })
         }
     }
 
     pub fn build(self) -> Skeleton {
         let mut hasher = DefaultHasher::new();
+        #[expect(clippy::collection_is_never_read, reason = "clippy bug")]
         let signature: Vec<_> = self
             .bones
             .iter()
@@ -50,6 +50,7 @@ impl SkeletonBuilder {
             .collect();
         signature.hash(&mut hasher);
         let hash = hasher.finish();
+
         Skeleton {
             bones: self.bones,
             signature: hash,
@@ -81,18 +82,16 @@ impl Skeleton {
     }
 
     pub(crate) fn get<'a>(&'a self, index: &SkeletonBoneIndex) -> GetBone<'a> {
-        if index.0 != 0 {
-            match self.bones.get(index.0 - 1) {
-                Some(bone) => GetBone::Bone { bone },
-                None => GetBone::NoBone,
-            }
-        } else {
-            // i.e. index == 0
+        if index.0 == 0 {
             GetBone::RootBone
+        } else {
+            self.bones
+                .get(index.0 - 1)
+                .map_or(GetBone::NoBone, |bone| GetBone::Bone { bone })
         }
     }
 
-    /// Used to determine whether a skeleton and an animation are compatible
+    /// Used to determine whether a skeleton and an animation are compatible.
     pub(crate) const fn signature(&self) -> u64 {
         self.signature
         // self.bones.iter().map(|bone| bone.parent).collect()
@@ -118,7 +117,7 @@ pub enum GetBone<'a> {
     Bone { bone: &'a Bone },
 }
 
-impl<'a> GetBone<'a> {
+impl GetBone<'_> {
     pub const fn is_bone(&self) -> bool {
         match self {
             Self::NoBone => false,

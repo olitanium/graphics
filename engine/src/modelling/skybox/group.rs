@@ -48,14 +48,14 @@ impl<'a, const OUT: usize, O, X: FramebufferWithDepth<OUT>> Group<'a, OUT, O, X>
     }
 }
 
-impl<'a, const OUT: usize, O, D: FramebufferWithDepth<OUT>> Draw for Group<'a, OUT, O, D> {
+impl<const OUT: usize, O, D: FramebufferWithDepth<OUT>> Draw for Group<'_, OUT, O, D> {
     fn draw_sized(
         self,
-        register: &mut FramebufferContext,
-        marker: &mut ShaderProgramContext,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
     ) -> DrawOut {
-        let mut active_framebuffer = self.framebuffer.bind(register);
-        let mut active_shader = self.shader.use_program(marker);
+        let mut active_framebuffer = self.framebuffer.bind(fb_context);
+        let mut active_shader = self.shader.use_program(sp_context);
 
         active_shader.drawing_skybox(true);
         active_shader

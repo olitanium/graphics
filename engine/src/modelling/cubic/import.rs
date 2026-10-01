@@ -1,21 +1,21 @@
+use alloc::rc::Rc;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use alloc::rc::Rc;
 
 use geometry::{Pose, Transform as _, TransformBy as _};
 use graphics::linear_algebra::{Matrix, UnitVector, Vector};
 use graphics::texture::{FlatTexture, Image, NewImageError, TextureHasBuilder as _};
 use graphics::types::ElementArrayElem;
 use russimp::Matrix4x4;
-use russimp::material::{PropertyTypeInfo, TextureType};
+use russimp::material::{Material as RussMaterial, PropertyTypeInfo, TextureType};
 use russimp::node::Node;
 use russimp::scene::{PostProcess, Scene};
 use utils::error_boilerplate;
 
 use super::material::Material;
+use crate::modelling::CubicVertex;
 use crate::modelling::cubic::mesh::MeshBuilder;
 use crate::modelling::extended_vertex::IncompleteVertex;
-use crate::modelling::{Bone, CubicVertex};
 
 #[derive(Debug, Clone)]
 #[non_exhaustive]
@@ -49,7 +49,7 @@ pub enum ImportError {
 
 error_boilerplate!(ImportError);
 
-pub(crate) struct ImportOutput<V: CubicVertex> {
+pub struct ImportOutput<V: CubicVertex> {
     pub meshes: Vec<MeshBuilder<V>>,
 }
 
@@ -75,7 +75,6 @@ pub(super) fn import<P: AsRef<Path>, V: CubicVertex>(
         }
     })?;
 
-    let mut bones = HashMap::new();
     let meshes = process_node(
         &scene,
         scene
@@ -84,7 +83,6 @@ pub(super) fn import<P: AsRef<Path>, V: CubicVertex>(
             .ok_or_else(|| ImportError::NoRootNode { path: path.into() })?,
         dir,
         &mut HashMap::new(),
-        &mut bones,
         Pose::IDENTITY,
         load_tangent_space,
     )?;
@@ -110,7 +108,6 @@ fn process_node<V: CubicVertex>(
     node: &Node,
     dir: &Path,
     current_mat: &mut HashMap<u32, Result<Rc<Material>, Rc<ParseMaterialError>>>,
-    _current_bones: &mut HashMap<String, Bone>,
     accum_transform: Pose,
     load_tangent_space: bool,
 ) -> Result<Vec<MeshBuilder<V>>, ImportError> {
@@ -168,16 +165,14 @@ fn process_node<V: CubicVertex>(
                     .collect();
 
                 fn is_no_vec_or_element_exists<T>(
-                    opt_value: &Option<Vec<T>>,
+                    opt_value: Option<&Vec<T>>,
                     index: usize,
                 ) -> Result<Option<&T>, usize> {
-                    match opt_value {
-                        None => Ok(None),
-                        Some(vector) => match vector.get(index) {
-                            Some(value) => Ok(Some(value)),
-                            None => Err(vector.len()),
-                        },
-                    }
+                    opt_value.map_or(Ok(None), |vector| {
+                        vector
+                            .get(index)
+                            .map_or_else(|| Err(vector.len()), |value| Ok(Some(value)))
+                    })
                 }
 
                 let mesh_buffer = element_buffer
@@ -203,22 +198,24 @@ fn process_node<V: CubicVertex>(
                                     index_asked: index,
                                     actual_len,
                                 })?;
-                            let triangle_normal = is_no_vec_or_element_exists(&opt_normal, index)
-                                .map_err(|actual_len| ImportError::ElementArrayOverflow {
-                                    which: "normal",
-                                    index_asked: index,
-                                    actual_len,
-                                })?
-                                .copied()
-                                .flatten();
-                            let triangle_tangent = is_no_vec_or_element_exists(&opt_tangent, index)
-                                .map_err(|actual_len| ImportError::ElementArrayOverflow {
-                                    which: "tangent",
-                                    index_asked: index,
-                                    actual_len,
-                                })?
-                                .copied()
-                                .flatten();
+                            let triangle_normal =
+                                is_no_vec_or_element_exists(opt_normal.as_ref(), index)
+                                    .map_err(|actual_len| ImportError::ElementArrayOverflow {
+                                        which: "normal",
+                                        index_asked: index,
+                                        actual_len,
+                                    })?
+                                    .copied()
+                                    .flatten();
+                            let triangle_tangent =
+                                is_no_vec_or_element_exists(opt_tangent.as_ref(), index)
+                                    .map_err(|actual_len| ImportError::ElementArrayOverflow {
+                                        which: "tangent",
+                                        index_asked: index,
+                                        actual_len,
+                                    })?
+                                    .copied()
+                                    .flatten();
 
                             Ok(IncompleteVertex::new(triangle_position)
                                 .texture(triangle_texture)
@@ -252,7 +249,6 @@ fn process_node<V: CubicVertex>(
                 node,
                 dir,
                 current_mat,
-                _current_bones,
                 accum_transform,
                 load_tangent_space,
             )
@@ -279,7 +275,7 @@ pub enum ParseMaterialError {
 error_boilerplate!(ParseMaterialError);
 
 fn parse_material(
-    material: &russimp::material::Material,
+    material: &RussMaterial,
     dir: &Path,
 ) -> Result<Rc<Material>, Rc<ParseMaterialError>> {
     // get semantic -> key -> data

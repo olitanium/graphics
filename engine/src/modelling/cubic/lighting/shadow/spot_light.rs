@@ -59,7 +59,7 @@ impl ShadowSpotLight {
             .build()
     }
 
-    pub(crate) unsafe fn bind_to<
+    pub(crate) fn bind_to<
         'a,
         'c,
         const N: usize,
@@ -78,11 +78,11 @@ impl ShadowSpotLight {
     {
         self.light.bind_to(shader, name, index)?;
         shader.set_uniform(
-            &CString::new(format!("{name}[{index}].matrix")).expect("should be no Nul"),
+            &CString::new(format!("{name}[{index}].matrix"))?,
             &self.projtimesview(),
         )?;
         shader.register_texture(iter::once((
-            CString::new(format!("{name}[{index}].depth")).expect("should be no Nul"),
+            CString::new(format!("{name}[{index}].depth"))?,
             self.framebuffer.get_attachment_ref(),
         )));
 

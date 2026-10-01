@@ -35,8 +35,8 @@ impl<'a, const N: usize, const OUT: usize, O, X: FramebufferWithoutExtra<OUT>>
     }
 }
 
-impl<'a, O, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> Draw
-    for Group<'a, N, OUT, O, D>
+impl<O, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> Draw
+    for Group<'_, N, OUT, O, D>
 {
     fn draw_sized(
         self,

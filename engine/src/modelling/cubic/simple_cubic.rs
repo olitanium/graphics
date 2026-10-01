@@ -6,22 +6,22 @@ use geometry::Pose;
 use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
+use graphics::linear_algebra::Vector;
 use graphics::shader_program::{ActiveShaderProgram, CullFace, ShaderSetUniformError};
 use russimp::scene::PostProcess;
-use utils::error_boilerplate;
+use utils::{HasIterWithCloned as _, error_boilerplate};
 
 use super::material::Material;
 use super::{Mesh, Skeleton, import};
 use crate::entity::EntityInner;
 use crate::modelling::cubic::{CalculatedAnimation, mesh};
-use crate::modelling::{BoundingBox, SimpleVertex};
+use crate::modelling::{BoundingBox, Collision, SimpleVertex};
 
 mod group;
 pub use group::Group;
 
 mod builder;
-pub use builder::Builder;
-pub(crate) use builder::TransformType;
+pub use builder::{Builder, TransformType};
 
 #[derive(Clone, Debug, Default)]
 pub struct SimpleCubic {
@@ -45,12 +45,12 @@ impl SimpleCubic {
     }
 
     pub fn temp_set_all_material(&mut self, mat: Rc<Material>) {
-        self.meshes
-            .iter_mut()
-            .for_each(|mesh| mesh.material = mat.clone());
+        for (mesh, material) in self.meshes.iter_mut().with_cloned(mat) {
+            mesh.material = material;
+        }
     }
 
-    pub fn triangles(&self) -> Vec<[<SimpleCubic as Model>::Vertex; 3]> {
+    pub fn triangles(&self) -> Vec<[<Self as Model>::Vertex; 3]> {
         self.meshes
             .iter()
             .flat_map(|mesh| mesh.triangles().into_owned())
@@ -92,7 +92,7 @@ impl SimpleCubic {
             .set_uniform(&c"model", &pose.as_transformation_matrix())
             .map_err(DrawError::SetUniform)?;
 
-        for mesh in self.meshes.iter() {
+        for mesh in &self.meshes {
             mesh.draw(active_shader, active_framebuffer)
                 .map_err(DrawError::Mesh)?;
         }
@@ -102,13 +102,10 @@ impl SimpleCubic {
 }
 
 impl EntityInner for SimpleCubic {
-    type BoundingBox<T> = BoundingBox<<SimpleCubic as Model>::Vertex, T>;
+    type BoundingBox<T> = BoundingBox<<Self as Model>::Vertex, T>;
     type DrawError<'a> = DrawError<'a>;
 
-    fn make_bounding_box<
-        T,
-        F: FnMut(&[(graphics::linear_algebra::Vector<3>, [Self::Vertex; 3])]) -> T,
-    >(
+    fn make_bounding_box<T, F: FnMut(&[(Vector<3>, [Self::Vertex; 3])]) -> T>(
         &self,
         depth: usize,
         init: F,
@@ -124,14 +121,14 @@ impl EntityInner for SimpleCubic {
     fn vertex_transform<'a, T>(
         &'a self,
         calc_anim: &'a CalculatedAnimation,
-    ) -> <Self::BoundingBox<T> as crate::modelling::Collision>::VertexTransform<'a> {
+    ) -> <Self::BoundingBox<T> as Collision>::VertexTransform<'a> {
         calc_anim.root()
     }
 
     fn box_transform<'a, T>(
         &'a self,
         calc_anim: &'a CalculatedAnimation,
-    ) -> <Self::BoundingBox<T> as crate::modelling::Collision>::Transform<'a> {
+    ) -> <Self::BoundingBox<T> as Collision>::Transform<'a> {
         calc_anim.root()
     }
 

@@ -28,7 +28,7 @@ pub trait ExtendedVertex: Vertex {
 pub trait CubicVertex: ExtendedVertex<LEN = 3> {
     #[inline]
     fn triangle_normal(triangle: &[Self; 3]) -> UnitVector<3> {
-        let [posa, posb, posc] = triangle.each_ref().map(|vert| vert.position());
+        let [posa, posb, posc] = triangle.each_ref().map(Self::position);
         (posb - posa)
             .cross(posc - posa)
             .try_normalize()
@@ -45,11 +45,15 @@ pub trait VertexHasTangent: CubicVertex {
     #[inline]
     fn triangle_normal_tangent(triangle: &[Self; 3]) -> UnitVector<3> {
         let sum_vector: Option<Vector<_>> = triangle.iter().map(|vert| vert.normal().v()).sum();
-        if let Some(unit) = sum_vector.and_then(|vec| vec.try_normalize()) {
-            return unit;
-        } else {
-            Self::triangle_normal(triangle)
-        }
+        // if let Some(unit) = sum_vector.and_then(|vec| vec.try_normalize()) {
+        // unit
+        // } else {
+        // Self::triangle_normal(triangle)
+        // }
+
+        sum_vector
+            .and_then(Vector::try_normalize)
+            .unwrap_or_else(|| Self::triangle_normal(triangle))
     }
 
     fn triangle_multi_normal_tangent(triangle: &[Self; 3]) -> [UnitVector<3>; 3] {

@@ -62,8 +62,8 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
     }
 }
 
-impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
-    for Group<'a, MAX, OUT, D>
+impl<const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
+    for Group<'_, MAX, OUT, D>
 {
     fn draw_sized(
         self,

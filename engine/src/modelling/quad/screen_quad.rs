@@ -33,6 +33,8 @@ impl<'a, const N: usize, X: AttachmentWithoutExtra<Tex = FlatTexture>> Framebuff
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum DrawError<'a> {
+    #[allow(clippy::allow_attributes, reason = "rustc only allows allow")]
+    #[allow(unused, reason = "Error")]
     VertexArrayDraw(VertexArrayDrawError<'a>),
 }
 error_boilerplate!(<'a> DrawError<'a>);
@@ -53,7 +55,7 @@ impl<'a, const N: usize, X: AttachmentWithoutExtra<Tex = FlatTexture>> Framebuff
                 // SAFETY: this `tex` is only borrowed here, is never passed to another function and the reference expires at the end of the function
                 unsafe {
                 tex.try_borrow_unguarded()
-                    .expect("cannot write to a framebuffer and read at the same time")
+                    .expect("cannot write to a framebuffer and read at the same time, if this panics, so does the gpu")
             })
             .enumerate()
             .map(|(index, tex)| {

@@ -1,5 +1,4 @@
 use core::array;
-use core::cell::RefMut;
 use core::fmt::Debug;
 
 use geometry::Transform;
@@ -331,10 +330,11 @@ pub fn permutations<T: Clone, const DIMS: usize>(
         })
     })
 }
+#[cfg(test)]
 mod test {
 
     #[test]
-    fn test_line_overlap() {
+    fn t_line_overlap() {
         use super::{TestBoxVertex, line_overlap};
 
         let input = TestBoxVertex {
@@ -344,11 +344,11 @@ mod test {
             two_ub: 2.0,
         };
 
-        assert!(line_overlap(input))
+        assert!(line_overlap(input));
     }
 
     #[test]
-    fn test_permuations() {
+    fn t_permuations() {
         use super::permutations;
 
         let vec1 = [1, 1, 1];
@@ -366,6 +366,6 @@ mod test {
                 [0, 1, 1],
                 [1, 1, 1],
             ]
-        )
+        );
     }
 }

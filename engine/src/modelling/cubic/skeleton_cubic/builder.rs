@@ -2,7 +2,7 @@ use alloc::rc::Rc;
 
 use geometry::{Pose, TransformBy as _};
 use graphics::shader_program::CullFace;
-use utils::{builder, new};
+use utils::{HasIterWithCloned as _, builder, new};
 
 use super::{Skeleton, SkeletonCubic};
 use crate::modelling::cubic::BoneAndMesh;
@@ -13,6 +13,7 @@ use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
 use crate::modelling::{SimpleVertex, test_models};
 
 #[derive(Debug, Clone, Default)]
+#[must_use = "Model must be built with the `build` method"]
 pub struct Builder<'a> {
     mesh_builders: Vec<(&'a SkeletonBoneIndex, MeshBuilder<SimpleVertex>)>,
     cull_face: CullFace,
@@ -55,8 +56,8 @@ impl<'a> Builder<'a> {
     }
 
     pub fn material(mut self, material: Rc<Material>) -> Self {
-        for (_, mesh) in &mut self.mesh_builders {
-            mesh.material = material.clone();
+        for ((_, mesh), material) in self.mesh_builders.iter_mut().with_cloned(material) {
+            mesh.material = material;
         }
         self
     }

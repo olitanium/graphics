@@ -133,6 +133,8 @@ impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
     ) -> Option<usize> {
         let (lower_bounds, upper_bounds) = make_bound(triangles)?;
 
+        // TODO: rewrite completely.
+        #[expect(clippy::cast_precision_loss, reason = "need to rewrite")]
         let children_or_meta = if depth != 0 {
             let opt_children = {
                 let dimensions = upper_bounds - lower_bounds;
