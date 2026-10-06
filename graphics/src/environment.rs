@@ -1,4 +1,5 @@
 use core::cell::RefMut;
+use core::error::Error;
 use core::fmt::{self, Debug};
 use core::time::Duration;
 use std::collections::HashSet;
@@ -169,8 +170,7 @@ impl<G: ApiState> Environment<G> {
 
         window.configure();
 
-        let global_state =
-            G::new(window.get_framebuffer_size()).map_err(|err| NewError::StateInit(err))?;
+        let global_state = G::new(window.size()).map_err(|err| NewError::StateInit(err))?;
 
         let creation_time = Instant::now();
 
@@ -182,16 +182,34 @@ impl<G: ApiState> Environment<G> {
             old_frame: None,
         })
     }
+}
 
-    pub fn run(mut self) -> Result<(), G::Error> {
-        // Substitute for `for to_draw in env.iter() {`
-        // self.window.make_current();
+pub enum RunError<G: ApiState> {
+    State(G::Error),
+    DrawError(Box<dyn Error>),
+    ContextError,
+}
+error_boilerplate!({G: ApiState} RunError<G>);
 
+impl<G: ApiState> fmt::Debug for RunError<G> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::ContextError => f.debug_struct("RunError::ContextError").finish(),
+            Self::State(g) => f.debug_struct(&format!("RunError::State({g:?})")).finish(),
+            Self::DrawError(e) => f
+                .debug_struct(&format!("RunError::DrawError({e:?})"))
+                .finish(),
+        }
+    }
+}
+
+impl<G: ApiState> Environment<G> {
+    pub fn run(mut self) -> Result<(), RunError<G>> {
         let mut shader_program_marker =
-            ShaderProgramContext::new().expect("First invocation means only one marker");
-        let mut framebuffer_register =
-            FramebufferContext::new().expect("First invocation means only one register");
+            ShaderProgramContext::new().ok_or(RunError::ContextError)?;
+        let mut framebuffer_context = FramebufferContext::new().ok_or(RunError::ContextError)?;
 
+        // Substitute for `for to_draw in env.iter() {`
         loop {
             let mut frame_iter = self.iter();
 
@@ -201,19 +219,20 @@ impl<G: ApiState> Environment<G> {
                 let result = frame_iter.next(query_outputs.take());
                 match result {
                     PollResult::Close => return Ok(()),
-                    PollResult::Error(err) => return Err(err),
+                    PollResult::Error(err) => return Err(RunError::State(err)),
                     PollResult::Draw(to_draw) => {
-                        framebuffer_register.clear();
+                        framebuffer_context.clear();
                         query_outputs = to_draw
-                            .draw_sized(&mut framebuffer_register, &mut shader_program_marker)
+                            .draw_sized(&mut framebuffer_context, &mut shader_program_marker)
+                            .map_err(RunError::DrawError)?
                             .get_query();
                     }
                     PollResult::Restart => break,
                 }
             }
 
-            let framebuffer_size = self.window.get_framebuffer_size();
-            self.global_state = G::new(framebuffer_size)?;
+            let framebuffer_size = self.window.size();
+            self.global_state = G::new(framebuffer_size).map_err(RunError::State)?;
         }
     }
 

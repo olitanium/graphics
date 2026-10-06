@@ -21,6 +21,7 @@ use crate::texture::{
 use crate::types::{self, GLint, TexDim, TexId};
 
 #[derive(Default, Debug)]
+#[must_use = "`FlatTexture` must be built with the `build` method"]
 pub struct Builder<T> {
     image: T,
     wrap_s_t: WrapType,

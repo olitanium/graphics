@@ -1,10 +1,12 @@
+use core::error::Error;
+
 use crate::Draw;
 use crate::environment::Event;
 use crate::environment::draw::PollResult;
 use crate::types::TexDim;
 
 pub trait ApiState: Sized {
-    type Error;
+    type Error: Error;
     type DrawOutput<'a>: Draw + 'a
     where
         Self: 'a;

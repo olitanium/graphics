@@ -1,14 +1,19 @@
-use core::cell::RefMut;
+use core::cell::{BorrowMutError, RefMut};
 use core::marker::PhantomData;
 use core::sync::atomic::{AtomicBool, Ordering};
 use std::collections::HashSet;
 
+use utils::error_boilerplate;
+
 use super::{FramebufferWithDepth, FramebufferWithStencil};
 use crate::framebuffer::traits::FramebufferWithoutExtra;
+use crate::types::{FrameBufferId, TexDim};
 use crate::{gl_call, types};
 
 #[derive(Debug)]
 pub struct FramebufferContext {
+    current_framebuffer: FrameBufferId::Primitive,
+    viewport: (TexDim, TexDim),
     cleared: HashSet<types::GLuint>,
 }
 static IS_INIT: AtomicBool = AtomicBool::new(false);
@@ -35,6 +40,8 @@ impl FramebufferContext {
     pub fn new() -> Option<Self> {
         let is_init = IS_INIT.swap(false, Ordering::Relaxed);
         (!is_init).then(|| Self {
+            current_framebuffer: 0,
+            viewport: const { (TexDim::new(1), TexDim::new(1)) },
             cleared: HashSet::new(),
         })
     }
@@ -42,14 +49,14 @@ impl FramebufferContext {
     pub fn register<'a, 'b, const OUT: usize, D>(
         &'b mut self,
         framebuffer: &'a D,
-    ) -> ActiveFramebuffer<'a, 'b, OUT, D>
+    ) -> Result<ActiveFramebuffer<'a, 'b, OUT, D>, BindError>
     where
         D: FramebufferWithoutExtra<OUT>,
     {
         if self.cleared.insert(framebuffer.id().as_primitive()) {
-            let mut active = ActiveFramebuffer::new(framebuffer, self);
+            let mut active = ActiveFramebuffer::new(framebuffer, self)?;
             active.clear();
-            active
+            Ok(active)
         } else {
             ActiveFramebuffer::new(framebuffer, self)
         }
@@ -74,28 +81,41 @@ pub struct ActiveFramebuffer<'a, 'b, const OUT: usize, D: FramebufferWithoutExtr
     context: &'b mut FramebufferContext,
 }
 
+#[derive(Debug)]
+pub enum BindError {
+    ReadingFromFramebuffer(BorrowMutError),
+}
+error_boilerplate!(BindError);
+
 impl<'a, 'b, const OUT: usize, D: FramebufferWithoutExtra<OUT>> ActiveFramebuffer<'a, 'b, OUT, D> {
-    pub fn new(framebuffer: &'a D, context: &'b mut FramebufferContext) -> Self {
+    pub fn new(framebuffer: &'a D, context: &'b mut FramebufferContext) -> Result<Self, BindError> {
         let (width, height) = framebuffer.size();
 
-        gl_call! {
-            gl::BindFramebuffer(gl::FRAMEBUFFER, framebuffer.id().as_primitive());
+        let fb_primitive = framebuffer.id().as_primitive();
+        if fb_primitive != context.current_framebuffer {
+            context.current_framebuffer = fb_primitive;
+            gl_call! {
+                gl::BindFramebuffer(gl::FRAMEBUFFER, framebuffer.id().as_primitive());
+            }
         }
-        gl_call! {
-            gl::Viewport(0, 0, width.as_primitive(), height.as_primitive());
+        if (width, height) != context.viewport {
+            context.viewport = (width, height);
+            gl_call! {
+                gl::Viewport(0, 0, width.as_primitive(), height.as_primitive());
+            }
         }
 
         framebuffer.enables(context);
 
         let texture_locks = framebuffer
             .try_give_texture_lock()
-            .expect("should do everything sequentially, this would break anyway");
+            .map_err(BindError::ReadingFromFramebuffer)?;
 
-        Self {
+        Ok(Self {
             framebuffer: PhantomData,
             _texture_locks: texture_locks,
             context,
-        }
+        })
     }
 
     /// Clear the currently bound Framebuffer and ALL buffer bits.

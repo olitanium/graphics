@@ -20,6 +20,7 @@ pub struct AggregateCalcAnim {
 }
 
 #[derive(Debug)]
+#[must_use = "`AggregateCalcAnim` must be built with the `build` method"]
 pub struct AggregateCalcAnimBuilder<'a> {
     // Invariant: all animation units can only point to those before themselves.
     // this is enforced by the `push` method

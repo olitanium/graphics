@@ -155,11 +155,11 @@ impl<B> GenVertexArray<B> {
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum VertexArrayDrawError<'a> {
-    BindTextures(BindTexturesError<'a>),
+pub enum VertexArrayDrawError {
+    BindTextures(BindTexturesError),
     Validate(ValidateError),
 }
-error_boilerplate!(<'a> VertexArrayDrawError<'a>);
+error_boilerplate!(VertexArrayDrawError);
 
 impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
     /// # Errors
@@ -167,11 +167,11 @@ impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
     /// Errors when the active shader program is not correctly configured for
     /// drawing. This may be because the shader program as written does not line
     /// up with the type provided to Rust.
-    pub fn draw<'a, M, O, const OUT: usize, D>(
+    pub fn draw<M, O, const OUT: usize, D>(
         &self,
-        active_shader_program: &mut ActiveShaderProgram<'a, '_, '_, M, O, D::Tex, OUT>,
+        active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, O, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-    ) -> Result<(), VertexArrayDrawError<'a>>
+    ) -> Result<(), VertexArrayDrawError>
     where
         M: Model<Vertex = V>,
         D: FramebufferWithoutExtra<OUT>,
@@ -242,12 +242,12 @@ impl GenVertexArray<()> {
     /// Errors when the active shader program is not correctly configured for
     /// drawing. This may be because the shader program as written does not line
     /// up with the type provided to Rust.
-    pub fn draw_len<'a, M, O, const OUT: usize, D>(
+    pub fn draw_len<M, O, const OUT: usize, D>(
         &self,
-        active_shader_program: &mut ActiveShaderProgram<'a, '_, '_, M, O, D::Tex, OUT>,
+        active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, O, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         len: ElementArrayLen,
-    ) -> Result<(), VertexArrayDrawError<'a>>
+    ) -> Result<(), VertexArrayDrawError>
     where
         M: Model<Vertex = NoVertex>,
         D: FramebufferWithoutExtra<OUT>,

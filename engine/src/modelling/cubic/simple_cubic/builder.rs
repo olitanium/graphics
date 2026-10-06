@@ -10,7 +10,7 @@ use crate::modelling::cubic::mesh::MeshBuilder;
 use crate::modelling::{SimpleVertex, test_models};
 
 #[derive(Debug, Clone, Default)]
-#[must_use = "SimpleCubic must by built with the `build method"]
+#[must_use = "`SimpleCubic` must be built with the `build` method"]
 pub struct Builder {
     mesh_builders: Vec<MeshBuilder<SimpleVertex>>,
     transforms: Vec<TransformType>,

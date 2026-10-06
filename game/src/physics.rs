@@ -2,7 +2,7 @@ use core::time::Duration;
 use std::collections::HashSet;
 
 use engine::Key;
-use engine::geometry::{Orientation, Pose};
+use engine::geometry::Pose;
 use engine::linear_algebra::{UnitVector, Vector};
 use engine::modelling::cubic::CalculatedAnimation;
 
@@ -20,11 +20,9 @@ impl State {
         let float_time = elapsed.as_secs_f32();
         let new_sun_pos = Vector::new([-float_time.cos().sin(), 1.0, -float_time.cos().cos()]);
 
-        self.sun.inner.physics.pose = Pose::new_from_orientation_translation(
-            Orientation::new_from_to(new_sun_pos, self.player.root().translation(), UnitVector::Y)
-                .expect("sun never below player"),
-            new_sun_pos,
-        );
+        self.sun.inner.physics.pose =
+            Pose::new_from_to_up(new_sun_pos, self.player.root().translation(), UnitVector::Y)
+                .expect("sun never below player");
         self.sun.light.set_position(new_sun_pos);
         self.sun_duplicate_light.set_position(new_sun_pos);
 

@@ -4,19 +4,18 @@ use core::num::NonZeroUsize;
 use std::hash::DefaultHasher;
 use std::sync::LazyLock;
 
-pub use bone::Bone;
-use bone::BoneBuilder;
+pub use bone::{Bone, BoneBuilder};
 use utils::new;
 
 #[derive(Debug, Clone, Default)]
-#[must_use = "Model must be created with the `build` method"]
-pub struct SkeletonBuilder {
+#[must_use = "`Skeleton` must be created with the `build` method"]
+pub struct Builder {
     // All accesses to `values` is offset by -1, where 0 means accessing the root node (given in
     // functions), 1 means accessing values[0], 2 => values[1] etc...
     pub(crate) bones: Vec<Bone>,
 }
 
-impl SkeletonBuilder {
+impl Builder {
     new!();
 
     /// Returns the index of that bone, or `None` if the parent does not exist.
@@ -71,12 +70,12 @@ impl Default for Skeleton {
 }
 
 impl Skeleton {
-    pub fn builder() -> SkeletonBuilder {
-        SkeletonBuilder::new()
+    pub fn builder() -> Builder {
+        Builder::new()
     }
 
     pub fn just_root() -> &'static Self {
-        static LAZY: LazyLock<Skeleton> = LazyLock::new(|| SkeletonBuilder::new().build());
+        static LAZY: LazyLock<Skeleton> = LazyLock::new(|| Builder::new().build());
 
         &LAZY
     }
@@ -102,12 +101,11 @@ impl Skeleton {
     }
 
     pub(crate) fn iter_non_root(&self) -> impl Iterator<Item = (NonZeroUsize, &Bone)> {
-        self.bones.iter().enumerate().map(|(index, bone)| {
-            (
-                NonZeroUsize::new(index + 1).expect("x+1 > 0 for all x, no overflow"),
-                bone,
-            )
-        })
+        self.bones
+            .iter()
+            .enumerate()
+            // will never "fail" because index + 1 will always be `> 0` until `usize::MAX`
+            .filter_map(|(index, bone)| NonZeroUsize::new(index + 1).map(|nz| (nz, bone)))
     }
 }
 

@@ -16,33 +16,33 @@ use crate::modelling::cubic::lighting::simple::SimpleBindError;
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum ShadowBindError<'a> {
-    BindSimpleLight(SimpleBindError<'a>),
-    SetUniform(ShaderSetUniformError<'a>),
+pub enum ShadowBindError {
+    BindSimpleLight(SimpleBindError),
+    SetUniform(ShaderSetUniformError),
     NulError(NulError),
     TooLong(<i32 as TryFrom<usize>>::Error),
 }
-error_boilerplate!(<'a> ShadowBindError<'a>);
+error_boilerplate!(ShadowBindError);
 
-impl<'a> From<ShaderSetUniformError<'a>> for ShadowBindError<'a> {
-    fn from(value: ShaderSetUniformError<'a>) -> Self {
+impl From<ShaderSetUniformError> for ShadowBindError {
+    fn from(value: ShaderSetUniformError) -> Self {
         Self::SetUniform(value)
     }
 }
 
-impl<'a> From<SimpleBindError<'a>> for ShadowBindError<'a> {
-    fn from(value: SimpleBindError<'a>) -> Self {
+impl From<SimpleBindError> for ShadowBindError {
+    fn from(value: SimpleBindError) -> Self {
         Self::BindSimpleLight(value)
     }
 }
 
-impl From<NulError> for ShadowBindError<'_> {
+impl From<NulError> for ShadowBindError {
     fn from(value: NulError) -> Self {
         Self::NulError(value)
     }
 }
 
-impl From<TryFromIntError> for ShadowBindError<'_> {
+impl From<TryFromIntError> for ShadowBindError {
     fn from(value: <i32 as TryFrom<usize>>::Error) -> Self {
         Self::TooLong(value)
     }

@@ -1,4 +1,5 @@
 use alloc::ffi::CString;
+use core::error::Error;
 
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::{AttachmentWithoutExtra, FramebufferWithoutExtra};
@@ -8,7 +9,6 @@ use graphics::{Draw, DrawOut};
 
 use super::FramebufferQuad;
 use crate::modelling::Quad;
-
 #[derive(Debug)]
 pub struct Group<
     'a,
@@ -62,14 +62,18 @@ impl<
         self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
-        let mut active_framebuffer = self.framebuffer.bind(fb_context);
+    ) -> Result<DrawOut, Box<dyn Error>> {
+        let mut active_framebuffer = self.framebuffer.bind(fb_context)?;
         let mut shader = self.shader.use_program(sp_context);
-        shader.set_uniform_dyn(self.uniforms).unwrap();
+        shader.set_uniform_dyn(self.uniforms)?;
 
-        for quad in self.quads {
-            quad.draw(&mut shader, &mut active_framebuffer).unwrap();
-        }
+        let err: Vec<_> = self
+            .quads
+            .into_iter()
+            .filter_map(|quad| quad.draw(&mut shader, &mut active_framebuffer).err())
+            .collect();
+
+        err.is_empty().ok_or_else(|| format!("{err:?}"))?;
 
         DrawOut::OK
     }
@@ -78,7 +82,7 @@ impl<
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let inner = *self;
         inner.draw_sized(fb_context, sp_context)
     }

@@ -13,7 +13,7 @@ use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
 use crate::modelling::{SimpleVertex, test_models};
 
 #[derive(Debug, Clone, Default)]
-#[must_use = "Model must be built with the `build` method"]
+#[must_use = "`SkeletonCubic` must be built with the `build` method"]
 pub struct Builder<'a> {
     mesh_builders: Vec<(&'a SkeletonBoneIndex, MeshBuilder<SimpleVertex>)>,
     cull_face: CullFace,

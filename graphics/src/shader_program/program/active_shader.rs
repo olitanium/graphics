@@ -1,4 +1,5 @@
 use alloc::ffi::{CString, NulError};
+use alloc::sync::Arc;
 use core::ffi::c_char;
 use core::fmt::{self, Debug};
 use core::ptr;
@@ -114,16 +115,18 @@ impl<M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, '_, 
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum ShaderSetUniformError<'a> {
+pub enum ShaderSetUniformError {
     NameNul(NulError),
     NotFound {
         c_name: CString,
-        shader_source: &'a str,
+        // I don't like the Arc, because this is not thread safe and so `Arc` is unneccesary. `Arc`
+        // is used because some Shaders are in `LazyLocks`.
+        shader_source: Arc<str>,
     },
 }
-error_boilerplate!(<'a> ShaderSetUniformError<'a>);
+error_boilerplate!(ShaderSetUniformError);
 
-fn match_result(res: Result<(), SetUniformError<'_>>) -> Result<(), ShaderSetUniformError<'_>> {
+fn match_result(res: Result<(), SetUniformError>) -> Result<(), ShaderSetUniformError> {
     match res {
         Ok(()) | Err(SetUniformError::GetLocation(GetUniformLocationError::OptimizedOut)) => Ok(()),
         Err(SetUniformError::GetLocation(GetUniformLocationError::NotFound {
@@ -139,12 +142,8 @@ fn match_result(res: Result<(), SetUniformError<'_>>) -> Result<(), ShaderSetUni
     }
 }
 
-impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, '_, M, O, T, OUT> {
-    pub fn set_uniform<N, U>(
-        &mut self,
-        name: &N,
-        value: &U,
-    ) -> Result<(), ShaderSetUniformError<'a>>
+impl<M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, '_, M, O, T, OUT> {
+    pub fn set_uniform<N, U>(&mut self, name: &N, value: &U) -> Result<(), ShaderSetUniformError>
     where
         N: UniformName,
         U: Uniform + ?Sized,
@@ -155,7 +154,7 @@ impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, 
     pub fn set_uniform_dyn(
         &mut self,
         values: Vec<(CString, &dyn Uniform)>,
-    ) -> Result<(), ShaderSetUniformError<'a>> {
+    ) -> Result<(), ShaderSetUniformError> {
         for (name, value) in values {
             match_result(value.set_uniform(&name, self))?;
         }
@@ -165,19 +164,24 @@ impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, 
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum BindTexturesError<'a> {
+pub enum BindTexturesError {
     BindTooHigh { maximum: usize },
-    SetUniform(Vec<ShaderSetUniformError<'a>>),
+    SetUniform(Vec<ShaderSetUniformError>),
 }
-error_boilerplate!(<'a> BindTexturesError<'a>);
+error_boilerplate!(BindTexturesError);
 
-impl<'a, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'a, '_, '_, M, O, T, OUT> {
-    pub(crate) fn bind_textures(&mut self) -> Result<(), BindTexturesError<'a>> {
+impl<M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, '_, M, O, T, OUT> {
+    pub(crate) fn bind_textures(&mut self) -> Result<(), BindTexturesError> {
         static MAX_TEX_UNITS: LazyLock<usize> = LazyLock::new(|| {
             let mut out = 0;
             gl_call! {
                 gl::GetIntegerv(gl::MAX_COMBINED_TEXTURE_IMAGE_UNITS, &raw mut out);
             }
+            #[expect(
+                clippy::expect_used,
+                reason = "OpenGL guaranteed that this will be positive, OpenGL could have used an \
+                          unsigned integer but chose not to"
+            )]
             usize::try_from(out).expect("will not be negative")
         });
 
@@ -224,20 +228,20 @@ impl<M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, '_, 
     }
 }
 
-pub trait IsActiveShaderProgram<'a> {
+pub trait IsActiveShaderProgram {
     fn get_uniform_location(
         &self,
         name: &dyn UniformName,
-    ) -> Result<UniformLocation, GetUniformLocationError<'a>>;
+    ) -> Result<UniformLocation, GetUniformLocationError>;
 }
 
-impl<'a, M: Model, O, T: Texture, const OUT: usize> IsActiveShaderProgram<'a>
-    for ActiveShaderProgram<'a, '_, '_, M, O, T, OUT>
+impl<M: Model, O, T: Texture, const OUT: usize> IsActiveShaderProgram
+    for ActiveShaderProgram<'_, '_, '_, M, O, T, OUT>
 {
     fn get_uniform_location(
         &self,
         name: &dyn UniformName,
-    ) -> Result<UniformLocation, GetUniformLocationError<'a>> {
+    ) -> Result<UniformLocation, GetUniformLocationError> {
         self.shader_program.get_uniform_location(name)
     }
 }

@@ -1,4 +1,5 @@
 use alloc::ffi::CString;
+use core::error::Error;
 use core::iter;
 
 use graphics::framebuffer::FramebufferContext;
@@ -75,7 +76,7 @@ impl<X: FramebufferWithDepth<3, Tex = FlatTexture>> Draw for Group<'_, X> {
         self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         self.list_light
             .gen_depth(
                 sp_context,
@@ -84,7 +85,7 @@ impl<X: FramebufferWithDepth<3, Tex = FlatTexture>> Draw for Group<'_, X> {
                 self.position,
                 &self.uniforms,
             )
-            .unwrap();
+            .map_err(|err| err.to_string())?;
 
         // At this point, all lights have their framebuffers filled with depth
         // information
@@ -93,30 +94,34 @@ impl<X: FramebufferWithDepth<3, Tex = FlatTexture>> Draw for Group<'_, X> {
         // this function, the references stored cannot leak
         unsafe {
             self.list_light
-                .bind(&mut active_shadow_shader, self.position)
-                .unwrap();
+                .bind(&mut active_shadow_shader, self.position)?;
         }
 
-        active_shadow_shader
-            .set_uniform(&c"projtimesview", &self.look_at)
-            .unwrap();
-        active_shadow_shader
-            .set_uniform(&c"camera_position", &self.position.homogeneous())
-            .unwrap();
-        active_shadow_shader.set_uniform_dyn(self.uniforms).unwrap();
+        active_shadow_shader.set_uniform(&c"projtimesview", &self.look_at)?;
+        active_shadow_shader.set_uniform(&c"camera_position", &self.position.homogeneous())?;
+        active_shadow_shader.set_uniform_dyn(self.uniforms)?;
 
-        let mut active_output_framebuffer = self.output_framebuffer.bind(fb_context);
-        for (model, calculated_animation) in iter::chain(self.opaque, self.transparent) {
-            model
-                .draw(
-                    &mut active_shadow_shader,
-                    &mut active_output_framebuffer,
-                    &calculated_animation,
-                )
-                .unwrap();
-        }
+        let mut active_output_framebuffer = self.output_framebuffer.bind(fb_context)?;
+
+        let mut errs: Vec<_> = iter::chain(self.opaque, self.transparent)
+            .filter_map(|(model, calculated_animation)| {
+                model
+                    .draw(
+                        &mut active_shadow_shader,
+                        &mut active_output_framebuffer,
+                        &calculated_animation,
+                    )
+                    .err()
+            })
+            .collect();
 
         drop(active_shadow_shader);
+
+        // TODO: can we recover this?
+        if let Some(first) = errs.pop() {
+            return Err(first.into());
+        }
+
         DrawOut::OK
     }
 
@@ -124,7 +129,7 @@ impl<X: FramebufferWithDepth<3, Tex = FlatTexture>> Draw for Group<'_, X> {
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let inner = *self;
         inner.draw_sized(fb_context, sp_context)
     }

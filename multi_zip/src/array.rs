@@ -56,7 +56,6 @@ impl<T: Iterator, const N: usize> MultiZip<T, N> {
 
     /// Get the underlying iterators so that they can be each checked for
     /// exhaustion.
-    #[must_use]
     #[inline]
     pub fn into_inner(self) -> [T; N] {
         self.0

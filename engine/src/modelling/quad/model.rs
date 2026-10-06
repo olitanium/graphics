@@ -60,17 +60,17 @@ impl<const N: usize> Quad<N> {
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum DrawError<'a> {
-    VertexArrayDraw(VertexArrayDrawError<'a>),
+pub enum DrawError {
+    VertexArrayDraw(VertexArrayDrawError),
 }
-error_boilerplate!(<'a> DrawError<'a>);
+error_boilerplate!(DrawError);
 
 impl<const N: usize> Quad<N> {
-    pub(crate) fn draw<'a, 'b, const OUT: usize, O, I>(
+    pub(crate) fn draw<'b, const OUT: usize, O, I>(
         &'b self,
-        active_shader: &mut ActiveShaderProgram<'a, '_, 'b, Self, O, I::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'b, Self, O, I::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, I>,
-    ) -> Result<(), DrawError<'a>>
+    ) -> Result<(), DrawError>
     where
         I: FramebufferWithoutExtra<OUT>,
     {
@@ -81,11 +81,10 @@ impl<const N: usize> Quad<N> {
             .iter()
             .map(|tex| &**tex as &dyn Texture)
             .enumerate()
-            .map(|(index, tex)| {
-                (
-                    CString::new(format!("in_texture{index}")).expect("should be no Nul"),
-                    tex,
-                )
+            .filter_map(|(index, tex)| {
+                CString::new(format!("in_texture{index}"))
+                    .map(|cstr| (cstr, tex))
+                    .ok()
             });
 
         active_shader.register_texture(input);

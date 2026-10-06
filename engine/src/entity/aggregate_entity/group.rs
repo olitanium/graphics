@@ -1,4 +1,5 @@
 use alloc::ffi::CString;
+use core::error::Error;
 use core::fmt;
 use core::fmt::Debug;
 
@@ -101,24 +102,29 @@ where
         self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let mut active_shader = self.shader.use_program(sp_context);
-        let mut active_framebuffer = self.framebuffer.bind(fb_context);
+        let mut active_framebuffer = self.framebuffer.bind(fb_context)?;
 
-        self.lights.bind(&mut active_shader).unwrap();
+        self.lights.bind(&mut active_shader)?;
 
-        active_shader
-            .set_uniform(&c"projtimesview", &self.camera_look_at)
-            .unwrap();
-        active_shader
-            .set_uniform(&c"camera_position", &self.camera_pos.homogeneous())
-            .unwrap();
+        active_shader.set_uniform(&c"projtimesview", &self.camera_look_at)?;
+        active_shader.set_uniform(&c"camera_position", &self.camera_pos.homogeneous())?;
 
-        active_shader.set_uniform_dyn(self.uniforms).unwrap();
+        active_shader.set_uniform_dyn(self.uniforms)?;
 
-        for (model, animations) in self.opaque {
-            _ = model.draw(&mut active_shader, &mut active_framebuffer, animations);
-        }
+        let err: Vec<_> = self
+            .opaque
+            .into_iter()
+            .filter_map(|(model, animations)| {
+                model
+                    .draw(&mut active_shader, &mut active_framebuffer, animations)
+                    .err()
+            })
+            .collect();
+
+        err.is_empty().ok_or_else(|| format!("{err:?}"))?;
+
         DrawOut::OK
     }
 
@@ -126,7 +132,7 @@ where
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let inner = *self;
         inner.draw_sized(fb_context, sp_context)
     }

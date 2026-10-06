@@ -17,27 +17,27 @@ use crate::types::UniformLocation;
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum SetUniformError<'a> {
-    GetLocation(GetUniformLocationError<'a>),
+pub enum SetUniformError {
+    GetLocation(GetUniformLocationError),
 }
-error_boilerplate!(<'a> SetUniformError<'a>);
+error_boilerplate!(SetUniformError);
 
 pub trait Uniform: Debug {
-    fn set_uniform<'a>(
+    fn set_uniform(
         &self,
         name: &dyn UniformName,
-        shader_program: &dyn IsActiveShaderProgram<'a>,
-    ) -> Result<(), SetUniformError<'a>>;
+        shader_program: &dyn IsActiveShaderProgram,
+    ) -> Result<(), SetUniformError>;
 }
 
 macro_rules! define_uniform {
     ($typ:ty => | $self:ident, $loc:ident, $shader:ident | $out:expr) => {
         impl Uniform for $typ {
-            fn set_uniform<'a>(
+            fn set_uniform(
                 &self,
                 name: &dyn UniformName,
-                shader_program: &dyn IsActiveShaderProgram<'a>,
-            ) -> Result<(), SetUniformError<'a>> {
+                shader_program: &dyn IsActiveShaderProgram,
+            ) -> Result<(), SetUniformError> {
                 match shader_program.get_uniform_location(name) {
                     Ok(location) => Ok((|$self: &Self, $loc: UniformLocation, $shader| $out)(
                         self,
@@ -54,11 +54,11 @@ macro_rules! define_uniform {
 macro_rules! named_define_uniform {
     ($typ:ty => | $self:ident, $name:ident, $shader:ident | $out:expr) => {
         impl Uniform for $typ {
-            fn set_uniform<'a>(
+            fn set_uniform(
                 &self,
                 name: &dyn UniformName,
-                shader_program: &dyn IsActiveShaderProgram<'a>,
-            ) -> Result<(), SetUniformError<'a>> {
+                shader_program: &dyn IsActiveShaderProgram,
+            ) -> Result<(), SetUniformError> {
                 (|$self: &Self, $name, $shader| $out)(self, name, shader_program)
             }
         }
@@ -127,8 +127,7 @@ impl UniformName for SliceValue<'_> {
         self.c_string.get_or_init(|| {
             let name = self.uniform.as_cstr().to_string_lossy();
             let string = format!("{name}[{:0}]", self.index);
-            CString::new(string)
-                .expect("name is from a CStr, and '[', ']' and '0'..'9' are all not Nul")
+            CString::new(string).unwrap_or_default()
         })
     }
 
@@ -142,11 +141,11 @@ impl UniformName for SliceValue<'_> {
 }
 
 impl<U: Uniform> Uniform for [U] {
-    fn set_uniform<'a>(
+    fn set_uniform(
         &self,
         name: &dyn UniformName,
-        shader_program: &dyn IsActiveShaderProgram<'a>,
-    ) -> Result<(), SetUniformError<'a>> {
+        shader_program: &dyn IsActiveShaderProgram,
+    ) -> Result<(), SetUniformError> {
         for (index, value) in self.iter().enumerate() {
             let slice_value = SliceValue {
                 uniform: name,

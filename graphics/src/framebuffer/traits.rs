@@ -1,8 +1,9 @@
-use core::cell::RefMut;
+use core::cell::{BorrowMutError, RefMut};
 
 /// Helpful traits to ensure that certain draw operations cannot be applied to
 /// framebuffers which are missing particular attachments.
 use super::{ActiveFramebuffer, Framebuffer, FramebufferContext};
+use crate::framebuffer::active_framebuffer::BindError;
 use crate::texture::{Texture, TextureHasBuilder};
 use crate::types::{self, FrameBufferId, TexDim};
 
@@ -75,9 +76,9 @@ impl<T> FramebufferWithoutExtra<1> for T
 where
     T: FramebufferWithoutExtra<2>,
 {
-    fn try_give_texture_lock(&self) -> Option<[RefMut<'_, Self::Tex>; 1]> {
+    fn try_give_texture_lock(&self) -> Result<[RefMut<'_, Self::Tex>; 1], BorrowMutError> {
         let [a, ..] = self.try_give_texture_lock()?;
-        Some([a])
+        Ok([a])
     }
 }
 impl<T> FramebufferWithDepth<1> for T
@@ -101,9 +102,9 @@ impl<T> FramebufferWithoutExtra<2> for T
 where
     T: FramebufferWithoutExtra<3>,
 {
-    fn try_give_texture_lock(&self) -> Option<[RefMut<'_, Self::Tex>; 2]> {
+    fn try_give_texture_lock(&self) -> Result<[RefMut<'_, Self::Tex>; 2], BorrowMutError> {
         let [a, b, ..] = self.try_give_texture_lock()?;
-        Some([a, b])
+        Ok([a, b])
     }
 }
 impl<T> FramebufferWithDepth<2> for T
@@ -126,11 +127,11 @@ pub trait FramebufferWithoutExtra<const OUT: usize>: FramebufferInternals {
     fn bind<'a, 'b>(
         &'a self,
         fb_context: &'b mut FramebufferContext,
-    ) -> ActiveFramebuffer<'a, 'b, OUT, Self> {
+    ) -> Result<ActiveFramebuffer<'a, 'b, OUT, Self>, BindError> {
         fb_context.register(self)
     }
 
-    fn try_give_texture_lock(&self) -> Option<[RefMut<'_, Self::Tex>; OUT]>;
+    fn try_give_texture_lock(&self) -> Result<[RefMut<'_, Self::Tex>; OUT], BorrowMutError>;
 }
 
 pub trait FramebufferWithDepth<const OUT: usize>: FramebufferWithoutExtra<OUT> {

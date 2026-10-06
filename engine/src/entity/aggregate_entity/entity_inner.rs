@@ -25,9 +25,7 @@ where
     Self::Vertex: CubicVertex,
 {
     type BoundingBox<T>: Collision;
-    type DrawError<'a>: Error
-    where
-        Self: 'a;
+    type DrawError: Error;
 
     fn make_bounding_box<T, F>(&self, depth: usize, init: F) -> Option<Self::BoundingBox<T>>
     where
@@ -45,12 +43,12 @@ where
         calc_anim: &'a CalculatedAnimation,
     ) -> <Self::BoundingBox<T> as Collision>::VertexTransform<'a>;
 
-    fn draw<'a, 'b, const OUT: usize, D, L>(
+    fn draw<'a, const OUT: usize, D, L>(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'b, '_, 'a, Self, L, D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         calculated_animation: &CalculatedAnimation,
-    ) -> Result<(), Self::DrawError<'b>>
+    ) -> Result<(), Self::DrawError>
     where
         D: FramebufferWithDepth<OUT>;
 }

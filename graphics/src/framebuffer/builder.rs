@@ -25,6 +25,7 @@ pub struct HasSize((TexDim, TexDim));
 /// Framebuffer builder type, used to select the number of colour buffers and
 /// types of depth testing.
 #[derive(Default)]
+#[must_use = "`Framebuffer` must be built with the `build` method"]
 pub struct Builder<const N: usize, S, B: AttachmentWithoutExtra> {
     /// Size of the underlying texture.
     size: S,
@@ -114,7 +115,6 @@ impl<const N: usize, S> Builder<N, S, WithDepth> {
 }
 
 impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, HasSize, B> {
-    #[must_use]
     pub fn map_attachment<F>(self, map_attachment: F) -> Self
     where
         F: Fn(B::TexBuilder) -> B::TexBuilder + 'static,
@@ -126,7 +126,6 @@ impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, HasSize, B> {
     }
 
     /// Build from information given to the `Builder` before.
-    #[must_use]
     #[inline]
     pub fn build(self) -> Framebuffer<N, B> {
         let id = {

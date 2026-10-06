@@ -7,6 +7,7 @@ use crate::vertex::Vertex;
 use crate::vertex_buffer::VertexBuffer;
 
 #[derive(Debug, Clone)]
+#[must_use = "`VertexArray` must be built with the `build` method"]
 pub struct Builder<V: Vertex> {
     vertices: Vec<V>,
     element_array: Vec<ElementArrayElem>,

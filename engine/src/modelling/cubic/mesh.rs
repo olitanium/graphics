@@ -33,17 +33,17 @@ impl<V: CubicVertex> Mesh<V> {
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum DrawError<'a> {
-    VertexArrayDraw(VertexArrayDrawError<'a>),
+pub enum DrawError {
+    VertexArrayDraw(VertexArrayDrawError),
 }
-error_boilerplate!(<'a> DrawError<'a>);
+error_boilerplate!(DrawError);
 
 impl<V: CubicVertex> Mesh<V> {
-    pub(crate) fn draw<'a, 'b, O, const OUT: usize, D, M>(
+    pub(crate) fn draw<'b, O, const OUT: usize, D, M>(
         &'b self,
-        active_shader: &mut ActiveShaderProgram<'a, '_, 'b, M, O, D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'b, M, O, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-    ) -> Result<(), DrawError<'a>>
+    ) -> Result<(), DrawError>
     where
         D: FramebufferWithDepth<OUT>,
         M: Model<Vertex = V>,

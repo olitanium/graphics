@@ -18,10 +18,10 @@ pub struct ListLights<'a, const MAX: usize> {
 }
 
 impl<const MAX: usize> ListLights<'_, MAX> {
-    pub(crate) fn bind<'a, const N: usize, L, T, M>(
+    pub(crate) fn bind<const N: usize, L, T, M>(
         &self,
-        shader_program: &mut ActiveShaderProgram<'a, '_, '_, M, L, T, N>,
-    ) -> Result<(), SimpleBindError<'a>>
+        shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
+    ) -> Result<(), SimpleBindError>
     where
         L: ListLightCompatible<MAX>,
         T: Texture,
@@ -33,12 +33,12 @@ impl<const MAX: usize> ListLights<'_, MAX> {
             light.bind_to(shader_program, "point", index)?;
         }
 
-        shader_program.set_uniform(&c"num_spot", &i32::try_from(self.spot.len())?)?;
+        shader_program.set_uniform(&c"num_spot", &u32::try_from(self.spot.len())?)?;
         for (index, light) in self.spot.iter().enumerate() {
             light.bind_to(shader_program, "spot", index)?;
         }
 
-        shader_program.set_uniform(&c"num_far", &i32::try_from(self.far.len())?)?;
+        shader_program.set_uniform(&c"num_far", &u32::try_from(self.far.len())?)?;
         for (index, light) in self.far.iter().enumerate() {
             light.bind_to(shader_program, "far", index)?;
         }

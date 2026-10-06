@@ -9,6 +9,7 @@ use super::{Quad, QuadVertex};
 use crate::modelling::test_models;
 
 #[derive(Debug, Default)]
+#[must_use = "`Quad` must be built with the `build` method"]
 pub struct Builder<const N: usize> {
     vertex_array: Option<VertexArray<QuadVertex>>,
     texture: Option<[Rc<FlatTexture>; N]>, // Option<Rc<FlatTexture>>,

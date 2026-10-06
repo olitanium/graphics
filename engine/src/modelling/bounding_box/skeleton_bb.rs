@@ -114,25 +114,25 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
 // }
 
 #[derive(Debug)]
-pub enum DrawError<'a> {
-    DrawRecursive(DrawRecursiveError<'a>),
+pub enum DrawError {
+    DrawRecursive(DrawRecursiveError),
     GetAnimation(GetAnimationError),
 }
 
-error_boilerplate!(<'a> DrawError<'a>);
+error_boilerplate!(DrawError);
 
 impl<V: CubicVertex, T: 'static> SkeletonBb<V, T> {
     #[allow(clippy::allow_attributes, reason = "technical")]
     #[allow(unused, reason = "to be used in a modernised `SkeletonBbGroup`")]
-    pub(crate) fn draw<'a, D, F>(
+    pub(crate) fn draw<D, F>(
         &self,
         level: usize,
-        active_shader: &mut ActiveShaderProgram<'a, '_, '_, VertexArray<Vector<3>>, (), D::Tex, 1>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, '_, VertexArray<Vector<3>>, (), D::Tex, 1>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
         skeleton: &Skeleton,
         calculated_animation: &CalculatedAnimation,
         mut colour: F,
-    ) -> Result<(), DrawError<'a>>
+    ) -> Result<(), DrawError>
     where
         D: FramebufferWithDepth<1, Tex = FlatTexture>,
         F: FnMut() -> ColourRGBA,

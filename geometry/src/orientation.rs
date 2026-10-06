@@ -70,8 +70,8 @@ impl Orientation {
             global_up, up_two,
             "`global_up` and `up_two` are the same at {global_up:?}"
         );
-        // should never fail because the `Self::new_forward_up` only fails when
-        // forward == up;
+        // should never fail in release because the `Self::new_forward_up` only
+        // fails when forward == up;
         Self::new_forward_up(forward, global_up).or_else(|| Self::new_forward_up(forward, up_two))
     }
 

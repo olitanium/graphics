@@ -1,4 +1,5 @@
 use alloc::ffi::{CString, NulError};
+use alloc::sync::Arc;
 use core::cell::RefCell;
 use core::fmt::{self, Debug};
 use core::hash::Hasher as _;
@@ -36,7 +37,7 @@ pub use cull_face::CullFace;
 
 pub struct ShaderProgram<M: Model, O, const OUT: usize, T: Texture> {
     pub(crate) id: ShaderProgramId,
-    concat_all_text: String,
+    concat_all_text: Arc<str>,
     uniform_locations: RefCell<HashMap<u64, i32>>,
     force_cull_face: Option<CullFace>,
     _phantom_model: PhantomData<fn(M, T) -> O>,
@@ -75,21 +76,21 @@ impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum GetUniformLocationError<'a> {
+pub enum GetUniformLocationError {
     NameNul(NulError),
     NotFound {
         c_name: CString,
-        shader_source: &'a str,
+        shader_source: Arc<str>,
     },
     OptimizedOut,
 }
-error_boilerplate!(<'a> GetUniformLocationError<'a>);
+error_boilerplate!(GetUniformLocationError);
 
 impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
     pub(crate) fn get_uniform_location(
         &self,
         name: &dyn UniformName,
-    ) -> Result<UniformLocation, GetUniformLocationError<'_>> {
+    ) -> Result<UniformLocation, GetUniformLocationError> {
         let hash = name.hash().finish();
 
         let out = *self
@@ -116,7 +117,7 @@ impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
             -2 => Err(GetUniformLocationError::OptimizedOut),
             -1 => Err(GetUniformLocationError::NotFound {
                 c_name: name.as_cstr().to_owned(),
-                shader_source: &self.concat_all_text,
+                shader_source: Arc::clone(&self.concat_all_text),
             }),
             other => Ok(UniformLocation::new(other)),
         }

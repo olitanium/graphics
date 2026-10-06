@@ -16,6 +16,7 @@
 #![feature(const_clone)]
 #![feature(trivial_bounds)]
 #![feature(const_option_ops)]
+#![feature(yeet_expr)]
 
 extern crate alloc;
 

@@ -1,6 +1,6 @@
 use super::{DualNumber, DualQuaternion};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct UnitDualQuaternion(DualQuaternion);
 
 impl UnitDualQuaternion {

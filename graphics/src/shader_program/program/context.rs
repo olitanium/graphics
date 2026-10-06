@@ -136,3 +136,9 @@ impl ShaderProgramContext {
         }
     }
 }
+
+impl Drop for ShaderProgramContext {
+    fn drop(&mut self) {
+        IS_INIT.store(false, Ordering::Relaxed);
+    }
+}

@@ -1,3 +1,6 @@
+use core::error::Error;
+use core::fmt;
+use core::fmt::Debug;
 use core::time::Duration;
 use std::collections::HashSet;
 
@@ -6,12 +9,21 @@ use engine::{ApiState, DrawNothing, Event, PollResult};
 
 pub struct State;
 
+#[derive(Debug)]
+pub struct StateError;
+impl fmt::Display for StateError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        <Self as Debug>::fmt(self, f)
+    }
+}
+impl Error for StateError {}
+
 impl ApiState for State {
     type DrawOutput<'a>
         = DrawNothing
     where
         Self: 'a;
-    type Error = ();
+    type Error = StateError;
 
     fn new(_initial_size: (TexDim, TexDim)) -> Result<Self, Self::Error> {
         Ok(Self {})

@@ -1,4 +1,5 @@
 use alloc::ffi::CString;
+use core::error::Error;
 
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
@@ -21,14 +22,15 @@ pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth
     camera_look_at: Matrix<4, 4>,
 
     lights: ListLights<'a, MAX>,
-    opaque: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
+    opaque: Vec<(&'a SkeletonCubic, &'a CalculatedAnimation)>,
 
-    uniforms: Vec<(CString, &'a dyn Uniform)>,
+    uniforms: Vec<(CString, &'a (dyn Uniform + 'a))>,
 }
 
 impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = FlatTexture>>
     Group<'a, MAX, OUT, D>
 {
+    #[must_use = "Group must be sent to the GPU for drawing"]
     pub fn new<O>(
         shader: &'a ShaderProgram<SkeletonCubic, ListLights<'a, MAX>, OUT, FlatTexture>,
         framebuffer: &'a D,
@@ -36,9 +38,9 @@ impl<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT, Tex = 
         camera: &Camera<O>,
         hint: &O::Hint,
         lights: ListLights<'a, MAX>,
-        opaque: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
+        opaque: Vec<(&'a SkeletonCubic, &'a CalculatedAnimation)>,
 
-        uniforms: Vec<(CString, &'a dyn Uniform)>,
+        uniforms: Vec<(CString, &'a (dyn Uniform + 'a))>,
     ) -> Result<Box<Self>, SignaturesDoNotMatchError>
     where
         O: CameraPose,
@@ -62,30 +64,33 @@ impl<const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
         self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let mut active_shader = self.shader.use_program(sp_context);
-        let mut active_framebuffer = self.framebuffer.bind(fb_context);
+        let mut active_framebuffer = self.framebuffer.bind(fb_context)?;
 
-        self.lights.bind(&mut active_shader).unwrap();
+        self.lights.bind(&mut active_shader)?;
 
-        active_shader
-            .set_uniform(&c"projtimesview", &self.camera_look_at)
-            .unwrap();
-        active_shader
-            .set_uniform(&c"camera_position", &self.camera_pos.homogeneous())
-            .unwrap();
+        active_shader.set_uniform(&c"projtimesview", &self.camera_look_at)?;
+        active_shader.set_uniform(&c"camera_position", &self.camera_pos.homogeneous())?;
 
-        active_shader.set_uniform_dyn(self.uniforms).unwrap();
+        active_shader.set_uniform_dyn(self.uniforms)?;
 
-        for (model, calculated_animation) in self.opaque {
-            model
-                .draw(
-                    &mut active_shader,
-                    &mut active_framebuffer,
-                    &calculated_animation,
-                )
-                .unwrap();
-        }
+        let err: Vec<_> = self
+            .opaque
+            .into_iter()
+            .filter_map(|(model, calculated_animation)| {
+                model
+                    .draw(
+                        &mut active_shader,
+                        &mut active_framebuffer,
+                        calculated_animation,
+                    )
+                    .err()
+            })
+            .collect();
+
+        err.is_empty().ok_or_else(|| format!("{err:?}"))?;
+
         DrawOut::OK
     }
 
@@ -93,7 +98,7 @@ impl<const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let inner = *self;
         inner.draw_sized(fb_context, sp_context)
     }

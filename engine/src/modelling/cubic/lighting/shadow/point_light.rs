@@ -1,7 +1,8 @@
 use alloc::ffi::CString;
+use core::error::Error;
 use core::iter;
 
-use geometry::{Orientation, Pose};
+use geometry::Pose;
 use graphics::framebuffer::attachments::CubeWithDepth;
 use graphics::framebuffer::traits::FramebufferWithoutExtra as _;
 use graphics::framebuffer::{Builder, Framebuffer, FramebufferContext};
@@ -12,6 +13,7 @@ use graphics::types::TexDim;
 use graphics::{Draw, DrawOut, Model, ShaderProgramContext};
 
 use crate::modelling::cubic::lighting::ShadowLightCompatible;
+use crate::modelling::cubic::lighting::shadow::list::ModelGenDepthDrawError;
 use crate::modelling::cubic::lighting::shadow::{GenDepthError, ShadowBindError};
 use crate::modelling::cubic::lighting::simple::PointLight;
 use crate::modelling::cubic::{CalculatedAnimation, camera};
@@ -58,22 +60,19 @@ impl ShadowPointLight {
         ]
         .map(|(forward, up)| {
             camera::builder()
-                .pose(Pose::new_from_orientation_translation(
-                    Orientation::new_forward_up(forward, up).expect("vector pairs different"),
-                    self.light.position,
-                ))
+                .pose(Pose::new_forward_up(self.light.position, forward, up).unwrap_or_default())
                 .perspective((90.0_f32).to_radians(), 1.0, NEAR_PLANE, far_plane)
                 .build()
                 .look_at(&())
         })
     }
 
-    pub(crate) fn bind_to<'c, 'a, const N: usize, const MAX: usize, L, T, M>(
+    pub(crate) fn bind_to<'c, const N: usize, const MAX: usize, L, T, M>(
         &'c self,
-        shader: &mut ActiveShaderProgram<'a, '_, 'c, M, L, T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, 'c, M, L, T, N>,
         name: &str,
         index: usize,
-    ) -> Result<(), ShadowBindError<'a>>
+    ) -> Result<(), ShadowBindError>
     where
         L: ShadowLightCompatible<MAX>,
         T: Texture,
@@ -98,16 +97,19 @@ impl ShadowPointLight {
         shader: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
         name: &str,
         index: usize,
-    ) where
+    ) -> Result<(), ShadowBindError>
+    where
         L: ShadowLightCompatible<MAX>,
         T: Texture,
         M: Model,
         M::Vertex: VertexHasTangent,
     {
         shader.register_texture(iter::once((
-            CString::new(format!("{name}[{index}].depth")).expect("should be no Nul"),
+            CString::new(format!("{name}[{index}].depth"))?,
             CubeMap::dyn_blank(),
         )));
+
+        Ok(())
     }
 
     pub fn gen_depth<'a>(
@@ -128,20 +130,28 @@ impl ShadowPointLight {
         active_depth_only_shader_point.set_uniform(&c"light_position", &self.light.position)?;
         active_depth_only_shader_point.set_uniform(&c"far_plane", &self.far_plane())?;
 
-        let mut active_light_framebuffer = self.framebuffer.bind(fb_context);
+        let mut active_light_framebuffer = self
+            .framebuffer
+            .bind(fb_context)
+            .map_err(GenDepthError::FramebufferBind)?;
 
-        for (model, calculated_animation) in opaque_models {
-            model
-                .draw(
-                    &mut active_depth_only_shader_point,
-                    &mut active_light_framebuffer,
-                    calculated_animation,
-                )
-                .map_err(|error| GenDepthError::Model { error, model })?;
-        }
+        let err: Vec<_> = opaque_models
+            .iter()
+            .filter_map(|(model, calculated_animation)| {
+                model
+                    .draw(
+                        &mut active_depth_only_shader_point,
+                        &mut active_light_framebuffer,
+                        calculated_animation,
+                    )
+                    .map_err(|error| ModelGenDepthDrawError { error, model })
+                    .err()
+            })
+            .collect();
 
         drop(active_depth_only_shader_point);
-        Ok(())
+
+        err.is_empty().ok_or(GenDepthError::Many(err))
     }
 }
 
@@ -172,10 +182,10 @@ impl Draw for PointLightIlluminatesGroup<'_> {
         self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         self.light
             .gen_depth(sp_context, fb_context, &self.opaque, vec![])
-            .unwrap();
+            .map_err(|err| err.to_string())?;
 
         DrawOut::OK
     }
@@ -184,7 +194,7 @@ impl Draw for PointLightIlluminatesGroup<'_> {
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let inner = *self;
         inner.draw_sized(fb_context, sp_context)
     }

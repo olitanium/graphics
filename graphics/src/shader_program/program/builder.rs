@@ -22,6 +22,7 @@ pub struct FragmentShader(Shader);
 pub struct MissingFragmentShader;
 
 #[derive(Debug)]
+#[must_use = "`ShaderProgram` must be built with the `build` method"]
 pub struct Builder<M: Model, O, T: Texture, const OUT: usize, V, F> {
     vertex_shader: V,
     fragment_shader: F,
@@ -170,7 +171,7 @@ impl<M: Model, O, T: Texture, const OUT: usize>
         if number == gl::TRUE.into() {
             Ok(ShaderProgram {
                 id: program_id,
-                concat_all_text: total_string,
+                concat_all_text: total_string.into(),
                 uniform_locations: RefCell::default(),
                 force_cull_face: self.force_cull_face,
                 _phantom_model: PhantomData,

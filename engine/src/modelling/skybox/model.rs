@@ -30,19 +30,19 @@ impl SkyBox {
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum DrawError<'a> {
+pub enum DrawError {
     FaceCulling(FaceCullingForcedByProgramError),
-    VertexArrayDraw(VertexArrayDrawError<'a>),
+    VertexArrayDraw(VertexArrayDrawError),
 }
 
-error_boilerplate!(<'a> DrawError<'a>);
+error_boilerplate!(DrawError);
 
 impl SkyBox {
-    pub(crate) fn draw<'a, 'b, const OUT: usize, O, D>(
+    pub(crate) fn draw<'b, const OUT: usize, O, D>(
         &'b self,
-        active_shader: &mut ActiveShaderProgram<'a, '_, 'b, Self, O, D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'b, Self, O, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-    ) -> Result<(), DrawError<'a>>
+    ) -> Result<(), DrawError>
     where
         D: FramebufferWithDepth<OUT>,
     {

@@ -1,3 +1,4 @@
+use core::error::Error;
 
 use crate::framebuffer::FramebufferContext;
 use crate::types::Query;
@@ -31,7 +32,7 @@ impl<D: Draw + ?Sized> Draw for HasDrawnQuery<D> {
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let inner = *self;
         inner.draw_sized(fb_context, sp_context)
     }
@@ -41,7 +42,7 @@ impl<D: Draw + ?Sized> Draw for HasDrawnQuery<D> {
         self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut
+    ) -> Result<DrawOut, Box<dyn Error>>
     where
         Self: Sized,
     {
@@ -51,7 +52,7 @@ impl<D: Draw + ?Sized> Draw for HasDrawnQuery<D> {
 
         gl_call! {gl::EndQuery(gl::ANY_SAMPLES_PASSED);}
 
-        DrawOut::make_query(self.name, self.query)
+        Ok(DrawOut::make_query(self.name, self.query))
     }
 }
 

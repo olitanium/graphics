@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 
 linear_algebra = {path = "../linear_algebra"}
+float_eq = {path = "../float_eq"}
 
 [lints]
 workspace = true

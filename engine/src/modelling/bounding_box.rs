@@ -217,12 +217,12 @@ where
     Vector<{ <BoundingBoxElement<V, T> as BoundingBoxShaderProgram>::DIMS }>: Vertex,
     Vector<{ V::LEN }>: Volume,
 {
-    pub(crate) fn draw<'a, P, D, F>(
+    pub(crate) fn draw<P, D, F>(
         &self,
         level: usize,
         pose: &P,
         active_shader: &mut ActiveShaderProgram<
-            'a,
+            '_,
             '_,
             '_,
             VertexArray<Vector<{ V::LEN }>>,
@@ -232,7 +232,7 @@ where
         >,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, 1, D>,
         mut colour: F,
-    ) -> Result<(), DrawRecursiveError<'a>>
+    ) -> Result<(), DrawRecursiveError>
     where
         P: Transform<Vector<{ V::LEN }>> + Clone,
         D: FramebufferWithDepth<1, Tex = FlatTexture>,

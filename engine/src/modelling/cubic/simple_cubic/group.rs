@@ -1,4 +1,5 @@
 use alloc::ffi::CString;
+use core::error::Error;
 
 use geometry::Pose;
 use graphics::framebuffer::FramebufferContext;
@@ -13,6 +14,7 @@ use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::cubic::{Camera, SimpleCubic};
 
 #[derive(Debug)]
+#[must_use = "Group must be sent to the GPU for drawing"]
 pub struct Group<'a, const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> {
     shader: &'a ShaderProgram<SimpleCubic, ListLights<'a, MAX>, OUT, D::Tex>,
     framebuffer: &'a D,
@@ -62,26 +64,29 @@ impl<const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
         self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let mut active_shader = self.shader.use_program(sp_context);
-        let mut active_framebuffer = self.framebuffer.bind(fb_context);
+        let mut active_framebuffer = self.framebuffer.bind(fb_context)?;
 
-        self.lights.bind(&mut active_shader).unwrap();
+        self.lights.bind(&mut active_shader)?;
 
-        active_shader
-            .set_uniform(&c"projtimesview", &self.camera_look_at)
-            .unwrap();
-        active_shader
-            .set_uniform(&c"camera_position", &self.camera_pos.homogeneous())
-            .unwrap();
+        active_shader.set_uniform(&c"projtimesview", &self.camera_look_at)?;
+        active_shader.set_uniform(&c"camera_position", &self.camera_pos.homogeneous())?;
 
-        active_shader.set_uniform_dyn(self.uniforms).unwrap();
+        active_shader.set_uniform_dyn(self.uniforms)?;
 
-        for (model, pose) in self.opaque {
-            model
-                .draw(&mut active_shader, &mut active_framebuffer, pose)
-                .unwrap();
-        }
+        let err: Vec<_> = self
+            .opaque
+            .into_iter()
+            .filter_map(|(model, pose)| {
+                model
+                    .draw(&mut active_shader, &mut active_framebuffer, pose)
+                    .err()
+            })
+            .collect();
+
+        err.is_empty().ok_or_else(|| format!("{err:?}"))?;
+
         DrawOut::OK
     }
 
@@ -89,7 +94,7 @@ impl<const MAX: usize, const OUT: usize, D: FramebufferWithDepth<OUT>> Draw
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let inner = *self;
         inner.draw_sized(fb_context, sp_context)
     }

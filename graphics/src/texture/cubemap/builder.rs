@@ -38,6 +38,7 @@ pub struct HasSomeImage {
 }
 
 #[derive(Debug, Clone, Default)]
+#[must_use = "`CubeMap` must be built with the `build` method"]
 pub struct Builder<T> {
     data: T,
     min_filter: Minification,

@@ -13,6 +13,7 @@ use graphics::types::TexDim;
 use graphics::{Model, ShaderProgramContext};
 
 use crate::modelling::cubic::camera::Camera;
+use crate::modelling::cubic::lighting::shadow::list::ModelGenDepthDrawError;
 use crate::modelling::cubic::lighting::shadow::{GenDepthError, ShadowBindError};
 use crate::modelling::cubic::lighting::simple::FarLight;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
@@ -67,20 +68,20 @@ impl ShadowFarLight {
                     UnitVector::X,
                     UnitVector::Z,
                 )
-                .expect("both up variables are different so this is guaranteed to succeed."),
+                .unwrap_or_default(),
                 target - vector_from_target,
             ))
             .orthographic(LIGHT_PLANE_WIDTH, LIGHT_PLANE_WIDTH, NEAR_PLANE, FAR_PLANE)
             .build()
     }
 
-    pub(crate) fn bind_to<'a, 'c, const N: usize, const MAX: usize, L, T, M>(
+    pub(crate) fn bind_to<'c, const N: usize, const MAX: usize, L, T, M>(
         &'c self,
-        shader: &mut ActiveShaderProgram<'a, '_, 'c, M, L, T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, 'c, M, L, T, N>,
         name: &str,
         index: usize,
         target: Vector<3>,
-    ) -> Result<(), ShadowBindError<'a>>
+    ) -> Result<(), ShadowBindError>
     where
         M: Model,
         M::Vertex: VertexHasTangent,
@@ -105,16 +106,19 @@ impl ShadowFarLight {
         shader: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
         name: &str,
         index: usize,
-    ) where
+    ) -> Result<(), ShadowBindError>
+    where
         M: Model,
         M::Vertex: VertexHasTangent,
         L: ShadowLightCompatible<MAX>,
         T: Texture,
     {
         shader.register_texture(iter::once((
-            CString::new(format!("{name}[{index}].depth")).expect("should be no Nul"),
+            CString::new(format!("{name}[{index}].depth"))?,
             FlatTexture::dyn_blank(),
         )));
+
+        Ok(())
     }
 
     pub(crate) fn projtimesview(&self, target: Vector<3>) -> Matrix<4, 4> {
@@ -137,20 +141,27 @@ impl ShadowFarLight {
         // internal framebuffer
         active_depth_only_shader.set_uniform(&c"projtimesview", &self.projtimesview(target))?;
 
-        let mut active_light_framebuffer = self.framebuffer.bind(fb_context);
+        let mut active_light_framebuffer = self
+            .framebuffer
+            .bind(fb_context)
+            .map_err(GenDepthError::FramebufferBind)?;
 
-        for (model, calculated_animation) in opaque_models {
-            model
-                .draw(
-                    &mut active_depth_only_shader,
-                    &mut active_light_framebuffer,
-                    calculated_animation,
-                )
-                .map_err(|error| GenDepthError::Model { error, model })?;
-        }
+        let err: Vec<_> = opaque_models
+            .iter()
+            .filter_map(|(model, calculated_animation)| {
+                model
+                    .draw(
+                        &mut active_depth_only_shader,
+                        &mut active_light_framebuffer,
+                        calculated_animation,
+                    )
+                    .map_err(|error| ModelGenDepthDrawError { error, model })
+                    .err()
+            })
+            .collect();
 
         drop(active_depth_only_shader);
 
-        Ok(())
+        err.is_empty().ok_or(GenDepthError::Many(err))
     }
 }

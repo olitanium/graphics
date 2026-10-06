@@ -12,6 +12,7 @@ use crate::modelling::extended_vertex::IncompleteVertex;
 use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex};
 
 #[derive(Debug, Clone)]
+#[must_use = "`Mesh` must be built with the `build` method"]
 pub struct Builder<V: CubicVertex> {
     pub triangles: Vec<[IncompleteVertex<3>; 3]>,
     pub material: Rc<Material>,

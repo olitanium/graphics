@@ -8,6 +8,7 @@ use crate::modelling::cubic::animation::BoneAnimation;
 use crate::modelling::cubic::skeleton::SkeletonBoneIndex;
 
 #[derive(Debug, Default)]
+#[must_use = "`SkeletalAnimation` must be built with the `build` method"]
 pub struct SkeletalAnimationBuilder {
     /// Used to identify whether this animation is valid for a given skeleton.
     /// The skeleton's signature can be derived as the ordered list of bone

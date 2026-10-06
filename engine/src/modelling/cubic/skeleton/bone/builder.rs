@@ -2,11 +2,11 @@ use geometry::{Pose, Transform as _};
 use utils::builder;
 
 use super::Bone;
-use crate::modelling::SkeletonBuilder;
+use crate::modelling::cubic::SkeletonBuilder;
 use crate::modelling::cubic::skeleton::{GetBone, SkeletonBoneIndex};
 
 #[derive(Debug)]
-#[must_use = "Model must be built with the `build` method"]
+#[must_use = "`Bone` must be built with the `build` method"]
 pub struct Builder<'a> {
     parent: &'a SkeletonBoneIndex,
     inverse_bind_pose_relative_to_parent: Option<Pose>,

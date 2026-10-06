@@ -32,19 +32,19 @@ impl<'a, const N: usize, X: AttachmentWithoutExtra<Tex = FlatTexture>> Framebuff
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum DrawError<'a> {
+pub enum DrawError {
     #[allow(clippy::allow_attributes, reason = "rustc only allows allow")]
     #[allow(unused, reason = "Error")]
-    VertexArrayDraw(VertexArrayDrawError<'a>),
+    VertexArrayDraw(VertexArrayDrawError),
 }
-error_boilerplate!(<'a> DrawError<'a>);
+error_boilerplate!(DrawError);
 
 impl<'a, const N: usize, X: AttachmentWithoutExtra<Tex = FlatTexture>> FramebufferQuad<'a, N, X> {
     pub(crate) fn draw<const OUT: usize, O, I>(
         self,
         active_shader: &mut ActiveShaderProgram<'a, '_, 'a, Quad<N>, O, I::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, I>,
-    ) -> Result<(), DrawError<'a>>
+    ) -> Result<(), DrawError>
     where
         I: FramebufferWithoutExtra<OUT>,
     {
@@ -54,18 +54,26 @@ impl<'a, const N: usize, X: AttachmentWithoutExtra<Tex = FlatTexture>> Framebuff
             .texture
             .get_textures_raw()
             .iter()
-            .map(|tex|
-                // SAFETY: this `tex` is only borrowed here, is never passed to another function and the reference expires at the end of the function
-                unsafe {
-                tex.try_borrow_unguarded()
-                    .expect("cannot write to a framebuffer and read at the same time, if this panics, so does the gpu")
-            })
             .enumerate()
-            .map(|(index, tex)| {
-                (
-                    CString::new(format!("in_texture{index}")).expect("should be no Nul"),
-                    tex as &dyn Texture,
-                )
+            // cannot write to a framebuffer and read at the same time, in order to prevent gpu
+            // crash, this filters out any illegal access.
+            .filter_map(|(index, tex)| {
+                // SAFETY: this `tex` is only borrowed here, and the reference
+                // expires at the end of the function
+                let res_ref = unsafe { tex.try_borrow_unguarded() };
+                if let Err(x) = &res_ref {
+                    eprintln!(
+                        "texture which would have been `in_texture{index}` cannot be bound \
+                         because the texture `RefCell` is already borrowed: {x:?}"
+                    );
+                }
+                res_ref.ok().map(|reftex| (index, reftex))
+            })
+            // `index::display` will not return a NUL character, so this always passes
+            .filter_map(|(index, tex)| {
+                CString::new(format!("in_texture{index}"))
+                    .map(|cstr| (cstr, tex as &dyn Texture))
+                    .ok()
             });
 
         active_shader.register_texture(input);

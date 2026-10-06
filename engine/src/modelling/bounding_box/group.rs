@@ -1,3 +1,4 @@
+use core::error::Error;
 use core::fmt::Debug;
 
 use geometry::Transform;
@@ -14,6 +15,7 @@ use crate::modelling::cubic::{Camera, CameraPose};
 use crate::modelling::{BoundingBox, BoundingBoxElement, ExtendedVertex, Volume};
 
 #[derive(Debug)]
+#[must_use = "Group must be sent to the GPU for drawing"]
 pub struct Group<
     'a,
     const OUT: usize,
@@ -85,24 +87,20 @@ where
         self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
-        let mut active_framebuffer = self.framebuffer.bind(fb_context);
+    ) -> Result<DrawOut, Box<dyn Error>> {
+        let mut active_framebuffer = self.framebuffer.bind(fb_context)?;
         let mut active_shader =
             BoundingBoxElement::<V, Bt>::shader_program().use_program(sp_context);
 
-        active_shader
-            .set_uniform(&c"projtimesview", &self.look_at)
-            .unwrap();
+        active_shader.set_uniform(&c"projtimesview", &self.look_at)?;
 
-        self.bounding_box
-            .draw(
-                self.level,
-                self.transform,
-                &mut active_shader,
-                &mut active_framebuffer,
-                self.colour,
-            )
-            .unwrap();
+        self.bounding_box.draw(
+            self.level,
+            self.transform,
+            &mut active_shader,
+            &mut active_framebuffer,
+            self.colour,
+        )?;
 
         DrawOut::OK
     }
@@ -111,7 +109,7 @@ where
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let inner = *self;
         inner.draw_sized(fb_context, sp_context)
     }

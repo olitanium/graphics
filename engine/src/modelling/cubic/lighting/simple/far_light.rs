@@ -20,12 +20,12 @@ pub struct FarLight {
 }
 
 impl FarLight {
-    pub(crate) fn bind_to<'a, const N: usize, const MAX: usize, L, T, M>(
+    pub(crate) fn bind_to<const N: usize, const MAX: usize, L, T, M>(
         &self,
-        shader: &mut ActiveShaderProgram<'a, '_, '_, M, L, T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
         name: &str,
         index: usize,
-    ) -> Result<(), SimpleBindError<'a>>
+    ) -> Result<(), SimpleBindError>
     where
         L: ListLightCompatible<MAX>,
         T: Texture,

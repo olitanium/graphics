@@ -1,3 +1,4 @@
+use core::error::Error;
 use core::ops::{ControlFlow, FromResidual, Residual, Try};
 
 use crate::framebuffer::FramebufferContext;
@@ -61,13 +62,13 @@ pub trait Draw {
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut;
+    ) -> Result<DrawOut, Box<dyn Error>>;
 
     fn draw_sized(
         self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut
+    ) -> Result<DrawOut, Box<dyn Error>>
     where
         Self: Sized;
 }
@@ -84,9 +85,9 @@ pub struct DrawOut {
 }
 
 impl DrawOut {
-    pub const OK: Self = Self {
+    pub const OK: Result<Self, Box<dyn Error>> = Ok(Self {
         inner: DrawOutInner::Draw,
-    };
+    });
 
     pub(crate) const fn make_query(name: usize, query_object: Query) -> Self {
         Self {
@@ -130,7 +131,7 @@ impl Draw for Box<dyn Draw + '_> {
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let inner = *self;
         inner.draw(fb_context, sp_context)
     }
@@ -139,7 +140,7 @@ impl Draw for Box<dyn Draw + '_> {
         self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut
+    ) -> Result<DrawOut, Box<dyn Error>>
     where
         Self: Sized,
     {
@@ -153,10 +154,10 @@ impl<T: Draw> Draw for [T] {
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let mut outputs = Vec::new();
         for group in self {
-            match group.draw_sized(fb_context, sp_context).inner {
+            match group.draw_sized(fb_context, sp_context)?.inner {
                 DrawOutInner::QueryOutput { name, query_object } => {
                     outputs.push((name, query_object));
                 }
@@ -170,9 +171,9 @@ impl<T: Draw> Draw for [T] {
         if outputs.is_empty() {
             DrawOut::OK
         } else {
-            DrawOut {
+            Ok(DrawOut {
                 inner: DrawOutInner::MultiQueryOutput { values: outputs },
-            }
+            })
         }
     }
 }
@@ -182,7 +183,7 @@ impl<T: Draw> Draw for Vec<T> {
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let slice = self.into_boxed_slice();
         slice.draw(fb_context, sp_context)
     }
@@ -191,7 +192,7 @@ impl<T: Draw> Draw for Vec<T> {
         self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut
+    ) -> Result<DrawOut, Box<dyn Error>>
     where
         Self: Sized,
     {
@@ -210,11 +211,19 @@ impl DrawNothing {
 }
 
 impl Draw for DrawNothing {
-    fn draw(self: Box<Self>, _: &mut FramebufferContext, _: &mut ShaderProgramContext) -> DrawOut {
+    fn draw(
+        self: Box<Self>,
+        _: &mut FramebufferContext,
+        _: &mut ShaderProgramContext,
+    ) -> Result<DrawOut, Box<dyn Error>> {
         DrawOut::OK
     }
 
-    fn draw_sized(self, _: &mut FramebufferContext, _: &mut ShaderProgramContext) -> DrawOut
+    fn draw_sized(
+        self,
+        _: &mut FramebufferContext,
+        _: &mut ShaderProgramContext,
+    ) -> Result<DrawOut, Box<dyn Error>>
     where
         Self: Sized,
     {

@@ -241,25 +241,25 @@ where
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum DrawRecursiveError<'a> {
-    SetUniform(ShaderSetUniformError<'a>),
-    VertexArrayDraw(VertexArrayDrawError<'a>),
+pub enum DrawRecursiveError {
+    SetUniform(ShaderSetUniformError),
+    VertexArrayDraw(VertexArrayDrawError),
 }
 
-error_boilerplate!(<'a> DrawRecursiveError<'a>);
+error_boilerplate!(DrawRecursiveError);
 
 impl<V, T> BoundingBoxElement<V, T>
 where
     V: ExtendedVertex,
     Vector<{ V::LEN }>: Volume,
 {
-    pub fn draw_recursive<'a, D, P, const OUT: usize, F>(
+    pub fn draw_recursive<D, P, const OUT: usize, F>(
         &self,
         bounding_box: &BoundingBox<V, T>,
         pose: &P,
         level: usize,
         active_shader: &mut ActiveShaderProgram<
-            'a,
+            '_,
             '_,
             '_,
             VertexArray<Vector<{ V::LEN }>>,
@@ -269,7 +269,7 @@ where
         >,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         colour: &mut F,
-    ) -> Result<(), DrawRecursiveError<'a>>
+    ) -> Result<(), DrawRecursiveError>
     where
         D: FramebufferWithDepth<OUT>,
         P: Transform<Vector<{ V::LEN }>> + Clone,

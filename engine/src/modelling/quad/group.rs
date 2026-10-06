@@ -1,4 +1,5 @@
 use alloc::ffi::CString;
+use core::error::Error;
 
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
@@ -8,6 +9,7 @@ use graphics::{Draw, DrawOut};
 use super::Quad;
 
 #[derive(Debug)]
+#[must_use = "Group must be sent to the GPU for drawing"]
 pub struct Group<'a, const N: usize, const OUT: usize, O, D: FramebufferWithoutExtra<OUT>> {
     shader: &'a ShaderProgram<Quad<N>, O, OUT, D::Tex>,
     framebuffer: &'a D,
@@ -42,14 +44,18 @@ impl<O, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> Draw
         self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
-        let mut active_framebuffer = self.framebuffer.bind(fb_context);
+    ) -> Result<DrawOut, Box<dyn Error>> {
+        let mut active_framebuffer = self.framebuffer.bind(fb_context)?;
         let mut shader = self.shader.use_program(sp_context);
-        shader.set_uniform_dyn(self.uniforms).unwrap();
+        shader.set_uniform_dyn(self.uniforms)?;
 
-        for quad in self.quads {
-            quad.draw(&mut shader, &mut active_framebuffer).unwrap();
-        }
+        let err: Vec<_> = self
+            .quads
+            .into_iter()
+            .filter_map(|quad| quad.draw(&mut shader, &mut active_framebuffer).err())
+            .collect();
+
+        err.is_empty().ok_or_else(|| format!("{err:?}"))?;
 
         DrawOut::OK
     }
@@ -58,7 +64,7 @@ impl<O, const N: usize, const OUT: usize, D: FramebufferWithoutExtra<OUT>> Draw
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let inner = *self;
         inner.draw_sized(fb_context, sp_context)
     }

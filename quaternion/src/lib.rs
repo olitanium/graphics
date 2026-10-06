@@ -5,6 +5,7 @@
 
 use core::ops;
 
+use float_eq::NearlyEq;
 use linear_algebra::{UnitVector, Vector};
 pub use unit_quaternion::UnitQuaternion;
 
@@ -20,7 +21,13 @@ pub struct Quaternion {
 
 impl PartialEq for Quaternion {
     fn eq(&self, other: &Self) -> bool {
-        (*self - *other).is_zero()
+        let real_eq = self.real.nearly_eq(
+            &other.real,
+            <f32 as NearlyEq>::SMALL_VALUE,
+            <f32 as NearlyEq>::SMALL_VALUE,
+        );
+        let vector_eq = self.vector == other.vector;
+        real_eq && vector_eq
     }
 }
 

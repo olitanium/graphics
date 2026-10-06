@@ -14,26 +14,26 @@ use utils::error_boilerplate;
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum SimpleBindError<'a> {
-    SetUniform(ShaderSetUniformError<'a>),
+pub enum SimpleBindError {
+    SetUniform(ShaderSetUniformError),
     Nul(NulError),
     TooLong(TryFromIntError),
 }
-error_boilerplate!(<'a> SimpleBindError<'a>);
+error_boilerplate!(SimpleBindError);
 
-impl<'a> From<ShaderSetUniformError<'a>> for SimpleBindError<'a> {
-    fn from(value: ShaderSetUniformError<'a>) -> Self {
+impl From<ShaderSetUniformError> for SimpleBindError {
+    fn from(value: ShaderSetUniformError) -> Self {
         Self::SetUniform(value)
     }
 }
 
-impl From<NulError> for SimpleBindError<'_> {
+impl From<NulError> for SimpleBindError {
     fn from(value: NulError) -> Self {
         Self::Nul(value)
     }
 }
 
-impl From<TryFromIntError> for SimpleBindError<'_> {
+impl From<TryFromIntError> for SimpleBindError {
     fn from(value: TryFromIntError) -> Self {
         Self::TooLong(value)
     }

@@ -76,19 +76,19 @@ impl SimpleCubic {
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum DrawError<'a> {
-    Mesh(mesh::DrawError<'a>),
-    SetUniform(ShaderSetUniformError<'a>),
+pub enum DrawError {
+    Mesh(mesh::DrawError),
+    SetUniform(ShaderSetUniformError),
 }
-error_boilerplate!(<'a> DrawError<'a>);
+error_boilerplate!(DrawError);
 
 impl SimpleCubic {
-    pub(crate) fn draw<'a, 'c, const OUT: usize, D, L>(
+    pub(crate) fn draw<'c, const OUT: usize, D, L>(
         &'c self,
-        active_shader: &mut ActiveShaderProgram<'a, '_, 'c, Self, L, D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'c, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         pose: Pose,
-    ) -> Result<(), DrawError<'a>>
+    ) -> Result<(), DrawError>
     where
         D: FramebufferWithDepth<OUT>,
     {
@@ -109,7 +109,7 @@ impl SimpleCubic {
 
 impl EntityInner for SimpleCubic {
     type BoundingBox<T> = BoundingBox<<Self as Model>::Vertex, T>;
-    type DrawError<'a> = DrawError<'a>;
+    type DrawError = DrawError;
 
     fn make_bounding_box<T, F>(&self, depth: usize, init: F) -> Option<Self::BoundingBox<T>>
     where
@@ -137,12 +137,12 @@ impl EntityInner for SimpleCubic {
         calc_anim.root()
     }
 
-    fn draw<'a, 'b, const OUT: usize, D, L>(
+    fn draw<'a, const OUT: usize, D, L>(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'b, '_, 'a, Self, L, D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         calculated_animation: &CalculatedAnimation,
-    ) -> Result<(), Self::DrawError<'b>>
+    ) -> Result<(), Self::DrawError>
     where
         D: FramebufferWithDepth<OUT>,
     {

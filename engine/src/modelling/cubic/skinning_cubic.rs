@@ -52,23 +52,23 @@ impl SkinningCubic {
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum DrawError<'a> {
+pub enum DrawError {
     SignaturesDoNotMatch(SignaturesDoNotMatchError),
-    Mesh(MeshDrawError<'a>),
+    Mesh(MeshDrawError),
     SetUniform {
-        mat: ShaderSetUniformError<'a>,
-        quat: ShaderSetUniformError<'a>,
+        mat: ShaderSetUniformError,
+        quat: ShaderSetUniformError,
     },
 }
-error_boilerplate!(<'a> DrawError<'a>);
+error_boilerplate!(DrawError);
 
 impl SkinningCubic {
-    pub(crate) fn draw<'b, 'a, const OUT: usize, D, L>(
+    pub(crate) fn draw<'a, const OUT: usize, D, L>(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'b, '_, 'a, Self, L, D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         calculated_animation: &CalculatedAnimation,
-    ) -> Result<(), DrawError<'b>>
+    ) -> Result<(), DrawError>
     where
         D: FramebufferWithDepth<OUT>,
     {
@@ -109,7 +109,7 @@ impl SkinningCubic {
 
 impl EntityInner for SkinningCubic {
     type BoundingBox<T> = SkeletonBb<SkeletalVertex, T>;
-    type DrawError<'a> = DrawError<'a>;
+    type DrawError = DrawError;
 
     fn make_bounding_box<T, F>(&self, depth: usize, init: F) -> Option<Self::BoundingBox<T>>
     where
@@ -151,12 +151,12 @@ impl EntityInner for SkinningCubic {
         (&self.skeleton, calc_anim)
     }
 
-    fn draw<'a, 'b, const OUT: usize, D, L>(
+    fn draw<'a, const OUT: usize, D, L>(
         &'a self,
-        active_shader: &mut ActiveShaderProgram<'b, '_, 'a, Self, L, D::Tex, OUT>,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self, L, D::Tex, OUT>,
         active_framebuffer: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         calculated_animation: &CalculatedAnimation,
-    ) -> Result<(), Self::DrawError<'b>>
+    ) -> Result<(), Self::DrawError>
     where
         D: FramebufferWithDepth<OUT>,
     {

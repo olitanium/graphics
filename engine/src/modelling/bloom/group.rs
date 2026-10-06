@@ -1,3 +1,5 @@
+use core::error::Error;
+
 use graphics::framebuffer::traits::{AttachmentWithoutExtra, FramebufferWithoutExtra};
 use graphics::framebuffer::{Framebuffer, FramebufferContext};
 use graphics::shader_program::ShaderProgramContext;
@@ -9,6 +11,7 @@ use crate::modelling::FramebufferQuad;
 use crate::opengl_shaders;
 
 #[derive(Debug)]
+#[must_use = "Group must be sent to the GPU for drawing"]
 pub struct Group<
     'a,
     X: FramebufferWithoutExtra<1, Tex = FlatTexture>,
@@ -41,26 +44,22 @@ impl<X: FramebufferWithoutExtra<1, Tex = FlatTexture>, Y: AttachmentWithoutExtra
         self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
-        let mut active_framebuffer_x = self.bloom.framebuffer_x.bind(fb_context);
+    ) -> Result<DrawOut, Box<dyn Error>> {
+        let mut active_framebuffer_x = self.bloom.framebuffer_x.bind(fb_context)?;
         let mut active_blur_x = opengl_shaders::bloom_x().use_program(sp_context);
 
         let input_quad = FramebufferQuad::new_from_framebuffer(self.input_fb);
 
-        input_quad
-            .draw(&mut active_blur_x, &mut active_framebuffer_x)
-            .unwrap();
+        input_quad.draw(&mut active_blur_x, &mut active_framebuffer_x)?;
 
         drop(active_framebuffer_x);
 
-        let mut active_output_fb = self.output_fb.bind(fb_context);
+        let mut active_output_fb = self.output_fb.bind(fb_context)?;
         let mut active_blur_y = opengl_shaders::bloom_y().use_program(sp_context);
 
         let blur_x_quad = FramebufferQuad::new_from_framebuffer(&self.bloom.framebuffer_x);
 
-        blur_x_quad
-            .draw(&mut active_blur_y, &mut active_output_fb)
-            .unwrap();
+        blur_x_quad.draw(&mut active_blur_y, &mut active_output_fb)?;
 
         DrawOut::OK
     }
@@ -69,7 +68,7 @@ impl<X: FramebufferWithoutExtra<1, Tex = FlatTexture>, Y: AttachmentWithoutExtra
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let inner = *self;
         inner.draw_sized(fb_context, sp_context)
     }

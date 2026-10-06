@@ -137,9 +137,7 @@ where
         };
         // get index of the first None
 
-        let child_at = self.push_aggregate_unit(child);
-
-        Ok(child_at)
+        self.push_aggregate_unit(child)
     }
 
     fn check_parent_and_bone(
@@ -171,38 +169,103 @@ impl<M: EntityInner, T> AggregateEntity<M, T>
 where
     M::Vertex: CubicVertex,
 {
-    fn push_aggregate_unit(&mut self, unit: AggregateUnit<M, T>) -> AggregateModelIndex {
+    fn push_aggregate_unit(
+        &mut self,
+        unit: AggregateUnit<M, T>,
+    ) -> Result<AggregateModelIndex, PushModelError> {
         let parent_unit = unit.parent_unit.inner_clone();
-        let child_at = if let Some((index, child_dest)) = self
-            .children
-            .iter_mut()
-            .enumerate()
-            // skip here ensures that the parent is always above the child.
-            // note that the `self.children` is offset by 1, so if the parent is ROOT (0)
-            // no children are skipped, if the parent is 1, only the first (the parent itself) is
-            // skipped, etc.
-            .skip(unit.parent_unit.0)
-            .find(|(_, opt_unit)| opt_unit.is_none())
-        {
-            *child_dest = Some(unit);
-            AggregateModelIndex(index + 1)
-        } else {
-            self.children.push(Some(unit));
-            let output = self.children.len();
-            AggregateModelIndex(output)
-        };
-
-        if parent_unit != AggregateModelIndex::ROOT_MODEL_INDEX {
-            let parent_mut = self
-                .children
-                .get_mut(parent_unit.0 - 1)
-                .expect("parent in aggregate unit must exist")
-                .as_mut()
-                .expect("parent in aggregate unit must exist");
-            parent_mut.children.push(child_at.inner_clone());
+        match self.children.last() {
+            Some(Some(_)) | None => self.children.push(None),
+            _ => {}
         }
 
-        child_at
+        let child_iterator = self.children.iter_mut().enumerate();
+
+        enum IsParent<'a, M, T>
+        where
+            M: EntityInner,
+            M::Vertex: CubicVertex,
+        {
+            Root,
+            Parent(&'a mut AggregateUnit<M, T>),
+        }
+
+        let (mut child_iterator, opt_parent) = if parent_unit
+            == AggregateModelIndex::ROOT_MODEL_INDEX
+        {
+            // don't need to get a reference to the parent
+            #[expect(
+                clippy::iter_skip_zero,
+                reason = "To align types on both branches of the if statement"
+            )]
+            (child_iterator.skip(0), IsParent::Root)
+        } else {
+            let to_skip = parent_unit.0 - 1;
+            let mut child_iterator = child_iterator.skip(to_skip);
+
+            // If this fails, it's because the parent positon was never there.
+            let Some((_index, parent)) = child_iterator.next() else {
+                return Err(PushModelError::ParentUnitDoesNotExist);
+            };
+            // If this fails, the parent may once have been there, but no
+            // longer.
+            let Some(mut_parent) = parent.as_mut() else {
+                return Err(PushModelError::ParentUnitDoesNotExist);
+            };
+
+            (child_iterator, IsParent::Parent(mut_parent))
+        };
+
+        let child_at = {
+            #[expect(
+                clippy::expect_used,
+                reason = "we checked and ensured that the last value is always None above"
+            )]
+            let (index, child_dest) = child_iterator
+                .find(|(_, opt_unit)| opt_unit.is_none())
+                .expect("we checked and ensured that the last value is always None above");
+            *child_dest = Some(unit);
+            AggregateModelIndex(index + 1)
+        };
+
+        if let IsParent::Parent(parent) = opt_parent {
+            parent.children.push(child_at.inner_clone());
+        }
+
+        Ok(child_at)
+
+        // let parent_unit = unit.parent_unit.inner_clone();
+        //
+        // let child_at = if let Some((index, child_dest)) = self
+        // .children
+        // .iter_mut()
+        // .enumerate()
+        // skip here ensures that the parent is always above the child.
+        // note that the `self.children` is offset by 1, so if the parent is
+        // ROOT (0) no children are skipped, if the parent is 1, only
+        // the first (the parent itself) is skipped, etc.
+        // .skip(unit.parent_unit.0)
+        // .find(|(_, opt_unit)| opt_unit.is_none())
+        // {
+        // child_dest = Some(unit);
+        // AggregateModelIndex(index + 1)
+        // } else {
+        // self.children.push(Some(unit));
+        // let output = self.children.len();
+        // AggregateModelIndex(output)
+        // };
+        //
+        // if parent_unit != AggregateModelIndex::ROOT_MODEL_INDEX {
+        // let parent_mut = self
+        // .children
+        // .get_mut(parent_unit.0 - 1)
+        // .expect("")
+        // .as_mut()
+        // .expect("parent in aggregate unit must exist");
+        // parent_mut.children.push(child_at.inner_clone());
+        // }
+        //
+        // Some(child_at)
     }
 
     #[expect(
@@ -425,26 +488,25 @@ where
     }
 }
 
-pub enum DrawError<'a, M: EntityInner + 'a>
+pub enum DrawError<M: EntityInner>
 where
     M::Vertex: CubicVertex,
 {
-    ModelDraw(M::DrawError<'a>),
+    ModelDraw(M::DrawError),
 }
 
-impl<'a, M: EntityInner + 'a> Debug for DrawError<'a, M>
+impl<M: EntityInner> Debug for DrawError<M>
 where
     M::Vertex: CubicVertex,
-    M::DrawError<'a>: Debug,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DrawError::ModelDraw(err) => Debug::fmt(err, f),
+            Self::ModelDraw(err) => Debug::fmt(err, f),
         }
     }
 }
 
-impl<'a, M: EntityInner + 'a> Display for DrawError<'a, M>
+impl<M: EntityInner> Display for DrawError<M>
 where
     M::Vertex: CubicVertex,
 {
@@ -454,18 +516,18 @@ where
 }
 
 #[expect(clippy::absolute_paths, reason = "there already is a mod error;")]
-impl<'a, M: EntityInner + 'a> core::error::Error for DrawError<'a, M> where M::Vertex: CubicVertex {}
+impl<M: EntityInner> core::error::Error for DrawError<M> where M::Vertex: CubicVertex {}
 
 impl<M: EntityInner, T> AggregateEntity<M, T>
 where
     M::Vertex: CubicVertex,
 {
-    pub(crate) fn draw<'a, 'b, const MAX: usize, const OUT: usize, F>(
+    pub(crate) fn draw<'a, const MAX: usize, const OUT: usize, F>(
         &'a self,
-        active_sp: &mut ActiveShaderProgram<'b, '_, 'a, M, ListLights<MAX>, F::Tex, OUT>,
+        active_sp: &mut ActiveShaderProgram<'_, '_, 'a, M, ListLights<MAX>, F::Tex, OUT>,
         active_fb: &mut ActiveFramebuffer<'_, '_, OUT, F>,
         calculated_animation: &AggregateCalcAnim,
-    ) -> Result<(), DrawError<'b, M>>
+    ) -> Result<(), DrawError<M>>
     where
         F: FramebufferWithDepth<OUT>,
     {
@@ -505,7 +567,7 @@ where
             children: Vec::new(),
         };
 
-        Ok(self.push_aggregate_unit(unit))
+        self.push_aggregate_unit(unit)
     }
 }
 

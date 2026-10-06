@@ -17,6 +17,7 @@ use crate::modelling::cubic::{
 use crate::modelling::{BoundingBoxElement, CubicVertex, Skeleton, SkeletonBb};
 
 #[derive(Debug)]
+#[must_use = "Group must be sent to the GPU for drawing"]
 pub struct Group<
     'a,
     const OUT: usize,

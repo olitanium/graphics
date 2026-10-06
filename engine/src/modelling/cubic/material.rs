@@ -56,23 +56,23 @@ impl Material {
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum RegisterToError<'a> {
-    SetUniformError(ShaderSetUniformError<'a>),
+pub enum RegisterToError {
+    SetUniformError(ShaderSetUniformError),
     Nul(NulError),
 }
-error_boilerplate!(<'a> RegisterToError<'a>);
-impl From<NulError> for RegisterToError<'_> {
+error_boilerplate!(RegisterToError);
+impl From<NulError> for RegisterToError {
     fn from(value: NulError) -> Self {
         Self::Nul(value)
     }
 }
 
 impl Material {
-    pub fn register_to<'a, 'b, const N: usize, T, M, O>(
+    pub fn register_to<'a, const N: usize, T, M, O>(
         &'a self,
-        shader: &mut ActiveShaderProgram<'b, '_, 'a, M, O, T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, 'a, M, O, T, N>,
         name: &str,
-    ) -> Result<(), RegisterToError<'b>>
+    ) -> Result<(), RegisterToError>
     where
         T: Texture,
         M: Model,
@@ -106,6 +106,7 @@ impl Material {
 }
 
 #[derive(Default, Debug)]
+#[must_use = "`Material` must be built with the `build` method"]
 pub struct Builder {
     translucent: bool,
     shininess: Option<f32>,

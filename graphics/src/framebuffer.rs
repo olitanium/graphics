@@ -1,4 +1,6 @@
-use core::cell::{Ref, RefCell, RefMut};
+use core::cell::{BorrowMutError, Ref, RefCell, RefMut};
+
+pub use active_framebuffer::BindError as FramebufferBindError;
 
 use crate::framebuffer::traits::{
     AttachmentWithDepth,
@@ -22,11 +24,9 @@ pub use active_framebuffer::{ActiveFramebuffer, FramebufferContext};
 pub use builder::Builder;
 use builder::MissingSize;
 
-#[must_use]
 pub fn flat_builder<const N: usize>() -> Builder<N, MissingSize, WithoutExtra> {
     Builder::new_flat()
 }
-#[must_use]
 pub fn cubic_builder<const N: usize>() -> Builder<N, MissingSize, CubeWithoutExtra> {
     Builder::new_cubic()
 }
@@ -68,8 +68,8 @@ impl FramebufferInternals for DefaultFramebuffer {
 }
 
 impl FramebufferWithoutExtra<1> for DefaultFramebuffer {
-    fn try_give_texture_lock(&self) -> Option<[RefMut<'_, Self::Tex>; 1]> {
-        self.texture.try_borrow_mut().ok().map(|x| [x])
+    fn try_give_texture_lock(&self) -> Result<[RefMut<'_, Self::Tex>; 1], BorrowMutError> {
+        self.texture.try_borrow_mut().map(|x| [x])
     }
 }
 impl FramebufferWithDepth<1> for DefaultFramebuffer {
@@ -129,7 +129,7 @@ impl<const OUT: usize, X: AttachmentWithoutExtra> FramebufferInternals for Frame
 impl<const OUT: usize, X: AttachmentWithoutExtra> FramebufferWithoutExtra<OUT>
     for Framebuffer<OUT, X>
 {
-    fn try_give_texture_lock(&self) -> Option<[RefMut<'_, Self::Tex>; OUT]> {
+    fn try_give_texture_lock(&self) -> Result<[RefMut<'_, Self::Tex>; OUT], BorrowMutError> {
         self.get_all_refmut()
     }
 }
@@ -178,15 +178,12 @@ impl<const N: usize, X: AttachmentWithoutExtra> Framebuffer<N, X> {
     // self.textures.clone()
     // }
 
-    pub fn get_all_refmut(&self) -> Option<[RefMut<'_, X::Tex>; N]> {
-        self.textures
-            .each_ref()
-            .try_map(RefCell::try_borrow_mut)
-            .ok()
+    pub const fn get_all_refmut(&self) -> Result<[RefMut<'_, X::Tex>; N], BorrowMutError> {
+        self.textures.each_ref().try_map(RefCell::try_borrow_mut)
     }
 
     pub fn get_all_colour_ref(&self) -> [Ref<'_, X::Tex>; N] {
-        self.textures.each_ref().map(|ref_rc| ref_rc.borrow())
+        self.textures.each_ref().map(RefCell::borrow)
     }
 
     pub const fn get_textures_raw(&self) -> &[RefCell<X::Tex>] {

@@ -14,6 +14,7 @@ use graphics::{Model, ShaderProgramContext};
 
 use crate::modelling::cubic::CalculatedAnimation;
 use crate::modelling::cubic::camera::{self, Camera};
+use crate::modelling::cubic::lighting::shadow::list::ModelGenDepthDrawError;
 use crate::modelling::cubic::lighting::shadow::{GenDepthError, ShadowBindError};
 use crate::modelling::cubic::lighting::simple::SpotLight;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
@@ -52,19 +53,19 @@ impl ShadowSpotLight {
                     UnitVector::Y,
                     UnitVector::Z,
                 )
-                .expect("both versions of `up` are different, this will never fail"),
+                .unwrap_or_default(),
                 self.light.position,
             ))
             .perspective(self.light.cos_outer_cut_off, 1.0, 0.1, 20.0)
             .build()
     }
 
-    pub(crate) fn bind_to<'a, 'c, const N: usize, const MAX: usize, L, T, M>(
+    pub(crate) fn bind_to<'c, const N: usize, const MAX: usize, L, T, M>(
         &'c self,
-        shader: &mut ActiveShaderProgram<'a, '_, 'c, M, L, T, N>,
+        shader: &mut ActiveShaderProgram<'_, '_, 'c, M, L, T, N>,
         name: &str,
         index: usize,
-    ) -> Result<(), ShadowBindError<'a>>
+    ) -> Result<(), ShadowBindError>
     where
         L: ShadowLightCompatible<MAX>,
         T: Texture,
@@ -88,16 +89,19 @@ impl ShadowSpotLight {
         shader: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
         name: &str,
         index: usize,
-    ) where
+    ) -> Result<(), ShadowBindError>
+    where
         L: ShadowLightCompatible<MAX>,
         T: Texture,
         M: Model,
         M::Vertex: VertexHasTangent,
     {
         shader.register_texture(iter::once((
-            CString::new(format!("{name}[{index}].depth")).expect("should be no Nul"),
+            CString::new(format!("{name}[{index}].depth"))?,
             FlatTexture::dyn_blank(),
         )));
+
+        Ok(())
     }
 
     pub(crate) fn projtimesview(&self) -> Matrix<4, 4> {
@@ -119,16 +123,27 @@ impl ShadowSpotLight {
         // internal framebuffer
         active_depth_only_shader.set_uniform(&c"projtimesview", &self.projtimesview())?;
 
-        let mut active_light_framebuffer = self.framebuffer.bind(fb_context);
+        let mut active_light_framebuffer = self
+            .framebuffer
+            .bind(fb_context)
+            .map_err(GenDepthError::FramebufferBind)?;
 
-        for (model, calculated_animation) in opaque_models {
-            model
-                .draw(
-                    &mut active_depth_only_shader,
-                    &mut active_light_framebuffer,
-                    calculated_animation,
-                )
-                .map_err(|error| GenDepthError::Model { error, model })?;
+        let err: Vec<_> = opaque_models
+            .iter()
+            .filter_map(|(model, calculated_animation)| {
+                model
+                    .draw(
+                        &mut active_depth_only_shader,
+                        &mut active_light_framebuffer,
+                        calculated_animation,
+                    )
+                    .map_err(|error| ModelGenDepthDrawError { error, model })
+                    .err()
+            })
+            .collect();
+
+        if !err.is_empty() {
+            do yeet GenDepthError::Many(err)
         }
 
         drop(active_depth_only_shader);

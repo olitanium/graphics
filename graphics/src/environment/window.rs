@@ -27,7 +27,7 @@ impl Window {
         Builder::new()
     }
 
-    pub(crate) fn get_framebuffer_size(&self) -> (TexDim, TexDim) {
+    pub(crate) fn size(&self) -> (TexDim, TexDim) {
         let (width, height) = self.os_handle.get_framebuffer_size();
         (TexDim::new(width), TexDim::new(height))
     }
@@ -55,7 +55,7 @@ impl Window {
         event_buffer.push(mouse);
 
         if self.window_resized() {
-            event_buffer.push(Event::WindowResize(self.get_framebuffer_size()));
+            event_buffer.push(Event::WindowResize(self.size()));
         }
 
         let keyboard = Event::Keyboard {
@@ -108,6 +108,7 @@ pub struct MissingGlfw;
 pub struct HasGlfw<'a>(&'a mut Glfw);
 
 #[derive(Debug)]
+#[must_use = "`Window` must be built with the `build` method"]
 pub struct Builder<G> {
     maker: G,
     suppress_config: bool,

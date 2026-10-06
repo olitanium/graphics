@@ -30,14 +30,20 @@ impl State {
                 other_entities: vec![],
             }
         } else {
-            let grapple_points = if let Some(bear) = self.bear.as_ref() {
-                vec![(bear, (), ())]
-            } else {
-                vec![]
-            };
+            // let grapple_points = if let Some(bear) = self.bear.as_ref() {
+            // vec![(bear, (), ())]
+            // } else {
+            // vec![]
+            // };
+            //
+            // UpdateInput {
+            // grapple_points,
+            // carryable_objects: vec![],
+            // other_entities: vec![],
+            // }
 
             UpdateInput {
-                grapple_points,
+                grapple_points: vec![],
                 carryable_objects: vec![],
                 other_entities: vec![],
             }
@@ -50,7 +56,7 @@ impl State {
                 .carryable_objects
                 .pop()
                 .flatten()
-                .map(|(bear, ..)| bear);
+                .map(|(bear, ..)| bear)
         }
 
         grappling_hook_calc_anim

@@ -1,4 +1,7 @@
 use alloc::rc::Rc;
+use core::error::Error;
+use core::fmt;
+use core::fmt::Debug;
 use core::time::Duration;
 use std::collections::HashSet;
 
@@ -36,9 +39,18 @@ pub struct State {
     camera: Camera,
 }
 
+#[derive(Debug)]
+pub struct StateError;
+impl fmt::Display for StateError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        <Self as Debug>::fmt(self, f)
+    }
+}
+impl Error for StateError {}
+
 impl ApiState for State {
     type DrawOutput<'a> = Box<dyn Draw + 'a>;
-    type Error = ();
+    type Error = StateError;
 
     fn new(initial_size: (TexDim, TexDim)) -> Result<Self, Self::Error> {
         let aspect = TexDim::aspect_ratio(initial_size.0, initial_size.1);

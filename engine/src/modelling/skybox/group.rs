@@ -1,4 +1,5 @@
 use alloc::ffi::CString;
+use core::error::Error;
 
 use graphics::framebuffer::FramebufferContext;
 use graphics::framebuffer::traits::FramebufferWithDepth;
@@ -56,20 +57,17 @@ impl<const OUT: usize, O, D: FramebufferWithDepth<OUT>> Draw for Group<'_, OUT, 
         self,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
-        let mut active_framebuffer = self.framebuffer.bind(fb_context);
+    ) -> Result<DrawOut, Box<dyn Error>> {
+        let mut active_framebuffer = self.framebuffer.bind(fb_context)?;
         let mut active_shader = self.shader.use_program(sp_context);
 
         active_shader.drawing_skybox(true);
-        active_shader
-            .set_uniform(&c"projtimesview", &self.look_at)
-            .unwrap();
+        active_shader.set_uniform(&c"projtimesview", &self.look_at)?;
 
-        active_shader.set_uniform_dyn(self.uniforms).unwrap();
+        active_shader.set_uniform_dyn(self.uniforms)?;
 
         self.skybox
-            .draw(&mut active_shader, &mut active_framebuffer)
-            .unwrap();
+            .draw(&mut active_shader, &mut active_framebuffer)?;
 
         active_shader.drawing_skybox(false);
 
@@ -80,7 +78,7 @@ impl<const OUT: usize, O, D: FramebufferWithDepth<OUT>> Draw for Group<'_, OUT, 
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
-    ) -> DrawOut {
+    ) -> Result<DrawOut, Box<dyn Error>> {
         let inner = *self;
         inner.draw_sized(fb_context, sp_context)
     }

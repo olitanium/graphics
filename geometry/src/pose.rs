@@ -4,7 +4,7 @@ use quaternion::Quaternion;
 
 use crate::{Orientation, Transform as _, TransformBy as _};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Pose {
     pub(crate) dual_quaternion: UnitDualQuaternion,
 }
