@@ -68,16 +68,13 @@ impl GameCamera {
                     .move_in_relative(displacement.v().scale(distance));
             }
 
+            let [mouse0, mouse1] = mouse_delta.into_inner();
             // -mouse_delta[0] is because I the positive direction on the mouse
             // is right
-            self.camera
-                .pose
-                .look_left(-mouse_delta[0] * self.sensitivity);
+            self.camera.pose.look_left(-mouse0 * self.sensitivity);
 
             // -mouse_delta[1] is because I have inverted Y
-            self.camera
-                .pose
-                .look_up(-mouse_delta[1] * self.sensitivity, None);
+            self.camera.pose.look_up(-mouse1 * self.sensitivity, None);
         }
     }
 }

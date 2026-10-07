@@ -109,20 +109,20 @@ pub fn quad_triangles(
 ) -> impl Iterator<Item = [IncompleteVertex<2>; 3]> {
     let [lower_x, lower_y] = lower_bound.into_inner();
     let [upper_x, upper_y] = upper_bound.into_inner();
-    let vertices = [
-        ([lower_x, lower_y], [0.0, 0.0]),
-        ([upper_x, lower_y], [1.0, 0.0]),
-        ([upper_x, upper_y], [1.0, 1.0]),
-        ([lower_x, upper_y], [0.0, 1.0]),
+
+    [
+        [
+            IncompleteVertex::new(vector![lower_x, lower_y]).texture(vector![0.0, 0.0]),
+            IncompleteVertex::new(vector![upper_x, lower_y]).texture(vector![0.0, 0.0]),
+            IncompleteVertex::new(vector![upper_x, upper_y]).texture(vector![0.0, 1.0]),
+        ],
+        [
+            IncompleteVertex::new(vector![lower_x, lower_y]).texture(vector![0.0, 0.0]),
+            IncompleteVertex::new(vector![upper_x, upper_y]).texture(vector![0.0, 1.0]),
+            IncompleteVertex::new(vector![lower_x, upper_y]).texture(vector![0.0, 1.0]),
+        ],
     ]
-    .map(|(position, texture)| {
-        IncompleteVertex::new(Vector::new(position)).texture(Vector::new(texture))
-    });
-
-    let triangles =
-        [[0, 1, 2], [0, 2, 3]].map(|arr_index| arr_index.map(|index| vertices[index].clone()));
-
-    triangles.into_iter()
+    .into_iter()
 }
 
 pub fn screen_quad() -> &'static VertexArray<QuadVertex> {
@@ -166,7 +166,7 @@ pub fn tail_with_bone(max_len: u8) -> impl Iterator<Item = [IncompleteVertex<3>;
                     BoneVertexTexture {
                         bone: bone1,
                         position: slice10,
-                        texture: Vector::new([fbone1 / max_len, 0.0]),
+                        texture: vector![fbone1 / max_len, 0.0],
                     },
                     BoneVertexTexture {
                         bone: bone1,

@@ -16,7 +16,7 @@ members = [
     "localrc",
     "fixed_point", 
     "bezier",
-    "handle_vec",
+    #"handle_vec",
     "triangle_intersection",
     "triangle_test",
     "get_or_extend",
@@ -63,6 +63,9 @@ unneeded_field_pattern = "allow"
 rest_pattern_accessible_field = "allow"
 partial_pub_fields = "allow"
 must_use_candidate = "allow"
+eprintln = "allow"
+print_stderr = "allow"
+use_debug = "allow"
 
 # not sure
 todo = "allow"
@@ -74,9 +77,6 @@ shadow_same = "allow"
 shadow_unrelated = "allow"
 module_name_repetitions = "allow"
 wildcard_enum_match_arm = "allow"
-eprintln = "allow"
-print_stderr = "allow"
-use_debug = "allow"
 similar_names = "allow"
 same_name_method = "allow"
 unreachable = "allow"
@@ -95,7 +95,7 @@ cast_possible_wrap = "allow"
 cast_possible_truncation = "allow"
 
 # remove_me_soon
-#expect_used = "allow"
+expect_used = "allow"
 unwrap_used = "allow"
 indexing_slicing = "allow"
 

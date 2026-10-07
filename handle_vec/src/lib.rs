@@ -1,7 +1,5 @@
 //! This crate is incomplete. Do not yet use it's contents.
 #![feature(phantom_variance_markers)]
-#![allow(clippy::restriction)]
-#![allow(clippy::pedantic)]
 
 use core::marker::{PhantomData, PhantomInvariantLifetime};
 

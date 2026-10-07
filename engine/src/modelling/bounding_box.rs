@@ -67,8 +67,8 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
         }
     }
 
-    fn get(&self, index: usize) -> &BoundingBoxElement<V, T> {
-        &self.inner[index]
+    fn get(&self, index: usize) -> Option<&BoundingBoxElement<V, T>> {
+        self.inner.get(index)
     }
 
     fn root_element(&self) -> &BoundingBoxElement<V, T> {

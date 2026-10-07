@@ -77,13 +77,13 @@ pub mod mem;
 macro_rules! builder {
     ($name:ident, $optname:ident : Option < $typ:ty >) => {
         #[doc = concat!("set ", stringify!($name), " to a value.")]
-        pub fn $name(mut self, $name: $typ) -> Self {
+        pub const fn $name(mut self, $name: $typ) -> Self {
             self.$name = Some($name);
             self
         }
 
         #[doc = concat!("set ", stringify!($name), " to an optional value.")]
-        pub fn $optname(mut self, $optname: Option<$typ>) -> Self {
+        pub const fn $optname(mut self, $optname: Option<$typ>) -> Self {
             self.$name = $optname;
             self
         }

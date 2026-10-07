@@ -221,6 +221,10 @@ where
     C::Transform<'a>: Clone,
 {
     pub grapple_points: Vec<(&'a A, A::Transform<'a>, A::VertexTransform<'a>)>,
+    #[expect(
+        clippy::type_complexity,
+        reason = "cannot turn off type_complexity in cargo.toml"
+    )]
     pub carryable_objects: Vec<Option<(B, B::Transform<'a>, B::VertexTransform<'a>)>>,
     pub other_entities: Vec<(&'a C, C::Transform<'a>, C::VertexTransform<'a>)>,
 }

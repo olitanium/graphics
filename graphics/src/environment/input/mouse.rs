@@ -60,10 +60,13 @@ impl Mouse {
                 MouseState::FirstMouse => MouseState::Stationary {
                     current_location: Vector::new([x, y]),
                 },
-                MouseState::Stationary { current_location } => MouseState::Moved {
-                    current_location: Vector::new([x, y]),
-                    delta: Vector::new([x - current_location[0], y - current_location[1]]),
-                },
+                MouseState::Stationary { current_location } => {
+                    let [curr0, curr1] = current_location.into_inner();
+                    MouseState::Moved {
+                        current_location: Vector::new([x, y]),
+                        delta: Vector::new([x - curr0, y - curr1]),
+                    }
+                }
                 MouseState::Moved {
                     current_location,
                     delta,

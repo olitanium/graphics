@@ -60,7 +60,11 @@ impl Children {
     where
         V: ExtendedVertex,
     {
-        self.children.map(|index| bounding_box.get(index))
+        self.children.map(|index| {
+            bounding_box
+                .get(index)
+                .expect("internal, children index should not extend too high")
+        })
     }
 }
 
@@ -86,39 +90,21 @@ where
 {
     let iter = iter.into_iter().map(V::position);
 
-    // let lower_bound = iter.clone().reduce(|array1, array2| {
-    // Vector::new(array::from_fn(|index| {
-    // f32::min(array1[index], array2[index])
-    // }))
-    // })?;
-
-    let lower_bounds_new = iter
+    let lower_bounds = iter
         .clone()
         .map(Vector::into_inner)
         .reduce(|vec1, vec2| vec1.zip_with(vec2, f32::min))?;
 
-    // assert_eq!(
-    // lower_bound,
-    // Vector::new(lower_bounds_new),
-    // "TODO: if pass, implement lower_bounds_new for UB and replace"
-    // );
-    //
-    // let upper_bound = iter.clone().reduce(|array1, array2| {
-    // Vector::new(array::from_fn(|index| {
-    // f32::max(array1[index], array2[index])
-    // }))
-    // })?;
-
-    let upper_bounds_new = iter
+    let upper_bounds = iter
         .map(Vector::into_inner)
         .reduce(|vec1, vec2| vec1.zip_with(vec2, f32::max))?;
 
     debug_assert!(
-        iter::zip(upper_bounds_new, lower_bounds_new).all(|(x, y)| x >= y),
+        iter::zip(upper_bounds, lower_bounds).all(|(x, y)| x >= y),
         "all upper bounts should be the same or higher than the LBs"
     );
 
-    Some((Vector::new(lower_bounds_new), Vector::new(upper_bounds_new)))
+    Some((Vector::new(lower_bounds), Vector::new(upper_bounds)))
 }
 
 fn make_bound<V>(
@@ -169,23 +155,20 @@ where
 
                 let mut new_partition: [_; CHILDRENPLUS1] = array::from_fn(|index| {
                     let partition_mult = (index) as f32 / CHILDREN_FLOAT;
-                    //let partition_value = partition_mult * upper_bounds[max_index] + (1.0 - partition_mult) * lower_bounds[max_index];
-                    let partition_value =  (1.0 - partition_mult).mul_add(lower_bounds[max_index], partition_mult * upper_bounds[max_index]);
+                    // let partition_value = partition_mult *
+                    // upper_bounds[max_index] + (1.0 - partition_mult) *
+                    // lower_bounds[max_index];
+                    let partition_value = (1.0 - partition_mult).mul_add(
+                        lower_bounds[max_index],
+                        partition_mult * upper_bounds[max_index],
+                    );
 
                     triangles.partition_point(|(centre, _)| centre[max_index] <= partition_value)
                 });
 
-                //ensure that no floating point errors happened above
+                // ensure that no floating point errors happened above
                 // CHILDRENPLUS1 always at least 1, so there is always a last
                 *new_partition.last_mut()? = triangles.len();
-
-                /*let points = number_of_partitions.map(|mult| {
-                    mult * upper_bounds[max_index] + (1.0 - mult) * lower_bounds[max_index]
-                });
-
-                let mut new_partition = points.map(|centre_point| {
-                    triangles.partition_point(|(centre, _)| centre[max_index] <= centre_point)
-                });*/
 
                 let partitions: [_; NUMBER_OF_CHILDREN] =
                     array::from_fn(|index| (new_partition[index], new_partition[index + 1]));
