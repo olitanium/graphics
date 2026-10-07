@@ -5,6 +5,7 @@
 - Yeet instead of Err(...into()) or Err(...)?
 
 == Can Do Now
+- VecOne periodically when appropriate, to remove unwraps
 - impl VertexHasTangent for others
 - Model auto-generated normals smooth option
 - Renderbuffer Objects (like textures for Framebuffer attachments. Might cause issues for shadows because they are unreadable)
@@ -18,6 +19,6 @@
   - Shadow Lights can then be generic over model type
 - Import
 - Bounding Box dyn
-- Bounding Box Collision uses refrerences, specifically for bone_index and unit_index
+- Bounding Box Collision uses references, specifically for bone_index and unit_index
 - Assess Vector<DIMS>: ExtendedVertex bound
 - Collision generic over DIMS, but needs a "TransformBy" shenanigans to ensure Pose, Complex Number etc. in all dims

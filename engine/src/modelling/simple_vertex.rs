@@ -4,6 +4,7 @@ use geometry::{Pose, Transform as _, TransformBy};
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
+use utils::error_boilerplate;
 
 use crate::modelling::extended_vertex::{ExtendedVertex, IncompleteVertex};
 use crate::modelling::{CubicVertex, VertexHasTangent};
@@ -51,7 +52,16 @@ impl TransformBy<Pose> for SimpleVertex {
     }
 }
 
+#[derive(Debug)]
+pub enum FromIncompleteVertexError {
+    Normal(Box<[IncompleteVertex<3>; 3]>),
+    TextureCoords(Box<[IncompleteVertex<3>; 3]>),
+    Tangent(Box<[IncompleteVertex<3>; 3]>),
+}
+error_boilerplate!(FromIncompleteVertexError);
+
 impl ExtendedVertex for SimpleVertex {
+    type FromIncompleteVertexError = FromIncompleteVertexError;
     type PreferredTransform<'a> = Pose;
 
     type const LEN: usize = 3;
@@ -60,38 +70,34 @@ impl ExtendedVertex for SimpleVertex {
         self.position
     }
 
-    fn from_incomplete_triangle(triangle: [IncompleteVertex<3>; 3]) -> Option<[Self; 3]> {
-        let temp_incomplete_triangle = triangle.clone();
+    fn from_incomplete_triangle(
+        triangle: [IncompleteVertex<3>; 3],
+    ) -> Result<[Self; 3], Self::FromIncompleteVertexError> {
+        let [trix, triy, triz] = triangle.each_ref();
 
         let new_normal = || {
-            let ab = temp_incomplete_triangle[1].position - temp_incomplete_triangle[0].position;
-            let ac = temp_incomplete_triangle[2].position - temp_incomplete_triangle[0].position;
+            let ab = triy.position - trix.position;
+            let ac = triz.position - trix.position;
             let out = ab.cross(ac).try_normalize();
-            if out.is_none() {
-                eprintln!("failed to make normal: ab: {ab:?}, ac: {ac:?}");
-            }
-            out
+            out.ok_or_else(|| FromIncompleteVertexError::Normal(Box::new(triangle.clone())))
         };
 
         let new_tangent = || {
-            let ab = temp_incomplete_triangle[1].position - temp_incomplete_triangle[0].position;
-            let ac = temp_incomplete_triangle[2].position - temp_incomplete_triangle[0].position;
-            let z1 =
-                (temp_incomplete_triangle[1].texture? - temp_incomplete_triangle[0].texture?).y();
-            let g1 =
-                (temp_incomplete_triangle[2].texture? - temp_incomplete_triangle[0].texture?).y();
+            let ab = triy.position - trix.position;
+            let ac = triz.position - trix.position;
+            let z1 = try { (triy.texture? - trix.texture?).y() }.ok_or_else(|| {
+                FromIncompleteVertexError::TextureCoords(Box::new(triangle.clone()))
+            })?;
+            let g1 = try { (triz.texture? - trix.texture?).y() }.ok_or_else(|| {
+                FromIncompleteVertexError::TextureCoords(Box::new(triangle.clone()))
+            })?;
 
-            let out = (ab.scale(g1) - ac.scale(z1)) // .scale(1.0/(g[1]*z[0] - g[0]*z[1]))
-                .try_normalize(); // change of basis
+            let out = (ab.scale(g1) - ac.scale(z1)).try_normalize();
 
-            if out.is_none() {
-                eprintln!("failed to make tangent: ab: {ab:?}, ac: {ac:?}, z[1]: {z1}, g[1]: {g1}");
-            }
-
-            out
+            out.ok_or_else(|| FromIncompleteVertexError::Tangent(Box::new(triangle.clone())))
         };
 
-        triangle.try_map(
+        triangle.clone().try_map(
             |IncompleteVertex {
                  position,
                  texture,
@@ -99,12 +105,14 @@ impl ExtendedVertex for SimpleVertex {
                  tangent,
                  ..
              }| {
-                let final_normal = normal.or_else(new_normal)?;
-                let final_tangent = tangent.or_else(new_tangent)?;
+                let final_normal = normal.map_or_else(new_normal, Ok)?;
+                let final_tangent = tangent.map_or_else(new_tangent, Ok)?;
 
-                Some(Self {
+                Ok(Self {
                     position,
-                    texture: texture?,
+                    texture: texture.ok_or_else(|| {
+                        FromIncompleteVertexError::Tangent(Box::new(triangle.clone()))
+                    })?,
                     normal: final_normal,
                     tangent: final_tangent,
                 })

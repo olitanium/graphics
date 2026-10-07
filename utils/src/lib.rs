@@ -3,6 +3,9 @@
 #![feature(const_trait_impl)]
 #![feature(const_ops)]
 
+mod fast_inverse_sqrt;
+pub use fast_inverse_sqrt::rsqrt;
+
 mod error;
 
 mod iter_with_cloned;
@@ -14,6 +17,9 @@ pub use ref_or_owned::RefOwned;
 
 /// Testbed is a module for trying out MVP ideas before fleshing out.
 pub mod addassign;
+
+pub mod vecone;
+pub use vecone::VecOne;
 
 pub mod hash_match;
 

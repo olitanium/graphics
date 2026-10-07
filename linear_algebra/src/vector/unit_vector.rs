@@ -22,9 +22,9 @@ macro_rules! unit_vector {
     }
 }
 
-impl<const N: usize, T> PartialEq for UnitVector<N, T>
+const impl<const N: usize, T> PartialEq for UnitVector<N, T>
 where
-    Vector<N, T>: PartialEq,
+    Vector<N, T>: [const] PartialEq,
 {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
@@ -91,9 +91,10 @@ impl<const N: usize, T> UnitVector<N, T> {
     }
 }
 
-impl<const N: usize, T> ops::Neg for UnitVector<N, T>
+const impl<const N: usize, T> ops::Neg for UnitVector<N, T>
 where
-    Vector<N, T>: ops::Neg<Output = Vector<N, T>>,
+    Self: [const] Destruct,
+    Vector<N, T>: [const] ops::Neg<Output = Vector<N, T>>,
 {
     type Output = Self;
 

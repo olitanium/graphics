@@ -2,6 +2,8 @@
 
 #![feature(const_ops)]
 #![feature(const_trait_impl)]
+#![feature(derive_const)]
+#![feature(const_clone)]
 
 use core::ops;
 
@@ -13,7 +15,8 @@ mod slerp;
 mod unit_quaternion;
 pub use slerp::Slerp;
 
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Default, Copy)]
+#[derive_const(Clone)]
 pub struct Quaternion {
     real: f32,
     vector: Vector<3, f32>,
@@ -119,17 +122,17 @@ impl Quaternion {
         self.magnitude_sq().sqrt()
     }
 
-    pub fn inverse_magnitude(&self) -> f32 {
-        1.0 / self.magnitude()
+    pub const fn inverse_magnitude(&self) -> f32 {
+        utils::rsqrt(self.magnitude_sq())
     }
 
     #[must_use]
-    pub fn normalize(self) -> UnitQuaternion {
+    pub const fn normalize(self) -> UnitQuaternion {
         UnitQuaternion::normalize_quaternion(self)
     }
 }
 
-impl ops::Add for Quaternion {
+const impl ops::Add for Quaternion {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -140,7 +143,7 @@ impl ops::Add for Quaternion {
     }
 }
 
-impl ops::Sub for Quaternion {
+const impl ops::Sub for Quaternion {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -151,7 +154,7 @@ impl ops::Sub for Quaternion {
     }
 }
 
-impl ops::Mul for Quaternion {
+const impl ops::Mul for Quaternion {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
@@ -164,7 +167,7 @@ impl ops::Mul for Quaternion {
     }
 }
 
-impl ops::Mul<f32> for Quaternion {
+const impl ops::Mul<f32> for Quaternion {
     type Output = Self;
 
     fn mul(self, rhs: f32) -> Self::Output {
@@ -172,7 +175,7 @@ impl ops::Mul<f32> for Quaternion {
     }
 }
 
-impl ops::Mul<Quaternion> for f32 {
+const impl ops::Mul<Quaternion> for f32 {
     type Output = Quaternion;
 
     fn mul(self, rhs: Quaternion) -> Self::Output {
@@ -180,7 +183,7 @@ impl ops::Mul<Quaternion> for f32 {
     }
 }
 
-impl ops::Neg for Quaternion {
+const impl ops::Neg for Quaternion {
     type Output = Self;
 
     fn neg(self) -> Self::Output {

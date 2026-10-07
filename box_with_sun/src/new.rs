@@ -99,7 +99,7 @@ impl State {
 
         let sun_duplicate_light = ShadowPointLight::new(
             inner_point_light,
-            TexDim::from_non_zero(const { NonZero::new(1000).unwrap() }),
+            const { TexDim::from_non_zero(NonZero::new(1000).unwrap()) },
         );
 
         let sun = Sun {

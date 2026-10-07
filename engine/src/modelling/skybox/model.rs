@@ -9,7 +9,7 @@ use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
 use utils::error_boilerplate;
 
 use crate::modelling::skybox::SkyBoxVertex;
-use crate::modelling::{ExtendedVertex, test_models};
+use crate::modelling::{ExtendedVertex as _, test_models};
 
 #[derive(Debug)]
 pub struct SkyBox {
@@ -21,7 +21,8 @@ impl SkyBox {
     pub fn new(texture: CubeMap) -> Self {
         let mut model_builder = VertexArray::builder();
         model_builder.extend_triangles(
-            test_models::origin_unit_cube().filter_map(ExtendedVertex::from_incomplete_triangle),
+            test_models::origin_unit_cube()
+                .filter_map(|tri| SkyBoxVertex::from_incomplete_triangle(tri).ok()),
         );
         let model = model_builder.build();
         Self { model, texture }

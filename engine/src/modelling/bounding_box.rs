@@ -215,7 +215,7 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T>
 where
     BoundingBoxElement<V, T>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
     Vector<{ <BoundingBoxElement<V, T> as BoundingBoxShaderProgram>::DIMS }>: Vertex,
-    Vector<{ V::LEN }>: Volume,
+    Vector<{ V::LEN }>: Volume + ExtendedVertex<FromIncompleteVertexError = !>,
 {
     pub(crate) fn draw<P, D, F>(
         &self,

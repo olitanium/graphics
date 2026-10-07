@@ -57,12 +57,14 @@ impl ApiState for State {
         let camera = CameraBuilder::new()
             .perspective(90_f32.to_radians(), aspect, 0.1, 10.0)
             .pose(
-                ManualPoseFixedUp::new_forward(
-                    Vector::new([0.0, 0.0, 2.0]),
-                    -UnitVector::Z,
-                    UnitVector::Y,
-                )
-                .expect("literals are okay"),
+                const {
+                    ManualPoseFixedUp::new_forward(
+                        Vector::new([0.0, 0.0, 2.0]),
+                        -UnitVector::Z,
+                        UnitVector::Y,
+                    )
+                    .expect("literals are okay")
+                },
             )
             .build();
 
@@ -122,12 +124,12 @@ impl ApiState for State {
 
         let frame_time = frame_time.as_secs_f32();
 
-        fn move_triangle_two(state: &mut State, translation: [f32; 3]) {
+        const fn move_triangle_two(state: &mut State, translation: [f32; 3]) {
             let old_pose = &mut state.triangle_two.physics.pose;
             old_pose.push_change(Pose::new_from_translation(Vector::new(translation)));
         }
 
-        fn rotate_triangle_two(state: &mut State, rotation: Orientation) {
+        const fn rotate_triangle_two(state: &mut State, rotation: Orientation) {
             let old_pose = state.triangle_two.physics.pose;
             let mut new_pose = Pose::new_from_orientation(rotation);
             new_pose.push_change(old_pose);

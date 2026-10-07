@@ -1,3 +1,5 @@
+use utils::rsqrt;
+
 use super::{DualNumber, DualQuaternion};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -5,10 +7,10 @@ pub struct UnitDualQuaternion(DualQuaternion);
 
 impl UnitDualQuaternion {
     #[must_use]
-    pub fn normalize_dual_quaternion(dual_quaternion: DualQuaternion) -> Self {
+    pub const fn normalize_dual_quaternion(dual_quaternion: DualQuaternion) -> Self {
         // https://stackoverflow.com/questions/23174899/properly-normalizing-a-dual-quaternion
         let DualNumber { real: s, dual: t } = dual_quaternion.magnitude_sq();
-        let u = 1.0 / s.sqrt();
+        let u = rsqrt(s);
 
         let factor = DualNumber {
             real: u,

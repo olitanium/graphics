@@ -29,7 +29,11 @@ impl Default for FixedUp {
 impl FixedUp {
     const COS_NO_CONE: f32 = 0.99;
 
-    pub fn new_from_to(position: Vector<3>, to: Vector<3>, up: UnitVector<3>) -> Option<Self> {
+    pub const fn new_from_to(
+        position: Vector<3>,
+        to: Vector<3>,
+        up: UnitVector<3>,
+    ) -> Option<Self> {
         let forward = (to - position).try_normalize()?;
 
         (forward != up).then_some(Self {
@@ -51,7 +55,7 @@ impl FixedUp {
         })
     }
 
-    pub fn left(&self) -> UnitVector<3> {
+    pub const fn left(&self) -> UnitVector<3> {
         self.up
             .v()
             .cross(self.forward.v())
@@ -67,8 +71,8 @@ impl FixedUp {
         self.up
     }
 
-    pub fn view_up(&self, left: Option<Vector<3>>) -> UnitVector<3> {
-        let left = left.unwrap_or_else(|| self.left_nonunit());
+    pub const fn view_up(&self, left: Option<Vector<3>>) -> UnitVector<3> {
+        let left = left.unwrap_or_else(const || self.left_nonunit());
         self.forward
             .v()
             .cross(left)

@@ -28,12 +28,12 @@ impl Pose {
         Self { dual_quaternion }
     }
 
-    pub fn new_from_to_up(from: Vector<3>, to: Vector<3>, up: UnitVector<3>) -> Option<Self> {
+    pub const fn new_from_to_up(from: Vector<3>, to: Vector<3>, up: UnitVector<3>) -> Option<Self> {
         let forward = (to - from).try_normalize()?;
         Self::new_forward_up(from, forward, up)
     }
 
-    pub fn new_forward_up(
+    pub const fn new_forward_up(
         from: Vector<3>,
         forward: UnitVector<3>,
         up: UnitVector<3>,
@@ -43,7 +43,7 @@ impl Pose {
     }
 
     #[must_use]
-    pub fn new_from_orientation_translation(
+    pub const fn new_from_orientation_translation(
         orientation: Orientation,
         translation: Vector<3>,
     ) -> Self {
@@ -56,12 +56,12 @@ impl Pose {
     }
 
     #[must_use]
-    pub fn new_from_orientation(orientation: Orientation) -> Self {
+    pub const fn new_from_orientation(orientation: Orientation) -> Self {
         Self::new_from_orientation_translation(orientation, Vector::ZERO)
     }
 
     #[must_use]
-    pub fn new_from_translation(translation: Vector<3>) -> Self {
+    pub const fn new_from_translation(translation: Vector<3>) -> Self {
         Self::new_from_orientation_translation(Orientation::IDENTITY, translation)
     }
 
@@ -86,7 +86,7 @@ impl Pose {
     }
 
     #[must_use]
-    pub fn translation(self) -> Vector<3> {
+    pub const fn translation(self) -> Vector<3> {
         let dual = self.dual_quaternion.u();
         let qd = dual.real;
         let qrstar = dual.dual.conjugate();
@@ -98,7 +98,7 @@ impl Pose {
     }
 
     #[must_use]
-    pub fn orientation(self) -> Orientation {
+    pub const fn orientation(self) -> Orientation {
         let new = self.dual_quaternion.u().real.normalize();
 
         Orientation::from_unitquaternion(new)
@@ -120,20 +120,20 @@ impl Pose {
         ])
     }
 
-    pub fn push_change(&mut self, pose: Self) -> &mut Self {
+    pub const fn push_change(&mut self, pose: Self) -> &mut Self {
         *self = (*self).transform_by(pose);
         self
     }
 
-    pub fn transform_x(self) -> UnitVector<3> {
+    pub const fn transform_x(self) -> UnitVector<3> {
         self.transform(UnitVector::X)
     }
 
-    pub fn transform_y(self) -> UnitVector<3> {
+    pub const fn transform_y(self) -> UnitVector<3> {
         self.transform(UnitVector::Y)
     }
 
-    pub fn transform_z(self) -> UnitVector<3> {
+    pub const fn transform_z(self) -> UnitVector<3> {
         self.transform(UnitVector::Z)
     }
 }

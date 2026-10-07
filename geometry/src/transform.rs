@@ -1,8 +1,10 @@
+use core::marker::Destruct;
+
 use linear_algebra::{UnitVector, Vector};
 
 use crate::{Orientation, Pose};
 
-pub trait TransformBy<By>: Sized {
+pub const trait TransformBy<By>: Sized {
     /// `TransformBy` takes an object, say a vector, and a transformation, say a
     /// matrix. The output is the result of applying the transformation to
     /// the object.
@@ -21,7 +23,7 @@ pub trait TransformBy<By>: Sized {
     fn transform_by(self, operator: By) -> Self;
 }
 
-impl TransformBy<Pose> for Vector<3> {
+const impl TransformBy<Pose> for Vector<3> {
     fn transform_by(self, operator: Pose) -> Self {
         let translation_as_pose = Pose::new_from_translation(self);
         let current_pos = translation_as_pose.transform_by(operator);
@@ -29,26 +31,26 @@ impl TransformBy<Pose> for Vector<3> {
     }
 }
 
-impl TransformBy<Pose> for UnitVector<3> {
+const impl TransformBy<Pose> for UnitVector<3> {
     fn transform_by(self, operator: Pose) -> Self {
         let orientation = operator.orientation();
         self.transform_by(orientation)
     }
 }
 
-impl TransformBy<Orientation> for Vector<3> {
+const impl TransformBy<Orientation> for Vector<3> {
     fn transform_by(self, operator: Orientation) -> Self {
         operator.act_on(self)
     }
 }
 
-impl TransformBy<Orientation> for UnitVector<3> {
+const impl TransformBy<Orientation> for UnitVector<3> {
     fn transform_by(self, operator: Orientation) -> Self {
         operator.act_on_unit(self)
     }
 }
 
-impl TransformBy<Self> for Pose {
+const impl TransformBy<Self> for Pose {
     fn transform_by(self, operator: Self) -> Self {
         let dual_quaternion = (operator.dual_quaternion.u() * self.dual_quaternion.u()).normalize();
 
@@ -56,7 +58,10 @@ impl TransformBy<Self> for Pose {
     }
 }
 
-impl<T: TransformBy<U>, U> TransformBy<Option<U>> for T {
+const impl<T: [const] TransformBy<U>, U> TransformBy<Option<U>> for T
+where
+    Option<U>: [const] Destruct,
+{
     fn transform_by(self, operator: Option<U>) -> Self {
         if let Some(operator) = operator {
             self.transform_by(operator)
@@ -66,9 +71,11 @@ impl<T: TransformBy<U>, U> TransformBy<Option<U>> for T {
     }
 }
 
-impl<V: TransformBy<Pose>, const N: usize> TransformBy<Pose> for [V; N] {
+const impl<V: [const] TransformBy<Pose> + [const] Destruct, const N: usize> TransformBy<Pose>
+    for [V; N]
+{
     fn transform_by(self, operator: Pose) -> Self {
-        self.map(|vertex| vertex.transform_by(operator))
+        self.map(const |vertex| vertex.transform_by(operator))
     }
 }
 
@@ -79,11 +86,11 @@ impl<V: TransformBy<Pose>, const N: usize> TransformBy<Pose> for [V; N] {
 ///
 /// Do not implement this trait, instead implement `transform_by`, where private
 /// members of the output type can be accessed. A blanket transform exists.
-pub trait Transform<T> {
+pub const trait Transform<T> {
     fn transform(self, input: T) -> T;
 }
 
-impl<U, T: TransformBy<U>> Transform<T> for U {
+const impl<U, T: [const] TransformBy<U>> Transform<T> for U {
     fn transform(self, input: T) -> T {
         input.transform_by(self)
     }
@@ -92,7 +99,7 @@ impl<U, T: TransformBy<U>> Transform<T> for U {
 #[derive(Debug, Clone, Copy)]
 pub struct NoTransform;
 
-impl<T> TransformBy<NoTransform> for T {
+const impl<T> TransformBy<NoTransform> for T {
     fn transform_by(self, NoTransform: NoTransform) -> Self {
         self
     }

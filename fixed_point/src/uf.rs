@@ -51,7 +51,7 @@ macro_rules! to_float {
 macro_rules! make_uf {
     ($name:ident, $inner:ty) => {
         /// An unsigned unit floating point with 8 bits.
-        #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
         #[repr(transparent)]
         pub struct $name {
             pub(crate) inner: $inner,
@@ -128,6 +128,12 @@ macro_rules! make_uf {
             fn sub(self, rhs: Self) -> Self::Output {
                 let inner = self.inner.saturating_sub(rhs.inner);
                 Self { inner }
+            }
+        }
+
+        const impl Default for $name {
+            fn default() -> Self {
+                Self { inner: 0 }
             }
         }
     };

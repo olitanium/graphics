@@ -7,6 +7,7 @@ edition = "2024"
 
 linear_algebra = {path = "../linear_algebra"}
 float_eq = {path = "../float_eq"}
+utils = {path = "../utils"}
 
 [lints]
 workspace = true

@@ -1,14 +1,16 @@
+use core::iter;
 use core::mem::offset_of;
-use core::{array, iter};
 
 use dual_number::DualQuaternion;
 use geometry::{Pose, TransformBy};
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
+use zip_with::ArrayZipWith as _;
 
 use crate::modelling::cubic::CalculatedAnimation;
 use crate::modelling::extended_vertex::IncompleteVertex;
+use crate::modelling::simple_vertex::FromIncompleteVertexError;
 use crate::modelling::{CubicVertex, ExtendedVertex, SimpleVertex, Skeleton};
 
 #[derive(Debug, Clone, Copy)]
@@ -77,6 +79,7 @@ impl<'a> TransformBy<(&'a Skeleton, &'a CalculatedAnimation)> for SkeletalVertex
 }
 
 impl ExtendedVertex for SkeletalVertex {
+    type FromIncompleteVertexError = FromIncompleteVertexError;
     type PreferredTransform<'a> = (&'a Skeleton, &'a CalculatedAnimation);
 
     type const LEN: usize = 3;
@@ -86,12 +89,14 @@ impl ExtendedVertex for SkeletalVertex {
     }
 
     #[inline]
-    fn from_incomplete_triangle(mut triangle: [IncompleteVertex<3>; 3]) -> Option<[Self; 3]> {
+    fn from_incomplete_triangle(
+        mut triangle: [IncompleteVertex<3>; 3],
+    ) -> Result<[Self; 3], Self::FromIncompleteVertexError> {
         let weights = triangle.each_mut().map(|vert| {
             let weight = vert.weights.take();
 
-            const NO_WEIGHT: (usize, f32) = (0, 0.0);
-            const ONLY_ROOT: (usize, f32) = (0, 1.0);
+            const NO_WEIGHT: (u32, f32) = (0, 0.0);
+            const ONLY_ROOT: (u32, f32) = (0, 1.0);
             weight.map_or([ONLY_ROOT, NO_WEIGHT, NO_WEIGHT, NO_WEIGHT], |vec| {
                 vec.into_array_with(|| NO_WEIGHT)
             })
@@ -99,19 +104,21 @@ impl ExtendedVertex for SkeletalVertex {
 
         let simple_vertex = SimpleVertex::from_incomplete_triangle(triangle)?;
 
-        Some(array::from_fn(move |index| Self {
-            position: simple_vertex[index].position,
-            texture: simple_vertex[index].texture,
-            normal: simple_vertex[index].normal,
-            tangent: simple_vertex[index].tangent,
-            bone_weights: weights[index].map(|(_, weight)| weight),
-            #[expect(
-                clippy::cast_precision_loss,
-                reason = "`bone` would ideally be u32, will fix when I have worked out \
-                          `SetAttribIPointer`"
-            )]
-            bone_indices: weights[index].map(|(bone, _)| bone as f32),
-        }))
+        Ok(
+            simple_vertex.zip_with(weights, |simple_vertex, weights| Self {
+                position: simple_vertex.position,
+                texture: simple_vertex.texture,
+                normal: simple_vertex.normal,
+                tangent: simple_vertex.tangent,
+                bone_weights: weights.map(|(_, weight)| weight),
+                #[expect(
+                    clippy::cast_precision_loss,
+                    reason = "`bone` would ideally be u32, will fix when I have worked out  \
+                              `SetAttribIPointer`"
+                )]
+                bone_indices: weights.map(|(bone, _)| bone as f32),
+            }),
+        )
     }
 }
 

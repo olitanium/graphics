@@ -22,7 +22,7 @@ impl Orientation {
     }
 
     #[must_use]
-    pub fn act_on(self, vector: Vector<3>) -> Vector<3> {
+    pub const fn act_on(self, vector: Vector<3>) -> Vector<3> {
         let vec_as_quarternion = Quaternion::from_vector(vector);
         let output_quaternion =
             self.quaternion.q() * vec_as_quarternion * self.quaternion.q().conjugate();
@@ -30,12 +30,12 @@ impl Orientation {
     }
 
     #[must_use]
-    pub fn act_on_unit(self, unit: UnitVector<3>) -> UnitVector<3> {
+    pub const fn act_on_unit(self, unit: UnitVector<3>) -> UnitVector<3> {
         UnitVector::new_unchecked(self.act_on(unit.v()).into_inner())
     }
 
     #[must_use]
-    pub fn combine(self, after: Self) -> Self {
+    pub const fn combine(self, after: Self) -> Self {
         let new_quaternion = (after.quaternion.q() * self.quaternion.q()).normalize();
         Self::from_unitquaternion(new_quaternion)
     }
@@ -47,7 +47,7 @@ impl Orientation {
     }
 
     #[must_use]
-    pub fn new_forward_up(forward: UnitVector<3>, global_up: UnitVector<3>) -> Option<Self> {
+    pub const fn new_forward_up(forward: UnitVector<3>, global_up: UnitVector<3>) -> Option<Self> {
         let left = global_up.v().cross(forward.v()).try_normalize()?;
         let view_up = forward.v().cross(left.v()).try_normalize()?;
 
@@ -76,7 +76,7 @@ impl Orientation {
     }
 
     #[must_use]
-    pub fn from_matrix(matrix: Matrix<3, 3>) -> Self {
+    pub const fn from_matrix(matrix: Matrix<3, 3>) -> Self {
         let quaternion = UnitQuaternion::from_matrix(matrix);
         Self { quaternion }
     }
@@ -145,7 +145,11 @@ impl Orientation {
     }
 
     #[must_use]
-    pub fn new_from_to(from: Vector<3>, to: Vector<3>, global_up: UnitVector<3>) -> Option<Self>
+    pub const fn new_from_to(
+        from: Vector<3>,
+        to: Vector<3>,
+        global_up: UnitVector<3>,
+    ) -> Option<Self>
     where
         Self: Sized,
     {

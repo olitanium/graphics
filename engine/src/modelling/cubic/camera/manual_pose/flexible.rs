@@ -14,12 +14,16 @@ pub struct Flexible {
 }
 
 impl Flexible {
-    pub fn new_from_to(position: Vector<3>, to: Vector<3>, up: UnitVector<3>) -> Option<Self> {
+    pub const fn new_from_to(
+        position: Vector<3>,
+        to: Vector<3>,
+        up: UnitVector<3>,
+    ) -> Option<Self> {
         let pose = Pose::new_from_to_up(position, to, up)?;
         Some(Self { pose })
     }
 
-    pub fn new_forward(
+    pub const fn new_forward(
         position: Vector<3>,
         forward: UnitVector<3>,
         up: UnitVector<3>,
@@ -28,15 +32,15 @@ impl Flexible {
         Some(Self { pose })
     }
 
-    pub fn left(&self) -> UnitVector<3> {
+    pub const fn left(&self) -> UnitVector<3> {
         self.pose.transform_x()
     }
 
-    pub fn up(&self) -> UnitVector<3> {
+    pub const fn up(&self) -> UnitVector<3> {
         self.pose.transform_y()
     }
 
-    pub fn forward(&self) -> UnitVector<3> {
+    pub const fn forward(&self) -> UnitVector<3> {
         self.pose.transform_z()
     }
 
@@ -52,7 +56,7 @@ impl Flexible {
         self.pose = self.pose.transform_by(transform);
     }
 
-    pub fn move_in(&mut self, displacement: Vector<3>) {
+    pub const fn move_in(&mut self, displacement: Vector<3>) {
         let pose = Pose::new_from_translation(displacement);
         self.pose = self.pose.transform_by(pose);
     }

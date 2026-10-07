@@ -34,9 +34,9 @@ impl<'a> Builder<'a> {
             self.inverse_bind_pose_relative_to_parent,
             skeleton.get(self.parent),
         ) {
+            (_, GetBone::NoBone) => return None,
             (None, GetBone::Bone { bone: parent }) => parent.inverse_bind_pose(),
             (None, GetBone::RootBone) => Pose::default(),
-            (_, GetBone::NoBone) => return None,
             (Some(self_inverse), GetBone::Bone { bone: parent }) => {
                 parent.inverse_bind_pose().transform(self_inverse)
             }

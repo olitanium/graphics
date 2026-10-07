@@ -1,5 +1,7 @@
 mod incomplete;
 
+use core::error::Error;
+
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::vertex::{NoVertex, Vertex};
 pub use incomplete::IncompleteVertex;
@@ -13,6 +15,7 @@ use crate::modelling::SimpleVertex;
 pub trait ExtendedVertex: Vertex {
     type const LEN: usize;
     type PreferredTransform<'a>: Transform<Self> + Clone;
+    type FromIncompleteVertexError: Error;
 
     fn position(&self) -> Vector<{ Self::LEN }>;
 
@@ -22,7 +25,7 @@ pub trait ExtendedVertex: Vertex {
 
     fn from_incomplete_triangle(
         triangle: [IncompleteVertex<{ Self::LEN }>; 3],
-    ) -> Option<[Self; 3]>;
+    ) -> Result<[Self; 3], Self::FromIncompleteVertexError>;
 }
 
 pub trait CubicVertex: ExtendedVertex<LEN = 3> {
@@ -65,6 +68,7 @@ pub trait VertexHasTangent: CubicVertex {
 }
 
 impl ExtendedVertex for NoVertex {
+    type FromIncompleteVertexError = !;
     type PreferredTransform<'a> = NoTransform;
 
     type const LEN: usize = 0;
@@ -73,7 +77,9 @@ impl ExtendedVertex for NoVertex {
         Vector::ZERO
     }
 
-    fn from_incomplete_triangle(_: [IncompleteVertex<0>; 3]) -> Option<[Self; 3]> {
-        Some([Self; 3])
+    fn from_incomplete_triangle(
+        _: [IncompleteVertex<0>; 3],
+    ) -> Result<[Self; 3], Self::FromIncompleteVertexError> {
+        Ok([Self; 3])
     }
 }

@@ -1,5 +1,5 @@
 use core::fmt::{self, Debug};
-use core::num::{NonZero, NonZeroUsize};
+use core::num::NonZero;
 use std::fs;
 use std::io::Write as _;
 
@@ -66,7 +66,7 @@ macro_rules! nz_opaque {
         )]
         impl $name {
             #[allow(dead_code, reason = "May not be required on this invocation of the macro")]
-            pub(crate) type Primitive = $type;
+            pub type Primitive = $type;
 
             pub(crate) const  fn as_primitive(&self) -> Self::Primitive {
                 self.0.get()
@@ -80,8 +80,8 @@ macro_rules! nz_opaque {
 nz_opaque!(TexDim: GLsizei, Clone, Copy);
 
 impl TexDim {
-    pub const fn from_non_zero(value: NonZeroUsize) -> Self {
-        Self(NonZero::new(value.get() as Self::Primitive).unwrap())
+    pub const fn from_non_zero(value: NonZero<Self::Primitive>) -> Self {
+        Self(value)
     }
 
     #[expect(

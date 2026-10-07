@@ -57,7 +57,7 @@ const impl<const N: usize> PartialEq for Vector<N, VectorPreferredFloat> {
     }
 }
 
-impl<const N: usize> Eq for Vector<N, VectorPreferredFloat> {}
+const impl<const N: usize> Eq for Vector<N, VectorPreferredFloat> {}
 
 impl<const N: usize> PartialOrd for Vector<N, VectorPreferredFloat> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
@@ -220,42 +220,27 @@ impl<const N: usize> Vector<N, VectorPreferredFloat> {
         self.magnitude_sq().sqrt()
     }
 
-    pub fn inverse_magnitude(&self) -> VectorPreferredFloat {
-        1.0 / self.magnitude()
-    }
+    pub const fn inverse_magnitude(&self) -> f32 {
+        // 1.0 / self.magnitude()
+        let magnitude = self.magnitude_sq();
+        let x2 = magnitude * 0.5;
+        let mut i = magnitude.to_bits();
+        i = 0x5F_37_59_DF - (i >> 1);
+        let mut y = f32::from_bits(i);
+        y = y * (1.5 - (x2 * y * y));
 
-    /// # Panics
-    ///
-    /// Panics when the vector is the Zero vector.
-    #[must_use]
-    #[inline]
-    #[deprecated = "use the `try` method and handle the error"]
-    pub fn normalize_or_panic(self) -> UnitVector<N, VectorPreferredFloat> {
-        let Some(vec) = self.try_normalize() else {
-            #[expect(clippy::panic, reason = "deprecated function, being phased out")]
-            (panic!("tried normalizing a zero vector"))
-        };
-        vec
+        y
     }
 
     /// Try to normalize a vector, returning `None` if the vector is zero.
     #[must_use]
     #[inline]
-    pub fn try_normalize(self) -> Option<UnitVector<N, VectorPreferredFloat>> {
-        let one_len = 1.0 / self.magnitude();
+    pub const fn try_normalize(self) -> Option<UnitVector<N, VectorPreferredFloat>> {
+        let one_len = self.inverse_magnitude();
         one_len
             .is_finite()
-            .then(|| UnitVector::new_unchecked(self.0.map(|x| x * one_len)))
+            .then(const || UnitVector::new_unchecked(self.0.map(const |x| x * one_len)))
     }
-
-    // pub const fn truncate_with<F, const M: usize>(self, f: F) -> Vector<M,
-    // f32> where
-    // F: [const] FnMut() -> f32,
-    // {
-    // let array_vec = ArrayVec::from_array(self.0);
-    //
-    // let new_arr = array_vec.into_array_with_new_len(f); Vector::new(new_arr)
-    // }
 
     /// Change the size of the vector, filling in the gaps with `0.0`.
     #[must_use]

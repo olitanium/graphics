@@ -14,7 +14,7 @@ impl UnitQuaternion {
 
     #[must_use]
     #[inline]
-    pub fn normalize_quaternion(input: Quaternion) -> Self {
+    pub const fn normalize_quaternion(input: Quaternion) -> Self {
         let one_magnitude = input.inverse_magnitude();
         let quaternion = input.scale(one_magnitude);
 
@@ -43,7 +43,7 @@ impl UnitQuaternion {
     /// courtesy of [this](http://marc-b-reynolds.github.io/quaternions/2017/08/08/QuatRotMatrix.html).
     #[must_use]
     #[inline]
-    pub fn from_matrix(mat: Matrix<3, 3>) -> Self {
+    pub const fn from_matrix(mat: Matrix<3, 3>) -> Self {
         #[rustfmt::ignore]
         let [m00, m10, m20, m01, m11, m21, m02, m12, m22] = mat.col_major();
 

@@ -385,6 +385,7 @@ version = "0.1.0"
 dependencies = [
  "linear_algebra",
  "quaternion",
+ "utils",
 ]
 
 [[package]]
@@ -1584,6 +1585,7 @@ version = "0.1.0"
 dependencies = [
  "float_eq",
  "linear_algebra",
+ "utils",
 ]
 
 [[package]]

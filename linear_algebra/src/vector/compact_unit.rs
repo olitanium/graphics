@@ -23,6 +23,7 @@ where
     /// Returns None if the `Vector` is a zero-vector.
     #[must_use]
     #[inline]
+    #[expect(clippy::missing_const_for_fn, reason = "it cannot be const")]
     pub fn try_normalize(vec: Vector<N, VectorPreferredFloat>) -> Option<Self> {
         vec.try_normalize().map(Self::from_unit_vector)
     }

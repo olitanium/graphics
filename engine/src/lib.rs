@@ -17,6 +17,11 @@
 #![feature(trivial_bounds)]
 #![feature(const_option_ops)]
 #![feature(yeet_expr)]
+#![feature(unwrap_infallible)]
+#![feature(const_closures)]
+#![feature(const_try)]
+#![feature(const_bool)]
+#![feature(const_cmp)]
 
 extern crate alloc;
 

@@ -252,6 +252,7 @@ mod test {
             }
         }
         impl ExtendedVertex for TestVertex {
+            type FromIncompleteVertexError = !;
             type PreferredTransform<'a> = NoTransform;
 
             type const LEN: usize = 3;
@@ -262,8 +263,8 @@ mod test {
 
             fn from_incomplete_triangle(
                 triangle: [IncompleteVertex<{ Self::LEN }>; 3],
-            ) -> Option<[Self; 3]> {
-                Some(triangle.map(|x| Self(x.position)))
+            ) -> Result<[Self; 3], !> {
+                Ok(triangle.map(|x| Self(x.position)))
             }
         }
         impl CubicVertex for TestVertex {

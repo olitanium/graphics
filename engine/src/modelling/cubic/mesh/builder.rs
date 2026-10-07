@@ -95,12 +95,13 @@ impl<V: CubicVertex> Builder<V> {
             self.triangles
                 .into_iter()
                 .map(ExtendedVertex::from_incomplete_triangle)
-                .inspect(|opt_triangle| {
-                    if opt_triangle.is_none() {
-                        eprintln!("bad triangle");
+                .filter_map(|opt_triangle| match opt_triangle {
+                    Ok(val) => Some(val),
+                    Err(err) => {
+                        eprintln!("bad triangle: {err:?}");
+                        None
                     }
-                })
-                .flatten(),
+                }),
         );
 
         let vertex_array = vertex_array_builder.build();

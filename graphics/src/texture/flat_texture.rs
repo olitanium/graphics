@@ -48,10 +48,12 @@ impl Default for FlatTexture {
         const {
             Self {
                 id: TexId::new(0),
-                size: (
-                    TexDim::from_non_zero(NonZero::new(1).expect("one")),
-                    TexDim::from_non_zero(NonZero::new(1).expect("one")),
-                ),
+                size: const {
+                    (
+                        TexDim::from_non_zero(NonZero::new(1).expect("one")),
+                        TexDim::from_non_zero(NonZero::new(1).expect("one")),
+                    )
+                },
             }
         }
     }

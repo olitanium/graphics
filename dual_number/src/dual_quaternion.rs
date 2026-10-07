@@ -30,19 +30,19 @@ impl DualQuaternion {
     }
 
     #[must_use]
-    pub fn magnitude_sq(self) -> DualNumber<f32> {
+    pub const fn magnitude_sq(self) -> DualNumber<f32> {
         let magnitude = self * self.quaternion_conjugate();
 
-        debug_assert!(
-            magnitude.real.vector().is_zero(),
-            "{:?}",
-            magnitude.real.vector()
-        );
-        debug_assert!(
-            magnitude.dual.vector().is_zero(),
-            "{:?}",
-            magnitude.dual.vector()
-        );
+        // debug_assert!(
+        // magnitude.real.vector().is_zero(),
+        // "{:?}",
+        // magnitude.real.vector()
+        // );
+        // debug_assert!(
+        // magnitude.dual.vector().is_zero(),
+        // "{:?}",
+        // magnitude.dual.vector()
+        // );
 
         let real_scalar = magnitude.real.scalar();
         let dual_scalar = magnitude.dual.scalar();
@@ -81,7 +81,7 @@ impl DualQuaternion {
     }
 
     #[must_use]
-    pub fn normalize(self) -> UnitDualQuaternion {
+    pub const fn normalize(self) -> UnitDualQuaternion {
         UnitDualQuaternion::normalize_dual_quaternion(self)
     }
 

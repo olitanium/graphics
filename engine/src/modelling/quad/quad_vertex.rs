@@ -4,6 +4,7 @@ use geometry::NoTransform;
 use graphics::linear_algebra::Vector;
 use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
+use utils::error_boilerplate;
 
 use crate::modelling::ExtendedVertex;
 use crate::modelling::extended_vertex::IncompleteVertex;
@@ -30,20 +31,31 @@ impl Vertex for QuadVertex {
     }
 }
 
+#[derive(Debug)]
+pub enum FromIncompleteVertexError {
+    NoTangent(Box<[IncompleteVertex<2>; 3]>),
+}
+error_boilerplate!(FromIncompleteVertexError);
+
 impl ExtendedVertex for QuadVertex {
+    type FromIncompleteVertexError = FromIncompleteVertexError;
     // TODO: 2D transforms
     type PreferredTransform<'a> = NoTransform;
 
     type const LEN: usize = 2;
 
-    fn from_incomplete_triangle(triangle: [IncompleteVertex<2>; 3]) -> Option<[Self; 3]> {
-        triangle.try_map(
+    fn from_incomplete_triangle(
+        triangle: [IncompleteVertex<2>; 3],
+    ) -> Result<[Self; 3], Self::FromIncompleteVertexError> {
+        triangle.clone().try_map(
             |IncompleteVertex {
                  position, texture, ..
              }| {
-                Some(Self {
+                Ok(Self {
                     position,
-                    tex_coordinate: texture?,
+                    tex_coordinate: texture.ok_or_else(|| {
+                        FromIncompleteVertexError::NoTangent(Box::new(triangle.clone()))
+                    })?,
                 })
             },
         )

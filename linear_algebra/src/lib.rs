@@ -21,6 +21,7 @@
 #![feature(stmt_expr_attributes)]
 #![feature(maybe_uninit_uninit_array_transpose)]
 #![feature(iter_collect_into)]
+#![feature(const_bool)]
 
 mod matrix;
 mod vector;

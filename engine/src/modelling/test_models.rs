@@ -3,8 +3,8 @@ use core::iter;
 use std::sync::LazyLock;
 
 use array_vec::arrvec;
-use geometry::{Orientation, Pose, TransformBy as _};
-use graphics::linear_algebra::{UnitVector, Vector, unit_vector};
+use geometry::{Pose, TransformBy as _};
+use graphics::linear_algebra::{UnitVector, Vector, unit_vector, vector};
 use graphics::vertex_array::VertexArray;
 
 use crate::modelling::cubic::material::Material;
@@ -214,7 +214,7 @@ pub fn tail_with_bone(max_len: u8) -> impl Iterator<Item = [IncompleteVertex<3>;
             .map(|triangle| {
                 triangle.map(|index| {
                     let BoneVertexTexture{ bone, position, texture} = vertices_in_order[index];
-                    let weights = arrvec![(usize::from(bone), 1.0)];
+                    let weights = arrvec![(u32::from(bone), 1.0)];
                     IncompleteVertex::new(position).weights(weights).texture(texture)
                 })
             });
@@ -231,29 +231,30 @@ pub fn tail_animation(num_bones: u8) -> (Skeleton, SkeletonBoneIndex, SkeletalAn
         let mut animation = BoneAnimation::new();
         animation
             .push(
-                Pose::new_from_orientation_translation(
-                    Orientation::new_forward_up(
+                const {
+                    Pose::new_forward_up(
+                        vector![0.0, 0.0, 1.0],
                         unit_vector![0.25, 0.0, 1.0],
-                        // .try_normalize()
-                        // .expect("Vector literal not Zero"),
                         UnitVector::Y,
                     )
-                    .expect("literals not the same"),
-                    Vector::new([0.0, 0.0, 1.0]),
-                ),
+                    .expect("literals, all the same. Ideally would be const")
+                },
                 1.0,
             )
-            .unwrap();
+            .expect("not \"finished\" the animation yet so this will return `Some` ");
         animation
             .push(
-                Pose::new_from_orientation_translation(
-                    Orientation::new_forward_up(unit_vector![-0.25, 0.0, 1.0], UnitVector::Y)
-                        .expect("literals not the same"),
-                    Vector::new([0.0, 0.0, 1.0]),
-                ),
+                const {
+                    Pose::new_forward_up(
+                        vector![0.0, 0.0, 1.0],
+                        unit_vector![-0.25, 0.0, 1.0],
+                        UnitVector::Y,
+                    )
+                    .expect("literals, all the same. Ideally would be const")
+                },
                 1.0,
             )
-            .unwrap();
+            .expect("not \"finished\" the animation yet so this will return `Some` ");
         animation
     };
 
@@ -273,7 +274,9 @@ pub fn tail_animation(num_bones: u8) -> (Skeleton, SkeletonBoneIndex, SkeletalAn
             .expect("parent bone always exists");
 
         cube_pose = cube_pose.transform_by(cube_push);
-        current_bone = skeleton.push_bone(bone).unwrap();
+        current_bone = skeleton
+            .push_bone(bone)
+            .expect("parent bone should exist, as it is created above");
     }
 
     (skeleton.build(), current_bone, animation_1.build())

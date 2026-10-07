@@ -1,5 +1,11 @@
+#![feature(const_trait_impl)]
+#![feature(const_ops)]
+#![feature(const_destruct)]
+#![feature(const_clone)]
+
 use core::fmt::Debug;
 use core::ops::{Add, Mul, Neg, Sub};
+use std::marker::Destruct;
 
 mod dual_quaternion;
 pub use dual_quaternion::{DualQuaternion, Sclerp, UnitDualQuaternion};
@@ -30,11 +36,13 @@ impl<M, T: Add<M>> Add<DualNumber<M>> for DualNumber<T> {
     }
 }
 
-impl<M, T: Mul<M>> Mul<DualNumber<M>> for DualNumber<T>
+const impl<M, T> Mul<DualNumber<M>> for DualNumber<T>
 where
-    M: Clone,
-    T: Clone,
-    <T as Mul<M>>::Output: Add<Output = <T as Mul<M>>::Output>,
+    Self: [const] Destruct,
+    DualNumber<M>: [const] Destruct,
+    M: [const] Clone,
+    T: [const] Clone + [const] Mul<M>,
+    <T as Mul<M>>::Output: [const] Add<Output = <T as Mul<M>>::Output>,
 {
     type Output = DualNumber<<T as Mul<M>>::Output>;
 
@@ -46,9 +54,10 @@ where
     }
 }
 
-impl<T> Mul<f32> for DualNumber<T>
+const impl<T> Mul<f32> for DualNumber<T>
 where
-    T: Mul<f32>,
+    Self: [const] Destruct,
+    T: [const] Mul<f32>,
 {
     type Output = DualNumber<<T as Mul<f32>>::Output>;
 

@@ -1,3 +1,6 @@
+#![feature(const_ops)]
+#![feature(const_trait_impl)]
+
 extern crate alloc;
 mod state;
 use state::State;

@@ -4,6 +4,7 @@ use graphics::types::VertexAttrType;
 use graphics::vertex::Vertex;
 
 use crate::modelling::extended_vertex::{ExtendedVertex, IncompleteVertex};
+use crate::modelling::simple_vertex::FromIncompleteVertexError;
 use crate::modelling::{CubicVertex, SimpleVertex};
 
 #[derive(Debug, Clone, Copy)]
@@ -23,6 +24,7 @@ impl Vertex for SkyBoxVertex {
 }
 
 impl ExtendedVertex for SkyBoxVertex {
+    type FromIncompleteVertexError = FromIncompleteVertexError;
     type PreferredTransform<'a> = NoTransform;
 
     type const LEN: usize = 3;
@@ -31,7 +33,9 @@ impl ExtendedVertex for SkyBoxVertex {
         self.0.position()
     }
 
-    fn from_incomplete_triangle(triangle: [IncompleteVertex<3>; 3]) -> Option<[Self; 3]> {
+    fn from_incomplete_triangle(
+        triangle: [IncompleteVertex<3>; 3],
+    ) -> Result<[Self; 3], Self::FromIncompleteVertexError> {
         SimpleVertex::from_incomplete_triangle(triangle).map(|arr| arr.map(SkyBoxVertex))
     }
 }

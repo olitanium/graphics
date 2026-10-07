@@ -79,7 +79,7 @@ where
     V: ExtendedVertex,
     F: FnMut() -> ColourRGBA,
     D: FramebufferWithDepth<1, Tex = FlatTexture>,
-    Vector<{ V::LEN }>: Volume,
+    Vector<{ V::LEN }>: Volume + ExtendedVertex<FromIncompleteVertexError = !>,
     T: Transform<Vector<{ V::LEN }>> + Clone,
     BoundingBoxElement<V, Bt>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
 {

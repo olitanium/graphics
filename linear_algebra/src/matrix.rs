@@ -139,10 +139,16 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
 
     #[inline]
     #[must_use]
-    pub fn col_major(&self) -> [VectorPreferredFloat; C * R] {
-        let mut x = ArrayVec::new();
-        self.col_flattened().iter().copied().collect_into(&mut x);
-        x.into_array_with(|| 0.0)
+    pub const fn col_major(&self) -> [VectorPreferredFloat; C * R] {
+        // let mut x = ArrayVec::new();
+        // self.col_flattened().iter().copied().collect_into(&mut x);
+        // x.into_array_with(|| 0.0)
+
+        *self
+            .0
+            .as_flattened()
+            .as_array()
+            .expect("should be enough elements")
     }
 
     pub const fn col(&self, index: usize) -> Option<Vector<R, VectorPreferredFloat>> {

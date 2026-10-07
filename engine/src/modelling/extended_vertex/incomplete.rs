@@ -10,7 +10,7 @@ pub struct IncompleteVertex<const N: usize> {
     pub texture: Option<Vector<2>>,
     pub normal: Option<UnitVector<3>>,
     pub tangent: Option<UnitVector<3>>,
-    pub weights: Option<ArrayVec<(usize, f32), 4>>,
+    pub weights: Option<ArrayVec<(u32, f32), 4>>,
 }
 
 impl TransformBy<Pose> for IncompleteVertex<3> {
@@ -38,7 +38,7 @@ impl<const N: usize> IncompleteVertex<N> {
 
     builder!(texture, opt_texture: Option<Vector<2>>);
 
-    builder!(weights, opt_weights: Option<ArrayVec<(usize, f32), 4>>);
+    builder!(weights, opt_weights: Option<ArrayVec<(u32, f32), 4>>);
 
     pub const fn new(position: Vector<N>) -> Self {
         Self {

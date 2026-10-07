@@ -251,7 +251,7 @@ error_boilerplate!(DrawRecursiveError);
 impl<V, T> BoundingBoxElement<V, T>
 where
     V: ExtendedVertex,
-    Vector<{ V::LEN }>: Volume,
+    Vector<{ V::LEN }>: Volume + ExtendedVertex<FromIncompleteVertexError = !>,
 {
     pub fn draw_recursive<D, P, const OUT: usize, F>(
         &self,
@@ -300,7 +300,7 @@ where
 
             let (lower_bounds, upper_bounds) = self.transform_by(pose);
             let positions_triangles = Volume::volume(lower_bounds, upper_bounds)
-                .map(|triangle| Vector::<{ V::LEN }>::from_incomplete_triangle(triangle).unwrap());
+                .map(|triangle| Vector::<{ V::LEN }>::from_incomplete_triangle(triangle).into_ok());
             let mut vertex_array_builder = VertexArray::builder();
             vertex_array_builder.extend_triangles(positions_triangles);
             let vertex_array = vertex_array_builder.build();

@@ -48,7 +48,7 @@ macro_rules! tofloat {
 macro_rules! make_sf {
     ($name:ident, $other:ty, $inner:ty, $unsigned:ty) => {
         /// A signed unit floating point with 8 bits.
-        #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
         #[repr(transparent)]
         pub struct $name {
             /// The inner integer storing the value.
@@ -127,6 +127,12 @@ macro_rules! make_sf {
             fn sub(self, rhs: Self) -> Self::Output {
                 let inner = self.inner.saturating_sub(rhs.inner);
                 Self { inner }
+            }
+        }
+
+        const impl Default for $name {
+            fn default() -> Self {
+                Self { inner: 0 }
             }
         }
     };
