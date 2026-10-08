@@ -71,8 +71,8 @@ pub fn origin_unit_cube() -> impl Iterator<Item = [IncompleteVertex<3>; 3]> {
 }
 
 pub fn origin_cube(side_length: f32) -> impl Iterator<Item = [IncompleteVertex<3>; 3]> {
-    let upper_bound = Vector::new([side_length / 2.0; 3]);
-    let lower_bound = Vector::new([-side_length / 2.0; 3]);
+    let upper_bound = vector![side_length / 2.0; 3];
+    let lower_bound = vector![-side_length / 2.0; 3];
 
     cube_triangles(lower_bound, upper_bound)
 }
@@ -92,9 +92,9 @@ pub fn vertex_array_quad(
 
 pub fn vertex_array_screen_quad() -> VertexArray<QuadVertex> {
     let vertices = QuadVertex::from_incomplete_triangle([
-        IncompleteVertex::new(Vector::new([-1.0, -1.0])).texture(Vector::ZERO),
-        IncompleteVertex::new(Vector::new([3.0, -1.0])).texture(Vector::new([2.0, 0.0])),
-        IncompleteVertex::new(Vector::new([-1.0, 3.0])).texture(Vector::new([0.0, 2.0])),
+        IncompleteVertex::new(vector![-1.0, -1.0]).texture(Vector::ZERO),
+        IncompleteVertex::new(vector![3.0, -1.0]).texture(vector![2.0, 0.0]),
+        IncompleteVertex::new(vector![-1.0, 3.0]).texture(vector![0.0, 2.0]),
     ])
     .expect("I have given enough to make a QuadVertex");
 
@@ -126,10 +126,7 @@ pub fn quad_triangles(
 }
 
 pub fn screen_quad() -> &'static VertexArray<QuadVertex> {
-    static SCREEN_QUAD: LazyLock<VertexArray<QuadVertex>> =
-        // LazyLock::new(|| vertex_array_quad(Vector::from([-1.0, -1.0]), Vector::new([1.0,
-        // 1.0])));
-        LazyLock::new(vertex_array_screen_quad);
+    static SCREEN_QUAD: LazyLock<VertexArray<QuadVertex>> = LazyLock::new(vertex_array_screen_quad);
 
     &SCREEN_QUAD
 }
@@ -138,10 +135,10 @@ pub fn screen_quad() -> &'static VertexArray<QuadVertex> {
 pub fn tail_with_bone(max_len: u8) -> impl Iterator<Item = [IncompleteVertex<3>; 3]> {
     const fn make_long_slice(z: f32) -> [Vector<3>; 4] {
         [
-            Vector::new([-0.5, -0.5, z]),
-            Vector::new([0.5, -0.5, z]),
-            Vector::new([0.5, 0.5, z]),
-            Vector::new([-0.5, 0.5, z]),
+            vector![-0.5, -0.5, z],
+            vector![0.5, -0.5, z],
+            vector![0.5, 0.5, z],
+            vector![-0.5, 0.5, z],
         ]
     }
 
@@ -171,37 +168,37 @@ pub fn tail_with_bone(max_len: u8) -> impl Iterator<Item = [IncompleteVertex<3>;
                     BoneVertexTexture {
                         bone: bone1,
                         position: slice11,
-                        texture: Vector::new([fbone1 / max_len, 1.0]),
+                        texture: vector![fbone1 / max_len, 1.0],
                     },
                     BoneVertexTexture {
                         bone: bone1,
                         position: slice12,
-                        texture: Vector::new([fbone1 / max_len, 0.0]),
+                        texture: vector![fbone1 / max_len, 0.0],
                     },
                     BoneVertexTexture {
                         bone: bone1,
                         position: slice13,
-                        texture: Vector::new([fbone1 / max_len, 1.0]),
+                        texture: vector![fbone1 / max_len, 1.0],
                     },
                     BoneVertexTexture {
                         bone: bone2,
                         position: slice20,
-                        texture: Vector::new([fbone2 / max_len, 0.0]),
+                        texture: vector![fbone2 / max_len, 0.0],
                     },
                     BoneVertexTexture {
                         bone: bone2,
                         position: slice21,
-                        texture: Vector::new([fbone2 / max_len, 1.0]),
+                        texture: vector![fbone2 / max_len, 1.0],
                     },
                     BoneVertexTexture {
                         bone: bone2,
                         position: slice22,
-                        texture: Vector::new([fbone2 / max_len, 0.0]),
+                        texture: vector![fbone2 / max_len, 0.0],
                     },
                     BoneVertexTexture {
                         bone: bone2,
                         position: slice23,
-                        texture: Vector::new([fbone2 / max_len, 1.0]),
+                        texture: vector![fbone2 / max_len, 1.0],
                     },
                 ];
                 #[rustfmt::skip]
@@ -227,50 +224,47 @@ pub fn tail_with_bone(max_len: u8) -> impl Iterator<Item = [IncompleteVertex<3>;
 
 // num_bones does not include the root bone.
 pub fn tail_animation(num_bones: u8) -> (Skeleton, SkeletonBoneIndex, SkeletalAnimation) {
-    let animation1 = {
-        let mut animation = BoneAnimation::new();
-        animation
-            .push(
-                const {
-                    Pose::new_forward_up(
-                        vector![0.0, 0.0, 1.0],
-                        unit_vector![0.25, 0.0, 1.0],
-                        UnitVector::Y,
-                    )
-                    .expect("literals, all the same. Ideally would be const")
-                },
-                1.0,
-            )
-            .expect("not \"finished\" the animation yet so this will return `Some` ");
-        animation
-            .push(
-                const {
-                    Pose::new_forward_up(
-                        vector![0.0, 0.0, 1.0],
-                        unit_vector![-0.25, 0.0, 1.0],
-                        UnitVector::Y,
-                    )
-                    .expect("literals, all the same. Ideally would be const")
-                },
-                1.0,
-            )
-            .expect("not \"finished\" the animation yet so this will return `Some` ");
-        animation
-    };
+    let mut tail_wag = BoneAnimation::new();
+    tail_wag
+        .push(
+            const {
+                Pose::new_forward_up(
+                    vector![0.0, 0.0, 1.0],
+                    unit_vector![0.25, 0.0, 1.0],
+                    UnitVector::Y,
+                )
+                .expect("literals, all the same. Ideally would be const")
+            },
+            1.0,
+        )
+        .expect("not \"finished\" the animation yet so this will return `Some` ");
+    tail_wag
+        .push(
+            const {
+                Pose::new_forward_up(
+                    vector![0.0, 0.0, 1.0],
+                    unit_vector![-0.25, 0.0, 1.0],
+                    UnitVector::Y,
+                )
+                .expect("literals, all the same. Ideally would be const")
+            },
+            1.0,
+        )
+        .expect("not \"finished\" the animation yet so this will return `Some` ");
 
     let mut skeleton = Skeleton::builder();
-    let mut animation_1 = SkeletalAnimation::builder();
+    let mut animation = SkeletalAnimation::builder();
 
     let mut current_bone = SkeletonBoneIndex::SKELETON_ROOT_BONE;
 
-    let cube_push = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.0]));
+    let cube_push = Pose::new_from_translation(vector![0.0, 0.0, 1.0]);
     let mut cube_pose = Pose::IDENTITY;
 
     for _ in 0..num_bones {
         let bone = Bone::builder(&current_bone).bind_pose_relative_to_parent(cube_push);
 
-        animation_1
-            .push_animation(animation1.clone(), &current_bone)
+        animation
+            .push_animation(tail_wag.clone(), &current_bone)
             .expect("parent bone always exists");
 
         cube_pose = cube_pose.transform_by(cube_push);
@@ -279,7 +273,7 @@ pub fn tail_animation(num_bones: u8) -> (Skeleton, SkeletonBoneIndex, SkeletalAn
             .expect("parent bone should exist, as it is created above");
     }
 
-    (skeleton.build(), current_bone, animation_1.build())
+    (skeleton.build(), current_bone, animation.build())
 }
 
 pub fn tail_skeleton_cubic(max_len: u8) -> (SkinningCubic, SkeletonBoneIndex, SkeletalAnimation) {

@@ -5,7 +5,7 @@ mod builder;
 pub use builder::Builder as MeshBuilder;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
-use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
+use graphics::vertex_array::{self, VertexArray};
 use graphics::{ActiveShaderProgram, Model};
 use utils::error_boilerplate;
 
@@ -34,7 +34,7 @@ impl<V: CubicVertex> Mesh<V> {
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum DrawError {
-    VertexArrayDraw(VertexArrayDrawError),
+    VertexArrayDraw(vertex_array::DrawError),
 }
 error_boilerplate!(DrawError);
 

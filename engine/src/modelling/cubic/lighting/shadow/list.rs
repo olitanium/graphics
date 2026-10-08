@@ -14,7 +14,7 @@ use graphics::texture::Texture;
 use utils::error_boilerplate;
 
 use super::{ShadowFarLight, ShadowPointLight, ShadowSpotLight};
-use crate::modelling::cubic::lighting::shadow::ShadowBindError;
+use crate::modelling::cubic::lighting::shadow::BindError;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
 use crate::modelling::cubic::{CalculatedAnimation, skeleton_cubic};
 use crate::modelling::{SkeletonCubic, VertexHasTangent};
@@ -94,7 +94,7 @@ impl<const MAX: usize> ShadowListLights<'_, MAX> {
         &'c self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'c, M, L, T, N>,
         target: Vector<3>,
-    ) -> Result<(), ShadowBindError>
+    ) -> Result<(), BindError>
     where
         L: ShadowLightCompatible<MAX>,
         T: Texture,

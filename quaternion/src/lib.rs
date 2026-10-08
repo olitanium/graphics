@@ -8,7 +8,7 @@
 use core::ops;
 
 use float_eq::NearlyEq;
-use linear_algebra::{UnitVector, Vector};
+use linear_algebra::{UnitVector, Vector, vector};
 pub use unit_quaternion::UnitQuaternion;
 
 mod slerp;
@@ -42,7 +42,7 @@ impl Quaternion {
     pub const fn new(real: f32, i: f32, j: f32, k: f32) -> Self {
         Self {
             real,
-            vector: Vector::new([i, j, k]),
+            vector: vector![i, j, k],
         }
     }
 

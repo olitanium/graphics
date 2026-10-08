@@ -38,7 +38,6 @@ impl State {
                     "assets/skybox/back.jpg",
                 )
                 .unwrap()
-                //.grayscale(0.0)
                 .build(),
         );
 
@@ -82,11 +81,11 @@ impl State {
         const SMALL_CUBE_SIDE_LENGTH: f32 = 0.3;
         let small_cube = SimpleEntity::from_simple_cubic(
             SimpleCubic::cube(SMALL_CUBE_SIDE_LENGTH, Rc::new(Material::white()))
-                .apply_transformation(Pose::new_from_translation(Vector::new([
+                .apply_transformation(Pose::new_from_translation(vector![
                     0.0,
                     SMALL_CUBE_SIDE_LENGTH * 0.5,
                     0.0,
-                ])))
+                ]))
                 .build(),
             0,
             Mass::new_inverse(0.0),
@@ -133,8 +132,6 @@ impl State {
         let bloom = Bloom::new(hdr_fb.size());
 
         Self {
-            toggle_b: true,
-
             game_camera,
             exposure,
 
@@ -150,7 +147,6 @@ impl State {
 
             hdr_fb,
             toggle_g: true,
-            toggle_h: true,
             bloom,
         }
     }
@@ -166,7 +162,7 @@ pub fn make_model(which_model: &str) -> Result<SimpleCubic, StateError> {
         )
         .map_err(StateError::Import)?
         .cull_face(CullFace::BackFace)
-        .apply_transformation(Pose::new_from_translation(Vector::new([0.0, -133.0, 43.0])))
+        .apply_transformation(Pose::new_from_translation(vector![0.0, -133.0, 43.0]))
         .scale(0.006)
         .build(),
         "backpack" => SimpleCubic::import(

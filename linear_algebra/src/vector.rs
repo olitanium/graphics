@@ -46,7 +46,7 @@ where
     // Would love to do as a #[derive()]
     #[inline]
     fn default() -> Self {
-        Vector::new([const { T::default() }; N])
+        Self::new([const { T::default() }; N])
     }
 }
 
@@ -78,7 +78,7 @@ impl<const N: usize> Ord for Vector<N, VectorPreferredFloat> {
 }
 
 /// Convenience macro to write new vectors, rather than having to write
-/// `Vector::new([...])`.
+/// `vector![...]`.
 #[macro_export]
 macro_rules! vector {
     ($($num:expr),+ $(,)?) => {
@@ -448,7 +448,7 @@ impl Vector<3, VectorPreferredFloat> {
     #[must_use]
     pub const fn homogeneous(self) -> Vector<4, VectorPreferredFloat> {
         let [this0, this1, this2] = self.into_inner();
-        Vector::new([this0, this1, this2, 1.0])
+        vector![this0, this1, this2, 1.0]
     }
 }
 

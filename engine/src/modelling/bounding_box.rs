@@ -12,12 +12,12 @@ use graphics::vertex_array::VertexArray;
 use graphics::{ActiveShaderProgram, Model, ShaderProgram};
 
 mod element;
-pub use element::BoundingBoxElement;
+pub use element::Element;
 use element::{ChildrenOrMeta, DrawRecursiveError, Meta};
 use graphics::vertex::Vertex;
 
 mod group;
-pub use group::Group as BoundingBoxGroup;
+pub use group::Group;
 
 mod skeleton_bb;
 pub use skeleton_bb::{
@@ -37,7 +37,7 @@ use crate::modelling::{CubicVertex, SimpleVertex, SkeletonCubic, Volume};
 #[derive(Debug, Clone)]
 pub struct BoundingBox<V: ExtendedVertex, T> {
     triangles: Vec<[V; 3]>,
-    inner: Vec<BoundingBoxElement<V, T>>,
+    inner: Vec<Element<V, T>>,
 }
 
 impl<V: ExtendedVertex, T> BoundingBox<V, T> {
@@ -55,7 +55,7 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
             triangle_len: triangles_len,
             data: RefCell::new(meta),
         });
-        let elem = BoundingBoxElement {
+        let elem = Element {
             lower_bound,
             upper_bound,
             children_or_meta,
@@ -67,11 +67,11 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
         }
     }
 
-    fn get(&self, index: usize) -> Option<&BoundingBoxElement<V, T>> {
+    fn get(&self, index: usize) -> Option<&Element<V, T>> {
         self.inner.get(index)
     }
 
-    fn root_element(&self) -> &BoundingBoxElement<V, T> {
+    fn root_element(&self) -> &Element<V, T> {
         self.inner
             .last()
             .expect("guaranteed at least one element, or the BB create function would return None")
@@ -116,7 +116,7 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
             .collect();
 
         let mut accumulator = Vec::new();
-        BoundingBoxElement::new_from_many_inner(
+        Element::new_from_many_inner(
             &mut accumulator,
             &mut triangles_with_mid,
             0,
@@ -179,7 +179,7 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBox<V, T> {
         P2: Transform<Vector<3>> + Clone,
     {
         let mut output = Vec::new();
-        BoundingBoxElement::overlaps_bounding_box_and_children(
+        Element::overlaps_bounding_box_and_children(
             lhs.root_element(),
             lhs,
             lhs_pose,
@@ -213,8 +213,8 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBox<V, T> {
 
 impl<V: ExtendedVertex, T> BoundingBox<V, T>
 where
-    BoundingBoxElement<V, T>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
-    Vector<{ <BoundingBoxElement<V, T> as BoundingBoxShaderProgram>::DIMS }>: Vertex,
+    Element<V, T>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
+    Vector<{ <Element<V, T> as BoundingBoxShaderProgram>::DIMS }>: Vertex,
     Vector<{ V::LEN }>: Volume + ExtendedVertex<FromIncompleteVertexError = !>,
 {
     pub(crate) fn draw<P, D, F>(
@@ -333,7 +333,7 @@ where
     -> &'static ShaderProgram<VertexArray<Vector<{ Self::DIMS }>>, (), 1, FlatTexture>;
 }
 
-impl<V: ExtendedVertex<LEN = 3>, T: 'static> BoundingBoxShaderProgram for BoundingBoxElement<V, T> {
+impl<V: ExtendedVertex<LEN = 3>, T: 'static> BoundingBoxShaderProgram for Element<V, T> {
     type const DIMS: usize = 3;
 
     fn shader_program() -> &'static ShaderProgram<VertexArray<Vector<3>>, (), 1, FlatTexture> {
@@ -354,18 +354,18 @@ impl<V: ExtendedVertex<LEN = 3>, T: 'static> BoundingBoxShaderProgram for Boundi
 
 #[cfg(test)]
 mod tests {
-    use graphics::linear_algebra::Vector;
+    use graphics::linear_algebra::{Vector, vector};
 
-    use crate::modelling::bounding_box::ChildrenOrMeta;
+    use crate::modelling::ExtendedVertex;
     use crate::modelling::bounding_box::element::Meta;
-    use crate::modelling::{BoundingBoxElement, ExtendedVertex};
+    use crate::modelling::bounding_box::{ChildrenOrMeta, Element};
 
-    fn default<V, T>() -> BoundingBoxElement<V, T>
+    fn default<V, T>() -> Element<V, T>
     where
         V: ExtendedVertex,
         T: Default,
     {
-        BoundingBoxElement {
+        Element {
             lower_bound: -Vector::X,
             upper_bound: Vector::X,
             children_or_meta: ChildrenOrMeta::Meta(Meta::default()),
@@ -379,21 +379,21 @@ mod tests {
 
         let coords = [
             Vector::ZERO,
-            Vector::new([0.0, 1.0]),
-            Vector::new([1.0, 1.0]),
-            Vector::new([1.0, 0.0]),
+            vector![0.0, 1.0],
+            vector![1.0, 1.0],
+            vector![1.0, 0.0],
         ];
 
         let triangles = [[0, 1, 2], [0, 2, 3]];
 
         let bound = BoundingBox::new_from_vec_indexes(&coords, &triangles, 0, |_| ()).unwrap();
 
-        let good_point = Vector::new([0.5, 0.5]);
-        let good_point2 = Vector::new([1.0, 0.5]);
-        let good_point3 = Vector::new([1.0, 1.0]);
-        let bad_point = Vector::new([2.0, 0.0]);
-        let bad_point2 = Vector::new([2.0, 2.0]);
-        let bad_point3 = Vector::new([-2.0, -2.0]);
+        let good_point = vector![0.5, 0.5];
+        let good_point2 = vector![1.0, 0.5];
+        let good_point3 = vector![1.0, 1.0];
+        let bad_point = vector![2.0, 0.0];
+        let bad_point2 = vector![2.0, 2.0];
+        let bad_point3 = vector![-2.0, -2.0];
 
         assert!(bound.encloses_point(good_point));
         assert!(bound.encloses_point(good_point2));
@@ -408,17 +408,17 @@ mod tests {
         use geometry::NoTransform;
         use graphics::linear_algebra::Vector;
 
-        use crate::modelling::bounding_box::BoundingBoxElement;
+        use super::Element;
 
-        let bounding_box = BoundingBoxElement::<Vector<2>, ()> {
-            upper_bound: Vector::new([1.0, 1.0]),
-            lower_bound: Vector::new([-1.0, -1.0]),
+        let bounding_box = Element::<Vector<2>, ()> {
+            upper_bound: vector![1.0, 1.0],
+            lower_bound: vector![-1.0, -1.0],
             ..default::<Vector<2>, _>()
         };
 
-        let other_box = BoundingBoxElement::<Vector<2>, ()> {
-            upper_bound: Vector::new([2.0, 0.5]),
-            lower_bound: Vector::new([-2.0, -0.5]),
+        let other_box = Element::<Vector<2>, ()> {
+            upper_bound: vector![2.0, 0.5],
+            lower_bound: vector![-2.0, -0.5],
             ..default::<Vector<2>, _>()
         };
 

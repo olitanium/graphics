@@ -67,19 +67,22 @@ eprintln = "allow"
 print_stderr = "allow"
 use_debug = "allow"
 too_many_arguments = "allow"
+# rustfmt fights this lint
+arbitrary_source_item_ordering = "allow"
+shadow_same = "allow"
+shadow_unrelated = "allow"
+wildcard_enum_match_arm = "allow"
 
 # not sure
 todo = "allow"
 unimplemented = "allow"
+unreachable = "allow"
+
+
 items_after_statements = "allow"
 multiple_inherent_impl = "allow"
-shadow_same = "allow"
-shadow_unrelated = "allow"
 module_name_repetitions = "allow"
-wildcard_enum_match_arm = "allow"
-similar_names = "allow"
 same_name_method = "allow"
-unreachable = "allow"
 too_many_lines = "allow"
 
 # temporary
@@ -87,7 +90,7 @@ too_many_lines = "allow"
 missing_inline_in_public_items = "allow"
 missing_docs_in_private_items = "allow"
 missing_errors_doc = "allow"
-struct_excessive_bools = "allow"
+# struct_excessive_bools = "allow"
 type_complexity = "allow"
 missing_panics_doc = "allow"
 cast_possible_wrap = "allow"

@@ -80,7 +80,7 @@ impl State {
 
         let bear = make_model("bear").unwrap();
         let mut bear = SimpleEntity::from_simple_cubic(bear, 20, Mass::new_inverse(1.0), |_| ());
-        bear.physics.pose = Pose::new_from_translation(Vector::new([0.0, 0.0, 4.5]));
+        bear.physics.pose = Pose::new_from_translation(vector![0.0, 0.0, 4.5]);
 
         let bear = Bear { inner: bear };
 
@@ -93,7 +93,7 @@ impl State {
 
         let bounding_box_level = 0;
 
-        const START_LOC: Vector<3> = Vector::new([-3.0, 0.0, 0.0]);
+        const START_LOC: Vector<3> = vector![-3.0, 0.0, 0.0];
 
         let camera = CameraBuilder::new()
             .pose(ManualPoseFixedUp::new_from_to(START_LOC, Vector::ZERO, UnitVector::Y).unwrap())
@@ -124,7 +124,7 @@ impl State {
         // let sun_colour = ColourRGB::new([1.0, 1.0, 1.0]);
         // let far_light = ShadowFarLight::new(
         // FarLight {
-        // direction: Vector::new([0.0, -0.99, 0.001]).normalize(),
+        // direction: vector![0.0, -0.99, 0.001].normalize(),
         // ambient: sun_colour.map(|x| x * 0.1),
         // diffuse: sun_colour.map(|x| x * 0.5),
         // specular: sun_colour.map(|x| x * 1.0),
@@ -135,7 +135,7 @@ impl State {
         // let sun2_colour = ColourRGB::new([1.0, 1.0, 1.0]);
         // let far_light2 = ShadowFarLight::new(
         // FarLight {
-        // direction: Vector::new([1.0, 0.0, 0.0]).normalize(),
+        // direction: vector![1.0, 0.0, 0.0].normalize(),
         // ambient: sun2_colour.map(|x| x * 0.0),
         // diffuse: sun2_colour.map(|x| x * 0.5),
         // specular: sun2_colour.map(|x| x * 1.0),
@@ -183,7 +183,7 @@ impl State {
         let mut aggregate_tail = AggregateEntity::new(simpletail.clone(), 1, |_| ());
         let offset = Pose::new_from_orientation_translation(
             Orientation::new_forward_up(UnitVector::Y, -UnitVector::Z).unwrap(),
-            Vector::new([0.0, 0.5, 0.5]),
+            vector![0.0, 0.5, 0.5],
         );
         let _ = aggregate_tail
             .push_model(
@@ -244,9 +244,9 @@ pub fn make_model(which_model: &str) -> Result<SimpleCubic, StateError> {
         .unwrap()
         .cull_face(CullFace::BackFace)
         .scale(0.01)
-        .apply_transformation(Pose::new_from_translation(Vector::new([
+        .apply_transformation(Pose::new_from_translation(vector![
             0.0, -1.2773916, 0.42744067,
-        ])))
+        ]))
         .build(),
         "backpack" => SimpleCubic::import(
             "assets/backpack/backpack.obj",
@@ -285,7 +285,7 @@ pub fn make_model(which_model: &str) -> Result<SimpleCubic, StateError> {
         //
         // let mut builder = SimpleCubic::builder();
         // const LENGTH_TAIL: usize = 10;
-        // let cube_push = Pose::new_from_translation(Vector::new([0.0, 0.0, 1.0]));
+        // let cube_push = Pose::new_from_translation(vector![0.0, 0.0, 1.0]);
         // let mut cube_pose = Pose::IDENTITY;
         //
         // builder.push_cube(cube_pose, material, 1.0, SkeletonBoneIndex::SKELETON_ROOT_BONE);

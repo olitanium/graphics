@@ -73,22 +73,22 @@ impl ExtendedVertex for SimpleVertex {
     fn from_incomplete_triangle(
         triangle: [IncompleteVertex<3>; 3],
     ) -> Result<[Self; 3], Self::FromIncompleteVertexError> {
-        let [trix, triy, triz] = triangle.each_ref();
+        let [first, second, third] = triangle.each_ref();
 
         let new_normal = || {
-            let ab = triy.position - trix.position;
-            let ac = triz.position - trix.position;
+            let ab = second.position - first.position;
+            let ac = third.position - first.position;
             let out = ab.cross(ac).try_normalize();
             out.ok_or_else(|| FromIncompleteVertexError::Normal(Box::new(triangle.clone())))
         };
 
         let new_tangent = || {
-            let ab = triy.position - trix.position;
-            let ac = triz.position - trix.position;
-            let z1 = try { (triy.texture? - trix.texture?).y() }.ok_or_else(|| {
+            let ab = second.position - first.position;
+            let ac = third.position - first.position;
+            let z1 = try { (second.texture? - first.texture?).y() }.ok_or_else(|| {
                 FromIncompleteVertexError::TextureCoords(Box::new(triangle.clone()))
             })?;
-            let g1 = try { (triz.texture? - trix.texture?).y() }.ok_or_else(|| {
+            let g1 = try { (third.texture? - first.texture?).y() }.ok_or_else(|| {
                 FromIncompleteVertexError::TextureCoords(Box::new(triangle.clone()))
             })?;
 

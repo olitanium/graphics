@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use geometry::{Pose, Transform as _, TransformBy as _};
-use graphics::linear_algebra::{Matrix, UnitVector, Vector};
+use graphics::linear_algebra::{Matrix, UnitVector, Vector, vector};
 use graphics::texture::{FlatTexture, Image, NewImageError, TextureHasBuilder as _};
 use graphics::types::ElementArrayElem;
 use russimp::Matrix4x4;
@@ -131,7 +131,7 @@ where
                 let positions: Vec<Vector<3>> = mesh
                     .vertices
                     .iter()
-                    .map(|vec3d| Vector::new([vec3d.x, vec3d.y, vec3d.z]))
+                    .map(|vec3d| vector![vec3d.x, vec3d.y, vec3d.z])
                     .collect();
 
                 let textures: Vec<Vector<2>> = mesh
@@ -141,14 +141,14 @@ where
                     .as_ref()
                     .ok_or_else(|| ImportError::NoTexCoords { dir: dir.into() })?
                     .iter()
-                    .map(|vec3d| Vector::new([vec3d.x, vec3d.y]))
+                    .map(|vec3d| vector![vec3d.x, vec3d.y])
                     .collect();
 
                 let (opt_normal, opt_tangent) = if load_tangent_space {
                     let normals: Vec<Option<UnitVector<3>>> = mesh
                         .normals
                         .iter()
-                        .map(|vec3d| Vector::new([vec3d.x, vec3d.y, vec3d.z]).try_normalize())
+                        .map(|vec3d| vector![vec3d.x, vec3d.y, vec3d.z].try_normalize())
                         .collect();
 
                     let opt_normal = (!normals.is_empty()).then_some(normals);
@@ -156,7 +156,7 @@ where
                     let tangent: Vec<Option<UnitVector<3>>> = mesh
                         .tangents
                         .iter()
-                        .map(|vec3d| Vector::new([vec3d.x, vec3d.y, vec3d.z]).try_normalize())
+                        .map(|vec3d| vector![vec3d.x, vec3d.y, vec3d.z].try_normalize())
                         .collect();
 
                     let opt_tangent = (!tangent.is_empty()).then_some(tangent);

@@ -5,7 +5,7 @@ use engine::entity::Mass;
 use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals;
 use engine::geometry::Pose;
-use engine::linear_algebra::{UnitVector, Vector};
+use engine::linear_algebra::{UnitVector, Vector, vector};
 use engine::modelling::cubic::lighting::shadow::{ShadowPointLight, ShadowSpotLight};
 use engine::modelling::cubic::lighting::simple::{PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
@@ -47,7 +47,7 @@ impl State {
 
         let bear = make_model("bear").unwrap();
         let mut bear = SimpleEntity::from_simple_cubic(bear, 20, Mass::new_inverse(1.0), |_| ());
-        bear.physics.pose = Pose::new_from_translation(Vector::new([0.0, 0.0, 4.5]));
+        bear.physics.pose = Pose::new_from_translation(vector![0.0, 0.0, 4.5]);
 
         let bear = Bear { inner: bear };
 
@@ -60,7 +60,7 @@ impl State {
 
         let bounding_box_level = 0;
 
-        const START_LOC: Vector<3> = Vector::new([-3.0, 0.0, 0.0]);
+        const START_LOC: Vector<3> = vector![-3.0, 0.0, 0.0];
 
         let camera = CameraBuilder::new()
             .pose(ManualPoseFixedUp::new_from_to(START_LOC, Vector::ZERO, UnitVector::Y).unwrap())
@@ -150,9 +150,9 @@ pub fn make_model(which_model: &str) -> Result<SimpleCubic, StateError> {
         .unwrap()
         .cull_face(CullFace::BackFace)
         .scale(0.01)
-        .apply_transformation(Pose::new_from_translation(Vector::new([
+        .apply_transformation(Pose::new_from_translation(vector![
             0.0, -1.2773916, 0.42744067,
-        ])))
+        ]))
         .build(),
         "backpack" => SimpleCubic::import(
             "assets/backpack/backpack.obj",

@@ -2,13 +2,13 @@ use alloc::ffi::CString;
 use alloc::rc::Rc;
 use core::array;
 
-use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::linear_algebra::Vector;
 use graphics::shader_program::{ActiveShaderProgram, CullFace};
 use graphics::texture::{FlatTexture, Texture};
-use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
+use graphics::vertex_array::VertexArray;
+use graphics::{Model, vertex_array};
 use utils::{RefOwned, error_boilerplate};
 
 use super::{Builder, QuadVertex};
@@ -61,7 +61,7 @@ impl<const N: usize> Quad<N> {
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum DrawError {
-    VertexArrayDraw(VertexArrayDrawError),
+    VertexArrayDraw(vertex_array::DrawError),
 }
 error_boilerplate!(DrawError);
 

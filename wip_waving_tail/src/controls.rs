@@ -133,7 +133,7 @@ impl State {
                 'Q' => string.clear(),
                 'l' => {
                     self.line.get_mut().push(TestLineVertex {
-                        position: Vector::new([self.angle.cos(), 0.0, self.angle.sin()]),
+                        position: vector![self.angle.cos(), 0.0, self.angle.sin()],
                         colour: ColourRGB::new([self.angle.cos(), 0.0, self.angle.sin()]),
                     });
                     self.angle += 0.1;
@@ -165,7 +165,7 @@ impl State {
                             .entity
                             .push(
                                 SkeletonEntity::from(bear_model),
-                                Pose::new_from_translation(Vector::new([0.0, 0.0, 0.5])),
+                                Pose::new_from_translation(vector![0.0, 0.0, 0.5]),
                                 &self.grappling_hook.chain,
                                 &self.grappling_hook.chain_end_bone,
                             )

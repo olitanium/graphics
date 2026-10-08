@@ -149,7 +149,7 @@ mod test {
                     for s in -10..10 {
                         for t in -10..10_i8 {
                             let input =
-                                //Vector::new([x as f32, y as f32, z as f32, s as f32, t as f32]);
+                                //vector![x as f32, y as f32, z as f32, s as f32, t as f32];
                                 Vector::new([x,y,z,s,t].map(VectorPreferredFloat::from));
 
                             let Some(normal_usual) = input.try_normalize() else {

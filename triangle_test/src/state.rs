@@ -7,7 +7,7 @@ use std::collections::HashSet;
 
 use engine::entity::Mass;
 use engine::geometry::{Orientation, Pose};
-use engine::linear_algebra::{UnitVector, Vector};
+use engine::linear_algebra::{UnitVector, Vector, vector};
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::cubic::material::Material;
 use engine::modelling::cubic::{
@@ -59,7 +59,7 @@ impl ApiState for State {
             .pose(
                 const {
                     ManualPoseFixedUp::new_forward(
-                        Vector::new([0.0, 0.0, 2.0]),
+                        vector![0.0, 0.0, 2.0],
                         -UnitVector::Z,
                         UnitVector::Y,
                     )
@@ -142,7 +142,7 @@ impl ApiState for State {
             &Key::S => move_triangle_two(self, [0.0, -frame_time, 0.0]),
             &Key::A => move_triangle_two(self, [-frame_time, 0.0, 0.0]),
             &Key::D => move_triangle_two(self, [frame_time, 0.0, 0.0]),
-            &Key::E => rotate_triangle_two(self, Orientation::new_forward_up(Vector::new([frame_time, 0.0, 1.0]).try_normalize().unwrap_or_default(), UnitVector::Y).unwrap_or_default()),
+            &Key::E => rotate_triangle_two(self, Orientation::new_forward_up(vector![frame_time, 0.0, 1.0].try_normalize().unwrap_or_default(), UnitVector::Y).unwrap_or_default()),
             &Key::Space => move_triangle_two(self, [0.0, 0.0, frame_time]),
             &Key::LeftShift => move_triangle_two(self, [0.0, 0.0, -frame_time]),
         }

@@ -14,7 +14,7 @@ use graphics::{Model, ShaderProgramContext};
 
 use crate::modelling::cubic::camera::Camera;
 use crate::modelling::cubic::lighting::shadow::list::ModelGenDepthDrawError;
-use crate::modelling::cubic::lighting::shadow::{GenDepthError, ShadowBindError};
+use crate::modelling::cubic::lighting::shadow::{BindError, GenDepthError};
 use crate::modelling::cubic::lighting::simple::FarLight;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
 use crate::modelling::cubic::{CalculatedAnimation, camera};
@@ -81,7 +81,7 @@ impl ShadowFarLight {
         name: &str,
         index: usize,
         target: Vector<3>,
-    ) -> Result<(), ShadowBindError>
+    ) -> Result<(), BindError>
     where
         M: Model,
         M::Vertex: VertexHasTangent,
@@ -106,7 +106,7 @@ impl ShadowFarLight {
         shader: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
         name: &str,
         index: usize,
-    ) -> Result<(), ShadowBindError>
+    ) -> Result<(), BindError>
     where
         M: Model,
         M::Vertex: VertexHasTangent,

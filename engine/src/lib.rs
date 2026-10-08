@@ -16,7 +16,7 @@
 #![feature(const_clone)]
 #![feature(trivial_bounds)]
 #![feature(const_option_ops)]
-#![feature(yeet_expr)]
+//#![feature(yeet_expr)]
 #![feature(unwrap_infallible)]
 #![feature(const_closures)]
 #![feature(const_try)]

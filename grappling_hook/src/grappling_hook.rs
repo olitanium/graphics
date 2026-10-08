@@ -3,7 +3,7 @@ use alloc::rc::Rc;
 use engine::ColourRGBA;
 use engine::entity::{AggregateEntity, AggregateModelIndex, ToAggregateEntity};
 use engine::geometry::{Pose, Transform};
-use engine::linear_algebra::Vector;
+use engine::linear_algebra::vector;
 use engine::modelling::cubic::material::Material;
 use engine::modelling::cubic::{
     AggregateCalcAnim,
@@ -116,19 +116,10 @@ impl GrapplingHook {
                 .expect(EXPECT_MESSAGE);
             bone_animation
                 .push_final_non_repeat(
-                    Pose::new_from_translation(Vector::new([0.0, 0.0, CHAIN_LINK_SIZE])),
+                    Pose::new_from_translation(vector![0.0, 0.0, CHAIN_LINK_SIZE]),
                     //(2 * (index - 1)) as f32 * SEC_PER_UNIT,
                 )
                 .expect(EXPECT_MESSAGE);
-            // bone_animation
-            // .push(
-            // Pose::new_from_translation(Vector::new([0.0, 0.0,
-            // CHAIN_LINK_SIZE])), SEC_PER_UNIT,
-            // )
-            // .expect(EXPECT_MESSAGE);
-            // bone_animation
-            // .push_final_non_repeat(Pose::IDENTITY)
-            // .expect(EXPECT_MESSAGE);
 
             animation_builder
                 .push_animation(bone_animation, parent)
@@ -141,11 +132,11 @@ impl GrapplingHook {
 
         let mut bone_animation = BoneAnimation::new();
         bone_animation
-            .push_final_non_repeat(Pose::new_from_translation(Vector::new([
+            .push_final_non_repeat(Pose::new_from_translation(vector![
                 0.0,
                 0.0,
                 CHAIN_LINK_SIZE * 0.5,
-            ])))
+            ]))
             .expect(EXPECT_MESSAGE);
 
         animation_builder
@@ -153,7 +144,7 @@ impl GrapplingHook {
             .expect("end bone exists");
 
         let new_bone = Bone::builder(end_of_chain).bind_pose_relative_to_parent(
-            Pose::new_from_translation(Vector::new([0.0, 0.0, CHAIN_LINK_SIZE * 0.5])),
+            Pose::new_from_translation(vector![0.0, 0.0, CHAIN_LINK_SIZE * 0.5]),
         );
 
         let hook_attachment_bone = skeleton_builder
@@ -176,11 +167,11 @@ impl GrapplingHook {
         let chain_attachment_point = aggregate
             .push_model(
                 chain,
-                Pose::new_from_translation(Vector::new([
+                Pose::new_from_translation(vector![
                     0.0,
                     0.0,
                     0.5 * (ORIGIN_BOX_SIZE - CHAIN_LINK_SIZE),
-                ])),
+                ]),
                 &SkeletonBoneIndex::SKELETON_ROOT_BONE,
                 &AggregateModelIndex::ROOT_MODEL_INDEX,
                 0,
@@ -190,7 +181,7 @@ impl GrapplingHook {
         let hook_attachment_point = aggregate
             .push_model(
                 hook,
-                Pose::new_from_translation(Vector::new([0.0, 0.0, 0.5 * (HOOK_SIZE)])),
+                Pose::new_from_translation(vector![0.0, 0.0, 0.5 * (HOOK_SIZE)]),
                 &hook_attachment_bone,
                 &chain_attachment_point,
                 1,

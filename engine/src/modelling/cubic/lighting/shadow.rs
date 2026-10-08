@@ -16,33 +16,33 @@ use crate::modelling::cubic::lighting::simple::SimpleBindError;
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum ShadowBindError {
+pub enum BindError {
     BindSimpleLight(SimpleBindError),
     SetUniform(ShaderSetUniformError),
     NulError(NulError),
     TooLong(<i32 as TryFrom<usize>>::Error),
 }
-error_boilerplate!(ShadowBindError);
+error_boilerplate!(BindError);
 
-impl From<ShaderSetUniformError> for ShadowBindError {
+impl From<ShaderSetUniformError> for BindError {
     fn from(value: ShaderSetUniformError) -> Self {
         Self::SetUniform(value)
     }
 }
 
-impl From<SimpleBindError> for ShadowBindError {
+impl From<SimpleBindError> for BindError {
     fn from(value: SimpleBindError) -> Self {
         Self::BindSimpleLight(value)
     }
 }
 
-impl From<NulError> for ShadowBindError {
+impl From<NulError> for BindError {
     fn from(value: NulError) -> Self {
         Self::NulError(value)
     }
 }
 
-impl From<TryFromIntError> for ShadowBindError {
+impl From<TryFromIntError> for BindError {
     fn from(value: <i32 as TryFrom<usize>>::Error) -> Self {
         Self::TooLong(value)
     }

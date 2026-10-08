@@ -140,7 +140,7 @@ impl Pose {
 
 #[cfg(test)]
 mod test {
-    use linear_algebra::UnitVector;
+    use linear_algebra::{UnitVector, vector};
 
     use super::*;
 
@@ -148,12 +148,12 @@ mod test {
     fn matrix() {
         let first_pose = Pose::new_from_orientation_translation(
             Orientation::new_from_to(Vector::ZERO, Vector::Z, UnitVector::Y).unwrap(),
-            Vector::new([1.0, 1.0, 1.0]),
+            vector![1.0, 1.0, 1.0],
         );
 
         let second_pose = Pose::new_from_orientation_translation(
             Orientation::new_from_to(Vector::ZERO, Vector::X, UnitVector::Y).unwrap(),
-            Vector::new([0.0, 0.5, 0.5]),
+            vector![0.0, 0.5, 0.5],
         );
 
         let new_pose = second_pose.transform(first_pose);

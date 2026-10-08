@@ -4,7 +4,7 @@ use engine::Key;
 use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
 use engine::framebuffer::traits::FramebufferInternals as _;
-use engine::linear_algebra::{UnitVector, Vector};
+use engine::linear_algebra::{UnitVector, Vector, vector};
 use engine::modelling::cubic::{self, CameraBuilder, ManualPoseFixedUp};
 
 pub struct GameCamera {
@@ -16,7 +16,7 @@ pub struct GameCamera {
 
 impl GameCamera {
     pub fn new(hdr_fb: &Framebuffer<3, WithDepth>) -> Self {
-        const START_LOC: Vector<3> = Vector::new([0.0, 0.5, 1.0]);
+        const START_LOC: Vector<3> = vector![0.0, 0.5, 1.0];
 
         let camera = CameraBuilder::new()
             .pose(

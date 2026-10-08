@@ -14,7 +14,7 @@ use graphics::{Draw, DrawOut, Model, ShaderProgramContext};
 
 use crate::modelling::cubic::lighting::ShadowLightCompatible;
 use crate::modelling::cubic::lighting::shadow::list::ModelGenDepthDrawError;
-use crate::modelling::cubic::lighting::shadow::{GenDepthError, ShadowBindError};
+use crate::modelling::cubic::lighting::shadow::{BindError, GenDepthError};
 use crate::modelling::cubic::lighting::simple::PointLight;
 use crate::modelling::cubic::{CalculatedAnimation, camera};
 use crate::modelling::{SkeletonCubic, VertexHasTangent};
@@ -72,7 +72,7 @@ impl ShadowPointLight {
         shader: &mut ActiveShaderProgram<'_, '_, 'c, M, L, T, N>,
         name: &str,
         index: usize,
-    ) -> Result<(), ShadowBindError>
+    ) -> Result<(), BindError>
     where
         L: ShadowLightCompatible<MAX>,
         T: Texture,
@@ -97,7 +97,7 @@ impl ShadowPointLight {
         shader: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
         name: &str,
         index: usize,
-    ) -> Result<(), ShadowBindError>
+    ) -> Result<(), BindError>
     where
         L: ShadowLightCompatible<MAX>,
         T: Texture,

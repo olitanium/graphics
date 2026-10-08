@@ -3,7 +3,7 @@ use std::collections::HashSet;
 
 use engine::Key;
 use engine::geometry::Pose;
-use engine::linear_algebra::{UnitVector, Vector};
+use engine::linear_algebra::{UnitVector, vector};
 use engine::modelling::cubic::CalculatedAnimation;
 
 use crate::state::State;
@@ -18,7 +18,7 @@ impl State {
         ground_animation: &CalculatedAnimation,
     ) {
         let float_time = elapsed.as_secs_f32();
-        let new_sun_pos = Vector::new([-float_time.cos().sin(), 1.0, -float_time.cos().cos()]);
+        let new_sun_pos = vector![-float_time.cos().sin(), 1.0, -float_time.cos().cos()];
 
         self.sun.inner.physics.pose =
             Pose::new_from_to_up(new_sun_pos, self.player.root().translation(), UnitVector::Y)

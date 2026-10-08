@@ -2,12 +2,12 @@ mod group;
 
 use alloc::ffi::CString;
 
-use graphics::ActiveShaderProgram;
 use graphics::framebuffer::traits::{AttachmentWithoutExtra, FramebufferWithoutExtra};
 use graphics::framebuffer::{ActiveFramebuffer, Framebuffer};
 use graphics::shader_program::CullFace;
 use graphics::texture::{FlatTexture, Texture};
-use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
+use graphics::vertex_array::VertexArray;
+use graphics::{ActiveShaderProgram, vertex_array};
 pub use group::Group as ScreenQuadGroup;
 use utils::error_boilerplate;
 
@@ -35,7 +35,7 @@ impl<'a, const N: usize, X: AttachmentWithoutExtra<Tex = FlatTexture>> Framebuff
 pub enum DrawError {
     #[allow(clippy::allow_attributes, reason = "rustc only allows allow")]
     #[allow(unused, reason = "Error")]
-    VertexArrayDraw(VertexArrayDrawError),
+    VertexArrayDraw(vertex_array::DrawError),
 }
 error_boilerplate!(DrawError);
 

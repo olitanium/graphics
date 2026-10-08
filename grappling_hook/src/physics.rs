@@ -1,4 +1,4 @@
-use engine::linear_algebra::Vector;
+use engine::linear_algebra::vector;
 use engine::modelling::cubic::AggregateCalcAnim;
 
 use crate::bear::Bear;
@@ -9,11 +9,11 @@ impl State {
     pub fn physics(&mut self, frame_time: f32) -> AggregateCalcAnim {
         let time = self.time;
 
-        let light_pos = Vector::new([
+        let light_pos = vector![
             5.0 * (time / 10.0).sin(),
             5.0 * (time / 10.0).sin(),
             5.0 * (time / 10.0).cos(),
-        ]);
+        ];
 
         self.point_light.light.position = light_pos;
 

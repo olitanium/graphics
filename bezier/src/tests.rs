@@ -1,4 +1,4 @@
-use linear_algebra::Vector;
+use linear_algebra::{Vector, vector};
 
 use super::*;
 
@@ -15,15 +15,15 @@ fn individual() {
 
     for val in [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0] {
         let out = bezier.get(val).unwrap();
-        let expected = Vector::new([val, val]);
+        let expected = vector![val, val];
         assert_eq!(out, expected, "at val {val}");
     }
 }
 
 #[test]
 fn chain() {
-    let start = Vector::new([1.0, 0.0]);
-    let finish = Vector::new([0.0, 1.0]);
+    let start = vector![1.0, 0.0];
+    let finish = vector![0.0, 1.0];
 
     let segment_one = BezierSegment::new([start, finish]);
     let segment_two = BezierSegment::new([finish, start]);

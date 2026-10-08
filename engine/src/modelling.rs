@@ -36,11 +36,10 @@ pub use skeletal_vertex::SkeletalVertex;
 pub mod test_models;
 
 pub mod bounding_box;
-pub(crate) use bounding_box::BoundingBoxElement;
 pub use bounding_box::{
     BoundingBox,
-    BoundingBoxGroup,
     Collision,
+    Group as BoundingBoxGroup,
     MakePreferredTransformFromSkeleton,
     SkeletonBb,
     SkeletonBbDrawError,

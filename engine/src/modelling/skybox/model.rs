@@ -5,7 +5,7 @@ use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::shader_program::{ActiveShaderProgram, CullFace, FaceCullingForcedByProgramError};
 use graphics::texture::{CubeMap, Texture};
-use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
+use graphics::vertex_array::{self, VertexArray};
 use utils::error_boilerplate;
 
 use crate::modelling::skybox::SkyBoxVertex;
@@ -33,7 +33,7 @@ impl SkyBox {
 #[non_exhaustive]
 pub enum DrawError {
     FaceCulling(FaceCullingForcedByProgramError),
-    VertexArrayDraw(VertexArrayDrawError),
+    VertexArrayDraw(vertex_array::DrawError),
 }
 
 error_boilerplate!(DrawError);

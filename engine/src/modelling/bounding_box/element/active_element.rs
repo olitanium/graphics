@@ -8,8 +8,7 @@ use zip_with::ArrayZipWith as _;
 
 use super::ChildrenOrMeta;
 use crate::modelling::BoundingBox;
-use crate::modelling::bounding_box::BoundingBoxElement;
-use crate::modelling::bounding_box::element::make_bound_inner;
+use crate::modelling::bounding_box::element::{Element, make_bound_inner};
 use crate::modelling::extended_vertex::ExtendedVertex;
 
 // pub(crate) struct ActiveBoundingBoxElement<'a, V, const DIMS: usize, T> {
@@ -17,7 +16,7 @@ use crate::modelling::extended_vertex::ExtendedVertex;
 // transform: &'a
 // }
 
-impl<V, T> BoundingBoxElement<V, T>
+impl<V, T> Element<V, T>
 where
     V: ExtendedVertex,
 {
@@ -94,11 +93,11 @@ fn collides_with_upper_lower<const N: usize>(
     .all(line_overlap)
 }
 
-impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
+impl<V: ExtendedVertex, T> Element<V, T> {
     pub fn overlaps_bounding_box_single<U, V2, P, P2>(
         &self,
         self_transform: &P,
-        other: &BoundingBoxElement<V2, U>,
+        other: &Element<V2, U>,
         other_transform: &P2,
     ) -> bool
     where
@@ -144,7 +143,7 @@ impl<V: ExtendedVertex, T> BoundingBoxElement<V, T> {
     }
 }
 
-impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
+impl<V: ExtendedVertex<LEN = 3>, T> Element<V, T> {
     pub fn intersects_triangle<P>(&self, transform: &P, triangle: &[Vector<{ V::LEN }>; 3]) -> bool
     where
         P: Transform<Vector<{ V::LEN }>> + Clone,
@@ -168,7 +167,7 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBoxElement<V, T> {
         this_boundingbox: &BoundingBox<V, T>,
         this_transform: &P,
         this_vertex_transform: &VP,
-        other: &BoundingBoxElement<V2, U>,
+        other: &Element<V2, U>,
         other_boundingbox: &BoundingBox<V2, U>,
         other_transform: &P2,
         other_vertex_transform: &VP2,

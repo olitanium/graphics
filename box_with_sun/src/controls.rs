@@ -93,10 +93,8 @@ impl State {
         if let Some(ch) = string.pop() {
             match ch {
                 'Q' => string.clear(),
-                'b' | 'B' => self.toggle_b = !self.toggle_b,
                 'm' | 'M' => self.toggle_m = !self.toggle_m,
                 'g' | 'G' => self.toggle_g = !self.toggle_g,
-                'h' | 'H' => self.toggle_h = !self.toggle_h,
                 ch => string.push(ch),
             }
         }

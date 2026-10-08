@@ -10,9 +10,10 @@ use graphics::texture::FlatTexture;
 use graphics::vertex::Vertex;
 use graphics::{Draw, DrawOut, ShaderProgramContext};
 
+use super::Element;
 use crate::modelling::bounding_box::BoundingBoxShaderProgram;
 use crate::modelling::cubic::{Camera, CameraPose};
-use crate::modelling::{BoundingBox, BoundingBoxElement, ExtendedVertex, Volume};
+use crate::modelling::{BoundingBox, ExtendedVertex, Volume};
 
 #[derive(Debug)]
 #[must_use = "Group must be sent to the GPU for drawing"]
@@ -25,7 +26,7 @@ pub struct Group<
     Bt,
     F: FnMut() -> ColourRGBA,
 > where
-    BoundingBoxElement<V, Bt>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
+    Element<V, Bt>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
     T: Transform<Vector<{ V::LEN }>>,
     Vector<{ V::LEN }>: Volume + Vertex,
 {
@@ -46,7 +47,7 @@ impl<
     F: FnMut() -> ColourRGBA,
 > Group<'a, 1, D, V, T, Bt, F>
 where
-    BoundingBoxElement<V, Bt>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
+    Element<V, Bt>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
     T: Transform<Vector<{ V::LEN }>>,
     Vector<{ V::LEN }>: Volume,
 {
@@ -81,7 +82,7 @@ where
     D: FramebufferWithDepth<1, Tex = FlatTexture>,
     Vector<{ V::LEN }>: Volume + ExtendedVertex<FromIncompleteVertexError = !>,
     T: Transform<Vector<{ V::LEN }>> + Clone,
-    BoundingBoxElement<V, Bt>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
+    Element<V, Bt>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
 {
     fn draw_sized(
         self,
@@ -89,8 +90,7 @@ where
         sp_context: &mut ShaderProgramContext,
     ) -> Result<DrawOut, Box<dyn Error>> {
         let mut active_framebuffer = self.framebuffer.bind(fb_context)?;
-        let mut active_shader =
-            BoundingBoxElement::<V, Bt>::shader_program().use_program(sp_context);
+        let mut active_shader = Element::<V, Bt>::shader_program().use_program(sp_context);
 
         active_shader.set_uniform(&c"projtimesview", &self.look_at)?;
 

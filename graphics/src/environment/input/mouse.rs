@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use glfw::PWindow;
 pub use glfw::{CursorMode, MouseButton as Button};
-use linear_algebra::Vector;
+use linear_algebra::{Vector, vector};
 
 use super::Action;
 
@@ -58,27 +58,24 @@ impl Mouse {
 
             let new = match state_ptr.state.get() {
                 MouseState::FirstMouse => MouseState::Stationary {
-                    current_location: Vector::new([x, y]),
+                    current_location: vector![x, y],
                 },
                 MouseState::Stationary { current_location } => {
                     let [curr0, curr1] = current_location.into_inner();
                     MouseState::Moved {
-                        current_location: Vector::new([x, y]),
-                        delta: Vector::new([x - curr0, y - curr1]),
+                        current_location: vector![x, y],
+                        delta: vector![x - curr0, y - curr1],
                     }
                 }
                 MouseState::Moved {
                     current_location,
                     delta,
                 } => {
-                    let [deltax, deltay] = delta.into_inner();
-                    let [current_locationx, current_locationy] = current_location.into_inner();
+                    let [delta_x, delta_y] = delta.into_inner();
+                    let [curr_x, curr_y] = current_location.into_inner();
                     MouseState::Moved {
-                        current_location: Vector::new([x, y]),
-                        delta: Vector::new([
-                            x - current_locationx + deltax,
-                            y - current_locationy + deltay,
-                        ]),
+                        current_location: vector![x, y],
+                        delta: vector![x - curr_x + delta_x, y - curr_y + delta_y],
                     }
                 }
             };
@@ -108,7 +105,7 @@ impl Mouse {
     pub(crate) fn get_delta(&self) -> Vector<2> {
         let out = match self.0.state.get() {
             MouseState::Moved { delta, .. } => delta,
-            MouseState::FirstMouse | MouseState::Stationary { .. } => Vector::new([0.0, 0.0]),
+            MouseState::FirstMouse | MouseState::Stationary { .. } => vector![0.0, 0.0],
         };
 
         if let MouseState::Moved {
@@ -125,7 +122,7 @@ impl Mouse {
 
     pub(crate) fn get_position(&self) -> Vector<2> {
         match self.0.state.get() {
-            MouseState::FirstMouse => Vector::new([0.0, 0.0]),
+            MouseState::FirstMouse => vector![0.0, 0.0],
             MouseState::Stationary { current_location } => current_location,
             MouseState::Moved {
                 current_location, ..

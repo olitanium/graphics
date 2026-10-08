@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use engine::entity::{Mass, Physics, SkeletonEntity};
 use engine::geometry::Pose;
-use engine::linear_algebra::{UnitVector, Vector};
+use engine::linear_algebra::{UnitVector, Vector, vector};
 use engine::modelling::cubic::material::Material;
 use engine::modelling::cubic::{CalculatedAnimation, SimpleCubic};
 use engine::modelling::{Collision, CubicVertex, SkeletonCubic};
@@ -27,8 +27,7 @@ impl Player {
             Mass::new_inverse(1.0),
             |_| (),
         );
-        player.physics.pose =
-            Pose::new_from_translation(Vector::new([0.25, PLAYER_SIZE * 0.5, 0.25]));
+        player.physics.pose = Pose::new_from_translation(vector![0.25, PLAYER_SIZE * 0.5, 0.25]);
         player.physics.velocity = Vector::ZERO;
         Self {
             entity: player.into(),

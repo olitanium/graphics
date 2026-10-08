@@ -97,15 +97,15 @@ impl DualQuaternion {
 
 #[cfg(test)]
 mod test {
-    use linear_algebra::Vector;
+    use linear_algebra::vector;
 
     use super::*;
 
     #[test]
     fn inverse() {
         let dual_quaternion = DualQuaternion::new(
-            Quaternion::from_scalar_vec(1.0, Vector::new([1.0, 1.0, 1.0])),
-            Quaternion::from_scalar_vec(2.0, Vector::new([2.0, 2.0, 2.0])),
+            Quaternion::from_scalar_vec(1.0, vector![1.0, 1.0, 1.0]),
+            Quaternion::from_scalar_vec(2.0, vector![2.0, 2.0, 2.0]),
         );
 
         let inverse = dual_quaternion.inverse();

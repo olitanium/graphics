@@ -8,7 +8,7 @@ use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::{Matrix, Vector};
 use graphics::shader_program::ShaderSetUniformError;
-use graphics::vertex_array::{VertexArray, VertexArrayDrawError};
+use graphics::vertex_array::{DrawError, VertexArray};
 use graphics::{ActiveShaderProgram, Model};
 use utils::error_boilerplate;
 use zip_with::ArrayZipWith as _;
@@ -56,7 +56,7 @@ impl Children {
     pub(super) fn get_children_elements<'a, V, T>(
         &self,
         bounding_box: &'a BoundingBox<V, T>,
-    ) -> [&'a BoundingBoxElement<V, T>; 2]
+    ) -> [&'a Element<V, T>; 2]
     where
         V: ExtendedVertex,
     {
@@ -75,7 +75,7 @@ pub(super) enum ChildrenOrMeta<T> {
 }
 
 #[derive(Debug, Clone)]
-pub struct BoundingBoxElement<V: ExtendedVertex, T> {
+pub struct Element<V: ExtendedVertex, T> {
     pub(crate) lower_bound: Vector<{ V::LEN }>,
     pub(crate) upper_bound: Vector<{ V::LEN }>,
 
@@ -118,7 +118,7 @@ where
     make_bound_inner(iter)
 }
 
-impl<V, T> BoundingBoxElement<V, T>
+impl<V, T> Element<V, T>
 where
     V: ExtendedVertex,
 {
@@ -226,12 +226,12 @@ where
 #[non_exhaustive]
 pub enum DrawRecursiveError {
     SetUniform(ShaderSetUniformError),
-    VertexArrayDraw(VertexArrayDrawError),
+    VertexArrayDraw(DrawError),
 }
 
 error_boilerplate!(DrawRecursiveError);
 
-impl<V, T> BoundingBoxElement<V, T>
+impl<V, T> Element<V, T>
 where
     V: ExtendedVertex,
     Vector<{ V::LEN }>: Volume + ExtendedVertex<FromIncompleteVertexError = !>,
@@ -304,7 +304,7 @@ where
     }
 }
 
-impl<V: ExtendedVertex, T> Model for BoundingBoxElement<V, T>
+impl<V: ExtendedVertex, T> Model for Element<V, T>
 where
     Vector<{ V::LEN }>: Volume,
 {

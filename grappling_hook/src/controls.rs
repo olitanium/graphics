@@ -4,7 +4,7 @@ use std::collections::HashSet;
 
 use engine::entity::SkeletonEntity;
 use engine::geometry::Pose;
-use engine::linear_algebra::Vector;
+use engine::linear_algebra::{Vector, vector};
 use engine::{Draw, Key, PollResult};
 
 use crate::bear::Bear;
@@ -145,7 +145,7 @@ impl State {
                             .entity
                             .push(
                                 SkeletonEntity::from(bear_model),
-                                Pose::new_from_translation(Vector::new([0.0, 0.0, 0.5])),
+                                Pose::new_from_translation(vector![0.0, 0.0, 0.5]),
                                 &self.grappling_hook.chain,
                                 &self.grappling_hook.chain_end_bone,
                             )

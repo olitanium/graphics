@@ -1,6 +1,6 @@
 use core::f32;
 
-use linear_algebra::{Matrix, UnitVector, Vector};
+use linear_algebra::{Matrix, UnitVector, Vector, vector};
 use quaternion::{Quaternion, UnitQuaternion};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
@@ -86,11 +86,11 @@ impl Orientation {
         let w = self.quaternion.q().scalar();
         let [x, y, z] = self.quaternion.q().vector().into_inner();
 
-        Vector::new([
+        vector![
             2.0 * w.mul_add(y, x * z),
             2.0 * w.mul_add(-x, y * z),
             2.0_f32.mul_add(-y.mul_add(y, x * x), 1.0),
-        ])
+        ]
         .try_normalize()
         .unwrap_or_default()
     }
@@ -100,11 +100,11 @@ impl Orientation {
         let w = self.quaternion.q().scalar();
         let [x, y, z] = self.quaternion.q().vector().into_inner();
 
-        Vector::new([
+        vector![
             2.0 * w.mul_add(-z, x * y),
             2.0_f32.mul_add(-z.mul_add(z, x * x), 1.0),
             2.0 * w.mul_add(x, y * z),
-        ])
+        ]
         .try_normalize()
         .unwrap_or_default() // y
     }
@@ -114,11 +114,11 @@ impl Orientation {
         let w = self.quaternion.q().scalar();
         let [x, y, z] = self.quaternion.q().vector().into_inner();
 
-        Vector::new([
+        vector![
             2.0_f32.mul_add(-z.mul_add(z, y * y), 1.0),
             2.0 * w.mul_add(z, x * y),
             2.0 * w.mul_add(-y, x * z),
-        ])
+        ]
         .try_normalize()
         .unwrap_or_default() // x
     }
@@ -180,6 +180,8 @@ impl Orientation {
 
 #[cfg(test)]
 mod test {
+    use linear_algebra::vector;
+
     use super::*;
 
     // #[test]
@@ -210,8 +212,8 @@ mod test {
         for (up, direction) in tests {
             let orientation = Orientation::new_forward_up(direction, up).unwrap();
 
-            let should_be_up = orientation.act_on(Vector::new([0.0, 1.0, 0.0]));
-            let should_be_direction = orientation.act_on(Vector::new([0.0, 0.0, 1.0]));
+            let should_be_up = orientation.act_on(vector![0.0, 1.0, 0.0]);
+            let should_be_direction = orientation.act_on(vector![0.0, 0.0, 1.0]);
 
             assert!(is_similar_enough(up.v(), should_be_up));
             assert!(is_similar_enough(direction.v(), should_be_direction));

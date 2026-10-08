@@ -155,11 +155,11 @@ impl<B> GenVertexArray<B> {
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum VertexArrayDrawError {
+pub enum DrawError {
     BindTextures(BindTexturesError),
     Validate(ValidateError),
 }
-error_boilerplate!(VertexArrayDrawError);
+error_boilerplate!(DrawError);
 
 impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
     /// # Errors
@@ -171,7 +171,7 @@ impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
         &self,
         active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, O, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
-    ) -> Result<(), VertexArrayDrawError>
+    ) -> Result<(), DrawError>
     where
         M: Model<Vertex = V>,
         D: FramebufferWithoutExtra<OUT>,
@@ -179,7 +179,7 @@ impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
         self.bind();
         let texture_result = active_shader_program
             .bind_textures()
-            .map_err(VertexArrayDrawError::BindTextures);
+            .map_err(DrawError::BindTextures);
 
         // match texture_result {
         // Ok(()) => {}
@@ -192,7 +192,7 @@ impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
 
         active_shader_program
             .validate()
-            .map_err(VertexArrayDrawError::Validate)?;
+            .map_err(DrawError::Validate)?;
 
         if let Some(element_buffer) = &self.element_array_buffer {
             element_buffer.bind();
@@ -231,7 +231,7 @@ fn empty() -> GenVertexArray<()> {
 }
 
 #[must_use]
-pub fn dummy_vertex_array() -> &'static GenVertexArray<()> {
+pub fn dummy() -> &'static GenVertexArray<()> {
     static DUMMY_VERTEX_ARRAY: LazyLock<GenVertexArray<()>> = LazyLock::new(empty);
     &DUMMY_VERTEX_ARRAY
 }
@@ -247,7 +247,7 @@ impl GenVertexArray<()> {
         active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, O, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         len: ElementArrayLen,
-    ) -> Result<(), VertexArrayDrawError>
+    ) -> Result<(), DrawError>
     where
         M: Model<Vertex = NoVertex>,
         D: FramebufferWithoutExtra<OUT>,
@@ -257,7 +257,7 @@ impl GenVertexArray<()> {
         #[cfg(debug_assertions)]
         active_shader_program
             .validate()
-            .map_err(VertexArrayDrawError::Validate)?;
+            .map_err(DrawError::Validate)?;
 
         gl_call! {
             gl::DrawArrays(gl::LINE_STRIP, 0, len.as_primitive());

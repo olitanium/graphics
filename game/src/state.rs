@@ -22,8 +22,6 @@ pub struct State {
     pub exposure: f32,
 
     pub toggle_g: bool,
-    pub toggle_b: bool,
-    pub toggle_h: bool,
     pub toggle_m: bool,
 
     pub sun: Sun,

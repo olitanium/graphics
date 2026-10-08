@@ -15,7 +15,7 @@ use graphics::{Model, ShaderProgramContext};
 use crate::modelling::cubic::CalculatedAnimation;
 use crate::modelling::cubic::camera::{self, Camera};
 use crate::modelling::cubic::lighting::shadow::list::ModelGenDepthDrawError;
-use crate::modelling::cubic::lighting::shadow::{GenDepthError, ShadowBindError};
+use crate::modelling::cubic::lighting::shadow::{GenDepthError, BindError};
 use crate::modelling::cubic::lighting::simple::SpotLight;
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
 use crate::modelling::{SkeletonCubic, VertexHasTangent};
@@ -65,7 +65,7 @@ impl ShadowSpotLight {
         shader: &mut ActiveShaderProgram<'_, '_, 'c, M, L, T, N>,
         name: &str,
         index: usize,
-    ) -> Result<(), ShadowBindError>
+    ) -> Result<(), BindError>
     where
         L: ShadowLightCompatible<MAX>,
         T: Texture,
@@ -89,7 +89,7 @@ impl ShadowSpotLight {
         shader: &mut ActiveShaderProgram<'_, '_, '_, M, L, T, N>,
         name: &str,
         index: usize,
-    ) -> Result<(), ShadowBindError>
+    ) -> Result<(), BindError>
     where
         L: ShadowLightCompatible<MAX>,
         T: Texture,
@@ -142,12 +142,8 @@ impl ShadowSpotLight {
             })
             .collect();
 
-        if !err.is_empty() {
-            do yeet GenDepthError::Many(err)
-        }
-
         drop(active_depth_only_shader);
 
-        Ok(())
+        err.is_empty().ok_or(GenDepthError::Many(err))
     }
 }

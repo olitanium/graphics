@@ -109,6 +109,10 @@ pub struct HasGlfw<'a>(&'a mut Glfw);
 
 #[derive(Debug)]
 #[must_use = "`Window` must be built with the `build` method"]
+#[expect(
+    clippy::struct_excessive_bools,
+    reason = "builder just needs to track pieces internally, never exposing the state"
+)]
 pub struct Builder<G> {
     maker: G,
     suppress_config: bool,

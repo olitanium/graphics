@@ -23,9 +23,10 @@ use array_vec::ArrayVecPopFront;
 /// ```
 pub const trait ArrayZipWith {
     /// The type of the element of the array.
+    type const LEN: usize;
+
     type Element;
     /// Length of the output (and input) arrays.
-    type const LEN: usize;
     /// Zip two arrays together and map with the given closure.
     fn zip_with<U, V, F>(self, array2: [U; Self::LEN], func: F) -> [V; Self::LEN]
     where
