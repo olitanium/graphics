@@ -1,5 +1,3 @@
-use crate::ArrayVec;
-
 mod into_iter;
 mod iter;
 mod iter_mut;
@@ -7,6 +5,8 @@ mod iter_mut;
 pub use into_iter::IntoIter;
 pub use iter::Iter;
 pub use iter_mut::IterMut;
+
+use crate::ArrayVec;
 
 impl<T, const N: usize> FromIterator<T> for ArrayVec<T, N> {
     #[inline]

@@ -13,23 +13,19 @@
 #![feature(const_drop_in_place)]
 #![feature(const_iter)]
 #![feature(const_result_unwrap_unchecked)]
+mod initmacro;
+mod iterators;
+mod pop_front;
 
+#[cfg(test)]
+mod test;
 use core::fmt::{self, Debug, Formatter};
 use core::marker::Destruct;
 use core::mem::{self, MaybeUninit};
 use core::ops::{Deref, DerefMut, Index, IndexMut};
 use core::{iter, ptr};
 
-mod iterators;
-
-#[cfg(test)]
-mod test;
-
 pub use iterators::{IntoIter, Iter, IterMut};
-
-mod initmacro;
-
-mod pop_front;
 pub use pop_front::ArrayVecPopFront;
 use utils::error_boilerplate;
 
