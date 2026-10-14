@@ -2,14 +2,14 @@
 #![no_std]
 #![feature(const_trait_impl)]
 #![expect(incomplete_features, reason = "nightly used, risks assessed")]
-#![feature(min_generic_const_args)]
-#![feature(macroless_generic_const_args)]
+#![feature(gca_min_const_items)]
+#![feature(gca_const_items)]
 #![feature(const_destruct)]
 #![feature(const_array)]
 #![feature(const_closures)]
 
-use core::array;
 use core::marker::Destruct;
+use core::{array, gca};
 
 use array_vec::ArrayVecPopFront;
 /// Zip two arrays together and map with the given closure.
@@ -23,12 +23,13 @@ use array_vec::ArrayVecPopFront;
 /// ```
 pub const trait ArrayZipWith {
     /// The type of the element of the array.
-    type const LEN: usize;
+    #[rustc_always_gca]
+    const LEN: usize;
 
     type Element;
     /// Length of the output (and input) arrays.
     /// Zip two arrays together and map with the given closure.
-    fn zip_with<U, V, F>(self, array2: [U; Self::LEN], func: F) -> [V; Self::LEN]
+    fn zip_with<U, V, F>(self, array2: [U; gca!(Self::LEN)], func: F) -> [V; gca!(Self::LEN)]
     where
         F: [const] FnMut(Self::Element, U) -> V + [const] Destruct,
         Self::Element: [const] Destruct,
@@ -39,7 +40,7 @@ pub const trait ArrayZipWith {
 const impl<const N: usize, T> ArrayZipWith for [T; N] {
     type Element = T;
 
-    type const LEN: usize = N;
+    const LEN: usize = gca!(N);
 
     #[inline]
     fn zip_with<U, V, F>(self, array2: [U; N], mut func: F) -> [V; N]

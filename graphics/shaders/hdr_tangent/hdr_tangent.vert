@@ -47,7 +47,7 @@ void main() {
     // Normal matrix adjusts normals after non-uniform transformation
     mat3 normal_matrix = mat3(model);
     vec3 world_normal = normal_matrix * normalize(in_normal);
-    vec3 world_tangent = mat3(model) * normalize(in_tangent); // unsure if this is the right correction matrix
+    vec3 world_tangent = normal_matrix * normalize(in_tangent); // unsure if this is the right correction matrix
 
     // Vertex Position in world space
     vec4 vertex_position = model * vec4(in_position, 1.0);

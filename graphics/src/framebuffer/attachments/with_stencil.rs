@@ -5,14 +5,14 @@ use crate::framebuffer::{
     self,
     AttachmentWithDepth,
     AttachmentWithStencil,
-    AttachmentWithoutExtra,
     Framebuffer,
+    FramebufferAttachment,
     FramebufferContext,
 };
 use crate::texture::{
+    FlatFramebufferAttachment,
     FlatTexture,
     FlatTextureBuilder,
-    FramebufferAttachment,
     Texture as _,
     TextureHasBuilder as _,
 };
@@ -32,9 +32,9 @@ impl fmt::Debug for WithStencil {
     }
 }
 
-impl AttachmentWithoutExtra for WithStencil {
+impl FramebufferAttachment for WithStencil {
     type Tex = FlatTexture;
-    type TexBuilder = FlatTextureBuilder<FramebufferAttachment<Self>>;
+    type TexBuilder = FlatTextureBuilder<FlatFramebufferAttachment<Self>>;
 
     fn new(size: (TexDim, TexDim), builder_map: OptTexBuilderMap<Self>) -> Self {
         let mut texture_builder = FlatTexture::builder().stencil_attachment(size);
@@ -43,23 +43,12 @@ impl AttachmentWithoutExtra for WithStencil {
             texture_builder = builder_map(texture_builder);
         }
 
-        let texture = texture_builder
-            .build()
-            .expect("This is not a WithoutExtra texture");
+        let texture = texture_builder.build();
 
         Self {
             texture,
             builder_map,
         }
-    }
-
-    fn components() -> Option<AttachmentTextureInfo> {
-        Some(AttachmentTextureInfo {
-            internal_format: gl::DEPTH24_STENCIL8,
-            format: gl::DEPTH_STENCIL,
-            data_type: gl::UNSIGNED_INT_24_8,
-            attachment: gl::DEPTH_STENCIL_ATTACHMENT,
-        })
     }
 
     fn new_framebuffer<const OUT: usize>(
@@ -89,9 +78,14 @@ impl AttachmentWithoutExtra for WithStencil {
 }
 
 impl AttachmentWithDepth for WithStencil {
-    // fn get_texture(&self) -> Rc<RefCell<FlatTexture>> {
-    // self.texture.clone()
-    // }
+    fn components() -> AttachmentTextureInfo {
+        AttachmentTextureInfo {
+            internal_format: gl::DEPTH24_STENCIL8,
+            format: gl::DEPTH_STENCIL,
+            data_type: gl::UNSIGNED_INT_24_8,
+            attachment: gl::DEPTH_STENCIL_ATTACHMENT,
+        }
+    }
 
     fn get_texture_ref(&self) -> &FlatTexture {
         &self.texture

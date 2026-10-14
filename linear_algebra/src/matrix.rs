@@ -1,8 +1,8 @@
 //! module for defining and storing matrix and methods.
 
 use core::fmt::{self, Debug};
-use core::iter;
 use core::ops::{self, Index, IndexMut};
+use core::{gca, iter};
 
 use array_vec::ArrayVec;
 use multi_zip::MultiZip;
@@ -64,6 +64,8 @@ impl<const R: usize, const C: usize> Debug for Matrix<R, C> {
 }
 
 impl<const R: usize, const C: usize> Matrix<R, C> {
+    const NUM_COMP: usize = R * C;
+
     /// Create `Matrix` from column major data. The matrix is stored as column
     /// major, so this does no processing and just moves the value in.
     ///
@@ -139,7 +141,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
 
     #[inline]
     #[must_use]
-    pub const fn col_major(&self) -> [VectorPreferredFloat; C * R] {
+    pub const fn col_major(&self) -> [VectorPreferredFloat; gca!(Self::NUM_COMP)] {
         // let mut x = ArrayVec::new();
         // self.col_flattened().iter().copied().collect_into(&mut x);
         // x.into_array_with(|| 0.0)
@@ -182,7 +184,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
 
     #[inline]
     #[must_use]
-    pub fn row_major(&self) -> [VectorPreferredFloat; C * R] {
+    pub fn row_major(&self) -> [VectorPreferredFloat; gca!(Self::NUM_COMP)] {
         let mut x = ArrayVec::new();
         self.row_iter().flatten().collect_into(&mut x);
         x.into_array_with(|| 0.0)

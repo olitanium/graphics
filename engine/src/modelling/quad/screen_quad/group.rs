@@ -2,7 +2,7 @@ use alloc::ffi::CString;
 use core::error::Error;
 
 use graphics::framebuffer::FramebufferContext;
-use graphics::framebuffer::traits::{AttachmentWithoutExtra, FramebufferWithoutExtra};
+use graphics::framebuffer::traits::{FramebufferAttachment, FramebufferWithoutExtra};
 use graphics::shader_program::{ShaderProgram, ShaderProgramContext, Uniform};
 use graphics::texture::FlatTexture;
 use graphics::{Draw, DrawOut};
@@ -16,7 +16,7 @@ pub struct Group<
     const OUT: usize,
     O,
     D: FramebufferWithoutExtra<OUT>,
-    X: AttachmentWithoutExtra<Tex = FlatTexture>,
+    X: FramebufferAttachment<Tex = FlatTexture>,
 > {
     shader: &'a ShaderProgram<Quad<N>, O, OUT, D::Tex>,
     framebuffer: &'a D,
@@ -30,7 +30,7 @@ impl<
     const N: usize,
     const OUT: usize,
     O,
-    X: AttachmentWithoutExtra<Tex = FlatTexture>,
+    X: FramebufferAttachment<Tex = FlatTexture>,
     D: FramebufferWithoutExtra<OUT>,
 > Group<'a, N, OUT, O, D, X>
 {
@@ -54,7 +54,7 @@ impl<
     const N: usize,
     const OUT: usize,
     O,
-    X: AttachmentWithoutExtra<Tex = FlatTexture>,
+    X: FramebufferAttachment<Tex = FlatTexture>,
     D: FramebufferWithoutExtra<OUT>,
 > Draw for Group<'_, N, OUT, O, D, X>
 {

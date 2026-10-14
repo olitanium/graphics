@@ -7,8 +7,7 @@ use utils::{builder, new};
 
 use super::FlatTexture;
 use crate::framebuffer::attachments::{WithDepth, WithStencil, WithoutExtra};
-use crate::framebuffer::traits::AttachmentWithoutExtra;
-use crate::gl_call;
+use crate::framebuffer::traits::{AttachmentWithDepth, FramebufferAttachment};
 use crate::texture::image::TexInternalFormat;
 use crate::texture::{
     Image,
@@ -19,6 +18,7 @@ use crate::texture::{
     WrapType,
 };
 use crate::types::{self, GLint, TexDim, TexId};
+use crate::{gl_call, texture};
 
 #[derive(Default, Debug)]
 #[must_use = "`FlatTexture` must be built with the `build` method"]
@@ -33,10 +33,10 @@ pub struct Builder<T> {
 pub struct MissingData;
 
 #[derive(Debug)]
-pub struct Dimensions((TexDim, TexDim));
+pub struct Dimensions<const N: usize>((TexDim, TexDim));
 
 #[derive(Debug)]
-pub struct FramebufferAttachment<X: AttachmentWithoutExtra> {
+pub struct FlatFramebufferAttachment<X: FramebufferAttachment> {
     size: (TexDim, TexDim),
     _att_type: PhantomData<X>,
 }
@@ -47,9 +47,9 @@ impl Builder<MissingData> {
 
 impl TexBuilder for Builder<MissingData> {
     type ExpectedFinal = FlatTexture;
-    type ReadyToBuild = Builder<Dimensions>;
+    type ReadyToBuild<const N: usize> = Builder<Dimensions<N>>;
 
-    fn size(self, size: (TexDim, TexDim)) -> <Self as TexBuilder>::ReadyToBuild {
+    fn size<const N: usize>(self, size: (TexDim, TexDim)) -> <Self as TexBuilder>::ReadyToBuild<N> {
         let image = Dimensions(size);
 
         Builder { image, ..self }
@@ -70,8 +70,8 @@ impl<T> Builder<T> {
     pub fn withoutextra_attachment(
         self,
         size: (TexDim, TexDim),
-    ) -> Builder<FramebufferAttachment<WithoutExtra>> {
-        let image = FramebufferAttachment {
+    ) -> Builder<FlatFramebufferAttachment<WithoutExtra>> {
+        let image = FlatFramebufferAttachment {
             size,
             _att_type: PhantomData,
         };
@@ -82,8 +82,8 @@ impl<T> Builder<T> {
     pub fn depth_attachment(
         self,
         size: (TexDim, TexDim),
-    ) -> Builder<FramebufferAttachment<WithDepth>> {
-        let image = FramebufferAttachment {
+    ) -> Builder<FlatFramebufferAttachment<WithDepth>> {
+        let image = FlatFramebufferAttachment {
             size,
             _att_type: PhantomData,
         };
@@ -94,8 +94,8 @@ impl<T> Builder<T> {
     pub fn stencil_attachment(
         self,
         size: (TexDim, TexDim),
-    ) -> Builder<FramebufferAttachment<WithStencil>> {
-        let image = FramebufferAttachment {
+    ) -> Builder<FlatFramebufferAttachment<WithStencil>> {
+        let image = FlatFramebufferAttachment {
             size,
             _att_type: PhantomData,
         };
@@ -219,21 +219,23 @@ impl Builder<Image> {
     }
 }
 
-impl TexBuilderCanBuild for Builder<Dimensions> {
+impl<const N: usize> TexBuilderCanBuild<N> for Builder<Dimensions<N>> {
     type Output = FlatTexture;
 
-    fn build(self) -> <Self as TexBuilderCanBuild>::Output {
+    fn build(self) -> <Self as TexBuilderCanBuild<N>>::Output {
         let id = gen_tex_set_parameters(&self);
+
+        let (internal_format, format) = const { texture::get_format::<N>() };
 
         gl_call! {
             gl::TexImage2D(
                 gl::TEXTURE_2D,
                 0,
-                gl::RGBA16F as GLint,
+                internal_format as GLint,
                 self.image.0.0.as_primitive(),
                 self.image.0.1.as_primitive(),
                 0,
-                gl::RGBA,
+                format,
                 gl::FLOAT,
                 ptr::null(),
             );
@@ -246,38 +248,36 @@ impl TexBuilderCanBuild for Builder<Dimensions> {
     }
 }
 
-// TODO: X: WithDepth and bugfix
-impl<X: AttachmentWithoutExtra> Builder<FramebufferAttachment<X>> {
-    pub fn build(self) -> Option<FlatTexture> {
-        X::components().map(|tex_info| {
-            let id = gen_tex_set_parameters(&self);
+impl<X: AttachmentWithDepth> Builder<FlatFramebufferAttachment<X>> {
+    pub fn build(self) -> FlatTexture {
+        let tex_info = X::components();
+        let id = gen_tex_set_parameters(&self);
 
-            gl_call! { gl::TexImage2D(
+        gl_call! { gl::TexImage2D(
+            gl::TEXTURE_2D,
+            0,
+            tex_info.internal_format as types::GLint,
+            self.image.size.0.as_primitive(),
+            self.image.size.1.as_primitive(),
+            0,
+            tex_info.format,
+            tex_info.data_type,
+            ptr::null(),
+        ); }
+
+        gl_call! {
+            gl::FramebufferTexture2D(
+                gl::FRAMEBUFFER,
+                tex_info.attachment,
                 gl::TEXTURE_2D,
+                id.as_primitive(),
                 0,
-                tex_info.internal_format as types::GLint,
-                self.image.size.0.as_primitive(),
-                self.image.size.1.as_primitive(),
-                0,
-                tex_info.format,
-                tex_info.data_type,
-                ptr::null(),
-            ); }
+            );
+        }
 
-            gl_call! {
-                gl::FramebufferTexture2D(
-                    gl::FRAMEBUFFER,
-                    tex_info.attachment,
-                    gl::TEXTURE_2D,
-                    id.as_primitive(),
-                    0,
-                );
-            }
-
-            FlatTexture {
-                id,
-                size: self.image.size,
-            }
-        })
+        FlatTexture {
+            id,
+            size: self.image.size,
+        }
     }
 }

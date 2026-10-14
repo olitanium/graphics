@@ -6,9 +6,10 @@
 #![feature(option_array_transpose)]
 #![feature(try_trait_v2_residual)]
 #![feature(try_trait_v2)]
-#![feature(unwrap_infallible)]
-#![feature(macroless_generic_const_args)]
-#![feature(min_generic_const_args)]
+//#![feature(macroless_generic_const_args)]
+//#![feature(min_generic_const_args)]
+#![feature(gca_min_const_items)]
+#![feature(gca_const_items)]
 #![feature(array_try_map)]
 #![feature(const_trait_impl)]
 

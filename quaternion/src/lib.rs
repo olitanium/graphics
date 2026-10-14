@@ -7,7 +7,7 @@
 
 use core::ops;
 
-use float_eq::NearlyEq;
+use float_eq::NearlyEq as _;
 use linear_algebra::{UnitVector, Vector, vector};
 pub use unit_quaternion::UnitQuaternion;
 
@@ -24,11 +24,7 @@ pub struct Quaternion {
 
 impl PartialEq for Quaternion {
     fn eq(&self, other: &Self) -> bool {
-        let real_eq = self.real.nearly_eq(
-            &other.real,
-            <f32 as NearlyEq>::SMALL_VALUE,
-            <f32 as NearlyEq>::SMALL_VALUE,
-        );
+        let real_eq = self.real.nearly_eq(&other.real, 0.001, 0.001);
         let vector_eq = self.vector == other.vector;
         real_eq && vector_eq
     }
@@ -114,7 +110,7 @@ impl Quaternion {
 
     #[must_use]
     pub const fn magnitude_sq(self) -> f32 {
-        self.real * self.real + self.vector.magnitude_sq()
+        self.real.mul_add(self.real, self.vector.magnitude_sq())
     }
 
     #[must_use]

@@ -10,8 +10,8 @@ use utils::{builder, error_boilerplate, new};
 
 use super::CubeMap;
 use crate::framebuffer::attachments::CubeWithDepth;
-use crate::framebuffer::traits::AttachmentWithoutExtra;
-use crate::texture::{Magnification, Minification, TexBuilder, TexBuilderCanBuild};
+use crate::framebuffer::traits::{AttachmentWithDepth, FramebufferAttachment};
+use crate::texture::{self, Magnification, Minification, TexBuilder, TexBuilderCanBuild};
 use crate::types::{TexDim, TexId};
 use crate::{gl_call, types};
 
@@ -19,10 +19,10 @@ use crate::{gl_call, types};
 pub struct MissingData;
 
 #[derive(Debug)]
-pub struct Dimensions(TexDim);
+pub struct Dimensions<const N: usize>(TexDim);
 
 #[derive(Debug)]
-pub struct FramebufferAttachment<T: AttachmentWithoutExtra> {
+pub struct CubeFramebufferAttachment<T: FramebufferAttachment> {
     size: TexDim,
     _att_type: PhantomData<T>,
 }
@@ -47,9 +47,9 @@ pub struct Builder<T> {
 
 impl TexBuilder for Builder<MissingData> {
     type ExpectedFinal = CubeMap;
-    type ReadyToBuild = Builder<Dimensions>;
+    type ReadyToBuild<const N: usize> = Builder<Dimensions<N>>;
 
-    fn size(self, size: (TexDim, TexDim)) -> <Self as TexBuilder>::ReadyToBuild {
+    fn size<const N: usize>(self, size: (TexDim, TexDim)) -> <Self as TexBuilder>::ReadyToBuild<N> {
         Builder {
             data: Dimensions(size.0),
             ..self
@@ -88,9 +88,12 @@ impl<T> Builder<T> {
 
     builder!(mag_filter: Magnification);
 
-    pub fn depth_attachment(self, size: TexDim) -> Builder<FramebufferAttachment<CubeWithDepth>> {
+    pub fn depth_attachment(
+        self,
+        size: TexDim,
+    ) -> Builder<CubeFramebufferAttachment<CubeWithDepth>> {
         Builder {
-            data: FramebufferAttachment {
+            data: CubeFramebufferAttachment {
                 size,
                 _att_type: PhantomData,
             },
@@ -191,11 +194,13 @@ fn make_tex_set_parameters<T>(build: &Builder<T>) -> TexId {
     id
 }
 
-impl TexBuilderCanBuild for Builder<Dimensions> {
+impl<const N: usize> TexBuilderCanBuild<N> for Builder<Dimensions<N>> {
     type Output = CubeMap;
 
-    fn build(self) -> <Self as TexBuilderCanBuild>::Output {
+    fn build(self) -> Self::Output {
         let id = make_tex_set_parameters(&self);
+
+        let (internal_format, format) = const { texture::get_format::<N>() };
 
         let size = self.data.0;
 
@@ -211,11 +216,11 @@ impl TexBuilderCanBuild for Builder<Dimensions> {
                 gl::TexImage2D(
                     target,
                     0,
-                    gl::RGBA16F as types::GLint,
+                    internal_format as types::GLint,
                     size.as_primitive(),
                     size.as_primitive(),
                     0,
-                    gl::RGBA,
+                    format,
                     gl::FLOAT,
                     ptr::null(),
                 );
@@ -260,47 +265,46 @@ impl Builder<HasSomeImage> {
     }
 }
 
-impl<T: AttachmentWithoutExtra> Builder<FramebufferAttachment<T>> {
-    pub fn build(self) -> Option<CubeMap> {
-        T::components().map(|tex_info| {
-            let id = make_tex_set_parameters(&self);
+impl<T: AttachmentWithDepth> Builder<CubeFramebufferAttachment<T>> {
+    pub fn build(self) -> CubeMap {
+        let tex_info = T::components();
+        let id = make_tex_set_parameters(&self);
 
-            for target in [
-                gl::TEXTURE_CUBE_MAP_POSITIVE_X,
-                gl::TEXTURE_CUBE_MAP_NEGATIVE_X,
-                gl::TEXTURE_CUBE_MAP_POSITIVE_Y,
-                gl::TEXTURE_CUBE_MAP_NEGATIVE_Y,
-                gl::TEXTURE_CUBE_MAP_POSITIVE_Z,
-                gl::TEXTURE_CUBE_MAP_NEGATIVE_Z,
-            ] {
-                gl_call! {
-                    gl::TexImage2D(
-                        target,
-                        0,
-                        tex_info.internal_format as types::GLint,
-                        self.data.size.as_primitive(),
-                        self.data.size.as_primitive(),
-                        0,
-                        tex_info.format,
-                        tex_info.data_type,
-                        ptr::null(),
-                    );
-                }
-            }
-
+        for target in [
+            gl::TEXTURE_CUBE_MAP_POSITIVE_X,
+            gl::TEXTURE_CUBE_MAP_NEGATIVE_X,
+            gl::TEXTURE_CUBE_MAP_POSITIVE_Y,
+            gl::TEXTURE_CUBE_MAP_NEGATIVE_Y,
+            gl::TEXTURE_CUBE_MAP_POSITIVE_Z,
+            gl::TEXTURE_CUBE_MAP_NEGATIVE_Z,
+        ] {
             gl_call! {
-                gl::FramebufferTexture(
-                    gl::FRAMEBUFFER,
-                    tex_info.attachment,
-                    id.as_primitive(),
+                gl::TexImage2D(
+                    target,
                     0,
+                    tex_info.internal_format as types::GLint,
+                    self.data.size.as_primitive(),
+                    self.data.size.as_primitive(),
+                    0,
+                    tex_info.format,
+                    tex_info.data_type,
+                    ptr::null(),
                 );
             }
+        }
 
-            CubeMap {
-                id,
-                size: self.data.size,
-            }
-        })
+        gl_call! {
+            gl::FramebufferTexture(
+                gl::FRAMEBUFFER,
+                tex_info.attachment,
+                id.as_primitive(),
+                0,
+            );
+        }
+
+        CubeMap {
+            id,
+            size: self.data.size,
+        }
     }
 }

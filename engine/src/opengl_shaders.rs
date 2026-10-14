@@ -157,3 +157,10 @@ make_included! {
     "shaders/simple_skeleton_blending_quat/simple_skeleton_blending_quat.vert",
     "shaders/hdr_tangent/hdr_tangent.frag",
 }
+
+make_included! {
+    ShaderProgram<SimpleCubic, (), 4, FlatTexture>,
+    deferred_simple,
+    "shaders/deferred/deferred.vert",
+    "shaders/deferred/deferred.frag",
+}

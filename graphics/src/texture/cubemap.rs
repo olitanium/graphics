@@ -8,7 +8,7 @@ use crate::gl_call;
 use crate::types::{TexDim, TexId};
 
 mod builder;
-pub use builder::{Builder as CubeMapBuilder, FramebufferAttachment as CubeFrameBufferAttachment};
+pub use builder::{Builder as CubeMapBuilder, CubeFramebufferAttachment};
 
 #[derive(Debug)]
 pub struct CubeMap {

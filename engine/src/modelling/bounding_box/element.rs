@@ -1,6 +1,6 @@
 use core::cell::{RefCell, RefMut};
-use core::fmt::Debug;
-use core::{array, iter};
+use core::fmt::{self, Debug};
+use core::{array, gca, iter};
 
 use geometry::Transform;
 use graphics::colour::ColourRGBA;
@@ -45,7 +45,7 @@ impl<T> Meta<T> {
     }
 }
 
-type const NUMBER_OF_CHILDREN: usize = 2;
+const NUMBER_OF_CHILDREN: usize = gca!(2);
 
 #[derive(Debug, Clone)]
 pub(super) struct Children {
@@ -74,15 +74,29 @@ pub(super) enum ChildrenOrMeta<T> {
     Children(Children),
 }
 
-#[derive(Debug, Clone)]
 pub struct Element<V: ExtendedVertex, T> {
-    pub(crate) lower_bound: Vector<{ V::LEN }>,
-    pub(crate) upper_bound: Vector<{ V::LEN }>,
+    pub(crate) lower_bound: Vector<{ gca!(V::LEN) }>,
+    pub(crate) upper_bound: Vector<{ gca!(V::LEN) }>,
 
     pub(super) children_or_meta: ChildrenOrMeta<T>,
 }
 
-fn make_bound_inner<'a, V, I>(iter: I) -> Option<(Vector<{ V::LEN }>, Vector<{ V::LEN }>)>
+impl<V: ExtendedVertex, T> Debug for Element<V, T>
+where
+    ChildrenOrMeta<T>: Debug,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Element")
+            .field("lower_bound", &self.lower_bound)
+            .field("upper_bound", &self.upper_bound)
+            .field("children_or_meta", &self.children_or_meta)
+            .finish()
+    }
+}
+
+fn make_bound_inner<'a, V, I>(
+    iter: I,
+) -> Option<(Vector<{ gca!(V::LEN) }>, Vector<{ gca!(V::LEN) }>)>
 where
     I: IntoIterator<Item = &'a V>,
     I::IntoIter: Clone,
@@ -108,8 +122,8 @@ where
 }
 
 fn make_bound<V>(
-    vectors: &[(Vector<{ V::LEN }>, [V; 3])],
-) -> Option<(Vector<{ V::LEN }>, Vector<{ V::LEN }>)>
+    vectors: &[(Vector<{ gca!(V::LEN) }>, [V; 3])],
+) -> Option<(Vector<{ gca!(V::LEN) }>, Vector<{ gca!(V::LEN) }>)>
 where
     V: ExtendedVertex,
 {
@@ -124,13 +138,13 @@ where
 {
     pub fn new_from_many_inner<F>(
         so_far: &mut Vec<Self>,
-        triangles: &mut [(Vector<{ V::LEN }>, [V; 3])],
+        triangles: &mut [(Vector<{ gca!(V::LEN) }>, [V; 3])],
         start_index: usize,
         depth: usize,
         init: &mut F,
     ) -> Option<usize>
     where
-        F: FnMut(&[(Vector<{ V::LEN }>, [V; 3])]) -> T,
+        F: FnMut(&[(Vector<{ gca!(V::LEN) }>, [V; 3])]) -> T,
     {
         let (lower_bounds, upper_bounds) = make_bound(triangles)?;
 
@@ -151,7 +165,7 @@ where
                 });
 
                 const CHILDREN_FLOAT: f32 = NUMBER_OF_CHILDREN as f32;
-                type const CHILDRENPLUS1: usize = const { NUMBER_OF_CHILDREN + 1 };
+                const CHILDRENPLUS1: usize = const { NUMBER_OF_CHILDREN + 1 };
 
                 let mut new_partition: [_; CHILDRENPLUS1] = array::from_fn(|index| {
                     let partition_mult = (index) as f32 / CHILDREN_FLOAT;
@@ -234,7 +248,7 @@ error_boilerplate!(DrawRecursiveError);
 impl<V, T> Element<V, T>
 where
     V: ExtendedVertex,
-    Vector<{ V::LEN }>: Volume + ExtendedVertex<FromIncompleteVertexError = !>,
+    Vector<{ gca!(V::LEN) }>: Volume + ExtendedVertex<FromIncompleteVertexError = !>,
 {
     pub fn draw_recursive<D, P, const OUT: usize, F>(
         &self,
@@ -245,7 +259,7 @@ where
             '_,
             '_,
             '_,
-            VertexArray<Vector<{ V::LEN }>>,
+            VertexArray<Vector<{ gca!(V::LEN) }>>,
             (),
             D::Tex,
             OUT,
@@ -255,7 +269,7 @@ where
     ) -> Result<(), DrawRecursiveError>
     where
         D: FramebufferWithDepth<OUT>,
-        P: Transform<Vector<{ V::LEN }>> + Clone,
+        P: Transform<Vector<{ gca!(V::LEN) }>> + Clone,
         F: FnMut() -> ColourRGBA,
     {
         if let ChildrenOrMeta::Children(children) = &self.children_or_meta
@@ -282,8 +296,9 @@ where
             let chosen_colour = colour();
 
             let (lower_bounds, upper_bounds) = self.transform_by(pose);
-            let positions_triangles = Volume::volume(lower_bounds, upper_bounds)
-                .map(|triangle| Vector::<{ V::LEN }>::from_incomplete_triangle(triangle).into_ok());
+            let positions_triangles = Volume::volume(lower_bounds, upper_bounds).map(|triangle| {
+                Vector::<{ gca!(V::LEN) }>::from_incomplete_triangle(triangle).into_ok()
+            });
             let mut vertex_array_builder = VertexArray::builder();
             vertex_array_builder.extend_triangles(positions_triangles);
             let vertex_array = vertex_array_builder.build();
@@ -306,7 +321,7 @@ where
 
 impl<V: ExtendedVertex, T> Model for Element<V, T>
 where
-    Vector<{ V::LEN }>: Volume,
+    Vector<{ gca!(V::LEN) }>: Volume,
 {
-    type Vertex = Vector<{ V::LEN }>;
+    type Vertex = Vector<{ gca!(V::LEN) }>;
 }

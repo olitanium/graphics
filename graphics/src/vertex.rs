@@ -1,27 +1,28 @@
-use core::mem;
+use core::{gca, mem};
 
 use linear_algebra::{UnitVector, Vector};
 
 use crate::types::{VertexAttr, VertexAttrType};
 
 pub trait Vertex: Copy + 'static {
-    type const ELEMENT_COUNT: usize;
+    #[rustc_always_gca]
+    const ELEMENT_COUNT: usize;
 
     #[must_use]
     fn stride() -> usize {
         mem::size_of::<Self>()
     }
 
-    fn offsets() -> [usize; Self::ELEMENT_COUNT];
+    fn offsets() -> [usize; gca!(Self::ELEMENT_COUNT)];
 
-    fn types_of() -> [VertexAttrType; Self::ELEMENT_COUNT];
+    fn types_of() -> [VertexAttrType; gca!(Self::ELEMENT_COUNT)];
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct NoVertex;
 
 impl Vertex for NoVertex {
-    type const ELEMENT_COUNT: usize = 0;
+    const ELEMENT_COUNT: usize = gca!(0);
 
     fn offsets() -> [usize; Self::ELEMENT_COUNT] {
         []
@@ -33,21 +34,21 @@ impl Vertex for NoVertex {
 }
 
 impl<T: VertexAttr + 'static> Vertex for T {
-    type const ELEMENT_COUNT: usize = 1;
+    const ELEMENT_COUNT: usize = gca!(1);
 
-    fn offsets() -> [usize; Self::ELEMENT_COUNT] {
-        [0; Self::ELEMENT_COUNT]
+    fn offsets() -> [usize; gca!(Self::ELEMENT_COUNT)] {
+        [0; _]
     }
 
-    fn types_of() -> [VertexAttrType; Self::ELEMENT_COUNT] {
-        [T::attr(1); Self::ELEMENT_COUNT]
+    fn types_of() -> [VertexAttrType; gca!(Self::ELEMENT_COUNT)] {
+        [T::attr(1); _]
     }
 }
 
 macro_rules! vector {
     ($num:literal) => {
         impl Vertex for [i32; $num] {
-            type const ELEMENT_COUNT: usize = 1;
+            const ELEMENT_COUNT: usize = core::gca!(1);
 
             fn offsets() -> [usize; Self::ELEMENT_COUNT] {
                 [0]
@@ -59,7 +60,7 @@ macro_rules! vector {
         }
 
         impl Vertex for [f32; $num] {
-            type const ELEMENT_COUNT: usize = 1;
+            const ELEMENT_COUNT: usize = core::gca!(1);
 
             fn offsets() -> [usize; Self::ELEMENT_COUNT] {
                 [0]
@@ -71,7 +72,7 @@ macro_rules! vector {
         }
 
         impl Vertex for Vector<$num> {
-            type const ELEMENT_COUNT: usize = 1;
+            const ELEMENT_COUNT: usize = core::gca!(1);
 
             fn offsets() -> [usize; Self::ELEMENT_COUNT] {
                 <[f32; $num]>::offsets()
@@ -83,7 +84,7 @@ macro_rules! vector {
         }
 
         impl Vertex for UnitVector<$num> {
-            type const ELEMENT_COUNT: usize = <Vector<$num> as Vertex>::ELEMENT_COUNT;
+            const ELEMENT_COUNT: usize = core::gca!(<Vector<$num> as Vertex>::ELEMENT_COUNT);
 
             fn offsets() -> [usize; Self::ELEMENT_COUNT] {
                 Vector::<$num>::offsets()

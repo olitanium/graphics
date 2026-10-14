@@ -2,7 +2,8 @@
   description = "Oliver's Rust Flake";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    #nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    nixpkgs.url = "github:nixos/nixpkgs?rev=34ab99075ac4f7e40cf037eef32cb1c360bb85e9";
     fenix.url = "github:nix-community/fenix/monthly";
   };
 
@@ -36,7 +37,7 @@
       bintools
     ];
   in {
-    devShells.${system}.default = pkgs.mkShellNoCC {
+    devShells.${system}.default = pkgs.mkShell {
       buildInputs = buildInputs ++ [pkgs.bashInteractive];
 
       #shellHook = ''
@@ -47,7 +48,7 @@
       # Set Environment Variables
       LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
       LIBCLANG_PATH = pkgs.lib.makeLibraryPath [pkgs.libclang];
-    
+      RUSTFLAGS="-Znext-solver=globally";
       RUST_BACKTRACE = "full";
     };
   };

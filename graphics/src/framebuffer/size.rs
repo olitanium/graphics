@@ -1,10 +1,10 @@
 use core::mem;
 
 use super::Framebuffer;
-use crate::framebuffer::traits::AttachmentWithoutExtra;
+use crate::framebuffer::traits::FramebufferAttachment;
 use crate::types::TexDim;
 
-impl<const N: usize, D: AttachmentWithoutExtra> Framebuffer<N, D> {
+impl<const N: usize, D: FramebufferAttachment> Framebuffer<N, D> {
     // Resize the colour and optional attachements to new size
     // TODO: enable destructive use of `self.stencil_or_depth`
     pub fn resize(&mut self, size: (TexDim, TexDim)) {

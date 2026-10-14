@@ -1,4 +1,4 @@
-use core::mem;
+use core::{gca, mem};
 
 use geometry::NoTransform;
 use graphics::linear_algebra::Vector;
@@ -16,7 +16,7 @@ pub struct QuadVertex {
 }
 
 impl Vertex for QuadVertex {
-    type const ELEMENT_COUNT: usize = 2;
+    const ELEMENT_COUNT: usize = gca!(2);
 
     fn offsets() -> [usize; Self::ELEMENT_COUNT] {
         [
@@ -42,7 +42,7 @@ impl ExtendedVertex for QuadVertex {
     // TODO: 2D transforms
     type PreferredTransform<'a> = NoTransform;
 
-    type const LEN: usize = 2;
+    const LEN: usize = gca!(2);
 
     fn from_incomplete_triangle(
         triangle: [IncompleteVertex<2>; 3],

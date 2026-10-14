@@ -6,13 +6,24 @@ mod cubemap;
 mod flat_texture;
 
 pub use cubemap::CubeMap;
-pub(crate) use cubemap::{CubeFrameBufferAttachment, CubeMapBuilder};
+pub(crate) use cubemap::{CubeFramebufferAttachment, CubeMapBuilder};
 pub use flat_texture::FlatTexture;
-pub(crate) use flat_texture::{FlatTextureBuilder, FramebufferAttachment};
+pub(crate) use flat_texture::{FlatFramebufferAttachment, FlatTextureBuilder};
 mod parameters;
 pub use parameters::{Magnification, Minification, MipMapInfo, WrapType};
 mod image;
 pub use image::{Image, NewImageError};
+
+const fn get_format<const N: usize>() -> (u32, u32) {
+    match N {
+        0 => panic!(),
+        1 => (gl::R16F, gl::RED),
+        2 => (gl::RG16F, gl::RG),
+        3 => (gl::RGB16F, gl::RGB),
+        4 => (gl::RGBA16F, gl::RGBA),
+        5.. => panic!(),
+    }
+}
 
 pub trait Texture {
     fn dyn_blank() -> &'static dyn Texture
@@ -34,12 +45,12 @@ pub trait TextureHasBuilder: Texture {
 
 pub trait TexBuilder {
     type ExpectedFinal: Texture;
-    type ReadyToBuild: TexBuilderCanBuild<Output = Self::ExpectedFinal>;
+    type ReadyToBuild<const N: usize>: TexBuilderCanBuild<N, Output = Self::ExpectedFinal>;
 
-    fn size(self, size: (TexDim, TexDim)) -> Self::ReadyToBuild;
+    fn size<const N: usize>(self, size: (TexDim, TexDim)) -> Self::ReadyToBuild<N>;
 }
 
-pub trait TexBuilderCanBuild {
+pub trait TexBuilderCanBuild<const N: usize> {
     type Output: Texture;
 
     fn build(self) -> Self::Output;

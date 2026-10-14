@@ -1,3 +1,5 @@
+use core::gca;
+
 use geometry::{NoTransform, Pose};
 use graphics::linear_algebra::Vector;
 
@@ -7,7 +9,7 @@ impl ExtendedVertex for Vector<2> {
     type FromIncompleteVertexError = !;
     type PreferredTransform<'a> = NoTransform;
 
-    type const LEN: usize = 2;
+    const LEN: usize = gca!(2);
 
     fn position(&self) -> Self {
         *self
@@ -24,7 +26,7 @@ impl ExtendedVertex for Vector<3> {
     type FromIncompleteVertexError = !;
     type PreferredTransform<'a> = Pose;
 
-    type const LEN: usize = 3;
+    const LEN: usize = gca!(3);
 
     fn from_incomplete_triangle(
         triangle: [IncompleteVertex<3>; 3],

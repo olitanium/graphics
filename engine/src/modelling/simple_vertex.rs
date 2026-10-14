@@ -1,4 +1,4 @@
-use core::mem;
+use core::{gca, mem};
 
 use geometry::{Pose, Transform as _, TransformBy};
 use graphics::linear_algebra::{UnitVector, Vector};
@@ -22,7 +22,7 @@ pub struct SimpleVertex {
 }
 
 impl Vertex for SimpleVertex {
-    type const ELEMENT_COUNT: usize = 4;
+    const ELEMENT_COUNT: usize = gca!(4);
 
     fn offsets() -> [usize; Self::ELEMENT_COUNT] {
         [
@@ -64,7 +64,7 @@ impl ExtendedVertex for SimpleVertex {
     type FromIncompleteVertexError = FromIncompleteVertexError;
     type PreferredTransform<'a> = Pose;
 
-    type const LEN: usize = 3;
+    const LEN: usize = gca!(3);
 
     fn position(&self) -> Vector<3> {
         self.position

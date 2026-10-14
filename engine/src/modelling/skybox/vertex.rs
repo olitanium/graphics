@@ -1,3 +1,5 @@
+use core::gca;
+
 use geometry::{NoTransform, Pose, TransformBy};
 use graphics::linear_algebra::Vector;
 use graphics::types::VertexAttrType;
@@ -12,7 +14,7 @@ use crate::modelling::{CubicVertex, SimpleVertex};
 pub struct SkyBoxVertex(SimpleVertex);
 
 impl Vertex for SkyBoxVertex {
-    type const ELEMENT_COUNT: usize = <SimpleVertex as Vertex>::ELEMENT_COUNT;
+    const ELEMENT_COUNT: usize = gca!(<SimpleVertex as Vertex>::ELEMENT_COUNT);
 
     fn offsets() -> [usize; Self::ELEMENT_COUNT] {
         SimpleVertex::offsets()
@@ -27,7 +29,7 @@ impl ExtendedVertex for SkyBoxVertex {
     type FromIncompleteVertexError = FromIncompleteVertexError;
     type PreferredTransform<'a> = NoTransform;
 
-    type const LEN: usize = 3;
+    const LEN: usize = gca!(3);
 
     fn position(&self) -> Vector<3> {
         self.0.position()

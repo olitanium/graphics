@@ -1,5 +1,6 @@
 use core::iter;
 use core::mem::offset_of;
+use std::gca;
 
 use dual_number::DualQuaternion;
 use geometry::{Pose, TransformBy};
@@ -24,7 +25,7 @@ pub struct SkeletalVertex {
 }
 
 impl Vertex for SkeletalVertex {
-    type const ELEMENT_COUNT: usize = 6;
+    const ELEMENT_COUNT: usize = gca!(6);
 
     fn offsets() -> [usize; Self::ELEMENT_COUNT] {
         [
@@ -82,7 +83,7 @@ impl ExtendedVertex for SkeletalVertex {
     type FromIncompleteVertexError = FromIncompleteVertexError;
     type PreferredTransform<'a> = (&'a Skeleton, &'a CalculatedAnimation);
 
-    type const LEN: usize = 3;
+    const LEN: usize = gca!(3);
 
     fn position(&self) -> Vector<3> {
         self.position

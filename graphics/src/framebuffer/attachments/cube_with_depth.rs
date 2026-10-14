@@ -4,12 +4,12 @@ use super::WithDepth;
 use crate::framebuffer::traits::{
     AttachmentTextureInfo,
     AttachmentWithDepth,
-    AttachmentWithoutExtra,
+    FramebufferAttachment,
     OptTexBuilderMap,
 };
 use crate::framebuffer::{self, Framebuffer, FramebufferContext};
 use crate::texture::{
-    CubeFrameBufferAttachment,
+    CubeFramebufferAttachment,
     CubeMap,
     CubeMapBuilder,
     Texture as _,
@@ -30,9 +30,9 @@ impl Debug for CubeWithDepth {
     }
 }
 
-impl AttachmentWithoutExtra for CubeWithDepth {
+impl FramebufferAttachment for CubeWithDepth {
     type Tex = CubeMap;
-    type TexBuilder = CubeMapBuilder<CubeFrameBufferAttachment<Self>>;
+    type TexBuilder = CubeMapBuilder<CubeFramebufferAttachment<Self>>;
 
     fn new(size: (TexDim, TexDim), builder_map: OptTexBuilderMap<Self>) -> Self {
         let mut builder = CubeMap::builder().depth_attachment(size.0);
@@ -41,21 +41,12 @@ impl AttachmentWithoutExtra for CubeWithDepth {
             builder = builder_map(builder);
         }
 
-        let cube_map = builder.build().expect("Contains Depth");
+        let cube_map = builder.build();
 
         Self {
             texture: cube_map,
             builder_map,
         }
-    }
-
-    fn components() -> Option<AttachmentTextureInfo> {
-        Some(AttachmentTextureInfo {
-            internal_format: gl::DEPTH_COMPONENT,
-            format: gl::DEPTH_COMPONENT,
-            data_type: gl::FLOAT,
-            attachment: gl::DEPTH_ATTACHMENT,
-        })
     }
 
     fn enables(context: &mut FramebufferContext) {
@@ -76,7 +67,16 @@ impl AttachmentWithoutExtra for CubeWithDepth {
 }
 
 impl AttachmentWithDepth for CubeWithDepth {
-    fn get_texture_ref(&self) -> &<Self as AttachmentWithoutExtra>::Tex {
+    fn components() -> AttachmentTextureInfo {
+        AttachmentTextureInfo {
+            internal_format: gl::DEPTH_COMPONENT,
+            format: gl::DEPTH_COMPONENT,
+            data_type: gl::FLOAT,
+            attachment: gl::DEPTH_ATTACHMENT,
+        }
+    }
+
+    fn get_texture_ref(&self) -> &<Self as FramebufferAttachment>::Tex {
         &self.texture
     }
 }

@@ -1,22 +1,24 @@
 //! Module to define a compact `UnitVector` which is embedded in one fewer
 //! dimension and with smaller data types.
-use core::{array, f64, iter};
+use core::{array, f64, gca, iter};
 
 use crate::{UnitVector, Vector, VectorPreferredFloat};
 
 /// The inner type, currently hoisted as an alias for quickly swapping out.
 type InnerType = fixed_point::Unitf16;
 
+const LEN<const N: usize>: usize = N + 1;
+
 /// An in-development representation of a `UnitVector` but with one fewer
 /// element and more compact form. For a 3 dimensional `UnitVector` this type
 /// will use 2 dimensions.
-pub struct CompactUnitVector<const N: usize>([InnerType; N - 1])
-where
-    [(); N - 1]:;
+pub struct CompactUnitVector<const N: usize>([InnerType; gca!(LEN::<N>)]);
+// where
+//[(); N - 1]:;
 
 impl<const N: usize> CompactUnitVector<N>
-where
-    [(); N - 1]:,
+// where
+//[(); N - 1]:,
 {
     /// Normalize a `Vector<N>` and return a `CompactUnitVector<N>` if possible.
     ///
@@ -36,8 +38,8 @@ where
         fn inner<const N: usize>(
             unit_vec: [VectorPreferredFloat; N],
         ) -> Option<CompactUnitVector<N>>
-        where
-            [(); N - 1]:,
+//where
+            //[(); N - 1]:,
         {
             let mut partial_sum_sq = unit_vec.iter().scan(1.0, |state, elem| {
                 *state -= elem * elem;

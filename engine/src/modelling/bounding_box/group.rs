@@ -1,5 +1,6 @@
 use core::error::Error;
 use core::fmt::Debug;
+use std::gca;
 
 use geometry::Transform;
 use graphics::colour::ColourRGBA;
@@ -26,9 +27,9 @@ pub struct Group<
     Bt,
     F: FnMut() -> ColourRGBA,
 > where
-    Element<V, Bt>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
-    T: Transform<Vector<{ V::LEN }>>,
-    Vector<{ V::LEN }>: Volume + Vertex,
+    Element<V, Bt>: BoundingBoxShaderProgram<DIMS = { gca!(V::LEN) }>,
+    T: Transform<Vector<{ gca!(V::LEN) }>>,
+    Vector<{ gca!(V::LEN) }>: Volume + Vertex,
 {
     framebuffer: &'a D,
     bounding_box: &'a BoundingBox<V, Bt>,
@@ -47,9 +48,9 @@ impl<
     F: FnMut() -> ColourRGBA,
 > Group<'a, 1, D, V, T, Bt, F>
 where
-    Element<V, Bt>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
-    T: Transform<Vector<{ V::LEN }>>,
-    Vector<{ V::LEN }>: Volume,
+    Element<V, Bt>: BoundingBoxShaderProgram<DIMS = { gca!(V::LEN) }>,
+    T: Transform<Vector<gca! { V::LEN }>>,
+    Vector<gca! { V::LEN }>: Volume,
 {
     pub fn new<P>(
         framebuffer: &'a D,
@@ -80,9 +81,9 @@ where
     V: ExtendedVertex,
     F: FnMut() -> ColourRGBA,
     D: FramebufferWithDepth<1, Tex = FlatTexture>,
-    Vector<{ V::LEN }>: Volume + ExtendedVertex<FromIncompleteVertexError = !>,
-    T: Transform<Vector<{ V::LEN }>> + Clone,
-    Element<V, Bt>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
+    Vector<gca! { V::LEN }>: Volume + ExtendedVertex<FromIncompleteVertexError = !>,
+    T: Transform<Vector<gca! { V::LEN }>> + Clone,
+    Element<V, Bt>: BoundingBoxShaderProgram<DIMS = { gca!(V::LEN) }>,
 {
     fn draw_sized(
         self,

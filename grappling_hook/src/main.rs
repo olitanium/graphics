@@ -1,8 +1,5 @@
-#![expect(incomplete_features)]
-#![feature(generic_const_exprs)]
 #![feature(try_trait_v2)]
 #![feature(try_trait_v2_residual)]
-#![feature(unwrap_infallible)]
 
 extern crate alloc;
 

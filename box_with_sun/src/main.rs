@@ -1,5 +1,4 @@
 #![expect(incomplete_features, reason = "nightly")]
-#![feature(generic_const_exprs)]
 #![feature(try_trait_v2)]
 #![feature(try_trait_v2_residual)]
 #![expect(clippy::expect_used, reason = "example")]

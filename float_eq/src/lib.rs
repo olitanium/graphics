@@ -34,21 +34,16 @@ make_nearly_eq!(nearly_eq_f64: f64);
 /// equal, and any number between `[-smallest, smallest]` is treated as 0.0 and
 /// compared appropriately.
 pub const trait NearlyEq {
-    const SMALL_VALUE: Self;
     fn nearly_eq(&self, other: &Self, proportion: Self, smallest: Self) -> bool;
 }
 
 const impl NearlyEq for f32 {
-    const SMALL_VALUE: Self = 0.001;
-
     fn nearly_eq(&self, other: &Self, proportion: Self, smallest: Self) -> bool {
         nearly_eq_f32(*self, *other, proportion, smallest)
     }
 }
 
 const impl NearlyEq for f64 {
-    const SMALL_VALUE: Self = 0.001;
-
     fn nearly_eq(&self, other: &Self, proportion: Self, smallest: Self) -> bool {
         nearly_eq_f64(*self, *other, proportion, smallest)
     }

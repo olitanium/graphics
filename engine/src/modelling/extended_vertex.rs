@@ -1,6 +1,7 @@
 mod incomplete;
 
 use core::error::Error;
+use std::gca;
 
 use graphics::linear_algebra::{UnitVector, Vector};
 use graphics::vertex::{NoVertex, Vertex};
@@ -13,18 +14,19 @@ use geometry::{NoTransform, Transform};
 use crate::modelling::SimpleVertex;
 
 pub trait ExtendedVertex: Vertex {
-    type const LEN: usize;
+    #[rustc_always_gca]
+    const LEN: usize;
     type PreferredTransform<'a>: Transform<Self> + Clone;
     type FromIncompleteVertexError: Error;
 
-    fn position(&self) -> Vector<{ Self::LEN }>;
+    fn position(&self) -> Vector<gca!(Self::LEN)>;
 
-    fn multi_position(vec: &[Self; 3]) -> [Vector<{ Self::LEN }>; 3] {
+    fn multi_position(vec: &[Self; 3]) -> [Vector<gca!(Self::LEN)>; 3] {
         vec.each_ref().map(Self::position)
     }
 
     fn from_incomplete_triangle(
-        triangle: [IncompleteVertex<{ Self::LEN }>; 3],
+        triangle: [IncompleteVertex<gca! {Self::LEN }>; 3],
     ) -> Result<[Self; 3], Self::FromIncompleteVertexError>;
 }
 
@@ -71,7 +73,7 @@ impl ExtendedVertex for NoVertex {
     type FromIncompleteVertexError = !;
     type PreferredTransform<'a> = NoTransform;
 
-    type const LEN: usize = 0;
+    const LEN: usize = gca!(0);
 
     fn position(&self) -> Vector<0> {
         Vector::ZERO

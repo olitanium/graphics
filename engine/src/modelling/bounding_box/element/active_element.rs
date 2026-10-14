@@ -1,5 +1,5 @@
-use core::array;
 use core::fmt::Debug;
+use core::{array, gca};
 
 use geometry::Transform;
 use graphics::linear_algebra::Vector;
@@ -20,9 +20,9 @@ impl<V, T> Element<V, T>
 where
     V: ExtendedVertex,
 {
-    pub fn transform_by<P>(&self, pose: &P) -> (Vector<{ V::LEN }>, Vector<{ V::LEN }>)
+    pub fn transform_by<P>(&self, pose: &P) -> (Vector<{ gca!(V::LEN) }>, Vector<{ gca!(V::LEN) }>)
     where
-        P: Transform<Vector<{ V::LEN }>> + Clone,
+        P: Transform<Vector<{ gca!(V::LEN) }>> + Clone,
     {
         let all_vertices: Vec<_> =
             permutations(self.lower_bound.into_inner(), self.upper_bound.into_inner())
@@ -101,9 +101,9 @@ impl<V: ExtendedVertex, T> Element<V, T> {
         other_transform: &P2,
     ) -> bool
     where
-        V2: ExtendedVertex<LEN = { V::LEN }>,
-        P: Transform<Vector<{ V::LEN }>> + Clone,
-        P2: Transform<Vector<{ V2::LEN }>> + Clone,
+        V2: ExtendedVertex<LEN = { gca!(V::LEN) }>,
+        P: Transform<Vector<{ gca!(V::LEN) }>> + Clone,
+        P2: Transform<Vector<{ gca!(V2::LEN) }>> + Clone,
     {
         let (self_lower_bound, self_upper_bound) = self.transform_by(self_transform);
         let (other_lower_bound, other_upper_bound) = other.transform_by(other_transform);
@@ -116,7 +116,7 @@ impl<V: ExtendedVertex, T> Element<V, T> {
         )
     }
 
-    pub fn encloses_point_single(&self, point: Vector<{ V::LEN }>) -> bool {
+    pub fn encloses_point_single(&self, point: Vector<{ gca!(V::LEN) }>) -> bool {
         let offset_from_minimum = point - self.lower_bound; // if in, all positive
         let offset_from_maximum = self.upper_bound - point; // if in, all positive
 
@@ -127,7 +127,7 @@ impl<V: ExtendedVertex, T> Element<V, T> {
     pub fn encloses_point_and_children(
         &self,
         bounding_box: &BoundingBox<V, T>,
-        point: Vector<{ V::LEN }>,
+        point: Vector<{ gca!(V::LEN) }>,
     ) -> bool {
         let is_in = self.encloses_point_single(point);
 
@@ -144,9 +144,13 @@ impl<V: ExtendedVertex, T> Element<V, T> {
 }
 
 impl<V: ExtendedVertex<LEN = 3>, T> Element<V, T> {
-    pub fn intersects_triangle<P>(&self, transform: &P, triangle: &[Vector<{ V::LEN }>; 3]) -> bool
+    pub fn intersects_triangle<P>(
+        &self,
+        transform: &P,
+        triangle: &[Vector<{ gca!(V::LEN) }>; 3],
+    ) -> bool
     where
-        P: Transform<Vector<{ V::LEN }>> + Clone,
+        P: Transform<Vector<{ gca!(V::LEN) }>> + Clone,
     {
         let Some((other_lower_bound, other_upper_bound)) = make_bound_inner(triangle) else {
             return false;
@@ -174,10 +178,10 @@ impl<V: ExtendedVertex<LEN = 3>, T> Element<V, T> {
         alter_meta: &mut F,
         accumulator: &mut Vec<([V; 3], [V2; 3])>,
     ) where
-        V2: ExtendedVertex<LEN = { V::LEN }>,
-        P: Transform<Vector<{ V::LEN }>> + Clone,
+        V2: ExtendedVertex<LEN = { gca!(V::LEN) }>,
+        P: Transform<Vector<{ gca!(V::LEN) }>> + Clone,
         VP: Transform<V> + Clone,
-        P2: Transform<Vector<{ V::LEN }>> + Clone,
+        P2: Transform<Vector<{ gca!(V::LEN) }>> + Clone,
         VP2: Transform<V2> + Clone,
         F: FnMut(&mut T, &mut U) -> bool,
     {

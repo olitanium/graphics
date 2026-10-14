@@ -1,6 +1,6 @@
 use core::error::Error;
 
-use graphics::framebuffer::traits::{AttachmentWithoutExtra, FramebufferWithoutExtra};
+use graphics::framebuffer::traits::{FramebufferAttachment, FramebufferWithoutExtra};
 use graphics::framebuffer::{Framebuffer, FramebufferContext};
 use graphics::shader_program::ShaderProgramContext;
 use graphics::texture::FlatTexture;
@@ -15,7 +15,7 @@ use crate::opengl_shaders;
 pub struct Group<
     'a,
     X: FramebufferWithoutExtra<1, Tex = FlatTexture>,
-    Y: AttachmentWithoutExtra<Tex = FlatTexture>,
+    Y: FramebufferAttachment<Tex = FlatTexture>,
 > {
     bloom: &'a Bloom,
     input_fb: &'a Framebuffer<3, Y>,
@@ -25,7 +25,7 @@ pub struct Group<
 impl<
     'a,
     X: FramebufferWithoutExtra<1, Tex = FlatTexture>,
-    Y: AttachmentWithoutExtra<Tex = FlatTexture>,
+    Y: FramebufferAttachment<Tex = FlatTexture>,
 > Group<'a, X, Y>
 {
     pub fn new(input_fb: &'a Framebuffer<3, Y>, output_fb: &'a X, bloom: &'a Bloom) -> Box<Self> {
@@ -37,7 +37,7 @@ impl<
     }
 }
 
-impl<X: FramebufferWithoutExtra<1, Tex = FlatTexture>, Y: AttachmentWithoutExtra<Tex = FlatTexture>>
+impl<X: FramebufferWithoutExtra<1, Tex = FlatTexture>, Y: FramebufferAttachment<Tex = FlatTexture>>
     Draw for Group<'_, X, Y>
 {
     fn draw_sized(

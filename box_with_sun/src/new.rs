@@ -131,17 +131,20 @@ impl State {
 }
 
 pub fn make_model() -> SimpleCubic {
-    use engine::PostProcess as P;
-    let model = SimpleCubic::import(
-        "assets/Teddy Statue/Teddy Statue.obj",
-        vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
-        true,
-    )
-    .expect("asset should exist and be correct")
-    .cull_face(CullFace::BackFace)
-    .apply_transformation(Pose::new_from_translation(vector![0.0, -133.0, 43.0]))
-    .scale(0.006)
-    .build();
+    // use engine::PostProcess as P;
+    // let model = SimpleCubic::import(
+    // "assets/Teddy Statue/Teddy Statue.obj",
+    // vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
+    // true,
+    // )
+    // .expect("asset should exist and be correct")
+    // .cull_face(CullFace::BackFace)
+    // .apply_transformation(Pose::new_from_translation(vector![0.0, -133.0,
+    // 43.0])) .scale(0.006)
+    // .build();
+
+    let model = SimpleCubic::cube(1.0, Rc::new(Material::white())).build();
+
     // let backpack = SimpleCubic::import(
     // "assets/backpack/backpack.obj",
     // vec![

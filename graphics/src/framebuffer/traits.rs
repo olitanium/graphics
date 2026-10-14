@@ -15,32 +15,32 @@ pub struct AttachmentTextureInfo {
     pub attachment: types::GLenum,
 }
 
-pub type OptTexBuilderMap<B: AttachmentWithoutExtra> =
+pub type OptTexBuilderMap<B: FramebufferAttachment> =
     Option<Box<dyn Fn(B::TexBuilder) -> B::TexBuilder + 'static>>;
 
-pub trait AttachmentWithoutExtra: Sized {
-    type Tex: Texture + TextureHasBuilder;
+pub trait FramebufferAttachment: Sized {
+    type Tex: TextureHasBuilder;
     type TexBuilder;
 
     fn new(size: (TexDim, TexDim), builder_map: OptTexBuilderMap<Self>) -> Self;
-
-    fn components() -> Option<AttachmentTextureInfo>;
-
-    /// Shortcut function to make a framebuffer based on an attachment
-    /// Used to assist in resizing a framebuffer.
-    fn new_framebuffer<const N: usize>(&mut self, size: (TexDim, TexDim)) -> Framebuffer<N, Self>;
 
     /// Get size of the internal buffer, as a fallback if there is no
     /// colourSized buffer. Ideally this would move into `WithDepthTrait`
     /// along with `aspect_ratio`.
     fn size(&self) -> (TexDim, TexDim);
 
+    /// Shortcut function to make a framebuffer based on an attachment
+    /// Used to assist in resizing a framebuffer.
+    fn new_framebuffer<const N: usize>(&mut self, size: (TexDim, TexDim)) -> Framebuffer<N, Self>;
+
     /// Enable the various OpenGL drawing modes.
     fn enables(context: &mut FramebufferContext);
 }
 
 /// Marker trait for attachments which provide a depth buffer.
-pub trait AttachmentWithDepth: AttachmentWithoutExtra {
+pub trait AttachmentWithDepth: FramebufferAttachment {
+    fn components() -> AttachmentTextureInfo;
+
     fn get_texture_ref(&self) -> &Self::Tex;
 
     fn depth_testing(depth_testing: bool, context: &mut FramebufferContext) {

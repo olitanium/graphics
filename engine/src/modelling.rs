@@ -1,7 +1,7 @@
 pub mod cubic;
 pub use cubic::{
     Bone,
-    ImportError,
+    // ImportError,
     SHADOW_SHADER_MAX_LIGHTS,
     ShadowGroup,
     SimpleCubicGroup,

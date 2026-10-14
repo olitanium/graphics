@@ -10,7 +10,7 @@ use crate::types::{TexDim, TexId};
 
 mod builder;
 use builder::MissingData;
-pub use builder::{Builder as FlatTextureBuilder, FramebufferAttachment};
+pub use builder::{Builder as FlatTextureBuilder, FlatFramebufferAttachment};
 
 #[derive(Debug)]
 pub struct FlatTexture {

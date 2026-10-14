@@ -1,3 +1,5 @@
+use std::gca;
+
 use graphics::linear_algebra::{Vector, vector};
 
 use crate::modelling::extended_vertex::IncompleteVertex;
@@ -7,7 +9,7 @@ pub trait Volume: ExtendedVertex {
     fn volume(
         lower_bound: Self,
         upper_bound: Self,
-    ) -> impl Iterator<Item = [IncompleteVertex<{ Self::LEN }>; 3]>;
+    ) -> impl Iterator<Item = [IncompleteVertex<gca!(Self::LEN)>; 3]>;
 
     fn infinity() -> (Self, Self);
 }

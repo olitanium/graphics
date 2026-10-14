@@ -2,7 +2,10 @@
 //! `UnitVectors` guaranteed to have magnitude 1.0, and `Matrix`es.
 #![no_std]
 #![expect(incomplete_features, reason = "Nightly features used")]
-#![feature(generic_const_exprs)]
+#![feature(gca_min_const_items)]
+#![feature(inherent_associated_types)]
+#![feature(generic_const_items)]
+#![feature(gca_const_items)]
 #![feature(const_clone)]
 #![feature(const_default)]
 #![feature(const_trait_impl)]

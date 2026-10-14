@@ -4,14 +4,14 @@ use crate::framebuffer::traits::{AttachmentTextureInfo, OptTexBuilderMap};
 use crate::framebuffer::{
     self,
     AttachmentWithDepth,
-    AttachmentWithoutExtra,
     Framebuffer,
+    FramebufferAttachment,
     FramebufferContext,
 };
 use crate::texture::{
+    FlatFramebufferAttachment,
     FlatTexture,
     FlatTextureBuilder,
-    FramebufferAttachment,
     Texture as _,
     TextureHasBuilder as _,
 };
@@ -31,9 +31,9 @@ impl fmt::Debug for WithDepth {
     }
 }
 
-impl AttachmentWithoutExtra for WithDepth {
+impl FramebufferAttachment for WithDepth {
     type Tex = FlatTexture;
-    type TexBuilder = FlatTextureBuilder<FramebufferAttachment<Self>>;
+    type TexBuilder = FlatTextureBuilder<FlatFramebufferAttachment<Self>>;
 
     fn new(size: (TexDim, TexDim), builder_map: OptTexBuilderMap<Self>) -> Self {
         let mut texture_builder = FlatTexture::builder().depth_attachment(size);
@@ -42,23 +42,12 @@ impl AttachmentWithoutExtra for WithDepth {
             texture_builder = map(texture_builder);
         }
 
-        let texture = texture_builder
-            .build()
-            .expect("This is not a WithoutExtra texture");
+        let texture = texture_builder.build();
 
         Self {
             texture,
             builder_map,
         }
-    }
-
-    fn components() -> Option<AttachmentTextureInfo> {
-        Some(AttachmentTextureInfo {
-            internal_format: gl::DEPTH_COMPONENT,
-            format: gl::DEPTH_COMPONENT,
-            data_type: gl::UNSIGNED_INT,
-            attachment: gl::DEPTH_ATTACHMENT,
-        })
     }
 
     fn new_framebuffer<const N: usize>(&mut self, size: (TexDim, TexDim)) -> Framebuffer<N, Self> {
@@ -85,6 +74,16 @@ impl AttachmentWithDepth for WithDepth {
     // self.texture.clone()
     // }
     //
+
+    fn components() -> AttachmentTextureInfo {
+        AttachmentTextureInfo {
+            internal_format: gl::DEPTH_COMPONENT,
+            format: gl::DEPTH_COMPONENT,
+            data_type: gl::UNSIGNED_INT,
+            attachment: gl::DEPTH_ATTACHMENT,
+        }
+    }
+
     fn get_texture_ref(&self) -> &FlatTexture {
         &self.texture
     }

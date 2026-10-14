@@ -1,12 +1,11 @@
 #![expect(incomplete_features, reason = "Nightly used")]
 #![feature(type_changing_struct_update)]
-//#![feature(generic_const_exprs)]
 #![feature(array_try_map)]
 #![feature(slice_partition_dedup)]
 #![feature(option_array_transpose)]
 #![feature(try_blocks)]
-#![feature(min_generic_const_args)]
-#![feature(macroless_generic_const_args)]
+#![feature(gca_min_const_items)]
+#![feature(gca_const_items)]
 #![feature(iter_map_windows)]
 #![feature(inherent_associated_types)]
 #![feature(const_trait_impl)]
@@ -16,8 +15,6 @@
 #![feature(const_clone)]
 #![feature(trivial_bounds)]
 #![feature(const_option_ops)]
-//#![feature(yeet_expr)]
-#![feature(unwrap_infallible)]
 #![feature(const_closures)]
 #![feature(const_try)]
 #![feature(const_bool)]
@@ -35,6 +32,6 @@ pub use geometry;
 pub use graphics::colour::{ColourRGB, ColourRGBA};
 pub use graphics::framebuffer::Builder as FrameBufferBuilder;
 pub use graphics::{types, *};
-pub use russimp::scene::PostProcess;
+// pub use russimp::scene::PostProcess;
 
 pub type VecDraw<'a> = Vec<Box<dyn Draw + 'a>>;

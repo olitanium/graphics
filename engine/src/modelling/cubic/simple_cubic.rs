@@ -8,17 +8,20 @@ use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
 use graphics::shader_program::{ActiveShaderProgram, CullFace, ShaderSetUniformError};
-use russimp::scene::PostProcess;
+// use russimp::scene::PostProcess;
 use utils::{HasIterWithCloned as _, error_boilerplate};
 
 use super::material::Material;
-use super::{Mesh, Skeleton, import};
+use super::{Mesh, Skeleton /* import */};
 use crate::entity::EntityInner;
 use crate::modelling::cubic::{CalculatedAnimation, mesh};
 use crate::modelling::{BoundingBox, Collision, SimpleVertex};
 
 mod group;
 pub use group::Group;
+
+mod deferred_group;
+pub use deferred_group::DeferredGroup;
 
 mod builder;
 pub use builder::{Builder, TransformType};
@@ -57,21 +60,22 @@ impl SimpleCubic {
             .collect()
     }
 
-    pub fn import<P>(
-        path: P,
-        post_process: Vec<PostProcess>,
-        load_tangent_space: bool,
-    ) -> Result<Builder, import::ImportError>
-    where
-        P: AsRef<Path>,
-    {
-        let import_output = import::import(path, post_process, load_tangent_space)?;
-
-        let mut out = Self::builder();
-        out.extend_meshes(import_output.meshes);
-
-        Ok(out)
-    }
+    // pub fn import<P>(
+    // path: P,
+    // post_process: Vec<PostProcess>,
+    // load_tangent_space: bool,
+    // ) -> Result<Builder, import::ImportError>
+    // where
+    // P: AsRef<Path>,
+    // {
+    // let import_output = import::import(path, post_process,
+    // load_tangent_space)?;
+    //
+    // let mut out = Self::builder();
+    // out.extend_meshes(import_output.meshes);
+    //
+    // Ok(out)
+    // }
 }
 
 #[derive(Debug)]

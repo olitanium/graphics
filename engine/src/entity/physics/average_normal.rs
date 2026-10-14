@@ -132,6 +132,8 @@ where
 
 #[cfg(test)]
 mod test {
+    use core::gca;
+
     use geometry::NoTransform;
     use graphics::linear_algebra::{UnitVector, Vector, vector};
     use graphics::types::VertexAttrType;
@@ -241,7 +243,7 @@ mod test {
         struct TestVertex(Vector<3>);
 
         impl Vertex for TestVertex {
-            type const ELEMENT_COUNT: usize = 0;
+            const ELEMENT_COUNT: usize = gca!(0);
 
             fn offsets() -> [usize; Self::ELEMENT_COUNT] {
                 []
@@ -255,7 +257,7 @@ mod test {
             type FromIncompleteVertexError = !;
             type PreferredTransform<'a> = NoTransform;
 
-            type const LEN: usize = 3;
+            const LEN: usize = gca!(3);
 
             fn position(&self) -> Vector<{ Self::LEN }> {
                 self.0

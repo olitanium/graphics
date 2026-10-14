@@ -5,7 +5,7 @@ pub use active_framebuffer::BindError as FramebufferBindError;
 use crate::framebuffer::traits::{
     AttachmentWithDepth,
     AttachmentWithStencil,
-    AttachmentWithoutExtra,
+    FramebufferAttachment,
     FramebufferInternals,
     FramebufferWithDepth,
     FramebufferWithStencil,
@@ -88,7 +88,7 @@ impl FramebufferWithStencil<1> for DefaultFramebuffer {
 /// A Framebuffer for drawing anything onto. Can be any size (rectangle). As an
 /// HDR buffer it can store any value in it's four channels (rgba).
 #[derive(Debug)]
-pub struct Framebuffer<const OUT: usize, X: AttachmentWithoutExtra> {
+pub struct Framebuffer<const OUT: usize, X: FramebufferAttachment> {
     /// OpenGL ID for this Framebuffer.
     id: FrameBufferId,
     /// Holder for Stencil and/or Depth buffers.
@@ -99,7 +99,7 @@ pub struct Framebuffer<const OUT: usize, X: AttachmentWithoutExtra> {
     textures: [RefCell<X::Tex>; OUT],
 }
 
-impl<const OUT: usize, X: AttachmentWithoutExtra> Drop for Framebuffer<OUT, X> {
+impl<const OUT: usize, X: FramebufferAttachment> Drop for Framebuffer<OUT, X> {
     fn drop(&mut self) {
         let id = self.id().as_primitive();
         gl_call! {
@@ -108,7 +108,7 @@ impl<const OUT: usize, X: AttachmentWithoutExtra> Drop for Framebuffer<OUT, X> {
     }
 }
 
-impl<const OUT: usize, X: AttachmentWithoutExtra> FramebufferInternals for Framebuffer<OUT, X> {
+impl<const OUT: usize, X: FramebufferAttachment> FramebufferInternals for Framebuffer<OUT, X> {
     type Tex = X::Tex;
 
     fn id(&self) -> &FrameBufferId {
@@ -126,7 +126,7 @@ impl<const OUT: usize, X: AttachmentWithoutExtra> FramebufferInternals for Frame
     }
 }
 
-impl<const OUT: usize, X: AttachmentWithoutExtra> FramebufferWithoutExtra<OUT>
+impl<const OUT: usize, X: FramebufferAttachment> FramebufferWithoutExtra<OUT>
     for Framebuffer<OUT, X>
 {
     fn try_give_texture_lock(&self) -> Result<[RefMut<'_, Self::Tex>; OUT], BorrowMutError> {
@@ -165,7 +165,7 @@ impl Default for DefaultFramebuffer {
     }
 }
 
-impl<const N: usize, X: AttachmentWithoutExtra> Framebuffer<N, X> {
+impl<const N: usize, X: FramebufferAttachment> Framebuffer<N, X> {
     // /// Access one of the Framebuffer draw locations,
     // /// # Errors
     // /// Returns Error if `index` >= `N` i.e. out of bounds*/

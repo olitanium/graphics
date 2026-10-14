@@ -53,7 +53,7 @@ where
 const impl<const N: usize> PartialEq for Vector<N, VectorPreferredFloat> {
     #[inline]
     fn eq(&self, other: &Self) -> bool {
-        array_maths::nearly_eq(self.inner(), other.inner())
+        array_maths::nearly_eq_f32(self.inner(), other.inner())
     }
 }
 

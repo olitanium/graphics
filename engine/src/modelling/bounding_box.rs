@@ -1,5 +1,6 @@
 use core::cell::RefCell;
 use core::fmt::Debug;
+use std::gca;
 use std::sync::LazyLock;
 
 use geometry::{Pose, Transform};
@@ -34,7 +35,7 @@ pub use collision::{Collision, no_alter_meta};
 use crate::modelling::extended_vertex::ExtendedVertex;
 use crate::modelling::{CubicVertex, SimpleVertex, SkeletonCubic, Volume};
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct BoundingBox<V: ExtendedVertex, T> {
     triangles: Vec<[V; 3]>,
     inner: Vec<Element<V, T>>,
@@ -45,7 +46,7 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
     pub fn new_test_trianges<F>(self, f: F) -> Self
     where
         F: FnOnce(&[[V; 3]]) -> T,
-        Vector<{ V::LEN }>: Volume,
+        Vector<gca! { V::LEN }>: Volume,
     {
         let triangles_len = self.triangles.len();
         let (upper_bound, lower_bound) = Volume::infinity();
@@ -86,7 +87,7 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
         init: F,
     ) -> Option<Self>
     where
-        F: FnMut(&[(Vector<{ V::LEN }>, [V; 3])]) -> T,
+        F: FnMut(&[(Vector<gca! { V::LEN }>, [V; 3])]) -> T,
     {
         let new_triangles: Option<Vec<_>> = triangles
             .iter()
@@ -99,7 +100,7 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
     pub(crate) fn new_from_triangles<I, F>(triangles: I, depth: usize, mut init: F) -> Option<Self>
     where
         I: IntoIterator<Item = [V; 3]>,
-        F: FnMut(&[(Vector<{ V::LEN }>, [V; 3])]) -> T,
+        F: FnMut(&[(Vector<gca! { V::LEN }>, [V; 3])]) -> T,
     {
         let triangles: Vec<_> = triangles.into_iter().collect();
 
@@ -130,7 +131,7 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
         })
     }
 
-    pub fn encloses_point(&self, point: Vector<{ V::LEN }>) -> bool {
+    pub fn encloses_point(&self, point: Vector<gca! { V::LEN }>) -> bool {
         self.root_element().encloses_point_and_children(self, point)
     }
 
@@ -213,9 +214,9 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBox<V, T> {
 
 impl<V: ExtendedVertex, T> BoundingBox<V, T>
 where
-    Element<V, T>: BoundingBoxShaderProgram<DIMS = { V::LEN }>,
-    Vector<{ <Element<V, T> as BoundingBoxShaderProgram>::DIMS }>: Vertex,
-    Vector<{ V::LEN }>: Volume + ExtendedVertex<FromIncompleteVertexError = !>,
+    Element<V, T>: BoundingBoxShaderProgram<DIMS = { gca!(V::LEN) }>,
+    Vector<{ gca!(<Element<V, T> as BoundingBoxShaderProgram>::DIMS) }>: Vertex,
+    Vector<gca! { V::LEN }>: Volume + ExtendedVertex<FromIncompleteVertexError = !>,
 {
     pub(crate) fn draw<P, D, F>(
         &self,
@@ -225,7 +226,7 @@ where
             '_,
             '_,
             '_,
-            VertexArray<Vector<{ V::LEN }>>,
+            VertexArray<Vector<gca!(V::LEN)>>,
             (),
             D::Tex,
             1,
@@ -234,7 +235,7 @@ where
         mut colour: F,
     ) -> Result<(), DrawRecursiveError>
     where
-        P: Transform<Vector<{ V::LEN }>> + Clone,
+        P: Transform<Vector<gca! { V::LEN }>> + Clone,
         D: FramebufferWithDepth<1, Tex = FlatTexture>,
         F: FnMut() -> ColourRGBA,
     {
@@ -326,15 +327,16 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, TThis> {
 // Can I remove or change DIMS?
 pub trait BoundingBoxShaderProgram: Model + Sized
 where
-    Vector<{ Self::DIMS }>: Vertex,
+    Vector<gca! { Self::DIMS }>: Vertex,
 {
-    type const DIMS: usize;
+    #[rustc_always_gca]
+    const DIMS: usize;
     fn shader_program()
-    -> &'static ShaderProgram<VertexArray<Vector<{ Self::DIMS }>>, (), 1, FlatTexture>;
+    -> &'static ShaderProgram<VertexArray<Vector<gca! { Self::DIMS }>>, (), 1, FlatTexture>;
 }
 
 impl<V: ExtendedVertex<LEN = 3>, T: 'static> BoundingBoxShaderProgram for Element<V, T> {
-    type const DIMS: usize = 3;
+    const DIMS: usize = gca!(3);
 
     fn shader_program() -> &'static ShaderProgram<VertexArray<Vector<3>>, (), 1, FlatTexture> {
         static SHADER_PROGRAM: LazyLock<ShaderProgram<VertexArray<Vector<3>>, (), 1, FlatTexture>> =

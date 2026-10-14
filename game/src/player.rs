@@ -28,8 +28,11 @@ impl Player {
             Mass::new_inverse(1.0),
             |_| (),
         );
-        player.physics.pose =
-            Pose::new_from_translation(vector![0.25, { const { 0.5 + PLAYER_SIZE * 0.5 } }, 0.25,]);
+        player.physics.pose = Pose::new_from_translation(vector![
+            0.25,
+            { const { PLAYER_SIZE.mul_add(0.5, 0.5) } },
+            0.25,
+        ]);
         player.physics.velocity = Vector::ZERO;
         Self {
             entity: player.into(),

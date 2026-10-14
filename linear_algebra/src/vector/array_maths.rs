@@ -80,24 +80,28 @@ where
 /// Check whether all components of the vector are zero (or very close).
 #[inline]
 pub const fn is_zero<const N: usize>(v1: &[VectorPreferredFloat; N]) -> bool {
-    nearly_eq(v1, &[0.0; N])
+    nearly_eq_f32(v1, &[0.0; N])
 }
 
-/// Check whether all components are element-wise equal.
-pub const fn nearly_eq<const N: usize, T>(v1: &[T; N], v2: &[T; N]) -> bool
-where
-    T: [const] NearlyEq + [const] Destruct,
-{
-    let mut index = 0;
-    while let (Some(value), Some(value2)) = (v1.get(index), v2.get(index)) {
-        if !value.nearly_eq(value2, T::SMALL_VALUE, T::SMALL_VALUE) {
-            return false;
+macro_rules! make_nearly_eq {
+    ($name:ident($val:ty)) => {
+        /// Check whether all components are element-wise equal.
+        pub const fn $name<const N: usize>(v1: &[$val; N], v2: &[$val; N]) -> bool {
+            let mut index = 0;
+            while let (Some(value), Some(value2)) = (v1.get(index), v2.get(index)) {
+                if !value.nearly_eq(value2, 0.001, 0.001) {
+                    return false;
+                }
+
+                index += 1;
+            }
+            true
         }
-
-        index += 1;
-    }
-    true
+    };
 }
+
+make_nearly_eq!(nearly_eq_f32(f32));
+make_nearly_eq!(nearly_eq_f64(f64));
 
 #[cfg(test)]
 mod test {
@@ -121,7 +125,7 @@ mod test {
 
     #[test]
     fn equal() {
-        assert!(nearly_eq(&[1.0, 1.0], &[1.0, 1.0]));
-        assert!(!nearly_eq(&[0.0, 0.0], &[1.0, 1.0]));
+        assert!(nearly_eq_f32(&[1.0, 1.0], &[1.0, 1.0]));
+        assert!(!nearly_eq_f64(&[0.0, 0.0], &[1.0, 1.0]));
     }
 }

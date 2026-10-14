@@ -2,7 +2,7 @@ mod group;
 
 use alloc::ffi::CString;
 
-use graphics::framebuffer::traits::{AttachmentWithoutExtra, FramebufferWithoutExtra};
+use graphics::framebuffer::traits::{FramebufferAttachment, FramebufferWithoutExtra};
 use graphics::framebuffer::{ActiveFramebuffer, Framebuffer};
 use graphics::shader_program::CullFace;
 use graphics::texture::{FlatTexture, Texture};
@@ -15,12 +15,12 @@ use crate::modelling::test_models::screen_quad;
 use crate::modelling::{Quad, QuadVertex};
 
 #[derive(Debug)]
-pub struct FramebufferQuad<'a, const N: usize, X: AttachmentWithoutExtra<Tex = FlatTexture>> {
+pub struct FramebufferQuad<'a, const N: usize, X: FramebufferAttachment<Tex = FlatTexture>> {
     vertex_array: &'static VertexArray<QuadVertex>,
     texture: &'a Framebuffer<N, X>,
 }
 
-impl<'a, const N: usize, X: AttachmentWithoutExtra<Tex = FlatTexture>> FramebufferQuad<'a, N, X> {
+impl<'a, const N: usize, X: FramebufferAttachment<Tex = FlatTexture>> FramebufferQuad<'a, N, X> {
     pub fn new_from_framebuffer(framebuffer: &'a Framebuffer<N, X>) -> Self {
         let vertex_array = screen_quad();
         Self {
@@ -39,7 +39,7 @@ pub enum DrawError {
 }
 error_boilerplate!(DrawError);
 
-impl<'a, const N: usize, X: AttachmentWithoutExtra<Tex = FlatTexture>> FramebufferQuad<'a, N, X> {
+impl<'a, const N: usize, X: FramebufferAttachment<Tex = FlatTexture>> FramebufferQuad<'a, N, X> {
     pub(crate) fn draw<const OUT: usize, O, I>(
         self,
         active_shader: &mut ActiveShaderProgram<'a, '_, 'a, Quad<N>, O, I::Tex, OUT>,

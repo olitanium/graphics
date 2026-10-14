@@ -1,3 +1,5 @@
+use alloc::rc::Rc;
+
 use geometry::Pose;
 use graphics::ActiveShaderProgram;
 use graphics::colour::ColourRGBA;
@@ -28,7 +30,7 @@ pub type SkeletonBbGroup = !;
 
 #[derive(Debug, Clone)]
 pub struct SkeletonBb<V: CubicVertex, T> {
-    per_bone: Vec<BoundingBox<V, T>>,
+    per_bone: Rc<[BoundingBox<V, T>]>,
 }
 
 impl<V: CubicVertex, T> SkeletonBb<V, T> {
@@ -40,7 +42,7 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
     where
         F: FnMut(&[(Vector<3>, [V; 3])]) -> T,
     {
-        let opt_per_mesh: Option<Vec<_>> = per_mesh
+        let opt_per_mesh: Option<Rc<_>> = per_mesh
             .into_iter()
             .map(|mesh| BoundingBox::new_from_triangles(mesh, depth, &mut init))
             .collect();
@@ -52,7 +54,7 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
 
     pub fn from_single(bbox: BoundingBox<V, T>) -> Self {
         Self {
-            per_bone: vec![bbox],
+            per_bone: Rc::new([bbox]),
         }
     }
 
@@ -244,7 +246,7 @@ where
 impl<V: CubicVertex, T> From<BoundingBox<V, T>> for SkeletonBb<V, T> {
     fn from(value: BoundingBox<V, T>) -> Self {
         Self {
-            per_bone: vec![value],
+            per_bone: Rc::new([value]),
         }
     }
 }

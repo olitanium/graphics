@@ -6,7 +6,7 @@ use core::{array, fmt};
 use super::attachments::{CubeWithoutExtra, WithDepth, WithStencil, WithoutExtra};
 use super::traits::OptTexBuilderMap;
 use super::{CubeWithDepth, Framebuffer};
-use crate::framebuffer::traits::AttachmentWithoutExtra;
+use crate::framebuffer::traits::FramebufferAttachment;
 use crate::gl_call;
 use crate::texture::{
     TexBuilder as _,
@@ -26,7 +26,7 @@ pub struct HasSize((TexDim, TexDim));
 /// types of depth testing.
 #[derive(Default)]
 #[must_use = "`Framebuffer` must be built with the `build` method"]
-pub struct Builder<const N: usize, S, B: AttachmentWithoutExtra> {
+pub struct Builder<const N: usize, S, B: FramebufferAttachment> {
     /// Size of the underlying texture.
     size: S,
     /// What type of internal.
@@ -34,7 +34,7 @@ pub struct Builder<const N: usize, S, B: AttachmentWithoutExtra> {
     map_attachment: OptTexBuilderMap<B>,
 }
 
-impl<const N: usize, S: Debug, B: AttachmentWithoutExtra + Debug> Debug for Builder<N, S, B> {
+impl<const N: usize, S: Debug, B: FramebufferAttachment + Debug> Debug for Builder<N, S, B> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Builder")
             .field("size", &self.size)
@@ -81,7 +81,7 @@ impl<const N: usize, S> Builder<N, S, CubeWithoutExtra> {
     }
 }
 
-impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, MissingSize, B> {
+impl<const N: usize, B: FramebufferAttachment> Builder<N, MissingSize, B> {
     /// Set the framebuffer size.
     pub fn size(self, size: (TexDim, TexDim)) -> Builder<N, HasSize, B> {
         Builder {
@@ -114,7 +114,7 @@ impl<const N: usize, S> Builder<N, S, WithDepth> {
     }
 }
 
-impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, HasSize, B> {
+impl<const N: usize, B: FramebufferAttachment> Builder<N, HasSize, B> {
     pub fn map_attachment<F>(self, map_attachment: F) -> Self
     where
         F: Fn(B::TexBuilder) -> B::TexBuilder + 'static,
@@ -141,7 +141,7 @@ impl<const N: usize, B: AttachmentWithoutExtra> Builder<N, HasSize, B> {
         let colour: [_; N] = array::from_fn(|_| {
             RefCell::new(
                 B::Tex::builder()
-                    .size(self.size.0)
+                    .size::<4>(self.size.0)
                     // TODO: Add `Map` field to implement this map
                     //.wrap_s_t((gl::CLAMP_TO_EDGE, gl::CLAMP_TO_EDGE))
                     .build(),
