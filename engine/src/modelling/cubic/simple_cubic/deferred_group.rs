@@ -1,35 +1,27 @@
-use std::error::Error;
-use std::ffi::CString;
+use alloc::ffi::CString;
+use core::error::Error;
 
 use geometry::Pose;
-use graphics::framebuffer::traits::FramebufferWithDepth;
+use graphics::framebuffer::traits::FramebufferWithoutExtra as _;
 use graphics::linear_algebra::Matrix;
 use graphics::shader_program::Uniform;
-use graphics::texture::FlatTexture;
 use graphics::{Draw, DrawOut, ShaderProgram, framebuffer};
 
+use crate::deferred::GBuffer;
 use crate::modelling::cubic::{Camera, CameraPose, SimpleCubic};
 use crate::opengl_shaders;
 
-const GBUFFER_ELEMENTS: usize = 4;
-
-pub struct DeferredGroup<'a, F>
-where
-    F: FramebufferWithDepth<GBUFFER_ELEMENTS, Tex = FlatTexture>,
-{
-    framebuffer: &'a F,
+pub struct DeferredGroup<'a> {
+    framebuffer: &'a GBuffer,
     opaque: Vec<(&'a SimpleCubic, Pose)>,
     camera_look_at: Matrix<4, 4>,
 
     uniforms: Vec<(CString, &'a dyn Uniform)>,
 }
 
-impl<'a, F> DeferredGroup<'a, F>
-where
-    F: FramebufferWithDepth<GBUFFER_ELEMENTS, Tex = FlatTexture>,
-{
+impl<'a> DeferredGroup<'a> {
     pub fn new<O>(
-        framebuffer: &'a F,
+        framebuffer: &'a GBuffer,
         opaque: Vec<(&'a SimpleCubic, Pose)>,
         camera: &Camera<O>,
         hint: &O::Hint,
@@ -47,10 +39,7 @@ where
     }
 }
 
-impl<F> Draw for DeferredGroup<'_, F>
-where
-    F: FramebufferWithDepth<GBUFFER_ELEMENTS, Tex = FlatTexture>,
-{
+impl Draw for DeferredGroup<'_> {
     fn draw_sized(
         self,
         fb_context: &mut framebuffer::FramebufferContext,

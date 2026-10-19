@@ -8,12 +8,12 @@ use crate::{Draw, DrawOut, ShaderProgramContext, gl_call};
 pub struct HasDrawnQuery<D: Draw + ?Sized> {
     name: usize,
     query: Query,
-    target: Box<D>,
+    target: D,
 }
 
-impl<D: Draw + ?Sized> HasDrawnQuery<D> {
+impl<D: Draw> HasDrawnQuery<D> {
     #[must_use]
-    pub fn new(name: usize, target: Box<D>) -> Box<Self> {
+    pub fn new(name: usize, target: D) -> Box<Self> {
         let query = {
             let mut value = 0;
             gl_call! {gl::GenQueries(1, &raw mut value) };
@@ -27,7 +27,7 @@ impl<D: Draw + ?Sized> HasDrawnQuery<D> {
     }
 }
 
-impl<D: Draw + ?Sized> Draw for HasDrawnQuery<D> {
+impl<D: Draw> Draw for HasDrawnQuery<D> {
     fn draw(
         self: Box<Self>,
         fb_context: &mut FramebufferContext,
@@ -48,7 +48,7 @@ impl<D: Draw + ?Sized> Draw for HasDrawnQuery<D> {
     {
         gl_call! {gl::BeginQuery(gl::ANY_SAMPLES_PASSED, self.query.as_primitive()); }
 
-        _ = self.target.draw(fb_context, sp_context);
+        _ = self.target.draw_sized(fb_context, sp_context);
 
         gl_call! {gl::EndQuery(gl::ANY_SAMPLES_PASSED);}
 

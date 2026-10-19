@@ -44,7 +44,7 @@ impl State {
         let illuminates = PointLightIlluminatesGroup::new_dyn(&self.sun_duplicate_light, opaque);
         out.push(illuminates);
 
-        let player_illuminates = PointLightIlluminatesGroup::new_dyn(
+        let player_illuminates = PointLightIlluminatesGroup::new(
             &self.sun_duplicate_light,
             vec![self.player.get_pair_model()],
         );
@@ -72,7 +72,7 @@ impl State {
             out.push(ScreenQuadGroup::new(
                 opengl_shaders::exposure3(),
                 default_framebuffer,
-                vec![FramebufferQuad::new_from_framebuffer(&self.hdr_fb)],
+                FramebufferQuad::new_from_framebuffer(&self.hdr_fb),
                 vec![(c"exposure".to_owned(), &self.exposure)],
             ));
         } else {

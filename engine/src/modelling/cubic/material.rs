@@ -145,7 +145,7 @@ impl Builder {
             emission: self.emission.unwrap_or_default(),
             normal_map: self
                 .normal_map
-                .unwrap_or_else(|| FlatTexture::monochrome(ColourRGBA::new([0.5, 0.5, 1.0, 1.0]))),
+                .unwrap_or_else(|| FlatTexture::monochrome(ColourRGBA::new([0.0, 0.0, 1.0, 1.0]))),
             ambient_occlusion: self.ambient_occlusion.unwrap_or_else(FlatTexture::white),
         }
     }

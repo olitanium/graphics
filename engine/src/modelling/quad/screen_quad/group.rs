@@ -21,7 +21,7 @@ pub struct Group<
     shader: &'a ShaderProgram<Quad<N>, O, OUT, D::Tex>,
     framebuffer: &'a D,
 
-    quads: Vec<FramebufferQuad<'a, N, X>>,
+    quads: FramebufferQuad<'a, N, X>,
     uniforms: Vec<(CString, &'a dyn Uniform)>,
 }
 
@@ -38,7 +38,7 @@ impl<
         shader: &'a ShaderProgram<Quad<N>, O, OUT, D::Tex>,
         framebuffer: &'a D,
 
-        quads: Vec<FramebufferQuad<'a, N, X>>,
+        quads: FramebufferQuad<'a, N, X>,
         uniforms: Vec<(CString, &'a dyn Uniform)>,
     ) -> Box<Self> {
         Box::new(Self {
@@ -67,13 +67,7 @@ impl<
         let mut shader = self.shader.use_program(sp_context);
         shader.set_uniform_dyn(self.uniforms)?;
 
-        let err: Vec<_> = self
-            .quads
-            .into_iter()
-            .filter_map(|quad| quad.draw(&mut shader, &mut active_framebuffer).err())
-            .collect();
-
-        err.is_empty().ok_or_else(|| format!("{err:?}"))?;
+        self.quads.draw(&mut shader, &mut active_framebuffer)?;
 
         DrawOut::OK
     }

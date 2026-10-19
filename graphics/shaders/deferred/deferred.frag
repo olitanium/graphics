@@ -1,9 +1,8 @@
 #version 330 core
 
-layout (location = 0) out vec3 position;
-layout (location = 1) out vec4 albedo;
-layout (location = 2) out vec3 normal;
-layout (location = 3) out vec3 tangent;
+layout (location = 0) out vec4 albedo;
+layout (location = 1) out vec4 position;
+layout (location = 2) out vec4 normal;
 
 struct Material {
     sampler2D diffuse;
@@ -20,9 +19,11 @@ uniform Material material;
 in vec2 out_texture_coord;
 in vec3 out_normal;
 in vec3 out_tangent;
+in vec3 out_position; 
+in mat3 tbn;
 
 void main() {
-    normal = texture(material.normal_map, out_texture_coord)
-    tangent = 
-
+    normal = vec4(tbn * normalize(texture(material.normal_map, out_texture_coord).rgb * 2.0 - 1.0), 1.0);
+    position = vec4(out_position, 1.0);
+    albedo = vec4(texture(material.diffuse, out_texture_coord).xyz, 1.0);
 }

@@ -4,6 +4,7 @@ members = [
     "game",
     "box_with_sun",
     "grappling_hook",
+    "deferred_test",
     "colour",
     "engine",
     "utils",

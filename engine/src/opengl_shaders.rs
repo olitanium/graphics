@@ -3,6 +3,7 @@ use std::sync::LazyLock;
 use graphics::shader_program::{CullFace, ShaderProgram};
 use graphics::texture::{CubeMap, FlatTexture};
 
+use crate::deferred::GBUFFER_ELEMENTS;
 use crate::modelling::cubic::lighting::shadow::ShadowListLights;
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::cubic::{SimpleCubic, SkinningCubic};
@@ -159,8 +160,15 @@ make_included! {
 }
 
 make_included! {
-    ShaderProgram<SimpleCubic, (), 4, FlatTexture>,
+    ShaderProgram<SimpleCubic, (), GBUFFER_ELEMENTS, FlatTexture>,
     deferred_simple,
     "shaders/deferred/deferred.vert",
     "shaders/deferred/deferred.frag",
+}
+
+make_included! {
+    ShaderProgram<Quad<GBUFFER_ELEMENTS>, ListLights<'static, 2>, 1, FlatTexture>,
+    deferred_simple_process,
+    "shaders/deferred/process/process.vert",
+    "shaders/deferred/process/process.frag",
 }

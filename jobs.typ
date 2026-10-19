@@ -6,6 +6,7 @@
 
 == Can Do Now
 - VecOne periodically when appropriate, to remove unwraps
+- Movement Vectors available in Shaders
 - impl VertexHasTangent for others
 - Model auto-generated normals smooth option
 - Renderbuffer Objects (like textures for Framebuffer attachments. Might cause issues for shadows because they are unreadable)

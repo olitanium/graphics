@@ -46,6 +46,7 @@ pub use skinning_cubic::{
 mod simple_cubic;
 pub use simple_cubic::{
     Builder as SimpleCubicBuilder,
+    DeferredGroup as SimpleCubicDeferredGroup,
     DrawError as SimpleCubicDrawError,
     Group as SimpleCubicGroup,
     SimpleCubic,

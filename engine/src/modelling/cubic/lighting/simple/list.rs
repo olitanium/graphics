@@ -26,7 +26,6 @@ impl<const MAX: usize> ListLights<'_, MAX> {
         L: ListLightCompatible<MAX>,
         T: Texture,
         M: Model,
-        M::Vertex: CubicVertex,
     {
         shader_program.set_uniform(&c"num_point", &u32::try_from(self.point.len())?)?;
         for (index, light) in self.point.iter().enumerate() {

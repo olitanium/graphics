@@ -71,7 +71,7 @@ impl State {
             out.push(ScreenQuadGroup::new(
                 engine::opengl_shaders::exposure3(),
                 default_framebuffer,
-                vec![fb],
+                fb,
                 vec![(c"exposure".to_owned(), &self.exposure)],
             ));
         }

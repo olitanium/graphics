@@ -65,7 +65,7 @@ void main() {
     vec3 B = cross(N, T);
     mat3 TBN = mat3(T, B, N);
     
-    mat3 rotate_to_tangent = transpose(TBN);
+    mat3 rotate_to_tangent = transpose(TBN); // this should be inverse, but because T, B and N are orthogonal, transpose is an optimisation
     
     mat4 to_tangent = mat4(rotate_to_tangent) * mat4(
         1.0, 0.0, 0.0,        0.0,

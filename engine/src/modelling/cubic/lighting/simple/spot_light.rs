@@ -35,7 +35,6 @@ impl SpotLight {
         L: ListLightCompatible<MAX>,
         T: Texture,
         M: Model,
-        M::Vertex: CubicVertex,
     {
         shader.set_uniform(
             &CString::new(format!("{name}_vary[{index}].position"))?,

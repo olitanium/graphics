@@ -22,7 +22,6 @@
 
 extern crate alloc;
 
-pub mod eng_state;
 pub mod entity;
 pub mod modelling;
 pub mod opengl_shaders;
@@ -32,6 +31,8 @@ pub use geometry;
 pub use graphics::colour::{ColourRGB, ColourRGBA};
 pub use graphics::framebuffer::Builder as FrameBufferBuilder;
 pub use graphics::{types, *};
+pub mod deferred;
+pub use deferred::GBUFFER_ELEMENTS;
 // pub use russimp::scene::PostProcess;
 
 pub type VecDraw<'a> = Vec<Box<dyn Draw + 'a>>;

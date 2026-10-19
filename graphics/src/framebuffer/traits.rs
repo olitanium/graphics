@@ -123,6 +123,32 @@ where
         T::stencil_testing(stencil_testing, context);
     }
 }
+
+impl<T> FramebufferWithoutExtra<3> for T
+where
+    T: FramebufferWithoutExtra<4>,
+{
+    fn try_give_texture_lock(&self) -> Result<[RefMut<'_, Self::Tex>; 3], BorrowMutError> {
+        let [a, b, c, ..] = self.try_give_texture_lock()?;
+        Ok([a, b, c])
+    }
+}
+impl<T> FramebufferWithDepth<3> for T
+where
+    T: FramebufferWithDepth<4>,
+{
+    fn depth_testing(depth_testing: bool, context: &mut FramebufferContext) {
+        T::depth_testing(depth_testing, context);
+    }
+}
+impl<T> FramebufferWithStencil<3> for T
+where
+    T: FramebufferWithStencil<4>,
+{
+    fn stencil_testing(stencil_testing: bool, context: &mut FramebufferContext) {
+        T::stencil_testing(stencil_testing, context);
+    }
+}
 pub trait FramebufferWithoutExtra<const OUT: usize>: FramebufferInternals {
     fn bind<'a, 'b>(
         &'a self,
