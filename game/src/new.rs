@@ -99,7 +99,7 @@ impl State {
         let bear_colour = ColourRGBA::new([0.5, 0.0, 0.0, 1.0]);
         bear.temp_set_all_material(Rc::new(
             Material::builder()
-                .emission(FlatTexture::monochrome(bear_colour))
+                .emission(FlatTexture::monochrome_clamped(bear_colour))
                 .build(),
         ));
         let sun = SimpleEntity::from_simple_cubic(bear, 20, Mass::new_inverse(1.0), |_| ());
@@ -152,33 +152,35 @@ impl State {
     }
 }
 
-pub fn make_model(which_model: &str) -> Result<SimpleCubic, StateError> {
-    use engine::PostProcess as P;
-    let model = match which_model {
-        "bear" => SimpleCubic::import(
-            "assets/Teddy Statue/Teddy Statue.obj",
-            vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
-            true,
-        )
-        .map_err(StateError::Import)?
-        .cull_face(CullFace::BackFace)
-        .apply_transformation(Pose::new_from_translation(vector![0.0, -133.0, 43.0]))
-        .scale(0.006)
-        .build(),
-        "backpack" => SimpleCubic::import(
-            "assets/backpack/backpack.obj",
-            vec![
-                P::Triangulate,
-                P::FlipUVs,
-                P::OptimizeGraph,
-                P::OptimizeMeshes,
-            ],
-            false,
-        )
-        .map_err(StateError::Import)?
-        .material(Rc::new(Material::white()))
-        .build(),
-        _ => SimpleCubic::empty(),
-    };
-    Ok(model)
+pub fn make_model(_which_model: &str) -> Result<SimpleCubic, StateError> {
+    // use engine::PostProcess as P;
+    // let model = match which_model {
+    // "bear" => SimpleCubic::import(
+    // "assets/Teddy Statue/Teddy Statue.obj",
+    // vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
+    // true,
+    // )
+    // .map_err(StateError::Import)?
+    // .cull_face(CullFace::BackFace)
+    // .apply_transformation(Pose::new_from_translation(vector![0.0, -133.0,
+    // 43.0])) .scale(0.006)
+    // .build(),
+    // "backpack" => SimpleCubic::import(
+    // "assets/backpack/backpack.obj",
+    // vec![
+    // P::Triangulate,
+    // P::FlipUVs,
+    // P::OptimizeGraph,
+    // P::OptimizeMeshes,
+    // ],
+    // false,
+    // )
+    // .map_err(StateError::Import)?
+    // .material(Rc::new(Material::white()))
+    // .build(),
+    // _ => SimpleCubic::empty(),
+    // };
+    //
+    // Ok(model)
+    todo!()
 }

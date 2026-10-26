@@ -9,9 +9,9 @@ uniform mat4 model;
 uniform mat4 projtimesview;
 
 out vec2 out_texture_coord;
-out vec3 out_normal;
-out vec3 out_tangent;
 out vec3 out_position; 
+out vec3 out_normal; 
+out vec3 out_tangent; 
 out mat3 tbn;
 
 void main() {
@@ -19,15 +19,17 @@ void main() {
 
     vec4 world_position = model * vec4(in_position, 1.0);
     mat3 normal_matrix = mat3(model);
-    vec3 world_normal = normal_matrix * in_normal;
-    vec3 world_tangent = normal_matrix * in_tangent;
+    vec3 world_normal = normalize(normal_matrix * in_normal);
+    vec3 world_tangent = normalize(normal_matrix * in_tangent);
+    world_tangent = normalize(world_tangent - dot(world_tangent, world_normal) * world_normal);
 
     gl_Position = projtimesview * world_position;
 
-    vec3 bitangent = cross( world_normal, world_tangent);
+    vec3 bitangent = cross(world_normal, world_tangent);
+
     tbn = mat3(world_tangent, bitangent, world_normal);
 
-    out_normal = normalize(world_normal);
-    out_tangent = normalize(world_tangent);
     out_position = world_position.xyz;
+    out_normal = world_normal;
+    out_tangent = world_tangent;
 }

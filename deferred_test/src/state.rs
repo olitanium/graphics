@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use engine::deferred::GBuffer;
 use engine::entity::SkeletonEntity;
 use engine::framebuffer::Framebuffer;
-use engine::framebuffer::attachments::WithDepth;
+use engine::framebuffer::attachments::{WithDepth, WithoutExtra};
 use engine::framebuffer::traits::FramebufferInternals as _;
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::CameraProjection;
@@ -33,7 +33,8 @@ pub struct State {
 
     pub skybox: SkyBox,
 
-    pub hdr_fb: GBuffer,
+    pub gbuffer: GBuffer,
+    pub hdr_out: Framebuffer<3, WithoutExtra>,
     pub bloom: Bloom,
 }
 
@@ -71,7 +72,7 @@ impl ApiState for State {
                     // self.bloom.resize(size);
                     self.game_camera.camera.projection = CameraProjection::Perspective {
                         fov: const { (90.0_f32).to_radians() },
-                        aspect: self.hdr_fb.aspect_ratio(),
+                        aspect: self.gbuffer.aspect_ratio(),
                         near: 0.1,
                         far: 100.0,
                     };

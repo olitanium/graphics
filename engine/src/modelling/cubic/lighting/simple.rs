@@ -16,6 +16,10 @@ use utils::error_boilerplate;
 #[non_exhaustive]
 pub enum SimpleBindError {
     SetUniform(ShaderSetUniformError),
+    SetUniformVarying {
+        varying: ShaderSetUniformError,
+        still: ShaderSetUniformError,
+    },
     Nul(NulError),
     TooLong(TryFromIntError),
 }

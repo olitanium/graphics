@@ -4,7 +4,7 @@ use core::error::Error;
 use geometry::Pose;
 use graphics::framebuffer::traits::FramebufferWithoutExtra as _;
 use graphics::linear_algebra::Matrix;
-use graphics::shader_program::Uniform;
+use graphics::shader_program::{BlendType, CullFace, Uniform};
 use graphics::{Draw, DrawOut, ShaderProgram, framebuffer};
 
 use crate::deferred::GBuffer;
@@ -52,6 +52,7 @@ impl Draw for DeferredGroup<'_> {
             ShaderProgram::use_program(opengl_shaders::deferred_simple(), sp_context);
         let mut active_framebuffer = self.framebuffer.bind(fb_context)?;
 
+        let original_blend = active_shader.set_blend(BlendType::None);
         active_shader.set_uniform(&c"projtimesview", &self.camera_look_at)?;
         active_shader.set_uniform_dyn(self.uniforms)?;
 
@@ -67,6 +68,9 @@ impl Draw for DeferredGroup<'_> {
 
         err.is_empty().ok_or_else(|| format!("{err:?}"))?;
 
+        if let Some(original_blend) = original_blend {
+            active_shader.set_blend(original_blend);
+        }
         DrawOut::OK
     }
 

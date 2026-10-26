@@ -93,7 +93,7 @@ impl Window {
         };
 
         gl_call! {
-            gl::ClearColor(0.5, 0.5, 0.5, 1.0);
+            gl::ClearColor(0.0, 0.0, 0.0, 1.0);
         };
 
         gl_call! {

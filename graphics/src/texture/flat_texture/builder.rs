@@ -103,6 +103,17 @@ impl<T> Builder<T> {
         Builder { image, ..self }
     }
 
+    pub fn monochrome_clamped(self, colour: ColourRGBA) -> Builder<Image> {
+        // let mut image = Rgba32FImage::new(1, 1);
+        // image.get_pixel_mut(0, 0).0 = colour.as_array();
+        // let image = ImageType::RgbaFloat(image.into_flat_samples());
+
+        Builder {
+            image: Image::new_monochrome_clamped(colour),
+            ..self
+        }
+    }
+
     pub fn monochrome(self, colour: ColourRGBA) -> Builder<Image> {
         // let mut image = Rgba32FImage::new(1, 1);
         // image.get_pixel_mut(0, 0).0 = colour.as_array();

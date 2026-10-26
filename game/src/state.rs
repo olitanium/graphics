@@ -8,7 +8,7 @@ use engine::framebuffer::traits::FramebufferInternals as _;
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::CameraProjection;
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
-use engine::modelling::{Bloom, ImportError, SkyBox};
+use engine::modelling::{Bloom, SkyBox};
 use engine::types::TexDim;
 use engine::{ApiState, Draw, Event, PollResult};
 
@@ -39,7 +39,7 @@ pub struct State {
 #[derive(Debug)]
 pub enum StateError {
     Unknown,
-    Import(ImportError),
+    // Import(ImportError),
 }
 
 utils::error_boilerplate!(StateError);

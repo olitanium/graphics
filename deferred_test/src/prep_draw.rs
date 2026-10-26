@@ -3,7 +3,14 @@ use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::SimpleCubicDeferredGroup;
 use engine::modelling::cubic::lighting::shadow::{PointLightIlluminatesGroup, ShadowListLights};
 use engine::modelling::cubic::lighting::simple::ListLights;
-use engine::modelling::{BloomGroup, FramebufferQuad, ScreenQuadGroup, ShadowGroup, SkyBoxGroup};
+use engine::modelling::{
+    Bloom,
+    BloomGroup,
+    FramebufferQuad,
+    ScreenQuadGroup,
+    ShadowGroup,
+    SkyBoxGroup,
+};
 use engine::query::HasDrawnQuery;
 use engine::{Draw, PollResult, VecDraw, deferred, opengl_shaders};
 
@@ -26,17 +33,28 @@ impl State {
         }
 
         out.push(SimpleCubicDeferredGroup::new(
-            &self.hdr_fb,
+            &self.gbuffer,
             opaque,
             &self.game_camera.camera,
             &(),
             vec![],
         ));
 
-        out.push(deferred::SimpleDeferredCompleteGroup::new(
+        out.push(deferred::SimpleDeferredCompleteGroup::<_, 3>::new(
+            &self.hdr_out,
+            &self.gbuffer,
+            ListLights {
+                point: arrvec![&self.sun.light],
+                ..ListLights::default()
+            },
+            &self.game_camera.camera,
+            &(),
+        ));
+
+        out.push(BloomGroup::new(
+            &self.hdr_out,
             default_framebuffer,
-            &self.hdr_fb,
-            ListLights::default(),
+            &self.bloom,
         ));
 
         PollResult::Draw(out)

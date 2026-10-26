@@ -172,3 +172,10 @@ make_included! {
     "shaders/deferred/process/process.vert",
     "shaders/deferred/process/process.frag",
 }
+
+make_included! {
+    ShaderProgram<Quad<GBUFFER_ELEMENTS>, ListLights<'static, 2>, 3, FlatTexture>,
+    deferred_simple_process_hdr,
+    "shaders/deferred/process/process.vert",
+    "shaders/deferred/process/process.frag",
+}

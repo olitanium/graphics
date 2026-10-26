@@ -12,6 +12,7 @@ pub struct ShaderProgramContext {
     current_program: Option<ShaderProgramId::Primitive>,
     current_cull_face: CullFace,
     current_drawing_skybox: bool,
+    blend: BlendType,
 
     forced_cull_face: Option<CullFace>,
 }
@@ -25,6 +26,7 @@ impl ShaderProgramContext {
             current_program: None,
             forced_cull_face: None,
             current_cull_face: CullFace::DoNotCull,
+            blend: BlendType::Immediate,
             current_drawing_skybox: false,
         })
     }
@@ -77,6 +79,47 @@ impl ShaderProgramContext {
         if let Some(cull_face) = cull_face {
             self.cull_face_after_check(cull_face);
         }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BlendType {
+    Immediate,
+    Sum,
+    None,
+}
+
+impl BlendType {
+    fn act(self) {
+        match self {
+            Self::Immediate => {
+                gl_call! {gl::Enable(gl::BLEND);
+                }
+                gl_call! {
+                    gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+                }
+            }
+            Self::Sum => {
+                gl_call! {gl::Enable(gl::BLEND);
+
+                }
+                gl_call! {
+                    gl::BlendFunc(gl::ONE, gl::ONE);
+                }
+            }
+            Self::None => gl_call! {gl::Disable(gl::BLEND);},
+        }
+    }
+}
+
+impl ShaderProgramContext {
+    pub(crate) fn blend(&mut self, blend: BlendType) -> Option<BlendType> {
+        (blend != self.blend).then(|| {
+            blend.act();
+            let out = blend;
+            self.blend = blend;
+            out
+        })
     }
 }
 

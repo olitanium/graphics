@@ -33,6 +33,7 @@ pub use uniform_name::UniformName;
 
 mod cull_face;
 use ::utils::error_boilerplate;
+pub use context::BlendType;
 pub use cull_face::CullFace;
 
 pub struct ShaderProgram<M: Model, O, const OUT: usize, T: Texture> {

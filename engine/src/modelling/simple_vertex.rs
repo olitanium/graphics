@@ -140,3 +140,43 @@ impl VertexHasTangent for SimpleVertex {
         self.normal
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use geometry::{Pose, TransformBy};
+    use graphics::linear_algebra::{UnitVector, vector};
+
+    use crate::modelling::{ExtendedVertex as _, IncompleteVertex, SimpleVertex};
+
+    #[test]
+    fn incomplete() {
+        let triangle = [
+            IncompleteVertex::new(vector![0.0, 0.0, 0.0]).texture(vector![0.0, 0.0]),
+            IncompleteVertex::new(vector![1.0, 0.0, 0.0]).texture(vector![1.0, 0.0]),
+            IncompleteVertex::new(vector![0.0, 1.0, 0.0]).texture(vector![0.0, 1.0]),
+        ];
+
+        for pose in [
+            Pose::IDENTITY,
+            Pose::new_from_to_up(
+                vector![0.0, 1.0, 0.0],
+                vector![0.0, 0.0, 1.0],
+                vector![1.0, 0.0, 0.0].try_normalize().unwrap(),
+            )
+            .unwrap(),
+            Pose::new_from_to_up(
+                vector![2.0, 1.0, 0.0],
+                vector![0.0, 1.0, 1.0],
+                vector![1.0, 0.0, 4.0].try_normalize().unwrap(),
+            )
+            .unwrap(),
+        ] {
+            let simple_triangle =
+                SimpleVertex::from_incomplete_triangle(triangle.clone().transform_by(pose))
+                    .unwrap();
+
+            assert_eq!(simple_triangle[0].normal, UnitVector::Z.transform_by(pose));
+            assert_eq!(simple_triangle[0].tangent, UnitVector::X.transform_by(pose));
+        }
+    }
+}

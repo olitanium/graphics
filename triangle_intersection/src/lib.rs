@@ -194,9 +194,9 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
             .is_some_and(|(new_one_trunc, new_two_trunc)| intersect2(new_one_trunc, new_two_trunc)),
         CrossType::Success(new_one, new_two) => {
             // TODO: intersecting planes and/or triangles
-            use SignOrZero as S;
             #[cfg(debug_assertions)]
             {
+                use SignOrZero as S;
                 let test1 = make_determinants_signorzero(new_one, new_two);
                 assert!(
                     matches!(

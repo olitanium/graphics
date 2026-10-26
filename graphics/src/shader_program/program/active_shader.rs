@@ -10,6 +10,7 @@ use utils::error_boilerplate;
 
 use super::uniform::Uniform;
 use super::{CullFace, ShaderProgram, ShaderProgramContext};
+use crate::shader_program::BlendType;
 use crate::shader_program::program::context::FaceCullingForcedByProgramError;
 use crate::shader_program::program::uniform::SetUniformError;
 use crate::shader_program::program::{GetUniformLocationError, UniformName};
@@ -225,6 +226,10 @@ impl<M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, '_, 
     // TODO: Drawing Skybox Token which is passed to SkyBox::draw
     pub fn drawing_skybox(&mut self, drawing_skybox: bool) {
         self.context.drawing_skybox(drawing_skybox);
+    }
+
+    pub fn set_blend(&mut self, blend: BlendType) -> Option<BlendType> {
+        self.context.blend(blend)
     }
 }
 

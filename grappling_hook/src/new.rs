@@ -140,34 +140,35 @@ impl State {
 }
 
 pub fn make_model(which_model: &str) -> Result<SimpleCubic, StateError> {
-    use engine::PostProcess as P;
-    let model = match which_model {
-        "bear" => SimpleCubic::import(
-            "assets/Teddy Statue/Teddy Statue.obj",
-            vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
-            true,
-        )
-        .unwrap()
-        .cull_face(CullFace::BackFace)
-        .scale(0.01)
-        .apply_transformation(Pose::new_from_translation(vector![
-            0.0, -1.2773916, 0.42744067,
-        ]))
-        .build(),
-        "backpack" => SimpleCubic::import(
-            "assets/backpack/backpack.obj",
-            vec![
-                P::Triangulate,
-                P::FlipUVs,
-                P::OptimizeGraph,
-                P::OptimizeMeshes,
-            ],
-            false,
-        )
-        .unwrap()
-        .material(Rc::new(Material::white()))
-        .build(),
-        _ => SimpleCubic::empty(),
-    };
-    Ok(model)
+    // use engine::PostProcess as P;
+    // let model = match which_model {
+    // "bear" => SimpleCubic::import(
+    // "assets/Teddy Statue/Teddy Statue.obj",
+    // vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
+    // true,
+    // )
+    // .unwrap()
+    // .cull_face(CullFace::BackFace)
+    // .scale(0.01)
+    // .apply_transformation(Pose::new_from_translation(vector![
+    // 0.0, -1.2773916, 0.42744067,
+    // ]))
+    // .build(),
+    // "backpack" => SimpleCubic::import(
+    // "assets/backpack/backpack.obj",
+    // vec![
+    // P::Triangulate,
+    // P::FlipUVs,
+    // P::OptimizeGraph,
+    // P::OptimizeMeshes,
+    // ],
+    // false,
+    // )
+    // .unwrap()
+    // .material(Rc::new(Material::white()))
+    // .build(),
+    // _ => SimpleCubic::empty(),
+    // };
+    // Ok(model)
+    todo!()
 }

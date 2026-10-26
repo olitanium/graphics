@@ -3,14 +3,15 @@ use engine::entity::SkeletonEntity;
 use engine::geometry::Pose;
 use engine::modelling::cubic::SimpleCubic;
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
+use engine::modelling::cubic::lighting::simple::PointLight;
 
 pub struct Sun {
     pub inner: SimpleEntity<()>,
-    pub light: ShadowPointLight,
+    pub light: PointLight,
 }
 
 impl Sun {
-    pub fn model_and_pose(&self) -> (&SimpleCubic, Pose) {
+    pub const fn model_and_pose(&self) -> (&SimpleCubic, Pose) {
         self.inner.temp_as_simplecubic_and_anim()
     }
 }

@@ -34,6 +34,10 @@ impl FlatTexture {
     pub fn monochrome(colour: ColourRGBA) -> Self {
         Self::builder().monochrome(colour).build()
     }
+
+    pub fn monochrome_clamped(colour: ColourRGBA) -> Self {
+        Self::builder().monochrome_clamped(colour).build()
+    }
 }
 
 impl Drop for FlatTexture {

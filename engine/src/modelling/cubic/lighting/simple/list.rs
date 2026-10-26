@@ -7,7 +7,6 @@ use graphics::texture::Texture;
 
 use super::super::traits::ListLightCompatible;
 use super::{FarLight, PointLight, SpotLight};
-use crate::modelling::CubicVertex;
 use crate::modelling::cubic::lighting::simple::SimpleBindError;
 
 #[derive(Clone, Debug, Default)]

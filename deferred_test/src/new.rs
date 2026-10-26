@@ -2,8 +2,8 @@ use alloc::rc::Rc;
 use core::num::NonZero;
 
 use engine::entity::Mass;
-use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals as _;
+use engine::framebuffer::{Builder, Framebuffer};
 use engine::geometry::Pose;
 use engine::linear_algebra::{Vector, vector};
 use engine::modelling::cubic::SimpleCubic;
@@ -13,7 +13,7 @@ use engine::modelling::cubic::material::Material;
 use engine::modelling::{Bloom, SkyBox};
 use engine::texture::{CubeMap, FlatTexture, Image, TextureHasBuilder as _, WrapType};
 use engine::types::TexDim;
-use engine::{ColourRGBA, SimpleEntity};
+use engine::{ColourRGB, ColourRGBA, SimpleEntity};
 
 use crate::camera::GameCamera;
 use crate::player::Player;
@@ -24,7 +24,7 @@ impl State {
     pub fn new_internal(screen_dims: (TexDim, TexDim)) -> Self {
         let exposure = 1.0;
 
-        let hdr_fb = Builder::new_flat()
+        let gbuffer = Builder::new_flat()
             .depth()
             .stencil()
             .size(screen_dims)
@@ -51,23 +51,22 @@ impl State {
                 ORIGIN_CUBE_SIDE_LENGTH,
                 Rc::new(
                     Material::builder()
-                        .normal_map(
-                            FlatTexture::builder()
-                                .image(
-                                    Image::new_from_srgba("assets/brick_wall/normal.png").unwrap(),
-                                )
-                                .wrap_s_t(WrapType::ClampToEdge)
-                                .build(),
-                        )
                         .diffuse(
                             FlatTexture::builder()
                                 .image(
-                                    Image::new_from_srgba("assets/brick_wall/brickwall.jpg")
+                                    Image::new_from_srgba("assets/brickwall/brickwall.jpg")
                                         .unwrap(),
                                 )
                                 .wrap_s_t(WrapType::ClampToEdge)
                                 .build(),
                         )
+                        .normal_map(
+                            FlatTexture::builder()
+                                .image(Image::new_from_rgba("assets/brickwall/normal.png").unwrap())
+                                .wrap_s_t(WrapType::ClampToEdge)
+                                .build(),
+                        )
+                        .shininess(32.0)
                         .build(),
                 ),
             )
@@ -97,10 +96,11 @@ impl State {
         );
 
         let player = Player::new();
-        let game_camera = GameCamera::new::<3, _>(&hdr_fb);
+        let game_camera = GameCamera::new::<3, _>(&gbuffer);
 
         let mut bear = make_model();
-        let bear_colour = ColourRGBA::new([0.8, 0.1, 0.1, 1.0]);
+        let bear_colour = ColourRGB::WHITE.map(|x| x * 3.0).to_rgba_with(1.0);
+
         bear.temp_set_all_material(Rc::new(
             Material::builder()
                 .emission(FlatTexture::monochrome(bear_colour))
@@ -118,28 +118,27 @@ impl State {
             specular: bear_colour.to_rgb(),
         };
 
-        let point_light = ShadowPointLight::new(
-            inner_point_light.clone(),
-            TexDim::from_non_zero(const { NonZero::new(1000).unwrap() }),
-        );
-
         let sun_duplicate_light = ShadowPointLight::new(
-            inner_point_light,
+            inner_point_light.clone(),
             const { TexDim::from_non_zero(NonZero::new(1000).unwrap()) },
         );
 
         let sun = Sun {
             inner: sun,
-            light: point_light,
+            light: inner_point_light,
         };
 
-        let bloom = Bloom::new(hdr_fb.size());
+        let hdr_fb: Framebuffer<3, engine::framebuffer::attachments::WithoutExtra> =
+            Builder::new_flat().size(gbuffer.size()).build();
+
+        let bloom = Bloom::new(gbuffer.size());
 
         Self {
             game_camera,
             exposure,
 
             skybox,
+            hdr_out: hdr_fb,
 
             sun,
             sun_duplicate_light,
@@ -149,7 +148,7 @@ impl State {
 
             toggle_m: true,
 
-            hdr_fb,
+            gbuffer,
             toggle_g: true,
             bloom,
         }

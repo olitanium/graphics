@@ -7,7 +7,6 @@ use graphics::shader_program::ActiveShaderProgram;
 use graphics::texture::Texture;
 
 use super::super::traits::ListLightCompatible;
-use crate::modelling::CubicVertex;
 use crate::modelling::cubic::lighting::simple::SimpleBindError;
 
 #[derive(Clone, Debug)]
@@ -31,10 +30,17 @@ impl FarLight {
         T: Texture,
         M: Model,
     {
-        shader.set_uniform(
+        let varying = shader.set_uniform(
             &CString::new(format!("{name}_vary[{index}].direction"))?,
             &self.direction,
-        )?;
+        );
+        let still = shader.set_uniform(
+            &CString::new(format!("{name}[{index}].direction"))?,
+            &self.direction,
+        );
+        if let (Err(varying), Err(still)) = (varying, still) {
+            return Err(SimpleBindError::SetUniformVarying { varying, still });
+        }
         shader.set_uniform(
             &CString::new(format!("{name}[{index}].ambient"))?,
             &self.ambient,

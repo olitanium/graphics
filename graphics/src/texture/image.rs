@@ -16,6 +16,7 @@ pub struct Image {
 #[derive(Debug, Clone)]
 pub enum ImageType {
     Linear(Vec<ColourRGBA>),
+    LinearUnclamped(Vec<ColourRGBA>),
     Srgba(Vec<ColourRGBA>),
 }
 
@@ -89,10 +90,17 @@ impl Image {
 
     new_from_file!(new_from_rgba Linear);
 
-    pub fn new_monochrome(colour: ColourRGBA) -> Self {
+    pub fn new_monochrome_clamped(colour: ColourRGBA) -> Self {
         Self {
             size: (TexDim::new(1), TexDim::new(1)),
             data: ImageType::Linear(vec![colour]),
+        }
+    }
+
+    pub fn new_monochrome(colour: ColourRGBA) -> Self {
+        Self {
+            size: (TexDim::new(1), TexDim::new(1)),
+            data: ImageType::LinearUnclamped(vec![colour]),
         }
     }
 
@@ -100,6 +108,7 @@ impl Image {
         let internal_format = match &self.data {
             ImageType::Linear(_) => gl::RGBA,
             ImageType::Srgba(_) => gl::SRGB_ALPHA,
+            ImageType::LinearUnclamped(_) => gl::RGBA16F,
         } as types::GLint;
 
         let size = self.size;
@@ -107,10 +116,13 @@ impl Image {
         let type_ = match &self.data {
             ImageType::Linear(_) => gl::FLOAT,
             ImageType::Srgba(_) => gl::FLOAT,
+            ImageType::LinearUnclamped(_) => gl::FLOAT,
         };
 
         let slice = match &self.data {
-            ImageType::Linear(x) | ImageType::Srgba(x) => x.as_slice(),
+            ImageType::Linear(x) | ImageType::Srgba(x) | ImageType::LinearUnclamped(x) => {
+                x.as_slice()
+            }
         };
 
         TexInternalFormat {

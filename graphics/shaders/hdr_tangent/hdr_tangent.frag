@@ -95,7 +95,7 @@ vec4 FarLight_illuminate(FarLight, FarLightVarying);
 vec4 SpotLight_illuminate(SpotLight, SpotLightVarying);
 
 
-vec4 diffuse_map = texture(material.diffuse, texture_coord);
+vec4 albedo = texture(material.diffuse, texture_coord);
 vec4 specular_map = texture(material.specular_map, texture_coord);
 vec4 emission = texture(material.emission, texture_coord);
 vec3 ambient_occlusion = texture(material.ambient_occlusion, texture_coord).rgb;
@@ -117,7 +117,7 @@ void main() {
 
 
     // TODO: fix alpha with an HDR buffer
-    float alpha = max(diffuse_map.a, emission.a);
+    float alpha = max(albedo.a, emission.a);
     vec4 colour = vec4((illumination + emission).xyz, alpha);
     
     if (colour.a < 0.01) {
@@ -136,11 +136,11 @@ void main() {
 
 GenericOutput generic_light(GenericLight light) {
     // Ambient
-    vec4 ambient = vec4(light.ambient, 1.0) * diffuse_map * vec4(ambient_occlusion, 1.0);
+    vec4 ambient = vec4(light.ambient, 1.0) * albedo * vec4(ambient_occlusion, 1.0);
     
     // Diffuse
     float diffuse_intensity = max(dot(normal, light.light_dir), 0.0);
-    vec4 diffuse = vec4(light.diffuse * diffuse_intensity, 1.0) * diffuse_map;
+    vec4 diffuse = vec4(light.diffuse * diffuse_intensity, 1.0) * albedo;
 
     // Specular
     vec3 reflect_dir = reflect(-light.light_dir, normal);
@@ -150,8 +150,7 @@ GenericOutput generic_light(GenericLight light) {
 
     vec4 specular = vec4(light.specular, 1.0)
         * pow(cos_reflect_angle, material.shininess)
-        * specular_map
-    ;
+        * specular_map;
 
     return GenericOutput (
         ambient,

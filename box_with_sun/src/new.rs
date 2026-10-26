@@ -77,7 +77,7 @@ impl State {
         let bear_colour = ColourRGBA::new([0.8, 0.1, 0.1, 1.0]);
         bear.temp_set_all_material(Rc::new(
             Material::builder()
-                .emission(FlatTexture::monochrome(bear_colour))
+                .emission(FlatTexture::monochrome_clamped(bear_colour))
                 .build(),
         ));
         let sun = SimpleEntity::from_simple_cubic(bear, 20, Mass::new_inverse(1.0), |_| ());
