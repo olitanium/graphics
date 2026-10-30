@@ -1,9 +1,7 @@
 use engine::SimpleEntity;
-use engine::entity::SkeletonEntity;
 use engine::geometry::Pose;
 use engine::modelling::cubic::SimpleCubic;
 use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
-use engine::modelling::cubic::lighting::simple::PointLight;
 
 pub struct Sun {
     pub inner: SimpleEntity<()>,

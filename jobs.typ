@@ -5,6 +5,7 @@
 - Yeet instead of Err(...into()) or Err(...)?
 
 == Can Do Now
+- Deferred Shading SSAO.
 - VecOne periodically when appropriate, to remove unwraps
 - Movement Vectors available in Shaders
 - impl VertexHasTangent for others

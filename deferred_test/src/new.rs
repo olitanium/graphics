@@ -2,6 +2,7 @@ use alloc::rc::Rc;
 use core::num::NonZero;
 
 use engine::entity::Mass;
+use engine::framebuffer::attachments::WithoutExtra;
 use engine::framebuffer::traits::FramebufferInternals as _;
 use engine::framebuffer::{Builder, Framebuffer};
 use engine::geometry::Pose;
@@ -13,7 +14,7 @@ use engine::modelling::cubic::material::Material;
 use engine::modelling::{Bloom, SkyBox};
 use engine::texture::{CubeMap, FlatTexture, Image, TextureHasBuilder as _, WrapType};
 use engine::types::TexDim;
-use engine::{ColourRGB, ColourRGBA, SimpleEntity};
+use engine::{ColourRGB, SimpleEntity};
 
 use crate::camera::GameCamera;
 use crate::player::Player;
@@ -126,8 +127,7 @@ impl State {
             light: inner_point_light,
         };
 
-        let hdr_fb: Framebuffer<3, engine::framebuffer::attachments::WithoutExtra> =
-            Builder::new_flat().size(gbuffer.size()).build();
+        let hdr_fb: Framebuffer<3, WithoutExtra> = Builder::new_flat().size(gbuffer.size()).build();
 
         let bloom = Bloom::new(gbuffer.size());
 

@@ -73,12 +73,12 @@ arbitrary_source_item_ordering = "allow"
 shadow_same = "allow"
 shadow_unrelated = "allow"
 wildcard_enum_match_arm = "allow"
+cast_precision_loss = "allow"
 
 # not sure
 todo = "allow"
 unimplemented = "allow"
 unreachable = "allow"
-
 
 items_after_statements = "allow"
 multiple_inherent_impl = "allow"

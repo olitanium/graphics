@@ -1,5 +1,6 @@
 use engine::SimpleEntity;
 use engine::entity::{EntityInner, ToAggregateEntity};
+use engine::geometry::Pose;
 use engine::modelling::cubic::SimpleCubic;
 use engine::modelling::{Collision, SkeletonCubic};
 
@@ -14,10 +15,7 @@ impl Collision for Bear {
     type Vertex = <SimpleEntity<()> as Collision>::Vertex;
     type VertexTransform<'a> = <SimpleEntity<()> as Collision>::VertexTransform<'a>;
 
-    fn collides<
-        T: Collision + ?Sized,
-        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
-    >(
+    fn collides<T, F>(
         &self,
         self_transform: &Self::Transform<'_>,
         self_vertex_transform: &Self::VertexTransform<'_>,
@@ -25,7 +23,11 @@ impl Collision for Bear {
         target_transform: &T::Transform<'_>,
         target_vertex_transform: &T::VertexTransform<'_>,
         alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>> {
+    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>
+    where
+        T: Collision + ?Sized,
+        F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
+    {
         self.inner.collides(
             self_transform,
             self_vertex_transform,
@@ -49,7 +51,7 @@ impl ToAggregateEntity<SimpleCubic> for Bear {
         self.inner.to_pair_model_bbox()
     }
 
-    fn root_pose(&self) -> engine::geometry::Pose {
+    fn root_pose(&self) -> Pose {
         <SimpleEntity<()> as ToAggregateEntity<SimpleCubic>>::root_pose(&self.inner)
     }
 }
@@ -61,12 +63,12 @@ impl ToAggregateEntity<SkeletonCubic> for Bear {
         self,
     ) -> (
         SkeletonCubic,
-        Option<<SkeletonCubic as engine::entity::EntityInner>::BoundingBox<()>>,
+        Option<<SkeletonCubic as EntityInner>::BoundingBox<()>>,
     ) {
         self.inner.to_pair_model_bbox()
     }
 
-    fn root_pose(&self) -> engine::geometry::Pose {
+    fn root_pose(&self) -> Pose {
         <SimpleEntity<()> as ToAggregateEntity<SkeletonCubic>>::root_pose(&self.inner)
     }
 }

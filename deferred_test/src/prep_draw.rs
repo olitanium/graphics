@@ -3,20 +3,10 @@ use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::SimpleCubicDeferredGroup;
 use engine::modelling::cubic::lighting::shadow::{
     ListLightIlluminatesGroup,
-    PointLightIlluminatesGroup,
     ShadowListLights,
 };
-use engine::modelling::cubic::lighting::simple::ListLights;
-use engine::modelling::{
-    Bloom,
-    BloomGroup,
-    FramebufferQuad,
-    ScreenQuadGroup,
-    ShadowGroup,
-    SkyBoxGroup,
-};
-use engine::query::HasDrawnQuery;
-use engine::{Draw, PollResult, VecDraw, deferred, opengl_shaders};
+use engine::modelling::BloomGroup;
+use engine::{Draw, PollResult, VecDraw, deferred};
 
 use crate::state::{State, StateError};
 

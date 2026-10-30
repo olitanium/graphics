@@ -3,7 +3,7 @@ use core::num::NonZero;
 
 use engine::entity::Mass;
 use engine::framebuffer::Builder;
-use engine::framebuffer::traits::FramebufferInternals;
+use engine::framebuffer::traits::FramebufferInternals as _;
 use engine::geometry::Pose;
 use engine::linear_algebra::{UnitVector, Vector, vector};
 use engine::modelling::cubic::lighting::shadow::{ShadowPointLight, ShadowSpotLight};
@@ -11,8 +11,7 @@ use engine::modelling::cubic::lighting::simple::{PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
 use engine::modelling::cubic::{CameraBuilder, ManualPoseFixedUp, SimpleCubic};
 use engine::modelling::{Bloom, SkyBox};
-use engine::shader_program::CullFace;
-use engine::texture::{CubeMap, TextureHasBuilder};
+use engine::texture::{CubeMap, TextureHasBuilder as _};
 use engine::types::TexDim;
 use engine::{ColourRGB, SimpleEntity};
 
@@ -21,7 +20,7 @@ use crate::grappling_hook::{GrapplingHook, UpdateInput};
 use crate::state::{State, StateError};
 
 impl State {
-    pub fn new_internal(size: (TexDim, TexDim)) -> Result<Self, StateError> {
+    pub fn new_internal(size: (TexDim, TexDim)) -> Self {
         let speed = [1.0, 1.0, 1.0];
         let exposure = 1.0;
 
@@ -97,8 +96,8 @@ impl State {
                 ambient: spotlight_colour.map(|x| x * 0.0),
                 diffuse: spotlight_colour,
                 specular: spotlight_colour,
-                cos_cut_off: 20f32.to_radians().cos(),
-                cos_outer_cut_off: 25f32.to_radians().cos(),
+                cos_cut_off: 20_f32.to_radians().cos(),
+                cos_outer_cut_off: 25_f32.to_radians().cos(),
             },
             TexDim::from_non_zero(const { NonZero::new(1000).unwrap() }),
         );
@@ -109,7 +108,7 @@ impl State {
         let grapple_animation =
             grappling_hook.update(0.0, &mut UpdateInput::<Bear, Bear, Bear>::default());
 
-        Ok(Self {
+        Self {
             toggle_b: false,
             time: 0.0,
             game_start: None,
@@ -135,11 +134,11 @@ impl State {
             point_light,
             spotlight,
             ns_point_light,
-        })
+        }
     }
 }
 
-pub fn make_model(which_model: &str) -> Result<SimpleCubic, StateError> {
+pub fn make_model(_which_model: &str) -> Result<SimpleCubic, StateError> {
     // use engine::PostProcess as P;
     // let model = match which_model {
     // "bear" => SimpleCubic::import(

@@ -14,7 +14,7 @@ pub const fn rsqrt(squared: f32) -> f32 {
 
 #[inline]
 pub const fn newton_method(half: f32, guess: f32) -> f32 {
-    guess * (1.5 - (half * guess * guess))
+    guess * (half * guess).mul_add(-guess, 1.5)
 }
 
 #[cfg(test)]

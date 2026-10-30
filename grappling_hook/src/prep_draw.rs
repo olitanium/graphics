@@ -15,13 +15,13 @@ use crate::state::{State, StateError};
 
 impl State {
     pub fn draw<'a>(
-        &'a mut self,
+        &'a self,
         default_framebuffer: &'a DefaultFramebuffer,
     ) -> PollResult<VecDraw<'a>, StateError> {
         let mut out = VecDraw::new();
 
         out.push(SkyBoxGroup::new(
-            engine::opengl_shaders::skybox_hdr(),
+            opengl_shaders::skybox_hdr(),
             &self.hdr_fb,
             &self.skybox,
             &self.camera,
@@ -57,7 +57,7 @@ impl State {
                 },
                 vec![bear.inner.temp_as_simplecubic_and_anim()],
                 vec![],
-            ))
+            ));
         }
 
         if self.toggle_g {
@@ -69,7 +69,7 @@ impl State {
         } else {
             let fb = FramebufferQuad::new_from_framebuffer(&self.hdr_fb);
             out.push(ScreenQuadGroup::new(
-                engine::opengl_shaders::exposure3(),
+                opengl_shaders::exposure3(),
                 default_framebuffer,
                 fb,
                 vec![(c"exposure".to_owned(), &self.exposure)],

@@ -1,6 +1,5 @@
 use alloc::rc::Rc;
 use core::fmt::Debug;
-use std::path::Path;
 
 use geometry::Pose;
 use graphics::Model;

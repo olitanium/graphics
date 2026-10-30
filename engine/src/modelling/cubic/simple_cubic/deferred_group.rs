@@ -4,7 +4,7 @@ use core::error::Error;
 use geometry::Pose;
 use graphics::framebuffer::traits::FramebufferWithoutExtra as _;
 use graphics::linear_algebra::Matrix;
-use graphics::shader_program::{BlendType, CullFace, Uniform};
+use graphics::shader_program::{BlendType, Uniform};
 use graphics::{Draw, DrawOut, ShaderProgram, framebuffer};
 
 use crate::deferred::GBuffer;

@@ -1,6 +1,5 @@
 use core::fmt;
 
-use colour::ColourRGBA;
 
 use crate::framebuffer::traits::{AttachmentTextureInfo, OptTexBuilderMap};
 use crate::framebuffer::{

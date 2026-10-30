@@ -1,9 +1,7 @@
 use std::collections::HashSet;
 
 use engine::Key;
-use engine::framebuffer::Framebuffer;
-use engine::framebuffer::attachments::WithDepth;
-use engine::framebuffer::traits::{FramebufferInternals as _, FramebufferWithoutExtra};
+use engine::framebuffer::traits::FramebufferWithoutExtra;
 use engine::linear_algebra::{UnitVector, Vector, vector};
 use engine::modelling::cubic::{self, CameraBuilder, ManualPoseFixedUp};
 

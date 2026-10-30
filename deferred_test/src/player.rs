@@ -1,15 +1,11 @@
 use alloc::rc::Rc;
 
-use engine::entity::{Mass, Physics, SkeletonEntity};
+use engine::entity::Mass;
 use engine::geometry::Pose;
-use engine::linear_algebra::{UnitVector, Vector, vector};
+use engine::linear_algebra::{Vector, vector};
+use engine::modelling::cubic::SimpleCubic;
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{CalculatedAnimation, SimpleCubic};
-use engine::modelling::{Collision, CubicVertex, SkeletonCubic};
-use engine::{ColourRGBA, Key, SimpleEntity};
-use utils::hash_matches;
-
-use crate::camera::GameCamera;
+use engine::{ColourRGBA, SimpleEntity};
 
 pub struct Player {
     entity: SimpleEntity<()>,

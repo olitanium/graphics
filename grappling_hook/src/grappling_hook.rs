@@ -2,7 +2,7 @@ use alloc::rc::Rc;
 
 use engine::ColourRGBA;
 use engine::entity::{AggregateEntity, AggregateModelIndex, ToAggregateEntity};
-use engine::geometry::{Pose, Transform};
+use engine::geometry::{Pose, Transform as _};
 use engine::linear_algebra::vector;
 use engine::modelling::cubic::material::Material;
 use engine::modelling::cubic::{
@@ -66,7 +66,7 @@ impl GrapplingHook {
         const CHAIN_LINK_SIZE: f32 = 0.5;
         const SEC_PER_UNIT: f32 = CHAIN_LINK_SIZE;
 
-        for _ in 1..len + 1 {
+        for _ in 1..=len {
             // bone 0 is the root so we need one more than LEN
             // Create new bone to correspond to the created animation
             let new_bone = Bone::builder(bones_root_to_tip.last().expect("filled"))
@@ -84,10 +84,10 @@ impl GrapplingHook {
             // add cube to each bone
             chain.push_cube(
                 Pose::IDENTITY,
-                white_material.clone(),
+                Rc::clone(&white_material),
                 CHAIN_LINK_SIZE,
                 bone,
-            )
+            );
         }
 
         // array_windows is a way to ensure that the last index is skipped
@@ -261,7 +261,7 @@ impl GrapplingHook {
                 .calculate_animation(None, [(&self.chain, (&self.chain_animation, 0.0))].into())
                 .expect("chain_animation is well defined for the chain element"),
             HookState::Extending { length, velocity } => {
-                *length += *velocity * timestep;
+                *length = f32::mul_add(*velocity, timestep, *length);
 
                 if *length < 0.0 {
                     self.hook_state = HookState::Still;
@@ -282,8 +282,7 @@ impl GrapplingHook {
                     )
                     .expect("chain_animation is well defined for the chain element");
 
-                for (grapple_targets, grapple_transform, vertex_transform) in
-                    target.grapple_points.iter()
+                for (grapple_targets, grapple_transform, vertex_transform) in &target.grapple_points
                 {
                     let mut collided = false;
 
@@ -293,7 +292,7 @@ impl GrapplingHook {
                         *grapple_targets,
                         grapple_transform,
                         vertex_transform,
-                        |(ref self_aggr, _), _, _, _| {
+                        |(ref self_aggr, _), (), _, _| {
                             if Some(self_aggr) == self.hook.as_ref() {
                                 collided = true;
                             }
@@ -319,7 +318,7 @@ impl GrapplingHook {
                     }
                 }
 
-                for opt_carry in target.carryable_objects.iter_mut() {
+                for opt_carry in &mut target.carryable_objects {
                     if let Some((ref_target, target_transform, vertex_transform)) =
                         opt_carry.as_ref()
                     {
@@ -331,7 +330,7 @@ impl GrapplingHook {
                             ref_target,
                             target_transform,
                             vertex_transform,
-                            |(ref self_aggr, _), _, _, _| {
+                            |(ref self_aggr, _), (), _, _| {
                                 if Some(self_aggr) == self.hook.as_ref() {
                                     collided = true;
                                 }
@@ -382,7 +381,7 @@ impl GrapplingHook {
                     }
                 }
 
-                for (other, other_tranform, vertex_transform) in target.other_entities.iter() {
+                for (other, other_tranform, vertex_transform) in &target.other_entities {
                     let mut collided = false;
 
                     self.entity.collides(
@@ -391,7 +390,7 @@ impl GrapplingHook {
                         *other,
                         other_tranform,
                         vertex_transform,
-                        |(ref self_aggr, _), _, _, _| {
+                        |(ref self_aggr, _), (), _, _| {
                             if Some(self_aggr) == self.hook.as_ref() {
                                 collided = true;
                             }
@@ -412,7 +411,7 @@ impl GrapplingHook {
                 ref mut length,
                 fixed_pose,
             } => {
-                *length -= velocity * timestep;
+                *length = f32::mul_add(velocity, -timestep, *length);
 
                 if *length < 0.0 {
                     *length = 0.0;
@@ -434,7 +433,7 @@ impl GrapplingHook {
 
                 if *length == 0.0 {
                     self.hook_state = HookState::Still;
-                    self.entity.base_pose = transform.root().root()
+                    self.entity.base_pose = transform.root().root();
                 }
 
                 transform
@@ -442,7 +441,7 @@ impl GrapplingHook {
             HookState::GrabbedObject {
                 length, velocity, ..
             } => {
-                *length -= *velocity * timestep;
+                *length = f32::mul_add(*velocity, -timestep, *length);
 
                 if *length < 0.0 {
                     self.hook_state = HookState::Still;
@@ -463,12 +462,12 @@ impl GrapplingHook {
 }
 
 impl GrapplingHook {
-    pub fn start(&mut self) {
+    pub const fn start(&mut self) {
         if matches!(self.hook_state, HookState::Still) {
             self.hook_state = HookState::Extending {
                 length: 0.0,
                 velocity: VELOCITY,
             }
-        };
+        }
     }
 }

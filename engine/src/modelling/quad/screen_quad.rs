@@ -6,12 +6,11 @@ use graphics::framebuffer::traits::{FramebufferAttachment, FramebufferWithoutExt
 use graphics::framebuffer::{ActiveFramebuffer, Framebuffer};
 use graphics::shader_program::CullFace;
 use graphics::texture::{FlatTexture, Texture};
-use graphics::{ActiveShaderProgram, Model, vertex_array};
+use graphics::{ActiveShaderProgram, vertex_array};
 pub use group::Group as ScreenQuadGroup;
 use utils::error_boilerplate;
 
-use crate::GBUFFER_ELEMENTS;
-use crate::modelling::{CubicVertex, Quad, test_models};
+use crate::modelling::{Quad, test_models};
 
 #[derive(Debug)]
 pub struct FramebufferQuad<'a, const N: usize, X: FramebufferAttachment<Tex = FlatTexture>> {

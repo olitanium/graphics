@@ -15,7 +15,6 @@ use crate::entity::EntityInner;
 use crate::modelling::SkeletonCubic;
 use crate::modelling::cubic::animation::CalculatedAnimation;
 use crate::modelling::cubic::camera::CameraPose;
-use crate::modelling::cubic::lighting::shadow::DepthTestable;
 use crate::opengl_shaders;
 
 pub const SHADOW_SHADER_MAX_LIGHTS: usize = 2;

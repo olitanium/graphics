@@ -11,7 +11,6 @@ use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
 use engine::modelling::cubic::lighting::simple::PointLight;
 use engine::modelling::cubic::material::Material;
 use engine::modelling::{Bloom, SkyBox};
-use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, FlatTexture, TextureHasBuilder as _};
 use engine::types::TexDim;
 use engine::{ColourRGBA, SimpleEntity};

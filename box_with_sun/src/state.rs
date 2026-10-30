@@ -53,7 +53,7 @@ impl ApiState for State {
         events: Vec<Event<'a>>,
     ) -> PollResult<Self::DrawOutput<'a>, Self::Error> {
         let mut frame_time = Duration::ZERO;
-        let mut game_duration = Duration::ZERO;
+        let game_duration = Duration::ZERO;
         let mut keyboard = HashSet::new();
         let mut mouse_delta = Vector::default();
         let mut local_string = None;

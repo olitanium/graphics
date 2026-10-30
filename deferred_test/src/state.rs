@@ -2,13 +2,11 @@ use core::time::Duration;
 use std::collections::HashSet;
 
 use engine::deferred::GBuffer;
-use engine::entity::SkeletonEntity;
 use engine::framebuffer::Framebuffer;
-use engine::framebuffer::attachments::{WithDepth, WithoutExtra};
+use engine::framebuffer::attachments::WithoutExtra;
 use engine::framebuffer::traits::FramebufferInternals as _;
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::CameraProjection;
-use engine::modelling::cubic::lighting::shadow::ShadowPointLight;
 use engine::modelling::{Bloom, SkyBox};
 use engine::types::TexDim;
 use engine::{ApiState, Draw, Event, PollResult, SimpleEntity};
@@ -54,7 +52,7 @@ impl ApiState for State {
         events: Vec<Event<'a>>,
     ) -> PollResult<Self::DrawOutput<'a>, Self::Error> {
         let mut frame_time = Duration::ZERO;
-        let mut game_duration = Duration::ZERO;
+        let game_duration = Duration::ZERO;
         let mut keyboard = HashSet::new();
         let mut mouse_delta = Vector::default();
         let mut local_string = None;

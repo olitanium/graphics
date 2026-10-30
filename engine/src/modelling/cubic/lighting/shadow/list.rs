@@ -15,8 +15,6 @@ use graphics::{Draw, DrawOut, Model};
 use utils::error_boilerplate;
 
 use super::{ShadowFarLight, ShadowPointLight, ShadowSpotLight};
-use crate::modelling::SkeletonCubic;
-use crate::modelling::cubic::CalculatedAnimation;
 use crate::modelling::cubic::lighting::shadow::{BindError, DepthTestable};
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
 
@@ -178,7 +176,7 @@ impl<M: DepthTestable, const MAX: usize> Draw for ListLightIlluminatesGroup<'_, 
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
     ) -> Result<DrawOut, Box<dyn Error>> {
-        let _ = self
+        _ = self
             .light
             .gen_depth(sp_context, fb_context, &self.opaque, self.target, &[]);
         //.map_err(|err| err.to_string())?;

@@ -11,7 +11,6 @@ use super::GBUFFER_ELEMENTS;
 use crate::deferred::GBuffer;
 use crate::modelling::FramebufferQuad;
 use crate::modelling::cubic::lighting::shadow::ShadowListLights;
-use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::cubic::{Camera, CameraPose};
 use crate::opengl_shaders;
 

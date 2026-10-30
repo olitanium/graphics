@@ -6,7 +6,7 @@ use core::mem::MaybeUninit;
 use core::ops::{Add, Div, Mul, Sub};
 
 use array_vec::ArrayVec;
-use float_eq::NearlyEq;
+use float_eq::NearlyEq as _;
 
 use crate::VectorPreferredFloat;
 

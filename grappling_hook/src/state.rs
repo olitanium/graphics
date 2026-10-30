@@ -3,7 +3,7 @@ use std::collections::HashSet;
 
 use engine::framebuffer::Framebuffer;
 use engine::framebuffer::attachments::WithDepth;
-use engine::framebuffer::traits::FramebufferInternals;
+use engine::framebuffer::traits::FramebufferInternals as _;
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::lighting::shadow::{ShadowPointLight, ShadowSpotLight};
 use engine::modelling::cubic::lighting::simple::PointLight;
@@ -117,7 +117,7 @@ impl ApiState for State {
 
         // eprintln!("fps: {}", 1.0 / frame_time);
 
-        self.controls(mouse_delta, keyboard, &mut string, frame_time, self.time)?;
+        self.controls(mouse_delta, &keyboard, &mut string, frame_time, self.time)?;
 
         self.grapple_animation = self.physics(frame_time);
 
@@ -125,6 +125,6 @@ impl ApiState for State {
     }
 
     fn new(initial_size: (TexDim, TexDim)) -> Result<Self, Self::Error> {
-        Self::new_internal(initial_size)
+        Ok(Self::new_internal(initial_size))
     }
 }

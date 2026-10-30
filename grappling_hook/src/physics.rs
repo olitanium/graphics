@@ -56,7 +56,7 @@ impl State {
                 .carryable_objects
                 .pop()
                 .flatten()
-                .map(|(bear, ..)| bear)
+                .map(|(bear, ..)| bear);
         }
 
         grappling_hook_calc_anim

@@ -143,7 +143,7 @@ impl VertexHasTangent for SimpleVertex {
 
 #[cfg(test)]
 mod tests {
-    use geometry::{Pose, TransformBy};
+    use geometry::{Pose, TransformBy as _};
     use graphics::linear_algebra::{UnitVector, vector};
 
     use crate::modelling::{ExtendedVertex as _, IncompleteVertex, SimpleVertex};
