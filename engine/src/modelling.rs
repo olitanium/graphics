@@ -4,6 +4,7 @@ pub use cubic::{
     // ImportError,
     SHADOW_SHADER_MAX_LIGHTS,
     ShadowGroup,
+    SimpleCubic,
     SimpleCubicGroup,
     Skeleton,
     SkeletonBuilder,

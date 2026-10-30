@@ -15,6 +15,7 @@ use crate::texture::{
     FlatTextureBuilder,
     Texture as _,
     TextureHasBuilder as _,
+    WrapType,
 };
 use crate::types::TexDim;
 
@@ -37,7 +38,9 @@ impl FramebufferAttachment for WithStencil {
     type TexBuilder = FlatTextureBuilder<FlatFramebufferAttachment<Self>>;
 
     fn new(size: (TexDim, TexDim), builder_map: OptTexBuilderMap<Self>) -> Self {
-        let mut texture_builder = FlatTexture::builder().stencil_attachment(size);
+        let mut texture_builder = FlatTexture::builder()
+            .stencil_attachment(size)
+            .wrap_s_t(WrapType::ClampToEdge);
 
         if let Some(builder_map) = &builder_map {
             texture_builder = builder_map(texture_builder);

@@ -100,9 +100,35 @@ make_included! {
 
 make_included! {
     ShaderProgram<SkeletonCubic, (), 0, FlatTexture>,
-    farspot_light_depth,
+    farspot_light_depth_skeleton,
     "shaders/depth_testing/farspot_light_depth/farspot_light_depth.vert",
     "shaders/depth_testing/farspot_light_depth/farspot_light_depth.frag",
+    cull_face: CullFace::FrontFace,
+}
+
+make_included! {
+    ShaderProgram<SkeletonCubic, (), 0, CubeMap>,
+    point_depth_skeleton,
+    "shaders/depth_testing/point_light_depth/point_light_depth.vert",
+    "shaders/depth_testing/point_light_depth/point_light_depth.frag",
+    "shaders/depth_testing/point_light_depth/point_light_depth.geom",
+    cull_face: CullFace::FrontFace,
+}
+
+make_included! {
+    ShaderProgram<SimpleCubic, (), 0, FlatTexture>,
+    farspot_light_depth_simple,
+    "shaders/depth_testing/farspot_light_depth/farspot_light_depth.vert",
+    "shaders/depth_testing/farspot_light_depth/farspot_light_depth.frag",
+    cull_face: CullFace::FrontFace,
+}
+
+make_included! {
+    ShaderProgram<SimpleCubic, (), 0, CubeMap>,
+    point_depth_simple,
+    "shaders/depth_testing/point_light_depth/point_light_depth.vert",
+    "shaders/depth_testing/point_light_depth/point_light_depth.frag",
+    "shaders/depth_testing/point_light_depth/point_light_depth.geom",
     cull_face: CullFace::FrontFace,
 }
 
@@ -125,15 +151,6 @@ make_included! {
     bloom_y,
     "shaders/bloom/blur_y_merge/blur_y_merge.vert",
     "shaders/bloom/blur_y_merge/blur_y_merge.frag",
-}
-
-make_included! {
-    ShaderProgram<SkeletonCubic, (), 0, CubeMap>,
-    point_depth,
-    "shaders/depth_testing/point_light_depth/point_light_depth.vert",
-    "shaders/depth_testing/point_light_depth/point_light_depth.frag",
-    "shaders/depth_testing/point_light_depth/point_light_depth.geom",
-    cull_face: CullFace::FrontFace,
 }
 
 // make_included! {
@@ -174,8 +191,22 @@ make_included! {
 }
 
 make_included! {
+    ShaderProgram<Quad<GBUFFER_ELEMENTS>, ShadowListLights<'static, 2>, 1, FlatTexture>,
+    deferred_shadow_process,
+    "shaders/deferred/process/process.vert",
+    "shaders/deferred/process/process_process.frag",
+}
+
+make_included! {
     ShaderProgram<Quad<GBUFFER_ELEMENTS>, ListLights<'static, 2>, 3, FlatTexture>,
     deferred_simple_process_hdr,
     "shaders/deferred/process/process.vert",
     "shaders/deferred/process/process.frag",
+}
+
+make_included! {
+    ShaderProgram<Quad<GBUFFER_ELEMENTS>, ShadowListLights<'static, 2>, 3, FlatTexture>,
+    deferred_shadow_process_hdr,
+    "shaders/deferred/process/process.vert",
+    "shaders/deferred/process/process_shadow.frag",
 }

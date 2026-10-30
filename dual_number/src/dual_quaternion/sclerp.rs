@@ -48,7 +48,8 @@ impl Sclerp {
         // let angle = 2.0 * wr.acos();
         // let pitch = -2.0 * wd / vr.magnitude();
         // let direction = vr.normalize().v();
-        // let moment = (vd - 0.5 * direction * pitch * wr) * (1.0 / vr.magnitude());
+        // let moment = (vd - 0.5 * direction * pitch * wr) * (1.0 /
+        // vr.magnitude());
         //
         // let v_f = DualNumber::new(direction, moment);
         // let theta_f = DualNumber::new(angle, pitch);
@@ -69,7 +70,8 @@ impl Sclerp {
         // let second_part_scalar = (0.5 * time * self.theta).cos();
         // let second_part_vector = self.v * (0.5 * time * self.theta).sin();
         //
-        // let dual_quaternion = DualQuaternion::new_transpose(second_part_scalar,
+        // let dual_quaternion =
+        // DualQuaternion::new_transpose(second_part_scalar,
         // second_part_vector); (self.from * dual_quaternion).normalize()
         let from = self.from.u() * (1.0 - time);
         let to = self.to * time;

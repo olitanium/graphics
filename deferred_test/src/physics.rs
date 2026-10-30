@@ -15,7 +15,7 @@ impl State {
                 .expect("sun never below player"),
             new_sun_pos,
         );
-        self.sun.light.position = new_sun_pos;
-        self.sun_duplicate_light.set_position(new_sun_pos);
+        self.sun.light.light.position = new_sun_pos;
+        // self.sun_duplicate_light.set_position(new_sun_pos);
     }
 }

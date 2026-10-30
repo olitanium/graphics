@@ -12,13 +12,12 @@ use graphics::texture::{CubeMap, Texture};
 use graphics::types::TexDim;
 use graphics::{Draw, DrawOut, Model, ShaderProgramContext};
 
+use crate::modelling::SkeletonCubic;
 use crate::modelling::cubic::lighting::ShadowLightCompatible;
 use crate::modelling::cubic::lighting::shadow::list::ModelGenDepthDrawError;
-use crate::modelling::cubic::lighting::shadow::{BindError, GenDepthError};
+use crate::modelling::cubic::lighting::shadow::{BindError, DepthTestable, GenDepthError};
 use crate::modelling::cubic::lighting::simple::PointLight;
 use crate::modelling::cubic::{CalculatedAnimation, camera};
-use crate::modelling::{SkeletonCubic, VertexHasTangent};
-use crate::opengl_shaders;
 
 #[derive(Debug)]
 pub struct ShadowPointLight {
@@ -77,7 +76,7 @@ impl ShadowPointLight {
         L: ShadowLightCompatible<MAX>,
         T: Texture,
         M: Model,
-        M::Vertex: VertexHasTangent,
+        // M::Vertex: VertexHasTangent,
     {
         self.light.bind_to(shader, name, index)?;
         shader.set_uniform(
@@ -102,7 +101,7 @@ impl ShadowPointLight {
         L: ShadowLightCompatible<MAX>,
         T: Texture,
         M: Model,
-        M::Vertex: VertexHasTangent,
+        // M::Vertex: VertexHasTangent,
     {
         shader.register_texture(iter::once((
             CString::new(format!("{name}[{index}].depth"))?,
@@ -112,15 +111,17 @@ impl ShadowPointLight {
         Ok(())
     }
 
-    pub fn gen_depth<'a>(
+    pub fn gen_depth<'a, M>(
         &self,
         sp_context: &mut ShaderProgramContext,
         fb_context: &mut FramebufferContext,
-        opaque_models: &[(&'a SkeletonCubic, CalculatedAnimation)],
+        opaque_models: &[(&'a M, M::Transform)],
         uniforms: Vec<(CString, &dyn Uniform)>,
-    ) -> Result<(), GenDepthError<'a>> {
-        let mut active_depth_only_shader_point =
-            opengl_shaders::point_depth().use_program(sp_context);
+    ) -> Result<(), GenDepthError<'a, M>>
+    where
+        M: DepthTestable,
+    {
+        let mut active_depth_only_shader_point = M::get_shader_point().use_program(sp_context);
         active_depth_only_shader_point.set_uniform_dyn(uniforms)?;
 
         for (index, matrix) in self.get_look_at_matrices().into_iter().enumerate() {
@@ -139,12 +140,15 @@ impl ShadowPointLight {
             .iter()
             .filter_map(|(model, calculated_animation)| {
                 model
-                    .draw(
+                    .draw_depth(
+                        calculated_animation,
                         &mut active_depth_only_shader_point,
                         &mut active_light_framebuffer,
-                        calculated_animation,
                     )
-                    .map_err(|error| ModelGenDepthDrawError { error, model })
+                    .map_err(|error| ModelGenDepthDrawError {
+                        error,
+                        model: *model,
+                    })
                     .err()
             })
             .collect();

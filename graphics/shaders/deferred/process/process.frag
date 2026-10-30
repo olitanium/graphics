@@ -99,9 +99,6 @@ void main() {
         illumination += SpotLight_illuminate(spot[x]);
     }
 
-    // TODO: fix alpha with an HDR buffer
-    float emission_alpha = emission.a;
-    
     vec4 colour = emission * emission.a + illumination * (1.0 - emission.a);
     
     if (colour.a < 0.01) {

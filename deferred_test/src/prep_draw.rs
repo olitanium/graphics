@@ -1,7 +1,11 @@
 use engine::array_vec::arrvec;
 use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::SimpleCubicDeferredGroup;
-use engine::modelling::cubic::lighting::shadow::{PointLightIlluminatesGroup, ShadowListLights};
+use engine::modelling::cubic::lighting::shadow::{
+    ListLightIlluminatesGroup,
+    PointLightIlluminatesGroup,
+    ShadowListLights,
+};
 use engine::modelling::cubic::lighting::simple::ListLights;
 use engine::modelling::{
     Bloom,
@@ -26,27 +30,54 @@ impl State {
         let mut opaque = vec![
             self.origin_cube.temp_as_simplecubic_and_anim(),
             self.player.get_pair_model(),
-            self.sun.model_and_pose(),
         ];
         if self.toggle_m {
             opaque.push(self.small_cube.temp_as_simplecubic_and_anim());
         }
 
+        // out.push(SimpleCubicDeferredGroup::new(
+        // &self.gbuffer,
+        // opaque,
+        // &self.game_camera.camera,
+        // &(),
+        // vec![],
+        // ));
+        //
+        // out.push(deferred::SimpleDeferredCompleteGroup::<_, 3>::new(
+        // &self.hdr_out,
+        // &self.gbuffer,
+        // ListLights {
+        // point: arrvec![&self.sun.light],
+        // ..ListLights::default()
+        // },
+        // &self.game_camera.camera,
+        // &(),
+        // ));
+
+        let lights = ShadowListLights {
+            point: arrvec![&self.sun.light],
+            ..ShadowListLights::default()
+        };
+
+        out.push(ListLightIlluminatesGroup::new_dyn(
+            lights.clone(),
+            opaque.clone(),
+            self.game_camera.camera.position(&()),
+        ));
+
+        opaque.push(self.sun.model_and_pose());
         out.push(SimpleCubicDeferredGroup::new(
             &self.gbuffer,
-            opaque,
+            opaque.clone(),
             &self.game_camera.camera,
             &(),
             vec![],
         ));
 
-        out.push(deferred::SimpleDeferredCompleteGroup::<_, 3>::new(
+        out.push(deferred::ShadowDeferredCompleteGroup::<_, 3>::new(
             &self.hdr_out,
             &self.gbuffer,
-            ListLights {
-                point: arrvec![&self.sun.light],
-                ..ListLights::default()
-            },
+            lights,
             &self.game_camera.camera,
             &(),
         ));

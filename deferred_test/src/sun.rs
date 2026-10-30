@@ -7,7 +7,7 @@ use engine::modelling::cubic::lighting::simple::PointLight;
 
 pub struct Sun {
     pub inner: SimpleEntity<()>,
-    pub light: PointLight,
+    pub light: ShadowPointLight,
 }
 
 impl Sun {

@@ -11,9 +11,11 @@ use graphics::{Draw, DrawOut, ShaderProgramContext};
 
 use super::camera::Camera;
 use super::lighting::shadow::ShadowListLights;
+use crate::entity::EntityInner;
 use crate::modelling::SkeletonCubic;
 use crate::modelling::cubic::animation::CalculatedAnimation;
 use crate::modelling::cubic::camera::CameraPose;
+use crate::modelling::cubic::lighting::shadow::DepthTestable;
 use crate::opengl_shaders;
 
 pub const SHADOW_SHADER_MAX_LIGHTS: usize = 2;
@@ -27,20 +29,8 @@ pub struct Group<'a, X: FramebufferWithDepth<3, Tex = FlatTexture>> {
 
     output_framebuffer: &'a X,
 
-    opaque: Vec<(
-        &'a SkeletonCubic,
-        // Pose,
-        // Option<&'a SkeletalAnimation>, // animation
-        // f32,                           // time
-        CalculatedAnimation,
-    )>,
-    transparent: Vec<(
-        &'a SkeletonCubic,
-        // Pose,
-        // Option<&'a SkeletalAnimation>, // animation
-        // f32,                           // time
-        CalculatedAnimation,
-    )>,
+    opaque: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
+    transparent: Vec<(&'a SkeletonCubic, CalculatedAnimation)>,
 
     uniforms: Vec<(CString, &'a dyn Uniform)>,
 }
@@ -90,12 +80,8 @@ impl<X: FramebufferWithDepth<3, Tex = FlatTexture>> Draw for Group<'_, X> {
         // At this point, all lights have their framebuffers filled with depth
         // information
         let mut active_shadow_shader = opengl_shaders::shadow().use_program(sp_context);
-        // SAFETY: because active_shadow_shader is dropped before the end of
-        // this function, the references stored cannot leak
-        unsafe {
-            self.list_light
-                .bind(&mut active_shadow_shader, self.position)?;
-        }
+        self.list_light
+            .bind(&mut active_shadow_shader, self.position)?;
 
         active_shadow_shader.set_uniform(&c"projtimesview", &self.look_at)?;
         active_shadow_shader.set_uniform(&c"camera_position", &self.position.homogeneous())?;
@@ -105,13 +91,13 @@ impl<X: FramebufferWithDepth<3, Tex = FlatTexture>> Draw for Group<'_, X> {
 
         let mut errs: Vec<_> = iter::chain(self.opaque, self.transparent)
             .filter_map(|(model, calculated_animation)| {
-                model
-                    .draw(
-                        &mut active_shadow_shader,
-                        &mut active_output_framebuffer,
-                        &calculated_animation,
-                    )
-                    .err()
+                EntityInner::draw(
+                    model,
+                    &mut active_shadow_shader,
+                    &mut active_output_framebuffer,
+                    &calculated_animation,
+                )
+                .err()
             })
             .collect();
 

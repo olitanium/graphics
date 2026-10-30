@@ -110,17 +110,15 @@ impl State {
 
         let light_attenuation_array = [0.0, 0.0, 1.0];
 
-        let inner_point_light = PointLight {
-            position: Vector::default(),
-            attenuation: light_attenuation_array,
-            ambient: bear_colour.to_rgb().map(|x| x * 0.1),
-            diffuse: bear_colour.to_rgb().map(|x| x * 0.5),
-            specular: bear_colour.to_rgb(),
-        };
-
-        let sun_duplicate_light = ShadowPointLight::new(
-            inner_point_light.clone(),
-            const { TexDim::from_non_zero(NonZero::new(1000).unwrap()) },
+        let inner_point_light = ShadowPointLight::new(
+            PointLight {
+                position: Vector::default(),
+                attenuation: light_attenuation_array,
+                ambient: bear_colour.to_rgb().map(|x| x * 0.0),
+                diffuse: bear_colour.to_rgb().map(|x| x * 1.0),
+                specular: bear_colour.to_rgb(),
+            },
+            TexDim::from_non_zero(const { NonZero::new(1000).unwrap() }),
         );
 
         let sun = Sun {
@@ -141,7 +139,6 @@ impl State {
             hdr_out: hdr_fb,
 
             sun,
-            sun_duplicate_light,
             origin_cube,
             small_cube,
             player,

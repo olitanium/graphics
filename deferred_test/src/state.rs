@@ -26,7 +26,6 @@ pub struct State {
     pub toggle_m: bool,
 
     pub sun: Sun,
-    pub sun_duplicate_light: ShadowPointLight,
     pub origin_cube: SimpleEntity<()>,
     pub small_cube: SimpleEntity<()>,
     pub player: Player,
@@ -66,7 +65,7 @@ impl ApiState for State {
             match event {
                 Event::WindowBuffer(buffer) => default_fb = Some(buffer),
                 Event::FrameTime(ft) => frame_time = ft,
-                Event::ElapsedTime(at) => game_duration = at,
+                // Event::ElapsedTime(at) => game_duration = at,
                 Event::WindowResize(_size) => {
                     // self.hdr_fb.resize(size);
                     // self.bloom.resize(size);

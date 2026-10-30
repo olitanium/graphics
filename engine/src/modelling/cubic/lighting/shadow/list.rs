@@ -1,7 +1,7 @@
 use alloc::ffi::{CString, NulError};
+use core::error::Error;
 
 use array_vec::ArrayVec;
-use graphics::Model;
 use graphics::framebuffer::{FramebufferBindError, FramebufferContext};
 use graphics::linear_algebra::Vector;
 use graphics::shader_program::{
@@ -11,15 +11,16 @@ use graphics::shader_program::{
     Uniform,
 };
 use graphics::texture::Texture;
+use graphics::{Draw, DrawOut, Model};
 use utils::error_boilerplate;
 
 use super::{ShadowFarLight, ShadowPointLight, ShadowSpotLight};
-use crate::modelling::cubic::lighting::shadow::BindError;
+use crate::modelling::SkeletonCubic;
+use crate::modelling::cubic::CalculatedAnimation;
+use crate::modelling::cubic::lighting::shadow::{BindError, DepthTestable};
 use crate::modelling::cubic::lighting::traits::ShadowLightCompatible;
-use crate::modelling::cubic::{CalculatedAnimation, skeleton_cubic};
-use crate::modelling::{SkeletonCubic, VertexHasTangent};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone)]
 pub struct ShadowListLights<'a, const MAX: usize> {
     pub far: ArrayVec<&'a ShadowFarLight, MAX>,
     pub spot: ArrayVec<&'a ShadowSpotLight, MAX>,
@@ -27,43 +28,46 @@ pub struct ShadowListLights<'a, const MAX: usize> {
 }
 
 #[derive(Debug)]
-pub struct ModelGenDepthDrawError<'a> {
-    pub error: skeleton_cubic::DrawError,
-    pub model: &'a SkeletonCubic,
+pub struct ModelGenDepthDrawError<'a, M: DepthTestable> {
+    pub error: M::Error,
+    pub model: &'a M,
 }
-error_boilerplate!(<'a> ModelGenDepthDrawError<'a>);
+error_boilerplate!({M: DepthTestable} <'a> ModelGenDepthDrawError<'a, M>);
 
 #[derive(Debug)]
 #[non_exhaustive]
-pub enum GenDepthError<'a> {
+pub enum GenDepthError<'a, M: DepthTestable> {
     SetUniform(ShaderSetUniformError),
     NulError(NulError),
     FramebufferBind(FramebufferBindError),
-    Many(Vec<ModelGenDepthDrawError<'a>>),
+    Many(Vec<ModelGenDepthDrawError<'a, M>>),
 }
-error_boilerplate!(<'a> GenDepthError<'a>);
+error_boilerplate!({M: DepthTestable} <'a> GenDepthError<'a, M>);
 
-impl From<ShaderSetUniformError> for GenDepthError<'_> {
+impl<M: DepthTestable> From<ShaderSetUniformError> for GenDepthError<'_, M> {
     fn from(value: ShaderSetUniformError) -> Self {
         Self::SetUniform(value)
     }
 }
 
-impl From<NulError> for GenDepthError<'_> {
+impl<M: DepthTestable> From<NulError> for GenDepthError<'_, M> {
     fn from(value: NulError) -> Self {
         Self::NulError(value)
     }
 }
 
 impl<const MAX: usize> ShadowListLights<'_, MAX> {
-    pub(crate) fn gen_depth<'a>(
+    pub(crate) fn gen_depth<'a, M>(
         &self,
         sp_context: &mut ShaderProgramContext,
         fb_context: &mut FramebufferContext,
-        opaque_models: &[(&'a SkeletonCubic, CalculatedAnimation)],
+        opaque_models: &[(&'a M, M::Transform)],
         target_position: Vector<3>,
         uniforms: &[(CString, &dyn Uniform)],
-    ) -> Result<(), GenDepthError<'a>> {
+    ) -> Result<(), GenDepthError<'a, M>>
+    where
+        M: DepthTestable,
+    {
         for light in &self.far {
             light.gen_depth(
                 sp_context,
@@ -87,10 +91,7 @@ impl<const MAX: usize> ShadowListLights<'_, MAX> {
         Ok(())
     }
 
-    /// # Safety
-    /// `active_shader` must be dropped before any changes to the light's
-    /// internal framebuffers is applied.
-    pub(crate) unsafe fn bind<'c, const N: usize, L, T, M>(
+    pub(crate) fn bind<'c, const N: usize, L, T, M>(
         &'c self,
         active_shader: &mut ActiveShaderProgram<'_, '_, 'c, M, L, T, N>,
         target: Vector<3>,
@@ -99,7 +100,7 @@ impl<const MAX: usize> ShadowListLights<'_, MAX> {
         L: ShadowLightCompatible<MAX>,
         T: Texture,
         M: Model,
-        M::Vertex: VertexHasTangent,
+        // M::Vertex: VertexHasTangent,
     {
         const FAR_LIGHT_NAME: &str = "far";
         active_shader.set_uniform(
@@ -139,5 +140,58 @@ impl<const MAX: usize> ShadowListLights<'_, MAX> {
         }
 
         Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub struct ListLightIlluminatesGroup<'a, M: DepthTestable, const MAX: usize> {
+    light: ShadowListLights<'a, MAX>,
+    opaque: Vec<(&'a M, M::Transform)>,
+    target: Vector<3>,
+}
+
+impl<'a, M: DepthTestable, const MAX: usize> ListLightIlluminatesGroup<'a, M, MAX> {
+    pub const fn new(
+        light: ShadowListLights<'a, MAX>,
+        opaque: Vec<(&'a M, M::Transform)>,
+        target: Vector<3>,
+    ) -> Self {
+        Self {
+            light,
+            opaque,
+            target,
+        }
+    }
+
+    pub fn new_dyn(
+        light: ShadowListLights<'a, MAX>,
+        opaque: Vec<(&'a M, M::Transform)>,
+        target: Vector<3>,
+    ) -> Box<dyn Draw + 'a> {
+        Box::new(Self::new(light, opaque, target))
+    }
+}
+
+impl<M: DepthTestable, const MAX: usize> Draw for ListLightIlluminatesGroup<'_, M, MAX> {
+    fn draw_sized(
+        self,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
+    ) -> Result<DrawOut, Box<dyn Error>> {
+        let _ = self
+            .light
+            .gen_depth(sp_context, fb_context, &self.opaque, self.target, &[]);
+        //.map_err(|err| err.to_string())?;
+
+        DrawOut::OK
+    }
+
+    fn draw(
+        self: Box<Self>,
+        fb_context: &mut FramebufferContext,
+        sp_context: &mut ShaderProgramContext,
+    ) -> Result<DrawOut, Box<dyn Error>> {
+        let inner = *self;
+        inner.draw_sized(fb_context, sp_context)
     }
 }

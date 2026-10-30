@@ -27,6 +27,10 @@ impl FlatTexture {
         Self::grayscale(1.0, 1.0)
     }
 
+    pub fn grayscale_clamped(shade: f32, alpha: f32) -> Self {
+        Self::monochrome_clamped(ColourRGBA::new([shade, shade, shade, alpha]))
+    }
+
     pub fn grayscale(shade: f32, alpha: f32) -> Self {
         Self::monochrome(ColourRGBA::new([shade, shade, shade, alpha]))
     }

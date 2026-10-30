@@ -7,10 +7,15 @@ mod spot_light;
 use graphics::shader_program::ShaderSetUniformError;
 pub use spot_light::ShadowSpotLight;
 mod list;
-pub use list::{GenDepthError, ShadowListLights};
+pub use list::{GenDepthError, ListLightIlluminatesGroup, ShadowListLights};
 mod point_light;
+pub use far_light::FarLightIlluminatesGroup;
 pub use point_light::{PointLightIlluminatesGroup, ShadowPointLight};
+pub use spot_light::SpotLightIlluminatesGroup;
 use utils::error_boilerplate;
+
+mod depth_testable;
+pub use depth_testable::DepthTestable;
 
 use crate::modelling::cubic::lighting::simple::SimpleBindError;
 

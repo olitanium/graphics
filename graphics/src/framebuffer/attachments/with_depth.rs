@@ -1,5 +1,7 @@
 use core::fmt;
 
+use colour::ColourRGBA;
+
 use crate::framebuffer::traits::{AttachmentTextureInfo, OptTexBuilderMap};
 use crate::framebuffer::{
     self,
@@ -14,6 +16,7 @@ use crate::texture::{
     FlatTextureBuilder,
     Texture as _,
     TextureHasBuilder as _,
+    WrapType,
 };
 use crate::types::TexDim;
 
@@ -36,7 +39,9 @@ impl FramebufferAttachment for WithDepth {
     type TexBuilder = FlatTextureBuilder<FlatFramebufferAttachment<Self>>;
 
     fn new(size: (TexDim, TexDim), builder_map: OptTexBuilderMap<Self>) -> Self {
-        let mut texture_builder = FlatTexture::builder().depth_attachment(size);
+        let mut texture_builder = FlatTexture::builder()
+            .depth_attachment(size)
+            .wrap_s_t(WrapType::ClampToEdge);
 
         if let Some(map) = &builder_map {
             texture_builder = map(texture_builder);

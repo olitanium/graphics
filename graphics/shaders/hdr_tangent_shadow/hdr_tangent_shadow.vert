@@ -9,7 +9,7 @@ layout (location = 3) in vec3 in_tangent;
 
 struct PointLightVarying {
     vec4 position;
-    vec3 frag_to_light;
+    vec3 light_to_frag;
 };
 
 struct PointLight {
@@ -123,7 +123,7 @@ void main() {
     for (uint x = 0u; x < num_point; ++x) {
         out_point_vary[x].position = to_tangent * point_vary[x].position; 
         // SHADOW
-        out_point_vary[x].frag_to_light = (model * vec4(in_position, 1.0)).xyz - point_vary[x].position.xyz;
+        out_point_vary[x].light_to_frag = (model * vec4(in_position, 1.0)).xyz - point_vary[x].position.xyz;
     }
 
     for (uint x = 0u; x < num_far; ++x) {

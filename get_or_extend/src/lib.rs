@@ -31,7 +31,8 @@ impl<T> GetAtOrExtend for Vec<T> {
             // index + 1 > index >= len, so we don't worry about shrinking
             self.resize_with(index + 1, new);
         }
-        // SAFETY: we just made the vector index + 1 len, so index is the last element
+        // SAFETY: we just made the vector index + 1 len, so index is the last
+        // element
         unsafe { self.get_unchecked_mut(index) }
     }
 }
