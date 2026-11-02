@@ -17,13 +17,16 @@ There is a `template_app` which can be used to begin the development of a 3D ren
 ## Examples
 
 * `triangle_test` - Minimal triangle rendered with transformations and collision detection
+  [image](./triangle_test/triangle_test.png)
 * `grappling_hook` - Interactive scene with collision and constraints
+  [video](./grappling_hook/grappling_hook.webm)
 * `box_with_sun` - Lit scene with multiple light sources and skybox.
+  [image](./box_with_sun/box_with_sun.png)
 
 run with
 
 ```bash
-cargo run --release --bin <OPTION>
+RUSTFLAGS="-Znext-solver=coherence" cargo run --release --bin <OPTION>
 ```
 
 ### With Nix (recommended)
@@ -37,10 +40,11 @@ Untested, requires `glfw3`, `assimp` and `OpenGL` libraries.
 ## Known issues and WIP
 
 * Documentation: sparse; high priority for expansion
-* Clippy: stict lints such as `must_use_candidate` and `private_doc` not yet fulfilled
-* Windows Support: Not tested
+* Clippy: strict lints such as `must_use_candidate` and `private_doc` not yet fulfilled
+* No Windows Support.
 
 ## Roadmap
 
-* Clippy compliance
+* Full Clippy compliance
 * Expanded Documentation
+* Vulkan support
