@@ -196,11 +196,6 @@ mod test {
 
     #[test]
     fn y() {
-        fn is_similar_enough(one: Vector<3>, two: Vector<3>) -> bool {
-            let diff = one - two;
-            diff.into_iter().all(|x| x.abs() < 0.001)
-        }
-
         let tests = [
             (UnitVector::Z, UnitVector::Y),
             (UnitVector::X, UnitVector::Y),
@@ -215,8 +210,8 @@ mod test {
             let should_be_up = orientation.act_on(vector![0.0, 1.0, 0.0]);
             let should_be_direction = orientation.act_on(vector![0.0, 0.0, 1.0]);
 
-            assert!(is_similar_enough(up.v(), should_be_up));
-            assert!(is_similar_enough(direction.v(), should_be_direction));
+            assert_eq!(up.v(), should_be_up);
+            assert_eq!(direction.v(), should_be_direction);
         }
     }
 }
