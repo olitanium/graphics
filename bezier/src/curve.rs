@@ -130,15 +130,22 @@ impl<const DIMS: usize, const N: usize> BezierCurve<DIMS, N> {
         #[expect(clippy::cast_possible_truncation, reason = "intended behaviour")]
         #[expect(clippy::cast_sign_loss, reason = "intended behaviour")]
         let floor_choice_clamp = t as usize;
-        let new_choice = usize::min(floor_choice_clamp, self.segments.len());
+        let new_choice = usize::min(floor_choice_clamp, self.segments.len() - 1);
         #[expect(
             clippy::cast_precision_loss,
             reason = "new_choice came from f32 originally"
         )]
         let new_part = t - new_choice as f32;
 
-        debug_assert_eq!(new_choice, choice, "testing new, simpler, method");
-        debug_assert_eq!(new_part, part, "testing new, simpler, method");
+        debug_assert_eq!(
+            new_choice, choice,
+            "testing new, simpler, method: self = {self:?} t = {t}"
+        );
+
+        debug_assert_eq!(
+            new_part, part,
+            "testing new, simpler, method: self = {self:?} t = {t}"
+        );
 
         // get segment
 

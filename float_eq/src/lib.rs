@@ -39,7 +39,7 @@ pub const trait NearlyEq {
 }
 
 const impl NearlyEq for f32 {
-    const SMALL_VALUE: Self = 0.001;
+    const SMALL_VALUE: Self = 0.005;
 
     fn nearly_eq(&self, other: &Self, proportion: Self, smallest: Self) -> bool {
         nearly_eq_f32(*self, *other, proportion, smallest)

@@ -4,7 +4,16 @@ This project aims to teach me all about 3D graphics, linear algebra, quaternions
 
 The primary design motivation for this project is to ensure that a program with draw errors *would not compile*. The design of the graphics engine is based on the workflow of OpenGL, but with wiggle room to extend to Vulkan once I have gotten my head around it. I do not currently intend to support any other APIs.
 
-The project is split into a large number of crates, which are successively re-exported up to the `graphics` crate which would be the logical first crate to for a new user to read. The crate defines a lot of useful logical drawable units such as models, quads and skyboxes. Some crates are not actually yet included in the tree, such as `local_rc` which is untested.
+The project is split into a large number of crates, which are successively re-exported up to the `graphics` crate which would be the logical first crate to for a new user to read. The crate defines a lot of useful logical drawable units such as models, quads and skyboxes.
+
+Some crates are included for development purposes and may not yet be used in the final output.
+
+## Architecture
+
+* Modular design with custom crates ranging from data structures to linear algebra.
+* Type safe GPU operations prevent runtime errors from compiling.
+* Production grade Clippy constraints.
+* Designed with performance in mind: zero cost abstractions, zero sized types for compile time guarantees.
 
 ## Why I built this
 
@@ -39,12 +48,12 @@ Untested, requires `glfw3`, `assimp` and `OpenGL` libraries. Needs Cargo nightly
 
 ## Known issues and WIP
 
-* Documentation: sparse; high priority for expansion
+* Documentation: high priority for expansion
 * Clippy: strict lints such as `must_use_candidate` and `private_doc` not yet fulfilled
-* No Windows Support.
 
 ## Roadmap
 
 * Full Clippy compliance
 * Expanded Documentation
+* Windows Support.
 * Vulkan support

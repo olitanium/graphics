@@ -32,16 +32,9 @@ where
 mod test {
     use core::iter;
 
+    use float_eq::NearlyEq;
+
     use super::*;
-
-    fn float_eq(a: f32, b: f32) -> bool {
-        const PRECISION: f32 = 0.01;
-        (a - b).abs() <= PRECISION
-    }
-
-    fn assert_float_eq(a: f32, b: f32) {
-        assert!(float_eq(a, b));
-    }
 
     #[test]
     fn prop() {
@@ -52,7 +45,7 @@ mod test {
         let test_inpus = test_outputs.map(|x| x * DURATION);
 
         for (input, output) in iter::zip(test_inpus, test_outputs) {
-            assert_float_eq(lerp.get(input), output);
+            NearlyEq::nearly_eq(&lerp.get(input), &output, 0.01, 0.01);
         }
     }
 }

@@ -7,7 +7,7 @@ edition = "2024"
 linear_algebra = {path = "../linear_algebra"}
 quaternion = {path = "../quaternion"}
 dual_number = {path = "../dual_number"}
-
+float_eq = {path = "../float_eq"}
 
 [lints]
 workspace = true
