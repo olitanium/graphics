@@ -42,9 +42,9 @@ mod test {
         let lerp = Lerp::new(0.0, 1.0, DURATION);
 
         let test_outputs = [0.0, 0.1, 0.2, 0.3, 1.0];
-        let test_inpus = test_outputs.map(|x| x * DURATION);
+        let test_inputs = test_outputs.map(|x| x * DURATION);
 
-        for (input, output) in iter::zip(test_inpus, test_outputs) {
+        for (input, output) in iter::zip(test_inputs, test_outputs) {
             NearlyEq::nearly_eq(&lerp.get(input), &output, 0.01, 0.01);
         }
     }
