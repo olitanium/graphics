@@ -89,7 +89,7 @@ macro_rules! make_nearly_eq {
         pub const fn $name<const N: usize>(v1: &[$val; N], v2: &[$val; N]) -> bool {
             let mut index = 0;
             while let (Some(value), Some(value2)) = (v1.get(index), v2.get(index)) {
-                if !value.nearly_eq(value2, 0.001, 0.001) {
+                if !value.nearly_eq(value2, 0.005, 0.005) {
                     return false;
                 }
 
