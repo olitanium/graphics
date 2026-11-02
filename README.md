@@ -19,7 +19,7 @@ There is a `template_app` which can be used to begin the development of a 3D ren
 * `triangle_test` - Minimal triangle rendered with transformations and collision detection
   ![image](./triangle_test/triangle_test.png)
 * `grappling_hook` - Interactive scene with collision and constraints
-  ![video](./grappling_hook/grappling_hook.webm)
+  ![video](./grappling_hook/grappling_hook.gif)
 * `box_with_sun` - Lit scene with multiple light sources and skybox.
   ![image](./box_with_sun/box_with_sun.png)
 
@@ -35,7 +35,7 @@ RUSTFLAGS="-Znext-solver=coherence" cargo run --release --bin <OPTION>
 
 ### On Windows
 
-Untested, requires `glfw3`, `assimp` and `OpenGL` libraries.
+Untested, requires `glfw3`, `assimp` and `OpenGL` libraries. Needs Cargo nightly complete 2026-09-01.
 
 ## Known issues and WIP
 
