@@ -4,11 +4,11 @@ This project aims to teach me all about 3D graphics, linear algebra, quaternions
 
 The primary design motivation for this project is to ensure that a program with draw errors *would not compile*. The design of the graphics engine is based on the workflow of OpenGL, but with wiggle room to extend to Vulkan once I have gotten my head around it. I do not currently intend to support any other APIs.
 
-The project is split into a large number of crates, which are successively re-exported up to the `graphics` crate which would be the logical first crate to read. The crate defines a lot of useful logical drawable units such as models, quads and skyboxes. Some crates are not actually yet included in the tree, such as `local_rc` which is untested.
+The project is split into a large number of crates, which are successively re-exported up to the `graphics` crate which would be the logical first crate to for a new user to read. The crate defines a lot of useful logical drawable units such as models, quads and skyboxes. Some crates are not actually yet included in the tree, such as `local_rc` which is untested.
 
 ## Why I built this
 
-I built this as a way to learn both low level Rust and low level graphics rendering. I wanted to best leverage the Rust type system to make it impossible for a library user to draw something that would fail slently or at runtime. This goal is still in development, as there are many places in the graphicas pipeline where there can be issues.
+I built this as a way to learn both low level Rust and low level graphics rendering. I wanted to best leverage the Rust type system to make it impossible for a library user to draw something that would fail silently or at runtime. This goal is still in development, as there are many places in the graphics pipeline where there can be issues.
 
 ## Getting Started
 
@@ -16,11 +16,11 @@ There is a `template_app` which can be used to begin the development of a 3D ren
 
 ## Examples
 
-* `triangle_test` - Minimal triangle rendered with transformations and collision detection
+* [`triangle_test`](./triangle_test/) - Minimal triangle rendered with transformations and collision detection
   ![image](./triangle_test/triangle_test.png)
-* `grappling_hook` - Interactive scene with collision and constraints
+* [`grappling_hook`](./grappling_hook/) - Interactive scene with collision and constraints
   ![video](./grappling_hook/grappling_hook.gif)
-* `box_with_sun` - Lit scene with multiple light sources and skybox.
+* [`box_with_sun`](./box_with_sun/) - Lit scene with multiple light sources and skybox.
   ![image](./box_with_sun/box_with_sun.png)
 
 run with
