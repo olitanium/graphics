@@ -17,11 +17,11 @@ There is a `template_app` which can be used to begin the development of a 3D ren
 ## Examples
 
 * `triangle_test` - Minimal triangle rendered with transformations and collision detection
-  [image](./triangle_test/triangle_test.png)
+  ![image](./triangle_test/triangle_test.png)
 * `grappling_hook` - Interactive scene with collision and constraints
-  [video](./grappling_hook/grappling_hook.webm)
+  ![video](./grappling_hook/grappling_hook.webm)
 * `box_with_sun` - Lit scene with multiple light sources and skybox.
-  [image](./box_with_sun/box_with_sun.png)
+  ![image](./box_with_sun/box_with_sun.png)
 
 run with
 
