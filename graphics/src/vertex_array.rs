@@ -244,7 +244,7 @@ impl GenVertexArray<()> {
     /// up with the type provided to Rust.
     pub fn draw_len<M, O, const OUT: usize, D>(
         &self,
-        active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, O, D::Tex, OUT>,
+        _active_shader_program: &mut ActiveShaderProgram<'_, '_, '_, M, O, D::Tex, OUT>,
         _: &mut ActiveFramebuffer<'_, '_, OUT, D>,
         len: ElementArrayLen,
     ) -> Result<(), DrawError>
@@ -255,7 +255,7 @@ impl GenVertexArray<()> {
         self.bind();
 
         #[cfg(debug_assertions)]
-        active_shader_program
+        _active_shader_program
             .validate()
             .map_err(DrawError::Validate)?;
 
