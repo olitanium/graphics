@@ -35,7 +35,7 @@ There is a `template_app` which can be used to begin the development of a 3D ren
 run with
 
 ```bash
-RUSTFLAGS="-Znext-solver=coherence" cargo run --release --bin <OPTION>
+cargo run --release --bin <OPTION>
 ```
 
 ### With Nix (recommended)

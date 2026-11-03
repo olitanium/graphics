@@ -313,7 +313,7 @@ pub fn intersect2(one: Triangle<2>, two: Triangle<2>) -> bool {
         [(p, q), (q, r), (r, p)].map(|(start, finish)| twod_det(start, finish, test))
     }
 
-    fn interior_r1(ccw_one: Triangle<2>, ccw_two: Triangle<2>, old_two: &[SignOrZero; 3]) -> bool {
+    fn interior_r1(ccw_one: Triangle<2>, ccw_two: Triangle<2>, _old_two: &[SignOrZero; 3]) -> bool {
         #[cfg(debug_assertions)]
         {
             let [p, ..] = ccw_one;
@@ -321,7 +321,7 @@ pub fn intersect2(one: Triangle<2>, two: Triangle<2>) -> bool {
 
             debug_assert!(
                 matches!(out, [S::Positive, S::Positive, S::Negative]),
-                "didn't rotate correctly: {old_two:?} => {out:?}"
+                "didn't rotate correctly: {_old_two:?} => {out:?}"
             );
         }
 
@@ -372,7 +372,7 @@ pub fn intersect2(one: Triangle<2>, two: Triangle<2>) -> bool {
     fn interior_boundary_r2(
         ccw_one: Triangle<2>,
         ccw_two: Triangle<2>,
-        old_two: &[SignOrZero; 3],
+        _old_two: &[SignOrZero; 3],
     ) -> bool {
         #[cfg(debug_assertions)]
         {
@@ -389,7 +389,7 @@ pub fn intersect2(one: Triangle<2>, two: Triangle<2>) -> bool {
                 | [S::Positive, S::Negative, S::Zero]
                 | [S::Positive, S::Zero, S::Negative]
                 ),
-                "didn't rotate correctly: {old_two:?} => {out:?}"
+                "didn't rotate correctly: {_old_two:?} => {out:?}"
             );
         }
 
