@@ -47,8 +47,10 @@
       # Set Environment Variables
       LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath buildInputs;
       LIBCLANG_PATH = pkgs.lib.makeLibraryPath [pkgs.libclang];
-    
       RUST_BACKTRACE = "full";
+      
+      # only here for this version
+      RUSTFLAGS="-Znext-solver=coherence";
     };
   };
 }
