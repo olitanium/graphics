@@ -15,13 +15,15 @@ mod image;
 pub use image::{Image, NewImageError};
 
 const fn get_format<const N: usize>() -> (u32, u32) {
-    match N {
-        0 => panic!(),
-        1 => (gl::R16F, gl::RED),
-        2 => (gl::RG16F, gl::RG),
-        3 => (gl::RGB16F, gl::RGB),
-        4 => (gl::RGBA16F, gl::RGBA),
-        5.. => panic!(),
+    const {
+        match N {
+            0 => panic!(),
+            1 => (gl::R16F, gl::RED),
+            2 => (gl::RG16F, gl::RG),
+            3 => (gl::RGB16F, gl::RGB),
+            4 => (gl::RGBA16F, gl::RGBA),
+            5.. => panic!(),
+        }
     }
 }
 

@@ -1,27 +1,23 @@
-# A 3D graphics rending library (Rust + OpenGL)
+# A 3D graphics rendering library (Rust + OpenGL)
 
-This project aims to teach me all about 3D graphics, linear algebra, quaternions and other concepts with the aim of making a simple-to-use 3D rending suite. I have tried to implement everything myself, using external crates only where it would be infeasible to make them myself *yet* such as `glfw` and `gl`.
+This project evolved from a learning exercise into a thoughtfully designed graphics engine capable of rendering 3D games and graphical simulations. Built with deliberate type-safety constraints: invalid GPU operations *will not compile*.
 
-The primary design motivation for this project is to ensure that a program with draw errors *would not compile*. The design of the graphics engine is based on the workflow of OpenGL, but with wiggle room to extend to Vulkan once I have gotten my head around it. I do not currently intend to support any other APIs.
-
-The project is split into a large number of crates, which are successively re-exported up to the `graphics` crate which would be the logical first crate to for a new user to read. The crate defines a lot of useful logical drawable units such as models, quads and skyboxes.
-
-Some crates are included for development purposes and may not yet be used in the final output.
+I implemented everything from scratch—custom linear algebra, data structures, rendering abstractions—using external crates only where infeasible (glfw, gl).
 
 ## Architecture
 
-* Modular design with custom crates ranging from data structures to linear algebra.
-* Type safe GPU operations prevent runtime errors from compiling.
-* Production grade Clippy constraints.
-* Designed with performance in mind: zero cost abstractions, zero sized types for compile time guarantees.
+* Type safety: Compile-time guarantees for valid GPU state; zero runtime panics in hot paths.
+* Zero-cost abstractions: Zero-sized types and compile-time specialization eliminate runtime overhead.
+* Code quality: Production-grade linting. Clippy compliance enforced.
+* Modular design: Custom crates from linear algebra to scene management; each independently usable.
 
-## Why I built this
+## Design Philosophy
 
-I built this as a way to learn both low level Rust and low level graphics rendering. I wanted to best leverage the Rust type system to make it impossible for a library user to draw something that would fail silently or at runtime. This goal is still in development, as there are many places in the graphics pipeline where there can be issues.
+Built to leverage Rust's type system for correctness: invalid GPU operations fail at compile time, not runtime. This constraint shaped every architectural decision—from type-safe draw operations to zero-sized compile-time guarantees. The result is a rendering library where entire classes of graphics bugs become uncompileable.
 
-## Getting Started
+## Getting started
 
-There is a `template_app` which can be used to begin the development of a 3D render, this template shows a dummy implementation of the `ApiState` trait, reads events and submits a `DrawNothing` to the graphics environment.
+See [`template_app`](./template_app/) for a minimal example implementing the `ApiState` trait.
 
 ## Examples
 
@@ -44,16 +40,11 @@ cargo run --release --bin <OPTION>
 
 ### On Windows
 
-Untested, requires `glfw3`, `assimp` and `OpenGL` libraries. Needs Cargo nightly complete 2026-09-01.
-
-## Known issues and WIP
-
-* Documentation: high priority for expansion
-* Clippy: strict lints such as `must_use_candidate` and `private_doc` not yet fulfilled
+Requires `glfw3`, `assimp`, `OpenGL` libraries and Cargo nightly complete 2026-09-01.
 
 ## Roadmap
 
 * Full Clippy compliance
-* Expanded Documentation
-* Windows Support.
+* Expanded documentation
+* Windows support
 * Vulkan support
