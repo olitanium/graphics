@@ -315,6 +315,7 @@ pub fn intersect2(one: Triangle<2>, two: Triangle<2>) -> bool {
 
     fn interior_r1(ccw_one: Triangle<2>, ccw_two: Triangle<2>, _old_two: &[SignOrZero; 3]) -> bool {
         #[cfg(debug_assertions)]
+        #[expect(clippy::used_underscore_binding, reason = "used for debug only")]
         {
             let [p, ..] = ccw_one;
             let out = test_vertex_wrt_sides(ccw_two, p);
@@ -380,17 +381,20 @@ pub fn intersect2(one: Triangle<2>, two: Triangle<2>) -> bool {
 
             let out = test_vertex_wrt_sides(ccw_two, p);
 
-            debug_assert!(
-                matches!(
-                    out,
-                    // interior of R2
-                    [S::Positive, S::Negative, S::Negative]
+            #[expect(clippy::used_underscore_binding, reason = "used for debug only")]
+            {
+                debug_assert!(
+                    matches!(
+                        out,
+                        // interior of R2
+                        [S::Positive, S::Negative, S::Negative]
                 // boundary of R2
                 | [S::Positive, S::Negative, S::Zero]
                 | [S::Positive, S::Zero, S::Negative]
-                ),
-                "didn't rotate correctly: {_old_two:?} => {out:?}"
-            );
+                    ),
+                    "didn't rotate correctly: {_old_two:?} => {out:?}"
+                );
+            }
         }
 
         let [p1, q1, r1] = ccw_one;

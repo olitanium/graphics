@@ -255,6 +255,7 @@ impl GenVertexArray<()> {
         self.bind();
 
         #[cfg(debug_assertions)]
+        #[expect(clippy::used_underscore_binding, reason = "used for debug only")]
         _active_shader_program
             .validate()
             .map_err(DrawError::Validate)?;

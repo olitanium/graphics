@@ -9,5 +9,3 @@ pub use simple::{SIMPLE_DEFERRED_GROUP_MAX_LIGHTS, SimpleDeferredCompleteGroup};
 
 mod shadow;
 pub use shadow::{SHADOW_DEFERRED_GROUP_MAX_LIGHTS, ShadowDeferredCompleteGroup};
-
-mod ambient_occlusion;

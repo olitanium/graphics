@@ -101,7 +101,7 @@ macro_rules! make_nearly_eq {
 }
 
 make_nearly_eq!(nearly_eq_f32(f32));
-make_nearly_eq!(nearly_eq_f64(f64));
+make_nearly_eq!(_nearly_eq_f64(f64));
 
 #[cfg(test)]
 mod test {
@@ -126,6 +126,6 @@ mod test {
     #[test]
     fn equal() {
         assert!(nearly_eq_f32(&[1.0, 1.0], &[1.0, 1.0]));
-        assert!(!nearly_eq_f64(&[0.0, 0.0], &[1.0, 1.0]));
+        assert!(!_nearly_eq_f64(&[0.0, 0.0], &[1.0, 1.0]));
     }
 }

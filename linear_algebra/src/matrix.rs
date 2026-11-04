@@ -64,6 +64,10 @@ impl<const R: usize, const C: usize> Debug for Matrix<R, C> {
 }
 
 impl<const R: usize, const C: usize> Matrix<R, C> {
+    #[expect(
+        dead_code,
+        reason = "bug, this is used but the warning comes up because of gca"
+    )]
     const NUM_COMP: usize = R * C;
 
     /// Create `Matrix` from column major data. The matrix is stored as column
