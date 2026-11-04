@@ -27,6 +27,8 @@ See [`template_app`](./template_app/) for a minimal example implementing the `Ap
   ![video](./grappling_hook/grappling_hook.gif)
 * [`box_with_sun`](./box_with_sun/) - Lit scene with multiple light sources and skybox.
   ![image](./box_with_sun/box_with_sun.png)
+* [`deferred_test`](./deferred_test/) - List scene demonstrating deferred shading.
+  ![image](./deferred_test/deferred_test.png)
 
 run with
 
