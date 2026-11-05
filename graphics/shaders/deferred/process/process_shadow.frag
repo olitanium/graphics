@@ -112,9 +112,7 @@ void main() {
         illumination += SpotLight_illuminate(spot[x]);
     }
 
-    vec4 colour = emission * emission.a + illumination * (1.0 - emission.a);
-    
-    colour = illumination;
+    vec4 colour = emission + illumination;
     
     if (colour.a < 0.01) {
         discard;

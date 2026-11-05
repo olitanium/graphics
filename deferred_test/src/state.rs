@@ -52,7 +52,7 @@ impl ApiState for State {
         events: Vec<Event<'a>>,
     ) -> PollResult<Self::DrawOutput<'a>, Self::Error> {
         let mut frame_time = Duration::ZERO;
-        let game_duration = Duration::ZERO;
+        let mut game_duration = Duration::ZERO;
         let mut keyboard = HashSet::new();
         let mut mouse_delta = Vector::default();
         let mut local_string = None;
@@ -63,7 +63,7 @@ impl ApiState for State {
             match event {
                 Event::WindowBuffer(buffer) => default_fb = Some(buffer),
                 Event::FrameTime(ft) => frame_time = ft,
-                // Event::ElapsedTime(at) => game_duration = at,
+                Event::ElapsedTime(at) => game_duration = at,
                 Event::WindowResize(_size) => {
                     // self.hdr_fb.resize(size);
                     // self.bloom.resize(size);
