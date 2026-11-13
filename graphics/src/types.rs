@@ -18,10 +18,6 @@ macro_rules! opaque {
             }
         }
 
-        //#[expect(
-            //clippy::allow_attributes,
-            //reason = "sometimes the macro released unused code"
-        //)]
         impl $name {
             #[allow(dead_code, reason = "May not be required on this invocation of the macro")]
             pub type Primitive = $type;
@@ -60,10 +56,6 @@ macro_rules! nz_opaque {
         }*/
 
 
-        //#[expect(
-            //clippy::allow_attributes,
-            //reason = "sometimes the macro released unused code"
-        //)]
         impl $name {
             #[allow(dead_code, reason = "May not be required on this invocation of the macro")]
             pub type Primitive = $type;
