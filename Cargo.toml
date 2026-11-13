@@ -100,4 +100,6 @@ cast_possible_truncation = "allow"
 expect_used = "allow"
 unwrap_used = "allow"
 indexing_slicing = "allow"
+must_use_without_reason = "allow"
+
 

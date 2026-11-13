@@ -1,13 +1,10 @@
 #![expect(incomplete_features, reason = "Nightly used")]
-#![feature(debug_closure_helpers)]
 #![feature(type_changing_struct_update)]
 #![feature(checked_type_aliases)]
 #![feature(inherent_associated_types)]
 #![feature(option_array_transpose)]
 #![feature(try_trait_v2_residual)]
 #![feature(try_trait_v2)]
-//#![feature(macroless_generic_const_args)]
-//#![feature(min_generic_const_args)]
 #![feature(gca_min_const_items)]
 #![feature(gca_const_items)]
 #![feature(array_try_map)]
@@ -42,10 +39,6 @@ macro_rules! gl_call_inner {
         // SAFETY: gl::GetError() does not do anything unsafe.
         while unsafe { gl::GetError() } != gl::NO_ERROR {}
         // perform the expression
-        #[expect(
-            clippy::allow_attributes,
-            reason = "Some calls will not require unsafety"
-        )]
         #[allow(
             clippy::macro_metavars_in_unsafe,
             reason = "gl_call is itself an unsafety marker"
