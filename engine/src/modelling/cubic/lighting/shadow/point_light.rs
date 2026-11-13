@@ -87,7 +87,7 @@ impl ShadowPointLight {
         shader.register_texture(iter::once((
             CString::new(format!("{name}[{index}].depth"))?,
             self.framebuffer.get_attachment_ref(),
-        )));
+        )))?;
 
         Ok(())
     }
@@ -106,7 +106,7 @@ impl ShadowPointLight {
         shader.register_texture(iter::once((
             CString::new(format!("{name}[{index}].depth"))?,
             CubeMap::dyn_blank(),
-        )));
+        )))?;
 
         Ok(())
     }

@@ -25,11 +25,7 @@ impl State {
     pub fn new_internal(screen_dims: (TexDim, TexDim)) -> Self {
         let exposure = 1.0;
 
-        let gbuffer = Builder::new_flat()
-            .depth()
-            .stencil()
-            .size(screen_dims)
-            .build();
+        let gbuffer = Builder::new_flat().depth().size(screen_dims).build();
 
         let skybox = SkyBox::new(
             CubeMap::builder()
@@ -46,7 +42,7 @@ impl State {
                 .build(),
         );
 
-        const ORIGIN_CUBE_SIDE_LENGTH: f32 = 1.0;
+        const ORIGIN_CUBE_SIDE_LENGTH: f32 = 0.5;
         let origin_cube = SimpleEntity::from_simple_cubic(
             SimpleCubic::cube(
                 ORIGIN_CUBE_SIDE_LENGTH,
@@ -71,23 +67,19 @@ impl State {
                         .build(),
                 ),
             )
-            .apply_transformation(Pose::new_from_translation(vector![
-                0.0,
-                -ORIGIN_CUBE_SIDE_LENGTH * 0.5,
-                0.0,
-            ]))
+            .apply_transformation(Pose::new_from_translation(vector![0.0, 0.0, 0.0,]))
             .build(),
             0,
             Mass::new_inverse(0.0),
             |_| (),
         );
 
-        const SMALL_CUBE_SIDE_LENGTH: f32 = 0.3;
+        const SMALL_CUBE_SIDE_LENGTH: f32 = 0.2;
         let small_cube = SimpleEntity::from_simple_cubic(
             SimpleCubic::cube(SMALL_CUBE_SIDE_LENGTH, Rc::new(Material::white()))
                 .apply_transformation(Pose::new_from_translation(vector![
                     0.0,
-                    SMALL_CUBE_SIDE_LENGTH * 0.5,
+                    ORIGIN_CUBE_SIDE_LENGTH * 0.5 + SMALL_CUBE_SIDE_LENGTH * 0.5,
                     0.0,
                 ]))
                 .build(),
@@ -128,12 +120,14 @@ impl State {
         };
 
         let hdr_fb: Framebuffer<3, WithoutExtra> = Builder::new_flat().size(gbuffer.size()).build();
+        let ambient_occlusion_buffer = Builder::new_flat().size(gbuffer.size()).build();
 
         let bloom = Bloom::new(gbuffer.size());
 
         Self {
             game_camera,
             exposure,
+            ambient_occlusion_buffer,
 
             skybox,
             hdr_out: hdr_fb,
@@ -146,7 +140,7 @@ impl State {
             toggle_m: true,
 
             gbuffer,
-            toggle_g: true,
+            toggle_g: 2,
             bloom,
         }
     }

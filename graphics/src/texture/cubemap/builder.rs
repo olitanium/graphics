@@ -19,7 +19,11 @@ use crate::{gl_call, types};
 pub struct MissingData;
 
 #[derive(Debug)]
-pub struct Dimensions<const N: usize>(TexDim);
+pub struct Dimensions<const N: usize> {
+    axis: TexDim,
+    min_filter: Minification,
+    mag_filter: Magnification,
+}
 
 #[derive(Debug)]
 pub struct CubeFramebufferAttachment<T: FramebufferAttachment> {
@@ -35,14 +39,14 @@ pub struct HasSomeImage {
     negative_y: DynamicImage,
     positive_z: DynamicImage,
     negative_z: DynamicImage,
+    mag_filter: Magnification,
+    min_filter: Minification,
 }
 
 #[derive(Debug, Clone, Default)]
 #[must_use = "`CubeMap` must be built with the `build` method"]
 pub struct Builder<T> {
     data: T,
-    min_filter: Minification,
-    mag_filter: Magnification,
 }
 
 impl TexBuilder for Builder<MissingData> {
@@ -51,7 +55,12 @@ impl TexBuilder for Builder<MissingData> {
 
     fn size<const N: usize>(self, size: (TexDim, TexDim)) -> <Self as TexBuilder>::ReadyToBuild<N> {
         Builder {
-            data: Dimensions(size.0),
+            data: Dimensions {
+                axis: size.0,
+                min_filter: Minification::default(),
+                mag_filter: Magnification::default(),
+            },
+
             ..self
         }
     }
@@ -84,10 +93,6 @@ fn make_colour(colour: ColourRGB) -> DynamicImage {
 }
 
 impl<T> Builder<T> {
-    builder!(min_filter: Minification);
-
-    builder!(mag_filter: Magnification);
-
     pub fn depth_attachment(
         self,
         size: TexDim,
@@ -97,7 +102,6 @@ impl<T> Builder<T> {
                 size,
                 _att_type: PhantomData,
             },
-            ..self
         }
     }
 }
@@ -124,9 +128,11 @@ impl Builder<MissingData> {
             negative_y: load_image(negative_y)?,
             positive_z: load_image(positive_z)?,
             negative_z: load_image(negative_z)?,
+            mag_filter: Magnification::Linear,
+            min_filter: Minification::TRILINEAR,
         };
 
-        Ok(Builder { data, ..self })
+        Ok(Builder { data })
     }
 
     pub fn monochrome(self, colour: ColourRGB) -> Builder<HasSomeImage> {
@@ -137,9 +143,11 @@ impl Builder<MissingData> {
             negative_y: make_colour(colour),
             positive_z: make_colour(colour),
             negative_z: make_colour(colour),
+            mag_filter: Magnification::Nearest,
+            min_filter: Minification::Nearest,
         };
 
-        Builder { data, ..self }
+        Builder { data }
     }
 
     pub fn grayscale(self, brightness: f32) -> Builder<HasSomeImage> {
@@ -147,7 +155,7 @@ impl Builder<MissingData> {
     }
 }
 
-fn make_tex_set_parameters<T>(build: &Builder<T>) -> TexId {
+fn make_tex_set_parameters() -> TexId {
     let id = {
         let mut id = 0;
         gl_call! { gl::GenTextures(1, &raw mut id); }
@@ -176,33 +184,59 @@ fn make_tex_set_parameters<T>(build: &Builder<T>) -> TexId {
             gl::CLAMP_TO_EDGE as types::GLint,
         );
     }
+    // TODO: Fix
     gl_call! {
         gl::TexParameteri(
             gl::TEXTURE_CUBE_MAP,
             gl::TEXTURE_MIN_FILTER,
-            build.min_filter.get_enum()
+            Minification::default().get_enum(),
         );
     }
     gl_call! {
         gl::TexParameteri(
             gl::TEXTURE_CUBE_MAP,
             gl::TEXTURE_MAG_FILTER,
-            build.mag_filter.get_enum()
+            Magnification::default().get_enum(),
         );
+    // END DEBUG
     }
-
     id
 }
 
 impl<const N: usize> TexBuilderCanBuild<N> for Builder<Dimensions<N>> {
     type Output = CubeMap;
 
+    fn min_filter(mut self, min_filter: Minification) -> Self {
+        self.data.min_filter = min_filter;
+        self
+    }
+
+    fn mag_filter(mut self, mag_filter: Magnification) -> Self {
+        self.data.mag_filter = mag_filter;
+        self
+    }
+
     fn build(self) -> Self::Output {
-        let id = make_tex_set_parameters(&self);
+        let id = make_tex_set_parameters();
+
+        gl_call! {
+            gl::TexParameteri(
+                gl::TEXTURE_CUBE_MAP,
+                gl::TEXTURE_MIN_FILTER,
+                self.data.min_filter.get_enum()
+            );
+        }
+        gl_call! {
+            gl::TexParameteri(
+                gl::TEXTURE_CUBE_MAP,
+                gl::TEXTURE_MAG_FILTER,
+                self.data.mag_filter.get_enum()
+            );
+        }
 
         let (internal_format, format) = const { texture::get_format::<N>() };
 
-        let size = self.data.0;
+        let size = self.data.axis;
 
         for target in [
             gl::TEXTURE_CUBE_MAP_POSITIVE_X,
@@ -232,8 +266,33 @@ impl<const N: usize> TexBuilderCanBuild<N> for Builder<Dimensions<N>> {
 }
 
 impl Builder<HasSomeImage> {
+    pub const fn min_filter(mut self, min_filter: Minification) -> Self {
+        self.data.min_filter = min_filter;
+        self
+    }
+
+    pub const fn mag_filter(mut self, mag_filter: Magnification) -> Self {
+        self.data.mag_filter = mag_filter;
+        self
+    }
+
     pub fn build(self) -> CubeMap {
-        let id = make_tex_set_parameters(&self);
+        let id = make_tex_set_parameters();
+
+        gl_call! {
+            gl::TexParameteri(
+                gl::TEXTURE_CUBE_MAP,
+                gl::TEXTURE_MIN_FILTER,
+                self.data.min_filter.get_enum()
+            );
+        }
+        gl_call! {
+            gl::TexParameteri(
+                gl::TEXTURE_CUBE_MAP,
+                gl::TEXTURE_MAG_FILTER,
+                self.data.mag_filter.get_enum()
+            );
+        }
 
         let size = TexDim::new(self.data.positive_x.width() as i32);
 
@@ -268,7 +327,7 @@ impl Builder<HasSomeImage> {
 impl<T: AttachmentWithDepth> Builder<CubeFramebufferAttachment<T>> {
     pub fn build(self) -> CubeMap {
         let tex_info = T::components();
-        let id = make_tex_set_parameters(&self);
+        let id = make_tex_set_parameters();
 
         for target in [
             gl::TEXTURE_CUBE_MAP_POSITIVE_X,

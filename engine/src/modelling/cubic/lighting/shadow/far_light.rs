@@ -1,4 +1,5 @@
 use alloc::ffi::CString;
+use core::cmp::Ordering;
 use core::error::Error;
 use core::iter;
 
@@ -9,7 +10,7 @@ use graphics::framebuffer::traits::FramebufferWithoutExtra as _;
 use graphics::framebuffer::{Builder, Framebuffer, FramebufferContext};
 use graphics::linear_algebra::{Matrix, UnitVector, Vector};
 use graphics::shader_program::{ActiveShaderProgram, Uniform};
-use graphics::texture::{FlatTexture, Magnification, Texture, WrapType};
+use graphics::texture::{FlatTexture, Texture, WrapType};
 use graphics::types::TexDim;
 use graphics::{Draw, DrawOut, Model, ShaderProgramContext};
 
@@ -35,11 +36,10 @@ impl ShadowFarLight {
                 .depth()
                 .size(size)
                 .map_attachment(|tex_builder| {
-                    tex_builder
-                        .wrap_s_t(WrapType::ClampToBorder(ColourRGBA::new([
-                            0.0, 0.0, 0.0, 1.0,
-                        ])))
-                        .mag_filter(Magnification::Linear)
+                    tex_builder.wrap_s_t(WrapType::ClampToBorder(ColourRGBA::new([
+                        0.0, 0.0, 0.0, 1.0,
+                    ])))
+                    //.set_depth_cmp(Ordering::Less)
                 })
                 .build(),
         }
@@ -97,7 +97,7 @@ impl ShadowFarLight {
         shader.register_texture(iter::once((
             CString::new(format!("{name}[{index}].depth"))?,
             self.framebuffer.get_attachment_ref(),
-        )));
+        )))?;
 
         Ok(())
     }
@@ -116,7 +116,7 @@ impl ShadowFarLight {
         shader.register_texture(iter::once((
             CString::new(format!("{name}[{index}].depth"))?,
             FlatTexture::dyn_blank(),
-        )));
+        )))?;
 
         Ok(())
     }

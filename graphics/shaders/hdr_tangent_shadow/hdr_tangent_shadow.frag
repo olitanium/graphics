@@ -133,11 +133,10 @@ void main() {
     // TODO: fix alpha with an HDR buffer
     float alpha = max(diffuse_map.a, emission.a);
     vec4 colour = vec4((illumination + emission).xyz, alpha);
-    colour = illumination;
     
-    //if (colour.a < 0.01) {
-    //    discard;
-    //}
+    if (colour.a < 0.01) {
+        discard;
+    }
 
     frag_colour = colour;
     if (dot(colour.rgb, vec3(0.2126, 0.7152, 0.0722)) > 10.0) {
@@ -207,8 +206,7 @@ float calculate_shadow(mat4 matrix, vec4 frag_pos_light_space, sampler2D depth_m
 
 float calculate_shadow_point(vec3 frag_to_light, samplerCube depth, float far_plane) {
     float closest_depth = texture(depth, frag_to_light).r;// * far_plane;
-    return closest_depth;
-    
+
     float current_depth = length(frag_to_light)/far_plane;
     
     return current_depth < closest_depth ? 1.0 : 0.0;
@@ -236,7 +234,6 @@ vec4 PointLight_illuminate(PointLight light, PointLightVarying light_vary) {
 
     float shadow = calculate_shadow_point(light_vary.light_to_frag, light.depth, light.far_plane);
 
-    return vec4(vec3(shadow), 1.0);
     // Return
     return gen_out.ambient + (gen_out.diffuse + gen_out.specular) * light_attenuation * shadow;
 }

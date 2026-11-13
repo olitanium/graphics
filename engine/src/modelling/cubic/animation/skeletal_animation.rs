@@ -14,9 +14,9 @@ pub struct SkeletalAnimationBuilder {
     /// The skeleton's signature can be derived as the ordered list of bone
     /// parents.
     signature: Vec<SkeletonBoneIndex>,
-    // The 0th bone is the Root bone, and isn't animated. bones[0] refers to skeleton bone 1.
-    // All accesses to bones must go through get() which returns an option in case of accessing
-    // bone 0.
+    // The 0th bone is the Root bone, and isn't animated. bones[0] refers to
+    // skeleton bone 1. All accesses to bones must go through get() which
+    // returns an option in case of accessing bone 0.
     bones: Vec<BoneAnimation>,
 }
 

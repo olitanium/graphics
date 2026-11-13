@@ -20,7 +20,7 @@ pub struct State {
 
     pub exposure: f32,
 
-    pub toggle_g: bool,
+    pub toggle_g: u32,
     pub toggle_m: bool,
 
     pub sun: Sun,
@@ -32,6 +32,7 @@ pub struct State {
 
     pub gbuffer: GBuffer,
     pub hdr_out: Framebuffer<3, WithoutExtra>,
+    pub ambient_occlusion_buffer: Framebuffer<1, WithoutExtra>,
     pub bloom: Bloom,
 }
 

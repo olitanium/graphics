@@ -115,7 +115,10 @@ impl<M: Model, O, const OUT: usize, T: Texture> ShaderProgram<M, O, OUT, T> {
 
         // if shader_source contains c_name then
         match out {
-            -2 => Err(GetUniformLocationError::OptimizedOut),
+            -2 => {
+                // eprintln!("optimised {:?}", { name.as_cstr() });
+                Err(GetUniformLocationError::OptimizedOut)
+            }
             -1 => Err(GetUniformLocationError::NotFound {
                 c_name: name.as_cstr().to_owned(),
                 shader_source: Arc::clone(&self.concat_all_text),

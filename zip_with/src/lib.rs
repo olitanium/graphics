@@ -55,7 +55,8 @@ const impl<const N: usize, T> ArrayZipWith for [T; N] {
 
         array::from_fn(const |_| {
             func(
-                // SAFETY: equal sized arrays, will be empty exactly as the function stops calling.
+                // SAFETY: equal sized arrays, will be empty exactly as the
+                // function stops calling.
                 unsafe { array1.pop_front().unwrap_unchecked() },
                 // SAFETY: as above.
                 unsafe { array2.pop_front().unwrap_unchecked() },

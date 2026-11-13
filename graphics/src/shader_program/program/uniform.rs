@@ -30,6 +30,14 @@ pub trait Uniform: Debug {
     ) -> Result<(), SetUniformError>;
 }
 
+pub trait LocatableUniform {
+    fn set_uniform_by_location(
+        &self,
+        location: UniformLocation,
+        shader_program: &dyn IsActiveShaderProgram,
+    );
+}
+
 macro_rules! define_uniform {
     ($typ:ty => | $self:ident, $loc:ident, $shader:ident | $out:expr) => {
         impl Uniform for $typ {
@@ -39,6 +47,7 @@ macro_rules! define_uniform {
                 shader_program: &dyn IsActiveShaderProgram,
             ) -> Result<(), SetUniformError> {
                 match shader_program.get_uniform_location(name) {
+                    // TODO: replace by set_uniform_by_location
                     Ok(location) => Ok((|$self: &Self, $loc: UniformLocation, $shader| $out)(
                         self,
                         location,
@@ -48,11 +57,35 @@ macro_rules! define_uniform {
                 }
             }
         }
+
+        impl LocatableUniform for $typ {
+            fn set_uniform_by_location(
+                &self,
+                location: UniformLocation,
+                shader_program: &dyn IsActiveShaderProgram,
+            ) {
+                (|$self: &Self, $loc: UniformLocation, $shader| $out)(
+                    self,
+                    location,
+                    shader_program,
+                )
+            }
+        }
     };
 }
 
 macro_rules! named_define_uniform {
-    ($typ:ty => | $self:ident, $name:ident, $shader:ident | $out:expr) => {
+    (
+        $typ:ty => |
+        $self:ident,
+        $name:ident,
+        $shader:ident |
+        $out:expr => |
+        $self_a:ident,
+        $location:ident,
+        $shader_a:ident |
+        $out_a:expr
+    ) => {
         impl Uniform for $typ {
             fn set_uniform(
                 &self,
@@ -62,6 +95,16 @@ macro_rules! named_define_uniform {
                 (|$self: &Self, $name, $shader| $out)(self, name, shader_program)
             }
         }
+
+        impl LocatableUniform for $typ {
+            fn set_uniform_by_location(
+                &self,
+                location: UniformLocation,
+                shader_program: &dyn IsActiveShaderProgram,
+            ) {
+                (|$self_a: &Self, $location, $shader_a| $out_a)(self, location, shader_program)
+            }
+        }
     };
 }
 
@@ -69,10 +112,10 @@ define_uniform!(i32 => |value, location, _s| { gl_call!{ gl::Uniform1i(location.
 define_uniform!(u32 => |value, location, _s| { gl_call!{ gl::Uniform1ui(location.as_primitive(), *value); } } );
 define_uniform!(f32 => |value, location, _s| { gl_call!{ gl::Uniform1f(location.as_primitive(), *value); } } );
 define_uniform!(f64 => |value, location, _s| { gl_call!{ gl::Uniform1d(location.as_primitive(), *value); } } );
-named_define_uniform!([i32; 1] => |value, name, s| value[0].set_uniform(name, s));
-named_define_uniform!([u32; 1] => |value, name, s| value[0].set_uniform(name, s));
-named_define_uniform!([f32; 1] => |value, name, s| value[0].set_uniform(name, s));
-named_define_uniform!([f64; 1] => |value, name, s| value[0].set_uniform(name, s));
+named_define_uniform!([i32; 1] => |value, name, s| value[0].set_uniform(name, s) => |value, loc, s| value[0].set_uniform_by_location(loc, s));
+named_define_uniform!([u32; 1] => |value, name, s| value[0].set_uniform(name, s) => |value, loc, s| value[0].set_uniform_by_location(loc, s));
+named_define_uniform!([f32; 1] => |value, name, s| value[0].set_uniform(name, s) => |value, loc, s| value[0].set_uniform_by_location(loc, s));
+named_define_uniform!([f64; 1] => |value, name, s| value[0].set_uniform(name, s) => |value, loc, s| value[0].set_uniform_by_location(loc, s));
 define_uniform!([i32; 2] => |value, location, _s| gl_call! { gl::Uniform2i(location.as_primitive(), value[0], value[1]); });
 define_uniform!([u32; 2] => |value, location, _s| gl_call! { gl::Uniform2ui(location.as_primitive(), value[0], value[1]); });
 define_uniform!([f32; 2] => |value, location, _s| gl_call! { gl::Uniform2f(location.as_primitive(), value[0], value[1]); });
@@ -89,8 +132,8 @@ define_uniform!([f64; 4] => |value, location, _s| gl_call! { gl::Uniform4d(locat
 macro_rules! vectors {
     ($($num:literal),*) => {
         $(
-named_define_uniform!(Vector<$num> => |value, name, s| value.inner().set_uniform(name, s));
-named_define_uniform!(UnitVector<$num> => |value, name, s| value.v().inner().set_uniform(name, s));
+named_define_uniform!(Vector<$num> => |value, name, s| value.inner().set_uniform(name, s) => |value, loc, s| value.set_uniform_by_location(loc, s));
+named_define_uniform!(UnitVector<$num> => |value, name, s| value.v().inner().set_uniform(name, s) => |value, loc, s| value.set_uniform_by_location(loc, s));
         )*
     };
 }
@@ -113,8 +156,8 @@ matrix!(4,2 => UniformMatrix2x4fv);
 matrix!(4,3 => UniformMatrix3x4fv);
 matrix!(4,4 => UniformMatrix4fv);
 
-named_define_uniform!(ColourRGB => |value, name, s| value.as_ref().set_uniform(name, s));
-named_define_uniform!(ColourRGBA => |value, name, s| value.as_ref().set_uniform(name, s));
+named_define_uniform!(ColourRGB => |value, name, s| value.as_ref().set_uniform(name, s) => |value, loc, s| value.set_uniform_by_location(loc, s));
+named_define_uniform!(ColourRGBA => |value, name, s| value.as_ref().set_uniform(name, s) => |value, loc, s| value.set_uniform_by_location(loc, s));
 
 struct SliceValue<'a> {
     uniform: &'a dyn UniformName,

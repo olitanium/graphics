@@ -18,10 +18,10 @@ macro_rules! opaque {
             }
         }
 
-        #[expect(
-            clippy::allow_attributes,
-            reason = "sometimes the macro released unused code"
-        )]
+        //#[expect(
+            //clippy::allow_attributes,
+            //reason = "sometimes the macro released unused code"
+        //)]
         impl $name {
             #[allow(dead_code, reason = "May not be required on this invocation of the macro")]
             pub type Primitive = $type;
@@ -60,10 +60,10 @@ macro_rules! nz_opaque {
         }*/
 
 
-        #[expect(
-            clippy::allow_attributes,
-            reason = "sometimes the macro released unused code"
-        )]
+        //#[expect(
+            //clippy::allow_attributes,
+            //reason = "sometimes the macro released unused code"
+        //)]
         impl $name {
             #[allow(dead_code, reason = "May not be required on this invocation of the macro")]
             pub type Primitive = $type;
@@ -91,6 +91,10 @@ impl TexDim {
     pub const fn aspect_ratio(x: Self, y: Self) -> f32 {
         x.as_primitive() as f32 / y.as_primitive() as f32
     }
+
+    pub const fn get(self) -> u32 {
+        self.0.get() as u32
+    }
 }
 opaque!(TexId: GLuint);
 opaque!(FrameBufferId: GLuint);
@@ -106,7 +110,7 @@ impl ElementArrayElem {
 opaque!(ElementArrayLen: GLsizei, Clone, Copy);
 opaque!(VertexBufferLen: GLsizei, Clone, Copy);
 nz_opaque!(VertexBufferId: GLuint);
-opaque!(UniformLocation: GLint);
+opaque!(UniformLocation: GLint, Clone);
 nz_opaque!(ShaderId: GLuint);
 nz_opaque!(ShaderProgramId: GLuint);
 nz_opaque!(Query: GLuint);

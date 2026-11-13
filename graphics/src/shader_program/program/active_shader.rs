@@ -12,7 +12,7 @@ use super::uniform::Uniform;
 use super::{CullFace, ShaderProgram, ShaderProgramContext};
 use crate::shader_program::BlendType;
 use crate::shader_program::program::context::FaceCullingForcedByProgramError;
-use crate::shader_program::program::uniform::SetUniformError;
+use crate::shader_program::program::uniform::{LocatableUniform, SetUniformError};
 use crate::shader_program::program::{GetUniformLocationError, UniformName};
 use crate::texture::Texture;
 use crate::types::{self, UniformLocation};
@@ -21,7 +21,7 @@ use crate::{Model, gl_call};
 pub struct ActiveShaderProgram<'a, 'b, 'c, M: Model, O, T: Texture, const OUT: usize> {
     shader_program: &'a ShaderProgram<M, O, OUT, T>,
     context: &'b mut ShaderProgramContext,
-    texture_list: HashMap<CString, &'c dyn Texture>,
+    texture_list: HashMap<UniformLocation, &'c dyn Texture>,
 }
 
 impl<M: Model + Debug, O, T: Texture + Debug, const OUT: usize> Debug
@@ -63,13 +63,34 @@ impl<'c, M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, 
         self.context
     }
 
-    pub fn register_texture<L>(&mut self, texture_list: L)
+    pub fn register_texture<'a, L, N>(
+        &mut self,
+        texture_list: L,
+    ) -> Result<(), ShaderSetUniformError>
     where
-        L: IntoIterator<Item = (CString, &'c dyn Texture)>,
+        N: UniformName,
+        L: IntoIterator<Item = (N, &'c dyn Texture)>,
     {
         for (string, texture) in texture_list {
-            self.texture_list.insert(string, texture);
+            let location = match self.get_uniform_location(&string) {
+                Err(GetUniformLocationError::OptimizedOut) => continue,
+                Err(GetUniformLocationError::NameNul(x)) => Err(ShaderSetUniformError::NameNul(x)),
+                Err(GetUniformLocationError::NotFound {
+                    c_name,
+                    shader_source,
+                }) => Err(ShaderSetUniformError::NotFound {
+                    c_name,
+                    shader_source,
+                }),
+                Ok(loc) => {
+                    // eprintln!("tex: {:?} at {:?}", string.as_cstr(), loc);
+                    Ok(loc)
+                }
+            }?;
+            self.texture_list.insert(location, texture);
         }
+
+        Ok(())
     }
 }
 
@@ -120,8 +141,8 @@ pub enum ShaderSetUniformError {
     NameNul(NulError),
     NotFound {
         c_name: CString,
-        // I don't like the Arc, because this is not thread safe and so `Arc` is unneccesary. `Arc`
-        // is used because some Shaders are in `LazyLocks`.
+        // I don't like the Arc, because this is not thread safe and so `Arc` is
+        // unneccesary. `Arc` is used because some Shaders are in `LazyLocks`.
         shader_source: Arc<str>,
     },
 }
@@ -144,6 +165,13 @@ fn match_result(res: Result<(), SetUniformError>) -> Result<(), ShaderSetUniform
 }
 
 impl<M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, '_, M, O, T, OUT> {
+    pub fn set_uniform_by_location<U>(&mut self, location: UniformLocation, value: &U)
+    where
+        U: LocatableUniform,
+    {
+        value.set_uniform_by_location(location, self);
+    }
+
     pub fn set_uniform<N, U>(&mut self, name: &N, value: &U) -> Result<(), ShaderSetUniformError>
     where
         N: UniformName,
@@ -186,32 +214,21 @@ impl<M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, '_, 
             usize::try_from(out).expect("will not be negative")
         });
 
-        if self.texture_list.len() <= *MAX_TEX_UNITS {
-            let mut errors = Vec::new();
-
-            for (index, (name, tex)) in self.texture_list.clone().into_iter().enumerate() {
-                #[expect(
-                    clippy::cast_possible_truncation,
-                    reason = "index <= u32::MAX because MAX_TEX_UNITS < u32::MAX"
-                )]
-                let i32_index = index as i32;
-                tex.bind_to(i32_index.cast_unsigned());
-                let result = self.set_uniform(&name, &i32_index);
-                if let Err(x) = result {
-                    errors.push(x);
+        (self.texture_list.len() <= *MAX_TEX_UNITS)
+            .then(|| {
+                for (index, (location, tex)) in self.texture_list.clone().into_iter().enumerate() {
+                    #[expect(
+                        clippy::cast_possible_truncation,
+                        reason = "index <= u32::MAX because MAX_TEX_UNITS < u32::MAX"
+                    )]
+                    let i32_index = index as i32;
+                    tex.bind_to(i32_index.cast_unsigned());
+                    self.set_uniform_by_location(location, &i32_index);
                 }
-                //.map_err(|err| BindTexturesError::SetUniform(err))?;
-            }
-            if errors.is_empty() {
-                Ok(())
-            } else {
-                Err(BindTexturesError::SetUniform(errors))
-            }
-        } else {
-            Err(BindTexturesError::BindTooHigh {
+            })
+            .ok_or(BindTexturesError::BindTooHigh {
                 maximum: *MAX_TEX_UNITS,
             })
-        }
     }
 }
 

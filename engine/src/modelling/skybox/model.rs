@@ -3,7 +3,12 @@ use core::iter;
 use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
-use graphics::shader_program::{ActiveShaderProgram, CullFace, FaceCullingForcedByProgramError};
+use graphics::shader_program::{
+    ActiveShaderProgram,
+    CullFace,
+    FaceCullingForcedByProgramError,
+    ShaderSetUniformError,
+};
 use graphics::texture::{CubeMap, Texture};
 use graphics::vertex_array::{self, VertexArray};
 use utils::error_boilerplate;
@@ -34,6 +39,7 @@ impl SkyBox {
 pub enum DrawError {
     FaceCulling(FaceCullingForcedByProgramError),
     VertexArrayDraw(vertex_array::DrawError),
+    TextureBindError(ShaderSetUniformError),
 }
 
 error_boilerplate!(DrawError);
@@ -50,10 +56,12 @@ impl SkyBox {
         active_shader
             .cull_face(CullFace::DoNotCull)
             .map_err(DrawError::FaceCulling)?;
-        active_shader.register_texture(iter::once((
-            c"skybox".to_owned(),
-            &self.texture as &dyn Texture,
-        )));
+        active_shader
+            .register_texture(iter::once((
+                c"skybox".to_owned(),
+                &self.texture as &dyn Texture,
+            )))
+            .map_err(DrawError::TextureBindError)?;
 
         self.model
             .draw(active_shader, active_framebuffer)

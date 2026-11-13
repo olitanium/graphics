@@ -1,6 +1,5 @@
 use core::fmt;
 
-
 use crate::framebuffer::traits::{AttachmentTextureInfo, OptTexBuilderMap};
 use crate::framebuffer::{
     self,
@@ -81,7 +80,7 @@ impl AttachmentWithDepth for WithDepth {
 
     fn components() -> AttachmentTextureInfo {
         AttachmentTextureInfo {
-            internal_format: gl::DEPTH_COMPONENT,
+            internal_format: gl::DEPTH_COMPONENT32F,
             format: gl::DEPTH_COMPONENT,
             data_type: gl::UNSIGNED_INT,
             attachment: gl::DEPTH_ATTACHMENT,

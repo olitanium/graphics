@@ -5,12 +5,15 @@ use colour::ColourRGBA;
 use image::ImageError;
 use utils::error_boilerplate;
 
+use crate::texture::{Magnification, Minification};
 use crate::types::{self, TexDim};
 
 #[derive(Debug, Clone)]
 pub struct Image {
     size: (TexDim, TexDim),
     data: ImageType,
+    pub(crate) mag_filter: Magnification,
+    pub(crate) min_filter: Minification,
 }
 
 #[derive(Debug, Clone)]
@@ -73,6 +76,8 @@ macro_rules! new_from_file {
             Ok(Self {
                 size,
                 data: ImageType::$enum_name(buffer),
+                min_filter: Minification::default(),
+                mag_filter: Magnification::default(),
             })
         }
     };
@@ -85,15 +90,39 @@ pub struct TexInternalFormat<'a> {
     pub(crate) slice: &'a [ColourRGBA],
 }
 
+#[derive(Debug)]
+pub enum NewFromStreamError {
+    WrongSize,
+}
+error_boilerplate!(NewFromStreamError);
+
 impl Image {
     new_from_file!(new_from_srgba Srgba);
 
     new_from_file!(new_from_rgba Linear);
 
+    pub fn new_from_stream(
+        size: (TexDim, TexDim),
+        pixels: Vec<ColourRGBA>,
+    ) -> Result<Self, NewFromStreamError> {
+        if pixels.len() == (size.0.as_primitive() * size.1.as_primitive()) as usize {
+            Ok(Self {
+                size,
+                data: ImageType::LinearUnclamped(pixels),
+                mag_filter: Magnification::default(),
+                min_filter: Minification::default(),
+            })
+        } else {
+            Err(NewFromStreamError::WrongSize)
+        }
+    }
+
     pub fn new_monochrome_clamped(colour: ColourRGBA) -> Self {
         Self {
             size: (TexDim::new(1), TexDim::new(1)),
             data: ImageType::Linear(vec![colour]),
+            mag_filter: Magnification::Nearest,
+            min_filter: Minification::Nearest,
         }
     }
 
@@ -101,6 +130,8 @@ impl Image {
         Self {
             size: (TexDim::new(1), TexDim::new(1)),
             data: ImageType::LinearUnclamped(vec![colour]),
+            mag_filter: Magnification::Nearest,
+            min_filter: Minification::Nearest,
         }
     }
 

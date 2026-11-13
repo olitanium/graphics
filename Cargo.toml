@@ -85,6 +85,7 @@ multiple_inherent_impl = "allow"
 module_name_repetitions = "allow"
 same_name_method = "allow"
 too_many_lines = "allow"
+must_use_without_reason = "allow"
 
 # temporary
 
@@ -94,6 +95,7 @@ missing_errors_doc = "allow"
 type_complexity = "allow"
 missing_panics_doc = "allow"
 cast_possible_wrap = "allow"
+cast_sign_loss = "allow"
 cast_possible_truncation = "allow"
 
 # remove_me_soon

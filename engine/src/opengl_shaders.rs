@@ -210,3 +210,10 @@ make_included! {
     "shaders/deferred/process/process.vert",
     "shaders/deferred/process/process_shadow.frag",
 }
+
+make_included! {
+    ShaderProgram<Quad<GBUFFER_ELEMENTS>, (), 1, FlatTexture>,
+    ambient_occlusion,
+    "shaders/deferred/ambient_occlusion/ambient_occlusion.vert",
+    "shaders/deferred/ambient_occlusion/ambient_occlusion.frag",
+}

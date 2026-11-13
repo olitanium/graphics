@@ -109,8 +109,8 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
             [S::Zero, S::Zero, S::Zero] => CrossType::Coplanar,
             [S::Positive, S::Positive, S::Positive] => CrossType::MaybeIntersecting,
             [S::Negative, S::Negative, S::Negative] => CrossType::None,
-            // Only one vertex is in positive, this must be rotated around and the other triangle
-            // kept as is
+            // Only one vertex is in positive, this must be rotated around and
+            // the other triangle kept as is
             [S::Positive, S::Negative | S::Zero, S::Negative | S::Zero] => {
                 CrossType::Success(one, two)
             }
@@ -123,8 +123,8 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
                 let permuted1 = permute!(one, 2);
                 CrossType::Success(permuted1, two)
             }
-            // only one vertex is negative, this must be rotated around and the other triangle
-            // flipped to make positive.
+            // only one vertex is negative, this must be rotated around and the
+            // other triangle flipped to make positive.
             [S::Negative, S::Positive | S::Zero, S::Positive | S::Zero] => {
                 let permuted2 = swap_qr(two);
                 CrossType::Success(one, permuted2)
@@ -139,8 +139,9 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
                 let permuted2 = swap_qr(two);
                 CrossType::Success(permuted1, permuted2)
             }
-            // One vertex is on the triangle, the other two on the same side. Make the others in the
-            // negative and rename the zero-vertex to label 1
+            // One vertex is on the triangle, the other two on the same side.
+            // Make the others in the negative and rename the zero-vertex to
+            // label 1
             [S::Zero, S::Negative, S::Negative] => CrossType::Success(one, two),
             [S::Negative, S::Zero, S::Negative] => {
                 let permuted1 = permute!(one, 1);
@@ -180,8 +181,8 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
                 match determiant_crossing(two, one) {
                     CrossType::MaybeIntersecting => CrossType::MaybeIntersecting,
                     CrossType::None => CrossType::None,
-                    // I don't expect these to come up because we've already asserted that they are
-                    // not coplanar or intersecting
+                    // I don't expect these to come up because we've already
+                    // asserted that they are not coplanar or intersecting
                     CrossType::Coplanar | CrossType::Success(..) => CrossType::None,
                 }
             }

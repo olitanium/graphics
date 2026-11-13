@@ -19,6 +19,8 @@
 #![feature(const_try)]
 #![feature(const_bool)]
 #![feature(const_cmp)]
+#![feature(random)]
+#![feature(integer_cast_extras)]
 
 extern crate alloc;
 

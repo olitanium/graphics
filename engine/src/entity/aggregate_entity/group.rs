@@ -71,8 +71,9 @@ where
         lights: ListLights<'a, MAX>,
         opaque: Vec<(
             &'a AggregateEntity<M, T>,
-            // HashMap<AggregateModelIndex, (&'a SkeletalAnimation, f32)>, // time
-            // Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,     // fix_anim
+            // HashMap<AggregateModelIndex, (&'a SkeletalAnimation, f32)>, //
+            // time Option<(AggregateModelIndex, SkeletonBoneIndex, Pose)>,
+            // // fix_anim
             &'a AggregateCalcAnim,
         )>,
 

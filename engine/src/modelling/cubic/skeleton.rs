@@ -10,8 +10,9 @@ use utils::new;
 #[derive(Debug, Clone, Default)]
 #[must_use = "`Skeleton` must be created with the `build` method"]
 pub struct Builder {
-    // All accesses to `values` is offset by -1, where 0 means accessing the root node (given in
-    // functions), 1 means accessing values[0], 2 => values[1] etc...
+    // All accesses to `values` is offset by -1, where 0 means accessing the
+    // root node (given in functions), 1 means accessing values[0], 2 =>
+    // values[1] etc...
     pub(crate) bones: Vec<Bone>,
 }
 

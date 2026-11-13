@@ -1,14 +1,12 @@
 use core::error::Error;
 
 use graphics::framebuffer::FramebufferContext;
-use graphics::framebuffer::attachments::WithStencil;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::texture::FlatTexture;
 use graphics::{Draw, DrawOut, ShaderProgramContext};
 use triangle_intersection::Vector;
 
-use super::GBUFFER_ELEMENTS;
-use crate::deferred::GBuffer;
+use crate::deferred::{GBuffer, GBufferFramebufferQuad};
 use crate::modelling::FramebufferQuad;
 use crate::modelling::cubic::lighting::shadow::ShadowListLights;
 use crate::modelling::cubic::{Camera, CameraPose};
@@ -21,7 +19,7 @@ where
     X: FramebufferWithoutExtra<OUT, Tex = FlatTexture>,
 {
     framebuffer: &'a X,
-    gbuffer: FramebufferQuad<'a, GBUFFER_ELEMENTS, WithStencil>,
+    gbuffer: GBufferFramebufferQuad<'a>,
     lights: ShadowListLights<'a, SHADOW_DEFERRED_GROUP_MAX_LIGHTS>,
     camera_pos: Vector<3>,
 }

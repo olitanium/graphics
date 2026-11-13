@@ -7,6 +7,11 @@ pub trait UniformName {
     fn as_cstr(&self) -> &CStr;
 
     fn hash(&self) -> DefaultHasher;
+
+    // get_uniform_location function here? So that UniformLocation can impl
+    // UniformName?
+    // if that happens then we can remove the set_uniform_by_location method on
+    // Uniform
 }
 
 impl UniformName for CString {

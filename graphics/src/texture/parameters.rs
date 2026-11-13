@@ -7,6 +7,7 @@ pub enum WrapType {
     #[default]
     ClampToEdge,
     ClampToBorder(ColourRGBA),
+    Repeat,
 }
 
 impl WrapType {
@@ -14,6 +15,7 @@ impl WrapType {
         match self {
             Self::ClampToEdge => gl::CLAMP_TO_EDGE as GLint,
             Self::ClampToBorder(_) => gl::CLAMP_TO_BORDER as GLint,
+            Self::Repeat => gl::REPEAT as GLint,
         }
     }
 }
@@ -23,11 +25,17 @@ pub enum Minification {
     #[default]
     Nearest,
     Bilinear,
-    Trilinear,
     MipMap {
-        sample_type: MipMapInfo,
-        mipmap_choice: MipMapInfo,
+        texture: MipMapInfo,
+        distance: MipMapInfo,
     },
+}
+
+impl Minification {
+    pub const TRILINEAR: Self = Self::MipMap {
+        texture: MipMapInfo::Linear,
+        distance: MipMapInfo::Linear,
+    };
 }
 
 #[derive(Debug, Clone)]
@@ -41,18 +49,14 @@ impl Minification {
         match self {
             Self::Nearest => gl::NEAREST as GLint,
             Self::Bilinear => gl::LINEAR as GLint,
-            Self::Trilinear => gl::LINEAR_MIPMAP_LINEAR as GLint,
-            Self::MipMap {
-                sample_type,
-                mipmap_choice,
-            } => get_mipmap_enum(sample_type, mipmap_choice),
+            Self::MipMap { texture, distance } => get_mipmap_enum(texture, distance),
         }
     }
 }
 
-const fn get_mipmap_enum(sample_type: &MipMapInfo, mipmap_choice: &MipMapInfo) -> GLint {
+const fn get_mipmap_enum(texture: &MipMapInfo, distance: &MipMapInfo) -> GLint {
     use MipMapInfo as M;
-    let out = match (sample_type, mipmap_choice) {
+    let out = match (texture, distance) {
         (M::Linear, M::Linear) => gl::LINEAR_MIPMAP_LINEAR,
         (M::Linear, M::Nearest) => gl::LINEAR_MIPMAP_NEAREST,
         (M::Nearest, M::Linear) => gl::NEAREST_MIPMAP_LINEAR,

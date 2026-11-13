@@ -1,12 +1,15 @@
 use engine::array_vec::arrvec;
+use engine::deferred::{
+    MakeAmbientOcclusionGroup,
+    ShadowDeferredCompleteGroup,
+    SimpleDeferredCompleteGroup,
+};
 use engine::framebuffer::DefaultFramebuffer;
 use engine::modelling::cubic::SimpleCubicDeferredGroup;
-use engine::modelling::cubic::lighting::shadow::{
-    ListLightIlluminatesGroup,
-    ShadowListLights,
-};
-use engine::modelling::BloomGroup;
-use engine::{Draw, PollResult, VecDraw, deferred};
+use engine::modelling::cubic::lighting::shadow::{ListLightIlluminatesGroup, ShadowListLights};
+use engine::modelling::cubic::lighting::simple::ListLights;
+use engine::modelling::{BloomGroup, FramebufferQuad, ScreenQuadGroup};
+use engine::{Draw, PollResult, VecDraw, opengl_shaders};
 
 use crate::state::{State, StateError};
 
@@ -24,15 +27,6 @@ impl State {
         if self.toggle_m {
             opaque.push(self.small_cube.temp_as_simplecubic_and_anim());
         }
-
-        // out.push(SimpleCubicDeferredGroup::new(
-        // &self.gbuffer,
-        // opaque,
-        // &self.game_camera.camera,
-        // &(),
-        // vec![],
-        // ));
-        //
         // out.push(deferred::SimpleDeferredCompleteGroup::<_, 3>::new(
         // &self.hdr_out,
         // &self.gbuffer,
@@ -48,7 +42,6 @@ impl State {
             point: arrvec![&self.sun.light],
             ..ShadowListLights::default()
         };
-
         out.push(ListLightIlluminatesGroup::new_dyn(
             lights.clone(),
             opaque.clone(),
@@ -58,13 +51,29 @@ impl State {
         opaque.push(self.sun.model_and_pose());
         out.push(SimpleCubicDeferredGroup::new(
             &self.gbuffer,
-            opaque.clone(),
+            opaque,
             &self.game_camera.camera,
             &(),
             vec![],
         ));
 
-        out.push(deferred::ShadowDeferredCompleteGroup::<_, 3>::new(
+        // out.push(MakeAmbientOcclusionGroup::new(
+        // &self.gbuffer,
+        // &self.ambient_occlusion_buffer,
+        // 64,
+        // &self.game_camera.camera,
+        // &(),
+        // self.toggle_g.cast_signed(),
+        // ));
+        //
+        // out.push(ScreenQuadGroup::new(
+        // opengl_shaders::exposure(),
+        // default_framebuffer,
+        // FramebufferQuad::new_from_framebuffer(&self.
+        // ambient_occlusion_buffer), vec![],
+        // ));
+
+        out.push(ShadowDeferredCompleteGroup::<_, 3>::new(
             &self.hdr_out,
             &self.gbuffer,
             lights,

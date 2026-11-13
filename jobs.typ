@@ -5,6 +5,10 @@
 - Yeet instead of Err(...into()) or Err(...)?
 
 == Can Do Now
+- Texture Parameters
+  - Min and Mag only for `Image`.
+  - gen_tex_set_parameters no longer looks at the `Image`, so image needs to specify the filtering.
+  - Depth buffer can choose to select the appropriate compare function.
 - Deferred Shading SSAO.
 - VecOne periodically when appropriate, to remove unwraps
 - Movement Vectors available in Shaders

@@ -94,7 +94,7 @@ impl State {
             match ch {
                 'Q' => string.clear(),
                 'm' | 'M' => self.toggle_m = !self.toggle_m,
-                'g' | 'G' => self.toggle_g = !self.toggle_g,
+                'g' | 'G' => self.toggle_g = dbg!((self.toggle_g + 1) % 3),
                 ch => string.push(ch),
             }
         }

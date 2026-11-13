@@ -1,12 +1,13 @@
 use core::fmt::Debug;
 use core::marker::PhantomData;
-use core::ptr;
+use core::{cmp, ptr};
+use std::cmp::Ordering;
 
 use colour::ColourRGBA;
 use utils::{builder, new};
 
 use super::FlatTexture;
-use crate::framebuffer::attachments::{WithDepth, WithStencil, WithoutExtra};
+use crate::framebuffer::attachments::{WithDepth, WithStencil};
 use crate::framebuffer::traits::{AttachmentWithDepth, FramebufferAttachment};
 use crate::texture::image::TexInternalFormat;
 use crate::texture::{
@@ -25,19 +26,22 @@ use crate::{gl_call, texture};
 pub struct Builder<T> {
     image: T,
     wrap_s_t: WrapType,
-    mag_filter: Magnification,
-    min_filter: Minification,
 }
 
 #[derive(Debug, Default)]
 pub struct MissingData;
 
 #[derive(Debug)]
-pub struct Dimensions<const N: usize>((TexDim, TexDim));
+pub struct Dimensions<const N: usize> {
+    size: (TexDim, TexDim),
+    mag_filter: Magnification,
+    min_filter: Minification,
+}
 
 #[derive(Debug)]
 pub struct FlatFramebufferAttachment<X: FramebufferAttachment> {
     size: (TexDim, TexDim),
+    depth_cmp: Option<cmp::Ordering>,
     _att_type: PhantomData<X>,
 }
 
@@ -50,7 +54,11 @@ impl TexBuilder for Builder<MissingData> {
     type ReadyToBuild<const N: usize> = Builder<Dimensions<N>>;
 
     fn size<const N: usize>(self, size: (TexDim, TexDim)) -> <Self as TexBuilder>::ReadyToBuild<N> {
-        let image = Dimensions(size);
+        let image = Dimensions {
+            size,
+            mag_filter: Magnification::default(),
+            min_filter: Minification::default(),
+        };
 
         Builder { image, ..self }
     }
@@ -59,25 +67,21 @@ impl TexBuilder for Builder<MissingData> {
 impl<T> Builder<T> {
     builder!(wrap_s_t: WrapType);
 
-    builder!(min_filter: Minification);
-
-    builder!(mag_filter: Magnification);
-
     pub fn image(self, image: Image) -> Builder<Image> {
         Builder { image, ..self }
     }
 
-    pub fn withoutextra_attachment(
-        self,
-        size: (TexDim, TexDim),
-    ) -> Builder<FlatFramebufferAttachment<WithoutExtra>> {
-        let image = FlatFramebufferAttachment {
-            size,
-            _att_type: PhantomData,
-        };
-
-        Builder { image, ..self }
-    }
+    // pub fn withoutextra_attachment(
+    // self,
+    // size: (TexDim, TexDim),
+    // ) -> Builder<FlatFramebufferAttachment<WithoutExtra>> {
+    // let image = FlatFramebufferAttachment {
+    // size,
+    // _att_type: PhantomData,
+    // };
+    //
+    // Builder { image, ..self }
+    // }
 
     pub fn depth_attachment(
         self,
@@ -85,6 +89,7 @@ impl<T> Builder<T> {
     ) -> Builder<FlatFramebufferAttachment<WithDepth>> {
         let image = FlatFramebufferAttachment {
             size,
+            depth_cmp: None,
             _att_type: PhantomData,
         };
 
@@ -97,6 +102,7 @@ impl<T> Builder<T> {
     ) -> Builder<FlatFramebufferAttachment<WithStencil>> {
         let image = FlatFramebufferAttachment {
             size,
+            depth_cmp: None,
             _att_type: PhantomData,
         };
 
@@ -126,6 +132,30 @@ impl<T> Builder<T> {
     }
 }
 
+impl<X: AttachmentWithDepth> Builder<FlatFramebufferAttachment<X>> {
+    /// In the glsl shader you compare the given value `r` against
+    /// the sampled depth `D`.
+    ///
+    /// `r depth_cmp C`.
+    ///
+    /// for example if `depth_cmp` is `Ordering::Greater` then the
+    /// ```glsl
+    /// uniform sampler2DShadow this_depth;
+    /// return texture(this_depth, vec3(texture_coords, r));
+    /// ```
+    ///
+    /// is like
+    ///
+    /// ```glsl
+    /// uniform sampler2D this_depth;
+    /// return r > texture(this_depth, texture_coords) ? 1.0 : 0.0;
+    /// ```
+    pub const fn set_depth_cmp(mut self, depth_cmp: cmp::Ordering) -> Self {
+        self.image.depth_cmp = Some(depth_cmp);
+        self
+    }
+}
+
 fn gen_tex_set_parameters<T>(builder: &Builder<T>) -> TexId {
     // let mut output = Internal { id: 0 };
     let id = {
@@ -148,16 +178,6 @@ fn gen_tex_set_parameters<T>(builder: &Builder<T>) -> TexId {
         gl::TEXTURE_WRAP_T,
         wrap_s_t,
     );}
-    gl_call! {gl::TexParameteri(
-        gl::TEXTURE_2D,
-        gl::TEXTURE_MIN_FILTER,
-        builder.min_filter.get_enum(),
-    );}
-    gl_call! {gl::TexParameteri(
-        gl::TEXTURE_2D,
-        gl::TEXTURE_MAG_FILTER,
-        builder.mag_filter.get_enum(),
-    );}
 
     if let WrapType::ClampToBorder(colour) = builder.wrap_s_t {
         gl_call! { gl::TexParameterfv(
@@ -173,29 +193,19 @@ fn gen_tex_set_parameters<T>(builder: &Builder<T>) -> TexId {
 impl Builder<Image> {
     pub fn build(self) -> FlatTexture {
         let id = gen_tex_set_parameters(&self);
-        // let (internalformat, width, height, type_, pixels) = match
-        // &self.image { ImageType::Rgba(samples) => (
-        // gl::RGBA as GLint,
-        // TexDim::new(samples.layout.width as GLsizei),
-        // TexDim::new(samples.layout.height as GLsizei),
-        // gl::UNSIGNED_BYTE,
-        // samples.samples.as_ptr().cast(),
-        // ),
-        // ImageType::Srgba(samples) => (
-        // gl::SRGB_ALPHA as GLint,
-        // TexDim::new(samples.layout.width as GLsizei),
-        // TexDim::new(samples.layout.height as GLsizei),
-        // gl::UNSIGNED_BYTE,
-        // samples.samples.as_ptr().cast(),
-        // ),
-        // ImageType::RgbaFloat(samples) => (
-        // gl::RGBA16F as GLint,
-        // TexDim::new(samples.layout.width as GLsizei),
-        // TexDim::new(samples.layout.height as GLsizei),
-        // gl::FLOAT,
-        // samples.samples.as_ptr().cast(),
-        // ),
-        // };
+
+        gl_call! {gl::TexParameteri(
+            gl::TEXTURE_2D,
+            gl::TEXTURE_MIN_FILTER,
+            self.image.min_filter.get_enum(),
+        );}
+
+        gl_call! {gl::TexParameteri(
+            gl::TEXTURE_2D,
+            gl::TEXTURE_MAG_FILTER,
+            self.image.mag_filter.get_enum(),
+        );}
+
         let TexInternalFormat {
             internal_format,
             size: (width, height),
@@ -217,7 +227,7 @@ impl Builder<Image> {
             );
         }
 
-        if let Minification::MipMap { .. } = self.min_filter {
+        if let Minification::MipMap { .. } = self.image.min_filter {
             gl_call! {
                 gl::GenerateMipmap(gl::TEXTURE_2D);
             }
@@ -233,8 +243,30 @@ impl Builder<Image> {
 impl<const N: usize> TexBuilderCanBuild<N> for Builder<Dimensions<N>> {
     type Output = FlatTexture;
 
+    fn min_filter(mut self, min_filter: Minification) -> Self {
+        self.image.min_filter = min_filter;
+        self
+    }
+
+    fn mag_filter(mut self, mag_filter: Magnification) -> Self {
+        self.image.mag_filter = mag_filter;
+        self
+    }
+
     fn build(self) -> <Self as TexBuilderCanBuild<N>>::Output {
         let id = gen_tex_set_parameters(&self);
+
+        gl_call! {gl::TexParameteri(
+            gl::TEXTURE_2D,
+            gl::TEXTURE_MIN_FILTER,
+            self.image.min_filter.get_enum(),
+        );}
+
+        gl_call! {gl::TexParameteri(
+            gl::TEXTURE_2D,
+            gl::TEXTURE_MAG_FILTER,
+            self.image.mag_filter.get_enum(),
+        );}
 
         let (internal_format, format) = const { texture::get_format::<N>() };
 
@@ -243,8 +275,8 @@ impl<const N: usize> TexBuilderCanBuild<N> for Builder<Dimensions<N>> {
                 gl::TEXTURE_2D,
                 0,
                 internal_format as GLint,
-                self.image.0.0.as_primitive(),
-                self.image.0.1.as_primitive(),
+                self.image.size.0.as_primitive(),
+                self.image.size.1.as_primitive(),
                 0,
                 format,
                 gl::FLOAT,
@@ -254,7 +286,7 @@ impl<const N: usize> TexBuilderCanBuild<N> for Builder<Dimensions<N>> {
 
         FlatTexture {
             id,
-            size: self.image.0,
+            size: self.image.size,
         }
     }
 }
@@ -263,6 +295,33 @@ impl<X: AttachmentWithDepth> Builder<FlatFramebufferAttachment<X>> {
     pub fn build(self) -> FlatTexture {
         let tex_info = X::components();
         let id = gen_tex_set_parameters(&self);
+
+        // NO MIN/MAG FILTER, instead texture compare func
+        match self.image.depth_cmp {
+            None => {
+                gl_call! {
+                    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, Minification::default().get_enum());
+                }
+                gl_call! {
+                    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, Magnification::default().get_enum());
+                }
+            }
+            Some(ordering) => {
+                gl_call! {
+                    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_COMPARE_MODE, gl::COMPARE_REF_TO_TEXTURE as types::GLint);
+                }
+
+                let mode = match ordering {
+                    Ordering::Less => gl::LESS,
+                    Ordering::Equal => gl::EQUAL,
+                    Ordering::Greater => gl::GREATER,
+                };
+
+                gl_call! {
+                    gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_COMPARE_FUNC, mode as types::GLint);
+                }
+            }
+        }
 
         gl_call! { gl::TexImage2D(
             gl::TEXTURE_2D,

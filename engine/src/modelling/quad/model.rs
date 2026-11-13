@@ -5,7 +5,7 @@ use core::array;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithoutExtra;
 use graphics::linear_algebra::Vector;
-use graphics::shader_program::{ActiveShaderProgram, CullFace};
+use graphics::shader_program::{ActiveShaderProgram, CullFace, ShaderSetUniformError};
 use graphics::texture::{FlatTexture, Texture};
 use graphics::vertex_array::VertexArray;
 use graphics::{Model, vertex_array};
@@ -62,6 +62,7 @@ impl<const N: usize> Quad<N> {
 #[non_exhaustive]
 pub enum DrawError {
     VertexArrayDraw(vertex_array::DrawError),
+    TextureBindError(ShaderSetUniformError),
 }
 error_boilerplate!(DrawError);
 
@@ -87,7 +88,9 @@ impl<const N: usize> Quad<N> {
                     .ok()
             });
 
-        active_shader.register_texture(input);
+        active_shader
+            .register_texture(input)
+            .map_err(DrawError::TextureBindError)?;
 
         self.vertex_array
             .draw(active_shader, active_framebuffer)

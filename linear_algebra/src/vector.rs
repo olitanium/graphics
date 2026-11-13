@@ -358,7 +358,8 @@ impl<const N: usize, T> Vector<N, T> {
     pub const fn magnitude_sq(self) -> T
     where
         T: [const] Add<Output = T> + [const] Mul<Output = T> + [const] Default + [const] Destruct,
-        // fixme: Should only be clone, but [f32; 3] does not impl [const] Clone yet
+        // fixme: Should only be clone, but [f32; 3] does not impl [const] Clone
+        // yet
         Self: Copy,
     {
         let temp = self;

@@ -81,25 +81,27 @@ impl Material {
         shader
             .set_uniform(&CString::new(format!("{name}.shininess"))?, &self.shininess)
             .map_err(RegisterToError::SetUniformError)?;
-        shader.register_texture(vec![
-            (
-                CString::new(format!("{name}.diffuse"))?,
-                &self.diffuse as &dyn Texture,
-            ),
-            (
-                CString::new(format!("{name}.specular_map"))?,
-                &self.specular_map,
-            ),
-            (CString::new(format!("{name}.emission"))?, &self.emission),
-            (
-                CString::new(format!("{name}.normal_map"))?,
-                &self.normal_map,
-            ),
-            (
-                CString::new(format!("{name}.ambient_occlusion"))?,
-                &self.ambient_occlusion,
-            ),
-        ]);
+        shader
+            .register_texture(vec![
+                (
+                    CString::new(format!("{name}.diffuse"))?,
+                    &self.diffuse as &dyn Texture,
+                ),
+                (
+                    CString::new(format!("{name}.specular_map"))?,
+                    &self.specular_map,
+                ),
+                (CString::new(format!("{name}.emission"))?, &self.emission),
+                (
+                    CString::new(format!("{name}.normal_map"))?,
+                    &self.normal_map,
+                ),
+                (
+                    CString::new(format!("{name}.ambient_occlusion"))?,
+                    &self.ambient_occlusion,
+                ),
+            ])
+            .map_err(RegisterToError::SetUniformError)?;
 
         Ok(())
     }
