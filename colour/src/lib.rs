@@ -1,4 +1,10 @@
+#![feature(const_trait_impl)]
+#![feature(const_destruct)]
+#![feature(const_array)]
+
 mod iter;
+use std::marker::Destruct;
+
 pub use iter::RGBAIntoIter;
 
 #[derive(Debug, Clone, Copy)]
@@ -53,9 +59,9 @@ impl ColourRGBA {
     }
 
     #[must_use = "map returns a new colour, so needs to be either used or saved"]
-    pub fn map_colour<F>(self, op: F) -> Self
+    pub const fn map_colour<F>(self, op: F) -> Self
     where
-        F: FnMut(f32) -> f32,
+        F: [const] FnMut(f32) -> f32 + [const] Destruct,
     {
         let [r, g, b, a] = self.as_array();
         let [nr, ng, nb] = [r, g, b].map(op);
@@ -115,9 +121,9 @@ impl ColourRGB {
     }
 
     #[must_use = "map returns a new colour, so needs to be either used or saved"]
-    pub fn map<F>(&self, f: F) -> Self
+    pub const fn map<F>(&self, f: F) -> Self
     where
-        F: Fn(f32) -> f32,
+        F: [const] Fn(f32) -> f32 + [const] Destruct,
     {
         Self(self.as_array().map(f))
     }

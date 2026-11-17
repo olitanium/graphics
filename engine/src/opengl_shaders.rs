@@ -140,6 +140,13 @@ make_included! {
 }
 
 make_included! {
+    ShaderProgram<Quad<3>, (), 1, FlatTexture>,
+    quad3,
+    "shaders/quad/quad.vert",
+    "shaders/quad/quad.frag",
+}
+
+make_included! {
     ShaderProgram<Quad<3>, (), 2, FlatTexture>,
     bloom_x,
     "shaders/bloom/blur_x/blur_x.vert",

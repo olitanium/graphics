@@ -1,5 +1,4 @@
 use core::cell::{BorrowMutError, RefMut};
-use core::marker::PhantomData;
 use core::sync::atomic::{AtomicBool, Ordering};
 use std::collections::HashSet;
 
@@ -76,7 +75,7 @@ impl FramebufferContext {
 
 #[derive(Debug)]
 pub struct ActiveFramebuffer<'a, 'b, const OUT: usize, D: FramebufferWithoutExtra<OUT>> {
-    framebuffer: PhantomData<&'a D>,
+    framebuffer: &'a D,
     _texture_locks: [RefMut<'a, D::Tex>; OUT],
     context: &'b mut FramebufferContext,
 }
@@ -112,7 +111,7 @@ impl<'a, 'b, const OUT: usize, D: FramebufferWithoutExtra<OUT>> ActiveFramebuffe
             .map_err(BindError::ReadingFromFramebuffer)?;
 
         Ok(Self {
-            framebuffer: PhantomData,
+            framebuffer,
             _texture_locks: texture_locks,
             context,
         })
@@ -121,6 +120,15 @@ impl<'a, 'b, const OUT: usize, D: FramebufferWithoutExtra<OUT>> ActiveFramebuffe
     /// Clear the currently bound Framebuffer and ALL buffer bits.
     pub fn clear(&mut self) {
         self.context.clear_current_framebuffer();
+    }
+}
+
+impl<const OUT: usize, D: FramebufferWithDepth<OUT>> ActiveFramebuffer<'_, '_, OUT, D> {
+    pub fn copy_depth_buffer<const OUT2: usize, F>(&self, source: &F)
+    where
+        F: FramebufferWithDepth<OUT2, Tex = D::Tex>,
+    {
+        copy_buffer(self, source, gl::DEPTH_BUFFER_BIT, gl::NEAREST);
     }
 }
 
@@ -133,5 +141,28 @@ impl<const OUT: usize, X: FramebufferWithDepth<OUT>> ActiveFramebuffer<'_, '_, O
 impl<const OUT: usize, X: FramebufferWithStencil<OUT>> ActiveFramebuffer<'_, '_, OUT, X> {
     pub fn stencil_testing(&mut self, stencil_testing: bool) {
         X::stencil_testing(stencil_testing, self.context);
+    }
+}
+
+fn copy_buffer<const OUT: usize, const OUT2: usize, F, A>(
+    dest: &ActiveFramebuffer<'_, '_, OUT, A>,
+    source: &F,
+    which_buffer: types::GLenum,
+    filter: types::GLenum,
+) where
+    A: FramebufferWithDepth<OUT>,
+    F: FramebufferWithDepth<OUT2, Tex = A::Tex>,
+{
+    gl_call! {
+        gl::BindFramebuffer(gl::READ_FRAMEBUFFER, source.id().as_primitive());
+    }
+    gl_call! {
+        gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, dest.framebuffer.id().as_primitive());
+    }
+
+    let source_size = source.size();
+    let dest_size = dest.framebuffer.size();
+    gl_call! {
+        gl::BlitFramebuffer(0, 0, source_size.0.as_primitive(), source_size.1.as_primitive(), 0, 0, dest_size.0.as_primitive(), dest_size.1.as_primitive(), which_buffer, filter);
     }
 }

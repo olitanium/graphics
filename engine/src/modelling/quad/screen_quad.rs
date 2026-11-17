@@ -18,25 +18,21 @@ use crate::modelling::{Quad, test_models};
 
 #[derive(Debug)]
 pub struct FramebufferQuad<'a, const N: usize, X: FramebufferAttachment<Tex = FlatTexture>> {
-    texture: &'a Framebuffer<N, X>,
+    pub inner: &'a Framebuffer<N, X>,
 }
 
 impl<'a, const N: usize, X: FramebufferAttachment<Tex = FlatTexture>> FramebufferQuad<'a, N, X> {
     pub const fn new_from_framebuffer(framebuffer: &'a Framebuffer<N, X>) -> Self {
-        Self {
-            texture: framebuffer,
-        }
+        Self { inner: framebuffer }
     }
 }
 
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum DrawError {
-    #[allow(clippy::allow_attributes, reason = "rustc only allows allow")]
-    #[allow(unused, reason = "Error")]
+    #[expect(unused, reason = "Error")]
     VertexArrayDraw(vertex_array::DrawError),
-    #[allow(clippy::allow_attributes, reason = "rustc only allows allow")]
-    #[allow(unused, reason = "Error")]
+    #[expect(unused, reason = "Error")]
     TextureBindError(ShaderSetUniformError),
 }
 error_boilerplate!(DrawError);
@@ -53,8 +49,8 @@ impl<'a, const N: usize, X: FramebufferAttachment<Tex = FlatTexture>> Framebuffe
         _ = active_shader.cull_face(CullFace::BackFace);
 
         let input = self
-            .texture
-            .get_textures_raw()
+            .inner
+            .get_all_raw()
             .iter()
             .enumerate()
             // cannot write to a framebuffer and read at the same time, in order to prevent gpu
@@ -95,6 +91,6 @@ where
     X: AttachmentWithDepth<Tex = FlatTexture>,
 {
     pub(crate) fn get_depth(&self) -> &dyn Texture {
-        self.texture.get_attachment_ref()
+        self.inner.get_attachment_ref()
     }
 }

@@ -143,7 +143,6 @@ impl<const N: usize, B: FramebufferAttachment> Builder<N, HasSize, B> {
                 B::Tex::builder()
                     .size::<4>(self.size.0)
                     // TODO: Add `Map` field to implement this map
-                    //.wrap_s_t((gl::CLAMP_TO_EDGE, gl::CLAMP_TO_EDGE))
                     .build(),
             )
         });
@@ -188,6 +187,7 @@ impl<const N: usize, B: FramebufferAttachment> Builder<N, HasSize, B> {
 
         Framebuffer {
             id,
+            size: self.size.0,
             stencil_or_depth,
             textures: colour,
         }

@@ -93,8 +93,9 @@ impl State {
         if let Some(ch) = string.pop() {
             match ch {
                 'Q' => string.clear(),
-                'm' | 'M' => self.toggle_m = !self.toggle_m,
-                'g' | 'G' => self.toggle_g = dbg!((self.toggle_g + 1) % 3),
+                'm' => self.toggle_m *= 2.0,
+                'M' => self.toggle_m *= 0.5,
+                'g' | 'G' => self.toggle_g = (self.toggle_g + 1).rem_euclid(3),
                 ch => string.push(ch),
             }
         }

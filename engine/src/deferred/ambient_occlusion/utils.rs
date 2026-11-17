@@ -25,16 +25,14 @@ fn generate_randon_uniform_0_to_2pi() -> f32 {
     cumulative * f32::consts::TAU
 }
 
-fn generate_x2_distribution(min_bound: f32) -> f32 {
-    let d = min_bound;
-
+fn generate_x2_distribution() -> f32 {
     let cumulative = generate_0_1_uniform();
 
-    d / (1.0 - cumulative)
+    cumulative * cumulative
 }
 
 pub fn get_sample_vec() -> Vector<3> {
-    let r = generate_x2_distribution(0.01);
+    let r = generate_x2_distribution();
     let theta = generate_random_cos_0_pi_2();
     let phi = generate_randon_uniform_0_to_2pi();
 
@@ -87,13 +85,13 @@ pub fn get_many_sample_vecs<const N: usize>() -> [Vector<3>; N] {
     array::from_fn(|_| get_sample_vec())
 }
 
-pub const KERNEL_SIZE: u32 = 128;
+pub const KERNEL_SIZE: u32 = 1000;
 pub const KERNEL_SIZE_TEX_DIM: TexDim =
     TexDim::from_non_zero(NonZero::new(KERNEL_SIZE.checked_cast_signed().unwrap()).unwrap());
 pub static RANDOM_VEC_KERNEL: LazyLock<FlatTexture> =
     LazyLock::new(|| random_vec_kernel((KERNEL_SIZE_TEX_DIM, KERNEL_SIZE_TEX_DIM)));
 
-pub static SAMPLE_VECS_LEN: usize = 128;
+pub static SAMPLE_VECS_LEN: usize = 1024;
 pub static SAMPLE_VECS: LazyLock<[Vector<3>; SAMPLE_VECS_LEN]> =
     LazyLock::new(get_many_sample_vecs);
 
@@ -153,7 +151,7 @@ mod tests {
             .unwrap();
         writeln!(file, "data").unwrap();
         (0..10000).for_each(|_| {
-            let rand = generate_x2_distribution(0.1);
+            let rand = generate_x2_distribution();
             writeln!(file, "{rand}").unwrap();
         });
     }

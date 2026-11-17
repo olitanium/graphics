@@ -1,7 +1,7 @@
+use core::cmp::Ordering;
 use core::fmt::Debug;
 use core::marker::PhantomData;
-use core::{cmp, ptr};
-use std::cmp::Ordering;
+use core::ptr;
 
 use colour::ColourRGBA;
 use utils::{builder, new};
@@ -41,7 +41,7 @@ pub struct Dimensions<const N: usize> {
 #[derive(Debug)]
 pub struct FlatFramebufferAttachment<X: FramebufferAttachment> {
     size: (TexDim, TexDim),
-    depth_cmp: Option<cmp::Ordering>,
+    depth_cmp: Option<Ordering>,
     _att_type: PhantomData<X>,
 }
 
@@ -63,27 +63,16 @@ impl TexBuilder for Builder<MissingData> {
         Builder { image, ..self }
     }
 }
-
 impl<T> Builder<T> {
     builder!(wrap_s_t: WrapType);
+}
 
-    pub fn image(self, image: Image) -> Builder<Image> {
+impl Builder<MissingData> {
+    pub const fn image(self, image: Image) -> Builder<Image> {
         Builder { image, ..self }
     }
 
-    // pub fn withoutextra_attachment(
-    // self,
-    // size: (TexDim, TexDim),
-    // ) -> Builder<FlatFramebufferAttachment<WithoutExtra>> {
-    // let image = FlatFramebufferAttachment {
-    // size,
-    // _att_type: PhantomData,
-    // };
-    //
-    // Builder { image, ..self }
-    // }
-
-    pub fn depth_attachment(
+    pub const fn depth_attachment(
         self,
         size: (TexDim, TexDim),
     ) -> Builder<FlatFramebufferAttachment<WithDepth>> {
@@ -96,7 +85,7 @@ impl<T> Builder<T> {
         Builder { image, ..self }
     }
 
-    pub fn stencil_attachment(
+    pub const fn stencil_attachment(
         self,
         size: (TexDim, TexDim),
     ) -> Builder<FlatFramebufferAttachment<WithStencil>> {
@@ -109,22 +98,14 @@ impl<T> Builder<T> {
         Builder { image, ..self }
     }
 
-    pub fn monochrome_clamped(self, colour: ColourRGBA) -> Builder<Image> {
-        // let mut image = Rgba32FImage::new(1, 1);
-        // image.get_pixel_mut(0, 0).0 = colour.as_array();
-        // let image = ImageType::RgbaFloat(image.into_flat_samples());
-
+    pub const fn monochrome_clamped(self, colour: ColourRGBA) -> Builder<Image> {
         Builder {
             image: Image::new_monochrome_clamped(colour),
             ..self
         }
     }
 
-    pub fn monochrome(self, colour: ColourRGBA) -> Builder<Image> {
-        // let mut image = Rgba32FImage::new(1, 1);
-        // image.get_pixel_mut(0, 0).0 = colour.as_array();
-        // let image = ImageType::RgbaFloat(image.into_flat_samples());
-
+    pub const fn monochrome(self, colour: ColourRGBA) -> Builder<Image> {
         Builder {
             image: Image::new_monochrome(colour),
             ..self
@@ -150,7 +131,7 @@ impl<X: AttachmentWithDepth> Builder<FlatFramebufferAttachment<X>> {
     /// uniform sampler2D this_depth;
     /// return r > texture(this_depth, texture_coords) ? 1.0 : 0.0;
     /// ```
-    pub const fn set_depth_cmp(mut self, depth_cmp: cmp::Ordering) -> Self {
+    pub const fn set_depth_cmp(mut self, depth_cmp: Ordering) -> Self {
         self.image.depth_cmp = Some(depth_cmp);
         self
     }

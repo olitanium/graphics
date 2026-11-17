@@ -1,3 +1,4 @@
+use core::slice;
 use std::io;
 use std::path::Path;
 
@@ -16,8 +17,11 @@ pub struct Image {
     pub(crate) min_filter: Minification,
 }
 
+#[non_exhaustive]
 #[derive(Debug, Clone)]
 pub enum ImageType {
+    LinearMono(ColourRGBA),
+    LinearUnclampedMono(ColourRGBA),
     Linear(Vec<ColourRGBA>),
     LinearUnclamped(Vec<ColourRGBA>),
     Srgba(Vec<ColourRGBA>),
@@ -117,19 +121,19 @@ impl Image {
         }
     }
 
-    pub fn new_monochrome_clamped(colour: ColourRGBA) -> Self {
+    pub const fn new_monochrome_clamped(colour: ColourRGBA) -> Self {
         Self {
             size: (TexDim::new(1), TexDim::new(1)),
-            data: ImageType::Linear(vec![colour]),
+            data: ImageType::LinearMono(colour),
             mag_filter: Magnification::Nearest,
             min_filter: Minification::Nearest,
         }
     }
 
-    pub fn new_monochrome(colour: ColourRGBA) -> Self {
+    pub const fn new_monochrome(colour: ColourRGBA) -> Self {
         Self {
             size: (TexDim::new(1), TexDim::new(1)),
-            data: ImageType::LinearUnclamped(vec![colour]),
+            data: ImageType::LinearUnclampedMono(colour),
             mag_filter: Magnification::Nearest,
             min_filter: Minification::Nearest,
         }
@@ -137,9 +141,11 @@ impl Image {
 
     pub(crate) const fn get_opengl_params(&self) -> TexInternalFormat<'_> {
         let internal_format = match &self.data {
+            ImageType::LinearMono(_) => gl::RGBA,
             ImageType::Linear(_) => gl::RGBA,
             ImageType::Srgba(_) => gl::SRGB_ALPHA,
             ImageType::LinearUnclamped(_) => gl::RGBA16F,
+            ImageType::LinearUnclampedMono(_) => gl::RGBA16F,
         } as types::GLint;
 
         let size = self.size;
@@ -148,11 +154,16 @@ impl Image {
             ImageType::Linear(_) => gl::FLOAT,
             ImageType::Srgba(_) => gl::FLOAT,
             ImageType::LinearUnclamped(_) => gl::FLOAT,
+            ImageType::LinearUnclampedMono(_) => gl::FLOAT,
+            ImageType::LinearMono(_) => gl::FLOAT,
         };
 
         let slice = match &self.data {
             ImageType::Linear(x) | ImageType::Srgba(x) | ImageType::LinearUnclamped(x) => {
                 x.as_slice()
+            }
+            ImageType::LinearMono(val) | ImageType::LinearUnclampedMono(val) => {
+                slice::from_ref(val)
             }
         };
 

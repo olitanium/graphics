@@ -1,4 +1,4 @@
-use core::cell::{BorrowMutError, Ref, RefCell, RefMut};
+use core::cell::{BorrowMutError, RefCell, RefMut};
 
 pub use active_framebuffer::BindError as FramebufferBindError;
 
@@ -91,6 +91,7 @@ impl FramebufferWithStencil<1> for DefaultFramebuffer {
 pub struct Framebuffer<const OUT: usize, X: FramebufferAttachment> {
     /// OpenGL ID for this Framebuffer.
     id: FrameBufferId,
+    size: (TexDim, TexDim),
     /// Holder for Stencil and/or Depth buffers.
     /// To ensure no Stencil without depth (which would be an incomplete
     /// buffer).
@@ -116,9 +117,7 @@ impl<const OUT: usize, X: FramebufferAttachment> FramebufferInternals for Frameb
     }
 
     fn size(&self) -> (TexDim, TexDim) {
-        self.textures
-            .first()
-            .map_or_else(|| self.stencil_or_depth.size(), |tex| tex.borrow().size())
+        self.size
     }
 
     fn enables(&self, context: &mut FramebufferContext) {
@@ -130,7 +129,7 @@ impl<const OUT: usize, X: FramebufferAttachment> FramebufferWithoutExtra<OUT>
     for Framebuffer<OUT, X>
 {
     fn try_give_texture_lock(&self) -> Result<[RefMut<'_, Self::Tex>; OUT], BorrowMutError> {
-        self.get_all_refmut()
+        self.get_all_mut()
     }
 }
 impl<const OUT: usize, X: AttachmentWithDepth> FramebufferWithDepth<OUT> for Framebuffer<OUT, X> {
@@ -178,24 +177,16 @@ impl<const N: usize, X: FramebufferAttachment> Framebuffer<N, X> {
     // self.textures.clone()
     // }
 
-    pub const fn get_all_refmut(&self) -> Result<[RefMut<'_, X::Tex>; N], BorrowMutError> {
+    pub const fn get_all_mut(&self) -> Result<[RefMut<'_, X::Tex>; N], BorrowMutError> {
         self.textures.each_ref().try_map(RefCell::try_borrow_mut)
     }
 
-    pub fn get_all_colour_ref(&self) -> [Ref<'_, X::Tex>; N] {
-        self.textures.each_ref().map(RefCell::borrow)
-    }
-
-    pub const fn get_textures_raw(&self) -> &[RefCell<X::Tex>] {
+    pub const fn get_all_raw(&self) -> &[RefCell<X::Tex>; N] {
         &self.textures
     }
 }
 
 impl<const N: usize, D: AttachmentWithDepth> Framebuffer<N, D> {
-    // pub fn get_attachment_texture(&self) -> Rc<RefCell<D::Tex>> {
-    // self.stencil_or_depth.get_texture()
-    // }
-
     pub fn get_attachment_ref(&self) -> &dyn Texture {
         self.stencil_or_depth.get_texture_ref()
     }

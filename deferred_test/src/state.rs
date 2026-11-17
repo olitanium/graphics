@@ -3,7 +3,7 @@ use std::collections::HashSet;
 
 use engine::deferred::GBuffer;
 use engine::framebuffer::Framebuffer;
-use engine::framebuffer::attachments::WithoutExtra;
+use engine::framebuffer::attachments::{WithDepth, WithoutExtra};
 use engine::framebuffer::traits::FramebufferInternals as _;
 use engine::linear_algebra::Vector;
 use engine::modelling::cubic::CameraProjection;
@@ -21,7 +21,7 @@ pub struct State {
     pub exposure: f32,
 
     pub toggle_g: u32,
-    pub toggle_m: bool,
+    pub toggle_m: f32,
 
     pub sun: Sun,
     pub origin_cube: SimpleEntity<()>,
@@ -31,7 +31,7 @@ pub struct State {
     pub skybox: SkyBox,
 
     pub gbuffer: GBuffer,
-    pub hdr_out: Framebuffer<3, WithoutExtra>,
+    pub hdr_out: Framebuffer<3, WithDepth>,
     pub ambient_occlusion_buffer: Framebuffer<1, WithoutExtra>,
     pub bloom: Bloom,
 }

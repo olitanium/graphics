@@ -2,9 +2,8 @@ use alloc::rc::Rc;
 use core::num::NonZero;
 
 use engine::entity::Mass;
-use engine::framebuffer::attachments::WithoutExtra;
+use engine::framebuffer::Builder;
 use engine::framebuffer::traits::FramebufferInternals as _;
-use engine::framebuffer::{Builder, Framebuffer};
 use engine::geometry::Pose;
 use engine::linear_algebra::{Vector, vector};
 use engine::modelling::cubic::SimpleCubic;
@@ -67,7 +66,7 @@ impl State {
                         .build(),
                 ),
             )
-            .apply_transformation(Pose::new_from_translation(vector![0.0, 0.0, 0.0,]))
+            .apply_transformation(const { Pose::new_from_translation(vector![0.0, 0.0, 0.0,]) })
             .build(),
             0,
             Mass::new_inverse(0.0),
@@ -77,11 +76,15 @@ impl State {
         const SMALL_CUBE_SIDE_LENGTH: f32 = 0.2;
         let small_cube = SimpleEntity::from_simple_cubic(
             SimpleCubic::cube(SMALL_CUBE_SIDE_LENGTH, Rc::new(Material::white()))
-                .apply_transformation(Pose::new_from_translation(vector![
-                    0.0,
-                    ORIGIN_CUBE_SIDE_LENGTH * 0.5 + SMALL_CUBE_SIDE_LENGTH * 0.5,
-                    0.0,
-                ]))
+                .apply_transformation(
+                    const {
+                        Pose::new_from_translation(vector![
+                            0.0,
+                            ORIGIN_CUBE_SIDE_LENGTH.mul_add(0.5, SMALL_CUBE_SIDE_LENGTH * 0.5),
+                            0.0,
+                        ])
+                    },
+                )
                 .build(),
             0,
             Mass::new_inverse(0.0),
@@ -89,10 +92,11 @@ impl State {
         );
 
         let player = Player::new();
+
         let game_camera = GameCamera::new::<3, _>(&gbuffer);
 
         let mut bear = make_model();
-        let bear_colour = ColourRGB::WHITE.map(|x| x * 3.0).to_rgba_with(1.0);
+        let bear_colour = const { ColourRGB::WHITE.map(const |x| x * 3.0).to_rgba_with(1.0) };
 
         bear.temp_set_all_material(Rc::new(
             Material::builder()
@@ -107,11 +111,11 @@ impl State {
             PointLight {
                 position: Vector::default(),
                 attenuation: light_attenuation_array,
-                ambient: bear_colour.to_rgb().map(|x| x * 0.0),
-                diffuse: bear_colour.to_rgb().map(|x| x * 1.0),
-                specular: bear_colour.to_rgb(),
+                ambient: bear_colour.to_rgb().map(|x| x * 0.2),
+                diffuse: bear_colour.to_rgb().map(|x| x * 0.0),
+                specular: bear_colour.to_rgb().map(|_| 0.0),
             },
-            TexDim::from_non_zero(const { NonZero::new(1000).unwrap() }),
+            const { TexDim::from_non_zero(NonZero::new(1000).unwrap()) },
         );
 
         let sun = Sun {
@@ -119,7 +123,7 @@ impl State {
             light: inner_point_light,
         };
 
-        let hdr_fb: Framebuffer<3, WithoutExtra> = Builder::new_flat().size(gbuffer.size()).build();
+        let hdr_fb = Builder::new_flat().size(gbuffer.size()).depth().build();
         let ambient_occlusion_buffer = Builder::new_flat().size(gbuffer.size()).build();
 
         let bloom = Bloom::new(gbuffer.size());
@@ -137,7 +141,7 @@ impl State {
             small_cube,
             player,
 
-            toggle_m: true,
+            toggle_m: 1.0,
 
             gbuffer,
             toggle_g: 2,

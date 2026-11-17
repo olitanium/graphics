@@ -20,7 +20,7 @@ impl Player {
             Mass::new_inverse(1.0),
             |_| (),
         );
-        entity.physics.pose = Pose::new_from_translation(vector![0.25, PLAYER_SIZE * 0.5, 0.25]);
+        entity.physics.pose = Pose::new_from_translation(vector![0.0, 0.35, 0.175]);
         entity.physics.velocity = Vector::ZERO;
         Self { entity }
     }

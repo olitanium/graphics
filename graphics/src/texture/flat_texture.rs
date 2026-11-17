@@ -27,6 +27,12 @@ impl FlatTexture {
         Self::grayscale(1.0, 1.0)
     }
 
+    pub fn white_ref() -> &'static Self {
+        static WHITE: LazyLock<FlatTexture> = LazyLock::new(FlatTexture::white);
+
+        &WHITE
+    }
+
     pub fn grayscale_clamped(shade: f32, alpha: f32) -> Self {
         Self::monochrome_clamped(ColourRGBA::new([shade, shade, shade, alpha]))
     }
@@ -56,12 +62,10 @@ impl Default for FlatTexture {
         const {
             Self {
                 id: TexId::new(0),
-                size: const {
-                    (
-                        TexDim::from_non_zero(NonZero::new(1).expect("one")),
-                        TexDim::from_non_zero(NonZero::new(1).expect("one")),
-                    )
-                },
+                size: (
+                    TexDim::from_non_zero(NonZero::new(1).expect("one")),
+                    TexDim::from_non_zero(NonZero::new(1).expect("one")),
+                ),
             }
         }
     }
@@ -71,7 +75,7 @@ impl TextureHasBuilder for FlatTexture {
     type Builder = FlatTextureBuilder<MissingData>;
 
     fn builder() -> <Self as TextureHasBuilder>::Builder {
-        <Self as TextureHasBuilder>::Builder::new()
+        <Self as TextureHasBuilder>::Builder::new().wrap_s_t(super::WrapType::ClampToEdge)
     }
 }
 

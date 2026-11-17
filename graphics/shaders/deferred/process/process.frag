@@ -121,8 +121,10 @@ GenericOutput generic_light(GenericLight light) {
     // global albedo,
     // global shininess,
     // global spec,
+    // global ambient_occlusion_factor,
      
     // Ambient
+    //vec4 ambient = vec4(light.ambient, 1.0) * albedo * vec4(ambient_occlusion_factor, 1.0);
     vec4 ambient = vec4(light.ambient, 1.0) * albedo;// * vec4(ambient_occlusion, 1.0);
     
     // Diffuse

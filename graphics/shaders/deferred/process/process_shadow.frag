@@ -40,7 +40,6 @@ struct FarLight {
     vec3 diffuse;
     vec3 specular;
 
-    //vec4 frag_pos_light_space; // calculated here
     mat4 matrix;
     sampler2D depth;
 };
@@ -58,7 +57,6 @@ struct SpotLight {
     float outer_cut_off;
     float cos_outer_cut_off;
 
-    //vec4 frag_pos_light_space; // calculated here
     mat4 matrix;
     sampler2D depth;
 };
@@ -96,6 +94,10 @@ vec4 normal_spec = texture(in_texture2, texture_coord);
 vec3 normal = normal_spec.xyz;
 float spec = normal_spec.a;
 vec4 emission = texture(in_texture3, texture_coord);
+
+uniform sampler2D ambient_occlusion;
+float ambient_occlusion_factor = texture(ambient_occlusion, texture_coord).r;
+
 
 vec3 view_dir = normalize(camera_position - position);
 
@@ -135,9 +137,10 @@ GenericOutput generic_light(GenericLight light) {
     // global albedo,
     // global shininess,
     // global spec,
+    // glocal ambient_occlusion_factor,
      
     // Ambient
-    vec4 ambient = vec4(light.ambient, 1.0) * albedo;// * vec4(ambient_occlusion, 1.0);
+    vec4 ambient = vec4(light.ambient * ambient_occlusion_factor, 1.0) * albedo;
     
     // Diffuse
     float diffuse_intensity = max(dot(normal, light.light_dir), 0.0);

@@ -1,15 +1,10 @@
 use engine::array_vec::arrvec;
-use engine::deferred::{
-    MakeAmbientOcclusionGroup,
-    ShadowDeferredCompleteGroup,
-    SimpleDeferredCompleteGroup,
-};
+use engine::deferred::{MakeAmbientOcclusionGroup, ShadowDeferredCompleteGroup};
 use engine::framebuffer::DefaultFramebuffer;
+use engine::modelling::BloomGroup;
 use engine::modelling::cubic::SimpleCubicDeferredGroup;
 use engine::modelling::cubic::lighting::shadow::{ListLightIlluminatesGroup, ShadowListLights};
-use engine::modelling::cubic::lighting::simple::ListLights;
-use engine::modelling::{BloomGroup, FramebufferQuad, ScreenQuadGroup};
-use engine::{Draw, PollResult, VecDraw, opengl_shaders};
+use engine::{Draw, PollResult, VecDraw};
 
 use crate::state::{State, StateError};
 
@@ -23,20 +18,8 @@ impl State {
         let mut opaque = vec![
             self.origin_cube.temp_as_simplecubic_and_anim(),
             self.player.get_pair_model(),
+            self.small_cube.temp_as_simplecubic_and_anim(),
         ];
-        if self.toggle_m {
-            opaque.push(self.small_cube.temp_as_simplecubic_and_anim());
-        }
-        // out.push(deferred::SimpleDeferredCompleteGroup::<_, 3>::new(
-        // &self.hdr_out,
-        // &self.gbuffer,
-        // ListLights {
-        // point: arrvec![&self.sun.light],
-        // ..ListLights::default()
-        // },
-        // &self.game_camera.camera,
-        // &(),
-        // ));
 
         let lights = ShadowListLights {
             point: arrvec![&self.sun.light],
@@ -57,25 +40,19 @@ impl State {
             vec![],
         ));
 
-        // out.push(MakeAmbientOcclusionGroup::new(
-        // &self.gbuffer,
-        // &self.ambient_occlusion_buffer,
-        // 64,
-        // &self.game_camera.camera,
-        // &(),
-        // self.toggle_g.cast_signed(),
-        // ));
-        //
-        // out.push(ScreenQuadGroup::new(
-        // opengl_shaders::exposure(),
-        // default_framebuffer,
-        // FramebufferQuad::new_from_framebuffer(&self.
-        // ambient_occlusion_buffer), vec![],
-        // ));
+        out.push(MakeAmbientOcclusionGroup::new(
+            &self.gbuffer,
+            &self.ambient_occlusion_buffer,
+            64,
+            &self.game_camera.camera,
+            &(),
+            self.toggle_m,
+        ));
 
         out.push(ShadowDeferredCompleteGroup::<_, 3>::new(
             &self.hdr_out,
             &self.gbuffer,
+            Some(&self.ambient_occlusion_buffer),
             lights,
             &self.game_camera.camera,
             &(),
@@ -86,6 +63,13 @@ impl State {
             default_framebuffer,
             &self.bloom,
         ));
+
+        // out.push(ScreenQuadGroup::new(
+        // opengl_shaders::quad3(),
+        // default_framebuffer,
+        // FramebufferQuad::new_from_framebuffer(&self.hdr_out),
+        // vec![],
+        // ));
 
         PollResult::Draw(out)
     }

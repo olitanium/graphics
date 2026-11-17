@@ -6,7 +6,7 @@ use std::path::Path;
 
 use colour::ColourRGB;
 use image::DynamicImage;
-use utils::{builder, error_boilerplate, new};
+use utils::{error_boilerplate, new};
 
 use super::CubeMap;
 use crate::framebuffer::attachments::CubeWithDepth;
@@ -60,8 +60,6 @@ impl TexBuilder for Builder<MissingData> {
                 min_filter: Minification::default(),
                 mag_filter: Magnification::default(),
             },
-
-            ..self
         }
     }
 }
@@ -92,8 +90,11 @@ fn make_colour(colour: ColourRGB) -> DynamicImage {
     DynamicImage::ImageRgb32F(image)
 }
 
-impl<T> Builder<T> {
-    pub fn depth_attachment(
+impl Builder<MissingData> {
+    new!();
+
+    #[expect(clippy::unused_self, reason = "For builder chaining")]
+    pub const fn depth_attachment(
         self,
         size: TexDim,
     ) -> Builder<CubeFramebufferAttachment<CubeWithDepth>> {
@@ -104,11 +105,8 @@ impl<T> Builder<T> {
             },
         }
     }
-}
 
-impl Builder<MissingData> {
-    new!();
-
+    #[expect(clippy::unused_self, reason = "For builder chaining")]
     pub fn image<P>(
         self,
         positive_x: P,
@@ -135,6 +133,7 @@ impl Builder<MissingData> {
         Ok(Builder { data })
     }
 
+    #[expect(clippy::unused_self, reason = "For builder chaining")]
     pub fn monochrome(self, colour: ColourRGB) -> Builder<HasSomeImage> {
         let data = HasSomeImage {
             positive_x: make_colour(colour),

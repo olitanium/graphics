@@ -4,7 +4,6 @@ use core::cell::{BorrowMutError, RefMut};
 /// framebuffers which are missing particular attachments.
 use super::{ActiveFramebuffer, Framebuffer, FramebufferContext};
 use crate::framebuffer::active_framebuffer::BindError;
-use crate::gl_call;
 use crate::texture::{Texture, TextureHasBuilder};
 use crate::types::{self, FrameBufferId, TexDim};
 
@@ -53,28 +52,6 @@ pub trait AttachmentWithDepth: FramebufferAttachment {
 pub trait AttachmentWithStencil: AttachmentWithDepth {
     fn stencil_testing(stencil_testing: bool, context: &mut FramebufferContext) {
         context.stencil_testing(stencil_testing);
-    }
-}
-
-fn copy_buffer<F, A>(
-    dest: &mut A,
-    source: &F,
-    _context: &mut FramebufferContext,
-    which_buffer: types::GLenum,
-    filter: types::GLenum,
-) where
-    A: FramebufferInternals,
-    F: FramebufferInternals<Tex = A::Tex>,
-{
-    gl_call! {
-        gl::BindFramebuffer(gl::READ_FRAMEBUFFER, source.id().as_primitive());
-    }
-    gl_call! {
-        gl::BindFramebuffer(gl::DRAW_FRAMEBUFFER, dest.id().as_primitive());
-    }
-
-    gl_call! {
-        gl::BlitFramebuffer(0, 0, source.size().0.as_primitive(), source.size().1.as_primitive(), 0, 0, dest.size().0.as_primitive(), dest.size().1.as_primitive(), which_buffer, filter);
     }
 }
 
@@ -181,41 +158,11 @@ pub trait FramebufferWithoutExtra<const OUT: usize>: FramebufferInternals {
     }
 
     fn try_give_texture_lock(&self) -> Result<[RefMut<'_, Self::Tex>; OUT], BorrowMutError>;
-
-    fn copy_depth_buffer<const OUT2: usize, F>(
-        &mut self,
-        source: &F,
-        context: &mut FramebufferContext,
-    ) where
-        F: FramebufferWithoutExtra<OUT2, Tex = Self::Tex>,
-    {
-        copy_buffer(self, source, context, gl::COLOR_BUFFER_BIT, gl::LINEAR);
-    }
 }
 
 pub trait FramebufferWithDepth<const OUT: usize>: FramebufferWithoutExtra<OUT> {
     fn depth_testing(depth_testing: bool, context: &mut FramebufferContext);
-
-    fn copy_depth_buffer<const OUT2: usize, F>(
-        &mut self,
-        source: &F,
-        context: &mut FramebufferContext,
-    ) where
-        F: FramebufferWithDepth<OUT2, Tex = Self::Tex>,
-    {
-        copy_buffer(self, source, context, gl::DEPTH_BUFFER_BIT, gl::NEAREST);
-    }
 }
 pub trait FramebufferWithStencil<const OUT: usize>: FramebufferWithDepth<OUT> {
     fn stencil_testing(stencil_testing: bool, context: &mut FramebufferContext);
-
-    fn copy_stencil_buffer<const OUT2: usize, F>(
-        &mut self,
-        source: &F,
-        context: &mut FramebufferContext,
-    ) where
-        F: FramebufferWithStencil<OUT2, Tex = Self::Tex>,
-    {
-        copy_buffer(self, source, context, gl::STENCIL_BUFFER_BIT, gl::NEAREST);
-    }
 }

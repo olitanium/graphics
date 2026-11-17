@@ -11,7 +11,7 @@ use graphics::texture::Texture;
 use graphics::{Draw, DrawOut, ShaderProgramContext};
 pub use utils::{RANDOM_VEC_KERNEL, SAMPLE_VECS};
 
-use crate::deferred::ambient_occlusion::utils::{KERNEL_SIZE, get_many_sample_vecs};
+use crate::deferred::ambient_occlusion::utils::KERNEL_SIZE;
 use crate::deferred::{GBuffer, GBufferFramebufferQuad};
 use crate::modelling::FramebufferQuad;
 use crate::modelling::cubic::{Camera, CameraPose};
@@ -22,7 +22,7 @@ pub struct MakeAmbientOcclusionGroup<'a> {
     ambient_occlusion_buffer: &'a Framebuffer<1, WithoutExtra>,
     look_at: Matrix<4, 4>,
     sample_vecs_len: u32,
-    toggle: i32,
+    radius: f32,
 }
 
 impl<'a> MakeAmbientOcclusionGroup<'a> {
@@ -32,7 +32,7 @@ impl<'a> MakeAmbientOcclusionGroup<'a> {
         sample_vecs_len: u32,
         camera: &Camera<P>,
         hint: &P::Hint,
-        toggle: i32,
+        radius: f32,
     ) -> Box<Self>
     where
         P: CameraPose,
@@ -44,7 +44,7 @@ impl<'a> MakeAmbientOcclusionGroup<'a> {
             ambient_occlusion_buffer,
             look_at,
             sample_vecs_len,
-            toggle,
+            radius,
         })
     }
 }
@@ -62,24 +62,24 @@ impl Draw for MakeAmbientOcclusionGroup<'_> {
         let mut active_sp = opengl_shaders::ambient_occlusion().use_program(sp_context);
         let mut active_fb = self.ambient_occlusion_buffer.bind(fb_context)?;
 
-        let vecs: [_; 128] = *SAMPLE_VECS;
+        let vecs = SAMPLE_VECS
+            .get(..self.sample_vecs_len as usize)
+            .unwrap_or(SAMPLE_VECS.as_slice());
+
         active_sp.set_uniform(&c"look_at", &self.look_at)?;
-        active_sp.set_uniform(&c"sample_vecs", vecs.as_slice())?;
-        active_sp.set_uniform(
-            &c"sample_vecs_len",
-            &u32::min(self.sample_vecs_len, vecs.len() as u32),
-        )?;
+        active_sp.set_uniform(&c"sample_vecs", vecs)?;
+        let len = vecs.len() as u32;
+        active_sp.set_uniform(&c"sample_vecs_len", &len)?;
 
         active_sp.set_uniform(&c"kernel_size", &KERNEL_SIZE)?;
 
         active_sp.set_uniform(&c"frames", &FRAMECOUNTER.fetch_add(1, Ordering::Relaxed))?;
+        active_sp.set_uniform(&c"radius", &self.radius)?;
 
         active_sp.register_texture([
             (c"random_tangent", &*RANDOM_VEC_KERNEL as &dyn Texture),
             (c"depth_buffer", self.gbuffer.get_depth()),
         ])?;
-
-        active_sp.set_uniform(&c"toggle_clip", &self.toggle)?;
 
         self.gbuffer.draw(&mut active_sp, &mut active_fb)?;
 

@@ -1,5 +1,4 @@
 use alloc::ffi::CString;
-use core::cmp::Ordering;
 use core::error::Error;
 use core::iter;
 
