@@ -158,6 +158,12 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
             .expect("should be enough elements")
     }
 
+    #[inline]
+    #[must_use]
+    pub const fn col_major_mut(&mut self) -> [[&mut VectorPreferredFloat; R]; C] {
+        self.0.each_mut().map(<[_; _]>::each_mut)
+    }
+
     pub const fn col(&self, index: usize) -> Option<Vector<R, VectorPreferredFloat>> {
         self.0.get(index).copied().map(Vector::new)
     }

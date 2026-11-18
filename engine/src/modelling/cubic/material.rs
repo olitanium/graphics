@@ -132,9 +132,9 @@ impl Builder {
 
     builder!(ambient_occlusion: Option<FlatTexture>);
 
-    builder!(shininess: Option<f32>);
+    builder!(const shininess: Option<f32>);
 
-    builder!(translucent: bool);
+    builder!(const translucent: bool);
 }
 
 impl Builder {

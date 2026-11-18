@@ -164,12 +164,9 @@ impl State {
             }
         }
 
-        self.camera
-            .pose
-            .look_left(-mouse_delta[0] * self.sensitivity);
-        self.camera
-            .pose
-            .look_up(mouse_delta[1] * self.sensitivity, None);
+        let [mouse_x, mouse_y] = mouse_delta.into_inner();
+        self.camera.pose.look_left(-mouse_x * self.sensitivity);
+        self.camera.pose.look_up(mouse_y * self.sensitivity, None);
 
         ControlOutput::Data(())
     }

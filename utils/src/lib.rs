@@ -104,6 +104,36 @@ macro_rules! builder {
             self
         }
     };
+
+    (const $name:ident, $optname:ident : Option < $typ:ty >) => {
+        #[doc = concat!("set ", stringify!($name), " to a value.")]
+        pub const fn $name(mut self, $name: $typ) -> Self {
+            self.$name = Some($name);
+            self
+        }
+
+        #[doc = concat!("set ", stringify!($name), " to an optional value.")]
+        pub const fn $optname(mut self, $optname: Option<$typ>) -> Self {
+            self.$name = $optname;
+            self
+        }
+    };
+
+    (const $name:ident : Option < $typ:ty >) => {
+        #[doc = concat!("set ", stringify!($name), " to an optional value.")]
+        pub const fn $name(mut self, $name: $typ) -> Self {
+            self.$name = Some($name);
+            self
+        }
+    };
+
+    (const $name:ident : $typ:ty) => {
+        #[doc = concat!("set ", stringify!($name), " to an value.")]
+        pub const fn $name(mut self, $name: $typ) -> Self {
+            self.$name = $name;
+            self
+        }
+    };
 }
 
 /// A small macro to make the `Builder` pattern easier to implement.

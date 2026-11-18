@@ -149,9 +149,9 @@ where
         let (lower_bounds, upper_bounds) = make_bound(triangles)?;
 
         // TODO: rewrite completely.
-        #[expect(clippy::cast_precision_loss, reason = "need to rewrite")]
+        //#[expect(clippy::cast_precision_loss, reason = "need to rewrite")]
         let children_or_meta = if depth != 0 {
-            let opt_children = {
+            let opt_children = try {
                 let dimensions = upper_bounds - lower_bounds;
                 let (max_index, _) = dimensions
                     .into_iter()
@@ -167,43 +167,42 @@ where
                 const CHILDREN_FLOAT: f32 = NUMBER_OF_CHILDREN as f32;
                 const CHILDRENPLUS1: usize = const { NUMBER_OF_CHILDREN + 1 };
 
-                let mut new_partition: [_; CHILDRENPLUS1] = array::from_fn(|index| {
+                let mut new_partition: [_; CHILDRENPLUS1] = array::try_from_fn(|index| try {
                     let partition_mult = (index) as f32 / CHILDREN_FLOAT;
                     // let partition_value = partition_mult *
                     // upper_bounds[max_index] + (1.0 - partition_mult) *
                     // lower_bounds[max_index];
                     let partition_value = (1.0 - partition_mult).mul_add(
-                        lower_bounds[max_index],
-                        partition_mult * upper_bounds[max_index],
+                        *lower_bounds.get(max_index)?,
+                        partition_mult * *upper_bounds.get(max_index)?,
                     );
 
                     triangles.partition_point(|(centre, _)| centre[max_index] <= partition_value)
-                });
+                })?;
 
                 // ensure that no floating point errors happened above
                 // CHILDRENPLUS1 always at least 1, so there is always a last
                 *new_partition.last_mut()? = triangles.len();
 
-                let partitions: [_; NUMBER_OF_CHILDREN] =
-                    array::from_fn(|index| (new_partition[index], new_partition[index + 1]));
+                let partitions: [_; NUMBER_OF_CHILDREN] = array::try_from_fn(|index| {
+                    Some((*new_partition.get(index)?, *new_partition.get(index + 1)?))
+                })?;
 
                 let node_not_leaf = partitions.iter().all(|(lower, upper)| lower != upper);
 
-                node_not_leaf
-                    .then(|| {
-                        partitions.try_map(|(lower_bound_partition, partition)| {
-                            let bb_triangle = &mut triangles[lower_bound_partition..partition];
+                node_not_leaf.then(|| {
+                    partitions.try_map(|(lower_bound_partition, partition)| {
+                        let bb_triangle = triangles.get_mut(lower_bound_partition..partition)?;
 
-                            Self::new_from_many_inner(
-                                so_far,
-                                bb_triangle,
-                                lower_bound_partition + start_index,
-                                depth - 1,
-                                init,
-                            )
-                        })
+                        Self::new_from_many_inner(
+                            so_far,
+                            bb_triangle,
+                            lower_bound_partition + start_index,
+                            depth - 1,
+                            init,
+                        )
                     })
-                    .flatten()
+                })??
             };
 
             opt_children.map_or_else(

@@ -101,6 +101,5 @@ cast_possible_truncation = "allow"
 # remove_me_soon
 expect_used = "allow"
 unwrap_used = "allow"
-indexing_slicing = "allow"
 
 

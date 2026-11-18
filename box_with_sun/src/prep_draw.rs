@@ -59,15 +59,6 @@ impl State {
             vec![],
         ));
 
-        // out.push(BoundingBoxGroup::new(
-        // &self.hdr_fb,
-        // self.sun.inner.bounding_box().unwrap().debug_get_first(),
-        // self.sun.inner.pose,
-        // &self.game_camera.camera,
-        // &(),
-        // 20,
-        // || ColourRGBA::grayscale(1.0, 0.5),
-        // ));
         if self.toggle_g {
             out.push(ScreenQuadGroup::new(
                 opengl_shaders::exposure3(),

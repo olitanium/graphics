@@ -326,15 +326,16 @@ pub fn permutations<T, const DIMS: usize>(
 where
     T: Clone,
 {
+    let vec = input_vec_1.zip_with(input_vec_2, |a, b| (a, b));
+
     (0..(1_usize << DIMS)).map(move |bin| {
-        array::from_fn(|index| {
+        let mut index = 0;
+        vec.each_ref().map(|(lhs, rhs)| {
             let mask = 1 << index;
+            index += 1;
             let first = (bin & mask) != 0;
-            if first {
-                input_vec_1[index].clone()
-            } else {
-                input_vec_2[index].clone()
-            }
+            let ref_out = if first { lhs } else { rhs };
+            ref_out.clone()
         })
     })
 }

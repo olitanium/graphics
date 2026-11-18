@@ -127,7 +127,7 @@ impl Builder<MissingData> {
             positive_z: load_image(positive_z)?,
             negative_z: load_image(negative_z)?,
             mag_filter: Magnification::Linear,
-            min_filter: Minification::TRILINEAR,
+            min_filter: Minification::Bilinear,
         };
 
         Ok(Builder { data })

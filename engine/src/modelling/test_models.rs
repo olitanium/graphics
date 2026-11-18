@@ -210,6 +210,7 @@ pub fn tail_with_bone(max_len: u8) -> impl Iterator<Item = [IncompleteVertex<3>;
             ]
             .map(|triangle| {
                 triangle.map(|index| {
+                    #[expect(clippy::indexing_slicing, reason = "hard coded indices looking in to hard coded array. Never going to fail")]
                     let BoneVertexTexture{ bone, position, texture} = vertices_in_order[index];
                     let weights = arrvec![(u32::from(bone), 1.0)];
                     IncompleteVertex::new(position).weights(weights).texture(texture)

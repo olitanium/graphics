@@ -21,6 +21,7 @@
 #![feature(const_cmp)]
 #![feature(random)]
 #![feature(integer_cast_extras)]
+#![feature(array_try_from_fn)]
 
 extern crate alloc;
 

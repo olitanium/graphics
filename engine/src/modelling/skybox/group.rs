@@ -36,7 +36,8 @@ impl<'a, const OUT: usize, O, X: FramebufferWithDepth<OUT>> Group<'a, OUT, O, X>
         let view = {
             let old_view: Matrix<3, 3> = camera.view(camera_hint).truncate();
             let mut view: Matrix<4, 4> = old_view.truncate();
-            view[(3, 3)] = 1.0;
+            let [_, _, _, [_, _, _, one]] = view.col_major_mut();
+            *one = 1.0;
             view
         };
 
@@ -79,7 +80,6 @@ impl<const OUT: usize, O, D: FramebufferWithDepth<OUT>> Draw for Group<'_, OUT, 
         fb_context: &mut FramebufferContext,
         sp_context: &mut ShaderProgramContext,
     ) -> Result<DrawOut, Box<dyn Error>> {
-        let inner = *self;
-        inner.draw_sized(fb_context, sp_context)
+        self.draw_sized(fb_context, sp_context)
     }
 }

@@ -28,6 +28,7 @@ impl State {
 
         let skybox = SkyBox::new(
             CubeMap::builder()
+                //.grayscale(1.0)
                 .image(
                     "assets/skybox/right.jpg",
                     "assets/skybox/left.jpg",
@@ -37,7 +38,6 @@ impl State {
                     "assets/skybox/back.jpg",
                 )
                 .expect("all images should exist")
-                //.grayscale(0.0)
                 .build(),
         );
 

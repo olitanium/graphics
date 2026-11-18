@@ -32,13 +32,13 @@ impl TransformBy<Pose> for IncompleteVertex<3> {
 // }
 
 impl<const N: usize> IncompleteVertex<N> {
-    builder!(normal, opt_normal: Option<UnitVector<3>>);
+    builder!(const normal, opt_normal: Option<UnitVector<3>>);
 
-    builder!(tangent, opt_tangent: Option<UnitVector<3>>);
+    builder!(const tangent, opt_tangent: Option<UnitVector<3>>);
 
-    builder!(texture, opt_texture: Option<Vector<2>>);
+    builder!(const texture, opt_texture: Option<Vector<2>>);
 
-    builder!(weights, opt_weights: Option<ArrayVec<(u32, f32), 4>>);
+    builder!(const weights, opt_weights: Option<ArrayVec<(u32, f32), 4>>);
 
     pub const fn new(position: Vector<N>) -> Self {
         Self {

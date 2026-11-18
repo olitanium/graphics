@@ -21,7 +21,7 @@ impl Builder<MissingPose> {
 }
 
 impl<P> Builder<P> {
-    builder!(radius: f32);
+    builder!(const radius: f32);
 
     pub const fn pose<PN>(self, pose: PN) -> Builder<PN>
     where

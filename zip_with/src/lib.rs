@@ -12,6 +12,7 @@ use core::marker::Destruct;
 use core::{array, gca};
 
 use array_vec::ArrayVecPopFront;
+
 /// Zip two arrays together and map with the given closure.
 /// for example
 /// ```rust
@@ -22,7 +23,7 @@ use array_vec::ArrayVecPopFront;
 /// assert_eq!(x.zip_with(y, |a, b| a + b), [5, 7, 9])
 /// ```
 pub const trait ArrayZipWith {
-    /// The type of the element of the array.
+    /// The len of the array.
     #[rustc_always_gca]
     const LEN: usize;
 
@@ -45,6 +46,8 @@ const impl<const N: usize, T> ArrayZipWith for [T; N] {
     #[inline]
     fn zip_with<U, V, F>(self, array2: [U; N], mut func: F) -> [V; N]
     where
+        // Self: [const] IntoIterator<Item = T>,
+        //[U; N]: [const] IntoIterator<Item = U>,
         F: [const] FnMut(T, U) -> V + [const] Destruct,
         T: [const] Destruct,
         U: [const] Destruct,
@@ -62,5 +65,18 @@ const impl<const N: usize, T> ArrayZipWith for [T; N] {
                 unsafe { array2.pop_front().unwrap_unchecked() },
             )
         })
+
+        // let mut iter_one = self.into_iter();
+        // let mut iter_two = array2.into_iter();
+        //
+        // array::from_fn(const |_| {
+        // func(
+        // // SAFETY: equal sized arrays, will be empty exactly as the
+        // // function stops calling.
+        // unsafe { iter_one.next().unwrap_unchecked() },
+        // // SAFETY: as above.
+        // unsafe { iter_two.next().unwrap_unchecked() },
+        // )
+        // })
     }
 }

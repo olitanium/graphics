@@ -58,11 +58,11 @@ impl<'a> TransformBy<(&'a Skeleton, &'a CalculatedAnimation)> for SkeletalVertex
             #[expect(
                 clippy::cast_sign_loss,
                 reason = "index would ideally be u32, will fix when I have worked out \
-                          `SetAttribIPointer`"
+                          `glSetAttribIPointer`"
             )]
             let index = index as usize;
 
-            let bone = bones[index];
+            let bone = bones.get(index).copied().unwrap_or_default();
             let dual_quat = bone.into_inner().u();
             accum = accum + dual_quat;
         }

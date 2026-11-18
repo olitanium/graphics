@@ -33,15 +33,15 @@ pub enum Minification {
 
 impl Minification {
     pub const TRILINEAR: Self = Self::MipMap {
-        texture: MipMapInfo::Linear,
-        distance: MipMapInfo::Linear,
+        texture: MipMapInfo::Bilinear,
+        distance: MipMapInfo::Bilinear,
     };
 }
 
 #[derive(Debug, Clone)]
 pub enum MipMapInfo {
     Nearest,
-    Linear,
+    Bilinear,
 }
 
 impl Minification {
@@ -57,15 +57,17 @@ impl Minification {
 const fn get_mipmap_enum(texture: &MipMapInfo, distance: &MipMapInfo) -> GLint {
     use MipMapInfo as M;
     let out = match (texture, distance) {
-        (M::Linear, M::Linear) => gl::LINEAR_MIPMAP_LINEAR,
-        (M::Linear, M::Nearest) => gl::LINEAR_MIPMAP_NEAREST,
-        (M::Nearest, M::Linear) => gl::NEAREST_MIPMAP_LINEAR,
+        (M::Bilinear, M::Bilinear) => gl::LINEAR_MIPMAP_LINEAR,
+        (M::Bilinear, M::Nearest) => gl::LINEAR_MIPMAP_NEAREST,
+        (M::Nearest, M::Bilinear) => gl::NEAREST_MIPMAP_LINEAR,
         (M::Nearest, M::Nearest) => gl::NEAREST_MIPMAP_NEAREST,
     };
     out as GLint
     // GL_{0}_MIPMAP_{1}
     // 0: Determines how each mipmap image is sampled from: be that linear or
-    // nearest 1: Determines which mipmap to choose, be that
+    // nearest
+    // 1: Determines which mipmap to choose, be that the nearest or an
+    // interpolation
 }
 
 #[derive(Debug, Default, Clone)]
