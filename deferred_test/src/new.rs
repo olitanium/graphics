@@ -36,7 +36,7 @@ impl State {
                     "assets/skybox/front.jpg",
                     "assets/skybox/back.jpg",
                 )
-                .expect("all images should exist")
+                .unwrap()
                 //.grayscale(0.0)
                 .build(),
         );

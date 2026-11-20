@@ -150,12 +150,12 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
         // self.col_flattened().iter().copied().collect_into(&mut x);
         // x.into_array_with(|| 0.0)
 
-        #[expect(clippy::expect_used, reason = "certain of number of element")]
-        *self
-            .0
+        //#[expect(clippy::expect_used, reason = "certain of number of element")]
+        self.0
             .as_flattened()
             .as_array()
-            .expect("should be enough elements")
+            .copied()
+            .unwrap_or([0.0; _])
     }
 
     #[inline]

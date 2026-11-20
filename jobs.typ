@@ -5,25 +5,25 @@
 - Yeet instead of Err(...into()) or Err(...)?
 
 == Can Do Now
+- Const derive for many types
 - Texture Parameters
-  - Min and Mag only for `Image`.
-  - gen_tex_set_parameters no longer looks at the `Image`, so image needs to specify the filtering.
   - Depth buffer can choose to select the appropriate compare function.
 - Deferred Shading SSAO.
+  - blur
 - VecOne periodically when appropriate, to remove unwraps
 - Movement Vectors available in Shaders
 - impl VertexHasTangent for others
-- Model auto-generated normals smooth option
 - Renderbuffer Objects (like textures for Framebuffer attachments. Might cause issues for shadows because they are unreadable)
 - Multisample FBs
-- Light uniform location cacheing without strings
-  - `UniformName` trait available
+- `UniformName` trait work
+  - Light uniform location cacheing without strings
 - BoneAnimation don't store poses, store ScLERPS
 - Camera ManualPose use Pose
 - Camera ManualPose split into two structs
 - ~ShaderProgram generics Vertex, Model and `Extra`~
   - Shadow Lights can then be generic over model type
 - Import
+  - Model auto-generated normals smooth option
 - Bounding Box dyn
 - Bounding Box Collision uses references, specifically for bone_index and unit_index
 - Assess Vector<DIMS>: ExtendedVertex bound

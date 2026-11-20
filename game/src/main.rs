@@ -1,3 +1,4 @@
+#![allow(clippy::unwrap_used, reason = "demo")]
 #![feature(try_trait_v2)]
 #![feature(try_trait_v2_residual)]
 

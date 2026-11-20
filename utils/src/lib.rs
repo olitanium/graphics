@@ -146,4 +146,11 @@ macro_rules! new {
             Self::default()
         }
     };
+
+    (const) => {
+        /// Create a new (default initialised) builder.
+        pub const fn new() -> Self {
+            Self::default()
+        }
+    };
 }

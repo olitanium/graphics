@@ -24,7 +24,7 @@ impl SimplePhysics {
         self.collision_push_direction.push(normal_max);
     }
 
-    fn get_clear_collision_dir(&mut self) -> Vec<NormalMax> {
+    const fn get_clear_collision_dir(&mut self) -> Vec<NormalMax> {
         mem::take(&mut self.collision_push_direction)
     }
 

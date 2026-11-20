@@ -50,7 +50,9 @@ impl Vertex for SkeletalVertex {
 impl<'a> TransformBy<(&'a Skeleton, &'a CalculatedAnimation)> for SkeletalVertex {
     fn transform_by(self, (skeleton, animation): (&'a Skeleton, &'a CalculatedAnimation)) -> Self {
         let mut accum = DualQuaternion::ZERO;
-        let bones = animation.poses(skeleton).unwrap();
+        let Ok(bones) = animation.poses(skeleton) else {
+            return self;
+        };
         for (weight, index) in iter::zip(self.bone_weights, self.bone_indices) {
             if weight == 0.0 {
                 break;

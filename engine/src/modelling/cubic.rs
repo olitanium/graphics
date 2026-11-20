@@ -25,7 +25,19 @@ pub mod lighting;
 pub mod material;
 
 mod animation;
-pub use animation::*;
+// pub use animation::*;
+pub(crate) use animation::CalcAnimUnitIndex;
+pub use animation::{
+    AggregateCalcAnim,
+    AggregateCalcAnimBuilder,
+    BoneAnimation,
+    BuildFixingBoneError,
+    CalculatedAnimation,
+    GetAnimationError,
+    PushAnimationError,
+    SignaturesDoNotMatchError,
+    SkeletalAnimation,
+};
 
 mod skeleton_cubic;
 pub use skeleton_cubic::{

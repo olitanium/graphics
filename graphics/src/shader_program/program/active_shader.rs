@@ -206,12 +206,9 @@ impl<M: Model, O, T: Texture, const OUT: usize> ActiveShaderProgram<'_, '_, '_, 
             gl_call! {
                 gl::GetIntegerv(gl::MAX_COMBINED_TEXTURE_IMAGE_UNITS, &raw mut out);
             }
-            #[expect(
-                clippy::expect_used,
-                reason = "OpenGL guaranteed that this will be positive, OpenGL could have used an \
-                          unsigned integer but chose not to"
-            )]
-            usize::try_from(out).expect("will not be negative")
+            // "OpenGL guarantees that this will be positive, OpenGL could have
+            // used an unsigned integer but chose not to"
+            usize::try_from(out).unwrap_or_default()
         });
 
         (self.texture_list.len() <= *MAX_TEX_UNITS)

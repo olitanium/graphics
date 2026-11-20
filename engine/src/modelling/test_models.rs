@@ -149,6 +149,7 @@ pub fn tail_with_bone(max_len: u8) -> impl Iterator<Item = [IncompleteVertex<3>;
                 (bone1, [slice10, slice11, slice12, slice13]),
                 (bone2, [slice20, slice21, slice22, slice23]),
             ]| {
+                #[derive(Copy, Clone)]
                 struct BoneVertexTexture {
                     bone: u8,
                     position: Vector<3>,
@@ -201,21 +202,23 @@ pub fn tail_with_bone(max_len: u8) -> impl Iterator<Item = [IncompleteVertex<3>;
                         texture: vector![fbone2 / max_len, 1.0],
                     },
                 ];
+
+                let [v0, v1, v2, v3, v4, v5, v6, v7] = vertices_in_order;
+
                 #[rustfmt::skip]
-            let triangles = [
-                [5, 1, 4], [4, 1, 0],
-                [1, 5, 2], [2, 5, 6],
-                [6, 7, 2], [2, 7, 3],
-                [0, 3, 4], [4, 3, 7],
-            ]
-            .map(|triangle| {
-                triangle.map(|index| {
-                    #[expect(clippy::indexing_slicing, reason = "hard coded indices looking in to hard coded array. Never going to fail")]
-                    let BoneVertexTexture{ bone, position, texture} = vertices_in_order[index];
-                    let weights = arrvec![(u32::from(bone), 1.0)];
-                    IncompleteVertex::new(position).weights(weights).texture(texture)
-                })
-            });
+                let triangles = [
+                    [v5, v1, v4], [v4, v1, v0],
+                    [v1, v5, v2], [v2, v5, v6],
+                    [v6, v7, v2], [v2, v7, v3],
+                    [v0, v3, v4], [v4, v3, v7],
+                ]
+                .map(|triangle| {
+                    triangle.map(|index| {
+                        let BoneVertexTexture{ bone, position, texture} = index;
+                        let weights = arrvec![(u32::from(bone), 1.0)];
+                        IncompleteVertex::new(position).weights(weights).texture(texture)
+                    })
+                });
 
                 triangles
             },
@@ -234,7 +237,7 @@ pub fn tail_animation(num_bones: u8) -> (Skeleton, SkeletonBoneIndex, SkeletalAn
                     unit_vector![0.25, 0.0, 1.0],
                     UnitVector::Y,
                 )
-                .expect("literals, all the same. Ideally would be const")
+                .unwrap()
             },
             1.0,
         )
@@ -247,7 +250,7 @@ pub fn tail_animation(num_bones: u8) -> (Skeleton, SkeletonBoneIndex, SkeletalAn
                     unit_vector![-0.25, 0.0, 1.0],
                     UnitVector::Y,
                 )
-                .expect("literals, all the same. Ideally would be const")
+                .unwrap()
             },
             1.0,
         )
@@ -271,7 +274,7 @@ pub fn tail_animation(num_bones: u8) -> (Skeleton, SkeletonBoneIndex, SkeletalAn
         cube_pose = cube_pose.transform_by(cube_push);
         current_bone = skeleton
             .push_bone(bone)
-            .expect("parent bone should exist, as it is created above");
+            .expect("parent should exist, it was created before");
     }
 
     (skeleton.build(), current_bone, animation.build())

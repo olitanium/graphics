@@ -1,5 +1,6 @@
 use geometry::{Pose, PoseSclerp};
 use infinite_window::InfiniteWindowIter;
+use utils::error_boilerplate;
 
 #[derive(Debug, Clone)]
 pub struct BoneAnimation {
@@ -14,6 +15,12 @@ impl Default for BoneAnimation {
     }
 }
 
+#[non_exhaustive]
+#[derive(Debug)]
+pub struct PushError;
+
+error_boilerplate!(PushError);
+
 impl BoneAnimation {
     pub const fn new() -> Self {
         Self {
@@ -22,23 +29,23 @@ impl BoneAnimation {
         }
     }
 
-    pub fn push(&mut self, pose: Pose, duration: f32) -> Result<(), Pose> {
+    pub fn push(&mut self, pose: Pose, duration: f32) -> Result<&mut Self, PushError> {
         if let Some(total_duration) = &mut self.duration {
             self.keyframes.push((*total_duration, pose));
             *total_duration += duration;
-            Ok(())
+            Ok(self)
         } else {
-            Err(pose)
+            Err(PushError)
         }
     }
 
-    pub fn push_final_non_repeat(&mut self, pose: Pose) -> Result<(), Pose> {
+    pub fn push_final_non_repeat(&mut self, pose: Pose) -> Result<&mut Self, PushError> {
         if let Some(total_duration) = self.duration {
             self.keyframes.push((total_duration, pose));
             self.duration = None;
-            Ok(())
+            Ok(self)
         } else {
-            Err(pose)
+            Err(PushError)
         }
     }
 

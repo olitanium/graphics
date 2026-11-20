@@ -22,7 +22,7 @@ impl State {
 
         self.sun.inner.physics.pose =
             Pose::new_from_to_up(new_sun_pos, self.player.root().translation(), UnitVector::Y)
-                .expect("sun never below player");
+                .unwrap();
         self.sun.light.set_position(new_sun_pos);
         self.sun_duplicate_light.set_position(new_sun_pos);
 

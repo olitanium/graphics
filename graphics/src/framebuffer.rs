@@ -147,6 +147,10 @@ impl<const OUT: usize, X: AttachmentWithStencil> FramebufferWithStencil<OUT>
 
 impl DefaultFramebuffer {
     /// Internal function to generate the default (screen) `FrameBuffer`.
+    #[expect(
+        clippy::missing_const_for_fn,
+        reason = "clippy bug FlatTexture no default"
+    )]
     pub(crate) fn new(size: (TexDim, TexDim)) -> Self {
         Self {
             size,

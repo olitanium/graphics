@@ -57,10 +57,6 @@ impl<V: CubicVertex, T> SkeletonBb<V, T> {
             per_bone: Rc::new([bbox]),
         }
     }
-
-    pub fn debug_get_first(&self) -> &BoundingBox<V, T> {
-        self.per_bone.first().unwrap()
-    }
 }
 
 // impl<V: CubicVertex, T> SkeletonBb<V, T> {

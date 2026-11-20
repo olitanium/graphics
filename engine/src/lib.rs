@@ -22,6 +22,8 @@
 #![feature(random)]
 #![feature(integer_cast_extras)]
 #![feature(array_try_from_fn)]
+#![feature(derive_const)]
+#![feature(const_default)]
 
 extern crate alloc;
 

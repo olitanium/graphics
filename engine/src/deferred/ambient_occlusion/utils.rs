@@ -73,7 +73,8 @@ pub fn random_vec_kernel(size: (TexDim, TexDim)) -> FlatTexture {
         .take(pixels as usize)
         .collect();
 
-    let image = Image::new_from_stream(size, pixel_iterator).unwrap();
+    let image = Image::new_from_stream(size, pixel_iterator)
+        .unwrap_or(const { Image::new_monochrome(ColourRGBA::BLUE) });
 
     FlatTexture::builder()
         .image(image)

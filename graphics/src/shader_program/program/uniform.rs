@@ -201,13 +201,3 @@ impl<U: Uniform> Uniform for [U] {
         Ok(())
     }
 }
-
-// impl<U: Uniform> Uniform for Vec<U> {
-// fn set_uniform<'a>(
-// &self,
-// name: String,
-// shader_program: &dyn IsActiveShaderProgram<'a>,
-// ) -> Result<(), SetUniformError<'a>> {
-// self.as_slice().set_uniform(name, shader_program)
-// }
-// }

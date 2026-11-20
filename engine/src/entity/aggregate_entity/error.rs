@@ -5,6 +5,7 @@ use utils::error_boilerplate;
 pub enum PushModelError {
     ParentUnitDoesNotExist,
     BoneInParentDoesNotExist,
+    InvariantError,
 }
 
 error_boilerplate!(PushModelError);

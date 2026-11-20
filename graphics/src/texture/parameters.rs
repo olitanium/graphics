@@ -20,7 +20,8 @@ impl WrapType {
     }
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
+#[derive_const(Default)]
 pub enum Minification {
     #[default]
     Nearest,
@@ -70,7 +71,8 @@ const fn get_mipmap_enum(texture: &MipMapInfo, distance: &MipMapInfo) -> GLint {
     // interpolation
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Clone)]
+#[derive_const(Default)]
 pub enum Magnification {
     #[default]
     Linear,

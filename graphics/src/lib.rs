@@ -9,6 +9,8 @@
 #![feature(gca_const_items)]
 #![feature(array_try_map)]
 #![feature(const_trait_impl)]
+#![feature(derive_const)]
+#![feature(const_default)]
 
 extern crate alloc;
 

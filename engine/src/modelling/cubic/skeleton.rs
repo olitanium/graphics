@@ -7,7 +7,8 @@ use std::sync::LazyLock;
 pub use bone::{Bone, BoneBuilder};
 use utils::new;
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
+#[derive_const(Default)]
 #[must_use = "`Skeleton` must be created with the `build` method"]
 pub struct Builder {
     // All accesses to `values` is offset by -1, where 0 means accessing the
@@ -17,7 +18,7 @@ pub struct Builder {
 }
 
 impl Builder {
-    new!();
+    new!(const);
 
     /// Returns the index of that bone, or `None` if the parent does not exist.
     pub fn push_bone(&mut self, bone: BoneBuilder) -> Option<SkeletonBoneIndex> {
@@ -71,7 +72,7 @@ impl Default for Skeleton {
 }
 
 impl Skeleton {
-    pub fn builder() -> Builder {
+    pub const fn builder() -> Builder {
         Builder::new()
     }
 

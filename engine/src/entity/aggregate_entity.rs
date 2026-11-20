@@ -175,6 +175,7 @@ where
     ) -> Result<AggregateModelIndex, PushModelError> {
         let parent_unit = unit.parent_unit.inner_clone();
         match self.children.last() {
+            // `Some(Some(_))` means occupied, `None` means empty list.
             Some(Some(_)) | None => self.children.push(None),
             _ => {}
         }
@@ -193,10 +194,10 @@ where
         let (mut child_iterator, opt_parent) = if parent_unit
             == AggregateModelIndex::ROOT_MODEL_INDEX
         {
-            // don't need to get a reference to the parent
             #[expect(
                 clippy::iter_skip_zero,
-                reason = "To align types on both branches of the if statement"
+                reason = "To ensure iterator types on both branches of the if statement are the \
+                          same"
             )]
             (child_iterator.skip(0), IsParent::Root)
         } else {
@@ -217,13 +218,9 @@ where
         };
 
         let child_at = {
-            #[expect(
-                clippy::expect_used,
-                reason = "we checked and ensured that the last value is always None above"
-            )]
             let (index, child_dest) = child_iterator
                 .find(|(_, opt_unit)| opt_unit.is_none())
-                .expect("we checked and ensured that the last value is always None above");
+                .ok_or(PushModelError::InvariantError)?;
             *child_dest = Some(unit);
             AggregateModelIndex(index + 1)
         };
@@ -320,14 +317,26 @@ where
 #[derive(Debug)]
 #[non_exhaustive]
 pub enum CalculateAnimationError<'a> {
-    BadAnimationInput {
-        error: SignaturesDoNotMatchError,
-        parent: &'a AggregateModelIndex,
+    BadRoot(SignaturesDoNotMatchError),
+    BadNonRoot {
+        error: PushAnimationError,
+        index: &'a AggregateModelIndex,
     },
     FixAnimationUnitDoesNotExist,
     FixAnimationBoneDoesNotExist,
+    BrokenInvariant(BrokenInvariantError),
 }
 error_boilerplate!(<'a> CalculateAnimationError<'a>);
+
+#[derive(Debug)]
+#[non_exhaustive]
+pub enum BrokenInvariantError {
+    ParentNotBeforeChild {
+        parent: AggregateModelIndex,
+        child: AggregateModelIndex,
+    },
+}
+error_boilerplate!(BrokenInvariantError);
 
 impl<M: EntityInner, T> AggregateEntity<M, T>
 where
@@ -343,10 +352,7 @@ where
 
         let mut anim_builder =
             AggregateCalcAnim::builder(self.base_pose, self.base_model.skeleton(), first_animation)
-                .map_err(|error| CalculateAnimationError::BadAnimationInput {
-                    error,
-                    parent: &AggregateModelIndex::ROOT_MODEL_INDEX,
-                })?;
+                .map_err(CalculateAnimationError::BadRoot)?;
 
         let mut parent_locations = HashMap::from([(
             AggregateModelIndex::ROOT_MODEL_INDEX,
@@ -369,9 +375,14 @@ where
             .filter_map(|(opt, index)| opt.as_ref().map(|unit| (unit, index)))
         {
             let animation = animations.get(&index).copied();
-            let parent_unit_index = parent_locations
-                .get(parent_model_unit)
-                .expect("parent comes before child in `self.children`, per the push_unit method");
+            let parent_unit_index = parent_locations.get(parent_model_unit).ok_or_else(|| {
+                CalculateAnimationError::BrokenInvariant(
+                    BrokenInvariantError::ParentNotBeforeChild {
+                        parent: parent_model_unit.inner_clone(),
+                        child: index.inner_clone(),
+                    },
+                )
+            })?;
             let destination = anim_builder
                 .push(
                     *parent_unit_index,
@@ -380,14 +391,9 @@ where
                     model.skeleton(),
                     animation,
                 )
-                .map_err(|error| match error {
-                    PushAnimationError::SignaturesDoNotMatch(error) => {
-                        CalculateAnimationError::BadAnimationInput {
-                            error,
-                            parent: parent_model_unit,
-                        }
-                    }
-                    _ => unreachable!("should be well formed animation tree"),
+                .map_err(|error| CalculateAnimationError::BadNonRoot {
+                    error,
+                    index: parent_model_unit,
                 })?;
             parent_locations.insert(index, destination);
         }
@@ -403,7 +409,7 @@ where
                         CalculateAnimationError::FixAnimationBoneDoesNotExist
                     }
                     BuildFixingBoneError::UnitDoesNotExist => {
-                        unreachable!("checked above when getting CalcAnimUnitIndex")
+                        CalculateAnimationError::FixAnimationUnitDoesNotExist
                     }
                 })?
         } else {

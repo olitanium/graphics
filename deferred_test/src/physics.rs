@@ -12,7 +12,7 @@ impl State {
 
         self.sun.inner.physics.pose = Pose::new_from_orientation_translation(
             Orientation::new_from_to(new_sun_pos, self.player.root().translation(), UnitVector::Y)
-                .expect("sun never below player"),
+                .unwrap(),
             new_sun_pos,
         );
         self.sun.light.light.position = new_sun_pos;
