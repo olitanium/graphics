@@ -13,7 +13,6 @@ pub type DualQuaternion = DualNumber<Quaternion>;
 impl DualQuaternion {
     pub const ZERO: Self = Self::new(Quaternion::ZERO, Quaternion::ZERO);
 
-    #[must_use]
     pub const fn new_transpose(scalar: DualNumber<f32>, vector: DualNumber<Vector<3>>) -> Self {
         Self {
             real: Quaternion::from_scalar_vec(scalar.real, vector.real),
@@ -21,7 +20,7 @@ impl DualQuaternion {
         }
     }
 
-    #[must_use]
+    #[must_use = "returns a new `DualQuaternion`, rather than modifying the original"]
     pub const fn quaternion_conjugate(self) -> Self {
         Self {
             real: self.real.conjugate(),
@@ -29,7 +28,6 @@ impl DualQuaternion {
         }
     }
 
-    #[must_use]
     pub const fn magnitude_sq(self) -> DualNumber<f32> {
         let magnitude = self * self.quaternion_conjugate();
 
@@ -53,8 +51,8 @@ impl DualQuaternion {
         }
     }
 
-    #[must_use]
-    pub fn inverse(self) -> Self {
+    #[must_use = "returns a new `DualQuaternion`, rather than modifying the original"]
+    pub const fn inverse(self) -> Self {
         // p^{−1} (1 − ε q p^{−1}).
         // = p^{-1} - ε p^{−1} q p^{−1}
 
@@ -72,7 +70,7 @@ impl DualQuaternion {
         }
     }
 
-    #[must_use]
+    #[must_use = "returns a new `DualQuaternion`, rather than modifying the original"]
     pub const fn conjugate(self) -> Self {
         Self {
             real: self.real.conjugate(),
@@ -80,12 +78,11 @@ impl DualQuaternion {
         }
     }
 
-    #[must_use]
+    #[must_use = "returns a new `DualQuaternion`, rather than modifying the original"]
     pub const fn normalize(self) -> UnitDualQuaternion {
         UnitDualQuaternion::normalize_dual_quaternion(self)
     }
 
-    #[must_use]
     pub const fn from_vector(vector: Vector<3>) -> Self {
         let quaternion = Quaternion::from_vector(vector);
         Self {

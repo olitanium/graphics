@@ -3,7 +3,7 @@
 #![expect(clippy::expect_used, reason = "example")]
 
 extern crate alloc;
-use engine::Environment;
+use engine::{Environment, EnvironmentConfiguration};
 
 mod camera;
 mod controls;
@@ -15,8 +15,14 @@ mod state;
 mod sun;
 
 fn main() {
-    Environment::<state::State>::new((4, 5), (2000, 1000), "Window", false)
-        .expect("well formed environment and State")
-        .run()
-        .expect("should not error");
+    Environment::<state::State>::new(&EnvironmentConfiguration {
+        gl_version: (3, 3),
+        screen_dims: (2000, 1000),
+        full_screen: false,
+        title: "Window",
+        mouse_fix_to_centre: true,
+    })
+    .expect("well formed environment and State")
+    .run()
+    .expect("should not error");
 }

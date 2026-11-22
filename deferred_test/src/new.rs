@@ -124,6 +124,7 @@ impl State {
         };
 
         let hdr_fb = Builder::new_flat().size(gbuffer.size()).depth().build();
+
         let ambient_occlusion_buffer = Builder::new_flat().size(gbuffer.size()).build();
 
         let bloom = Bloom::new(gbuffer.size());

@@ -33,27 +33,22 @@ impl ColourRGBA {
 
     get_colour!(a, 3);
 
-    #[must_use]
     pub const fn new(input: [f32; 4]) -> Self {
         Self(input)
     }
 
-    #[must_use]
     pub const fn grayscale(input: f32, alpha: f32) -> Self {
         Self::new([input, input, input, alpha])
     }
 
-    #[must_use]
     pub const fn new_from_arr_alpha(input: [f32; 3], alpha: f32) -> Self {
         Self([input[0], input[1], input[2], alpha])
     }
 
-    #[must_use]
     pub const fn as_array(self) -> [f32; 4] {
         self.0
     }
 
-    #[must_use]
     pub const fn as_ref(&self) -> &[f32; 4] {
         &self.0
     }
@@ -68,7 +63,6 @@ impl ColourRGBA {
         Self::new([nr, ng, nb, a])
     }
 
-    #[must_use]
     pub const fn to_rgb(self) -> ColourRGB {
         let [r, g, b, _] = self.as_array();
         ColourRGB::new([r, g, b])
@@ -99,22 +93,18 @@ impl ColourRGB {
 
     get_colour!(b, 2);
 
-    #[must_use]
     pub const fn new(input: [f32; 3]) -> Self {
         Self(input)
     }
 
-    #[must_use]
     pub const fn as_array(self) -> [f32; 3] {
         self.0
     }
 
-    #[must_use]
     pub const fn as_ref(&self) -> &[f32; 3] {
         &self.0
     }
 
-    #[must_use]
     pub const fn to_rgba_with(self, alpha: f32) -> ColourRGBA {
         let Self([r, g, b]) = self;
         ColourRGBA::new([r, g, b, alpha])

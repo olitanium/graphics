@@ -38,6 +38,6 @@ pub use graphics::framebuffer::Builder as FrameBufferBuilder;
 pub use graphics::{types, *};
 pub mod deferred;
 pub use deferred::GBUFFER_ELEMENTS;
-// pub use russimp::scene::PostProcess;
+pub use russimp_ng::scene::PostProcess;
 
 pub type VecDraw<'a> = Vec<Box<dyn Draw + 'a>>;

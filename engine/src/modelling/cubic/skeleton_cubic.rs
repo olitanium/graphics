@@ -5,7 +5,7 @@ use geometry::Pose;
 use graphics::Model;
 use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
-use graphics::linear_algebra::{Matrix, Vector};
+use graphics::linear_algebra::Vector;
 use graphics::shader_program::{ActiveShaderProgram, CullFace, ShaderSetUniformError};
 use utils::{HasIterWithCloned as _, error_boilerplate};
 
@@ -133,7 +133,7 @@ impl SkeletonCubic {
                     &c"model",
                     &calculated_animation
                         .get(bone, &self.skeleton)
-                        .map_or_else(|_| Matrix::identity(), Pose::as_transformation_matrix),
+                        .map_or_default(Pose::as_transformation_matrix),
                 )
                 .map_err(DrawError::SetUniform)?;
 

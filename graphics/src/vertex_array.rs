@@ -120,7 +120,6 @@ impl<V: Vertex> GenVertexArray<VertexBuffer<V>> {
         }
     }
 
-    #[must_use]
     pub fn triangles(&self) -> Cow<'_, [[V; 3]]> {
         self.element_array_buffer.as_ref().map_or_else(
             || Cow::Borrowed(self.vertex_buffer.vertices().as_chunks().0),
@@ -230,7 +229,6 @@ fn empty() -> GenVertexArray<()> {
     }
 }
 
-#[must_use]
 pub fn dummy() -> &'static GenVertexArray<()> {
     static DUMMY_VERTEX_ARRAY: LazyLock<GenVertexArray<()>> = LazyLock::new(empty);
     &DUMMY_VERTEX_ARRAY

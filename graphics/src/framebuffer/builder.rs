@@ -9,6 +9,8 @@ use super::{CubeWithDepth, Framebuffer};
 use crate::framebuffer::traits::FramebufferAttachment;
 use crate::gl_call;
 use crate::texture::{
+    Magnification,
+    Minification,
     TexBuilder as _,
     TexBuilderCanBuild as _,
     Texture as _,
@@ -142,6 +144,8 @@ impl<const N: usize, B: FramebufferAttachment> Builder<N, HasSize, B> {
             RefCell::new(
                 B::Tex::builder()
                     .size::<4>(self.size.0)
+                    .mag_filter(Magnification::Linear)
+                    .min_filter(Minification::Bilinear)
                     // TODO: Add `Map` field to implement this map
                     .build(),
             )

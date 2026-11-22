@@ -25,7 +25,12 @@ impl<T> DualNumber<T> {
     }
 }
 
-impl<M, T: Add<M>> Add<DualNumber<M>> for DualNumber<T> {
+const impl<M, T> Add<DualNumber<M>> for DualNumber<T>
+where
+    Self: [const] Destruct,
+    DualNumber<M>: [const] Destruct,
+    T: [const] Add<M>,
+{
     type Output = DualNumber<<T as Add<M>>::Output>;
 
     fn add(self, rhs: DualNumber<M>) -> Self::Output {
@@ -91,7 +96,11 @@ impl<M, T: Sub<M>> Sub<DualNumber<M>> for DualNumber<T> {
     }
 }
 
-impl<U, T: Neg<Output = U>> Neg for DualNumber<T> {
+const impl<U, T> Neg for DualNumber<T>
+where
+    Self: [const] Destruct,
+    T: [const] Neg<Output = U>,
+{
     type Output = DualNumber<U>;
 
     fn neg(self) -> Self::Output {
@@ -103,7 +112,7 @@ impl<U, T: Neg<Output = U>> Neg for DualNumber<T> {
 }
 
 impl DualNumber<f32> {
-    #[must_use]
+    #[must_use = "returns a new `DualNumber`, rather than modifying the original"]
     pub fn sin(self) -> Self {
         // https://math.stackexchange.com/a/1072309
         let Self { real: a, dual: b } = self;
@@ -111,7 +120,7 @@ impl DualNumber<f32> {
         Self::new(a.sin(), b * a.cos())
     }
 
-    #[must_use]
+    #[must_use = "returns a new `DualNumber`, rather than modifying the original"]
     pub fn cos(self) -> Self {
         // https://math.stackexchange.com/a/1072309
         let Self { real: a, dual: b } = self;
@@ -122,7 +131,7 @@ impl DualNumber<f32> {
         }
     }
 
-    #[must_use]
+    #[must_use = "returns a new `DualNumber`, rather than modifying the original"]
     pub fn tan(self) -> Self {
         // https://math.stackexchange.com/a/1072309
         let Self { real: a, dual: b } = self;

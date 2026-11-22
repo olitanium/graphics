@@ -5,7 +5,7 @@
 #![feature(const_trait_impl)]
 
 extern crate alloc;
-use engine::Environment;
+use engine::{Environment, EnvironmentConfiguration};
 
 mod camera;
 mod controls;
@@ -17,8 +17,14 @@ mod state;
 mod sun;
 
 fn main() {
-    Environment::<state::State>::new((3, 3), (2000, 1000), "Window", true)
-        .unwrap()
-        .run()
-        .unwrap();
+    Environment::<state::State>::new(&EnvironmentConfiguration {
+        gl_version: (3, 3),
+        screen_dims: (2000, 1000),
+        full_screen: false,
+        title: "Window",
+        mouse_fix_to_centre: true,
+    })
+    .unwrap()
+    .run()
+    .unwrap();
 }

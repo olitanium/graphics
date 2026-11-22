@@ -1,7 +1,6 @@
 [workspace]
 resolver = "3"
 members = [
-    "game",
     "box_with_sun",
     "grappling_hook",
     "deferred_test",
@@ -38,6 +37,7 @@ nursery = { level = "warn", priority = -1 }
 blanket_clippy_restriction_lints = "allow"
 
 expect_used = "allow" # self documenting
+indexing_slicing = "forbid"
 
 pub_use = "allow"
 single_char_lifetime_names = "allow"
@@ -74,18 +74,15 @@ shadow_same = "allow"
 shadow_unrelated = "allow"
 wildcard_enum_match_arm = "allow"
 cast_precision_loss = "allow"
+items_after_statements = "allow"
+module_name_repetitions = "allow"
 
 # rustfmt fights this lint
 arbitrary_source_item_ordering = "allow"
 
 # not sure
-todo = "allow"
 unimplemented = "allow"
-unreachable = "allow"
-must_use_without_reason = "allow"
-items_after_statements = "allow"
 multiple_inherent_impl = "allow"
-module_name_repetitions = "allow"
 same_name_method = "allow"
 too_many_lines = "allow"
 
@@ -99,5 +96,3 @@ missing_panics_doc = "allow"
 cast_possible_wrap = "allow"
 cast_sign_loss = "allow"
 cast_possible_truncation = "allow"
-
-indexing_slicing = "forbid"

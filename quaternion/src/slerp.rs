@@ -22,7 +22,6 @@ impl Slerp {
     /// Get a new `Slerp` calculator from two `UnitQuaternions`. The `Slerp` can
     /// be configured to go the shortest path or the longest path by setting
     /// `long_way`.
-    #[must_use]
     #[inline]
     pub fn new(from: UnitQuaternion, to: UnitQuaternion, long_way: bool) -> Self {
         let from = from.q();
@@ -48,7 +47,6 @@ impl Slerp {
 
     /// Use the interpolation to get a `UnitQuaternion` (representing an
     /// orientation).
-    #[must_use]
     #[inline]
     pub fn get(self, time: f32) -> UnitQuaternion {
         if self.from == self.to {

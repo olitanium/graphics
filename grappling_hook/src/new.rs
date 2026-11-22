@@ -9,15 +9,16 @@ use engine::linear_algebra::{UnitVector, Vector, vector};
 use engine::modelling::cubic::lighting::shadow::{ShadowPointLight, ShadowSpotLight};
 use engine::modelling::cubic::lighting::simple::{PointLight, SpotLight};
 use engine::modelling::cubic::material::Material;
-use engine::modelling::cubic::{CameraBuilder, ManualPoseFixedUp, SimpleCubic};
+use engine::modelling::cubic::{CameraBuilder, ImportError, ManualPoseFixedUp, SimpleCubic};
 use engine::modelling::{Bloom, SkyBox};
+use engine::shader_program::CullFace;
 use engine::texture::{CubeMap, TextureHasBuilder as _};
 use engine::types::TexDim;
 use engine::{ColourRGB, SimpleEntity};
 
 use crate::bear::Bear;
 use crate::grappling_hook::{GrapplingHook, UpdateInput};
-use crate::state::{State, StateError};
+use crate::state::State;
 
 impl State {
     pub fn new_internal(size: (TexDim, TexDim)) -> Self {
@@ -138,36 +139,35 @@ impl State {
     }
 }
 
-pub fn make_model(_which_model: &str) -> Result<SimpleCubic, StateError> {
-    // use engine::PostProcess as P;
-    // let model = match which_model {
-    // "bear" => SimpleCubic::import(
-    // "assets/Teddy Statue/Teddy Statue.obj",
-    // vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
-    // true,
-    // )
-    // .unwrap()
-    // .cull_face(CullFace::BackFace)
-    // .scale(0.01)
-    // .apply_transformation(Pose::new_from_translation(vector![
-    // 0.0, -1.2773916, 0.42744067,
-    // ]))
-    // .build(),
-    // "backpack" => SimpleCubic::import(
-    // "assets/backpack/backpack.obj",
-    // vec![
-    // P::Triangulate,
-    // P::FlipUVs,
-    // P::OptimizeGraph,
-    // P::OptimizeMeshes,
-    // ],
-    // false,
-    // )
-    // .unwrap()
-    // .material(Rc::new(Material::white()))
-    // .build(),
-    // _ => SimpleCubic::empty(),
-    // };
-    // Ok(model)
-    todo!()
+pub fn make_model(which_model: &str) -> Result<SimpleCubic, ImportError> {
+    use engine::PostProcess as P;
+    let model = match which_model {
+        "bear" => SimpleCubic::import(
+            "assets/Teddy Statue/Teddy Statue.obj",
+            vec![P::Triangulate, P::OptimizeGraph, P::OptimizeMeshes],
+            true,
+        )?
+        .cull_face(CullFace::BackFace)
+        .scale(0.01)
+        .apply_transformation(Pose::new_from_translation(vector![
+            0.0,
+            -1.277_391_6,
+            0.427_440_67,
+        ]))
+        .build(),
+        "backpack" => SimpleCubic::import(
+            "assets/backpack/backpack.obj",
+            vec![
+                P::Triangulate,
+                P::FlipUVs,
+                P::OptimizeGraph,
+                P::OptimizeMeshes,
+            ],
+            false,
+        )?
+        .material(Rc::new(Material::white()))
+        .build(),
+        _ => SimpleCubic::empty(),
+    };
+    Ok(model)
 }

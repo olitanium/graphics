@@ -4,6 +4,7 @@
 #![feature(const_trait_impl)]
 #![feature(derive_const)]
 #![feature(const_clone)]
+#![feature(const_default)]
 
 use core::ops;
 
@@ -34,7 +35,6 @@ impl Quaternion {
     pub const IDENTITY: Self = Self::new(1.0, 0.0, 0.0, 0.0);
     pub const ZERO: Self = Self::new(0.0, 0.0, 0.0, 0.0);
 
-    #[must_use]
     pub const fn new(real: f32, i: f32, j: f32, k: f32) -> Self {
         Self {
             real,
@@ -42,7 +42,6 @@ impl Quaternion {
         }
     }
 
-    #[must_use]
     pub const fn from_scalar_vec(scalar: f32, vector: Vector<3, f32>) -> Self {
         Self {
             real: scalar,
@@ -50,7 +49,6 @@ impl Quaternion {
         }
     }
 
-    #[must_use]
     pub const fn is_zero(self) -> bool {
         const EPSILON: f32 = 0.001;
 
@@ -60,22 +58,18 @@ impl Quaternion {
         real_same && vec_same
     }
 
-    #[must_use]
     pub const fn dot(self, other: Self) -> f32 {
         self.real.mul_add(other.real, self.vector.dot(other.vector))
     }
 
-    #[must_use]
     pub const fn vector(self) -> Vector<3, f32> {
         self.vector
     }
 
-    #[must_use]
     pub const fn scalar(self) -> f32 {
         self.real
     }
 
-    #[must_use]
     pub fn axis_angle(angle: f32, axis: UnitVector<3, f32>) -> UnitQuaternion {
         let sin = (angle / 2.0).sin();
         let cos = (angle / 2.0).cos();
@@ -84,18 +78,17 @@ impl Quaternion {
         non_normal.normalize()
     }
 
-    #[must_use]
+    #[must_use = "returns a new `Quaternion`, rather than modifying the original"]
     pub const fn conjugate(mut self) -> Self {
         self.vector = -self.vector;
         self
     }
 
-    #[must_use]
     pub const fn from_vector(vector: Vector<3, f32>) -> Self {
         Self { real: 0.0, vector }
     }
 
-    #[must_use]
+    #[must_use = "returns a new `Quaternion`, rather than modifying the original"]
     pub const fn scale(self, scalar: f32) -> Self {
         Self {
             real: self.real * scalar,
@@ -103,17 +96,15 @@ impl Quaternion {
         }
     }
 
-    #[must_use]
-    pub fn inverse(self) -> Self {
+    #[must_use = "returns a new `Quaternion`, rather than modifying the original"]
+    pub const fn inverse(self) -> Self {
         self.conjugate().scale(1.0 / self.magnitude_sq())
     }
 
-    #[must_use]
     pub const fn magnitude_sq(self) -> f32 {
         self.real.mul_add(self.real, self.vector.magnitude_sq())
     }
 
-    #[must_use]
     pub fn magnitude(self) -> f32 {
         self.magnitude_sq().sqrt()
     }
@@ -122,7 +113,6 @@ impl Quaternion {
         utils::rsqrt(self.magnitude_sq())
     }
 
-    #[must_use]
     pub const fn normalize(self) -> UnitQuaternion {
         UnitQuaternion::normalize_quaternion(self)
     }

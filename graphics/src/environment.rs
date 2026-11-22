@@ -5,11 +5,13 @@ use core::time::Duration;
 use std::collections::HashSet;
 use std::time::Instant;
 
+mod config;
 mod draw;
 mod global_state;
 mod input;
 mod window;
 
+pub use config::Config;
 pub use draw::{Draw, DrawNothing, DrawOut};
 use glfw::fail_on_errors;
 pub use global_state::ApiState;
@@ -127,16 +129,11 @@ pub struct Environment<G: ApiState> {
 }
 
 impl<G: ApiState> Environment<G> {
-    pub fn new(
-        gl_version: (u32, u32),
-        screen_dims: (u32, u32),
-        title: &str,
-        mouse_fix_to_centre: bool,
-    ) -> Result<Self, NewError<G>> {
+    pub fn new(config: &Config) -> Result<Self, NewError<G>> {
         let mut glfw =
             glfw::init(fail_on_errors!()).map_err(|glfw_error| NewError::GlfwInit(glfw_error))?;
 
-        let (gl_major, gl_minor) = gl_version;
+        let (gl_major, gl_minor) = config.gl_version;
         glfw.window_hint(glfw::WindowHint::ContextVersionMajor(gl_major));
         glfw.window_hint(glfw::WindowHint::ContextVersionMinor(gl_minor));
         glfw.window_hint(glfw::WindowHint::OpenGlProfile(
@@ -146,9 +143,10 @@ impl<G: ApiState> Environment<G> {
 
         let mut window = Window::builder()
             .suppress_config(true)
-            .dims(screen_dims)
-            .mouse_fix_to_centre(mouse_fix_to_centre)
-            .title(title.to_owned())
+            .full_screen(config.full_screen)
+            .dims(config.screen_dims)
+            .mouse_fix_to_centre(config.mouse_fix_to_centre)
+            .title(config.title.to_owned())
             .raw_motion(true)
             .glfw(&mut glfw)
             .build()

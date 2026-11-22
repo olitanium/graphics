@@ -59,7 +59,6 @@ impl UnitVector<3, VectorPreferredFloat> {
 impl<const N: usize, T> UnitVector<N, T> {
     /// Unwrap the `UnitVector` into it's inner `Vector`. Most vector operations
     /// happen with the `Vector` type.
-    #[must_use]
     #[inline]
     pub const fn v(self) -> Vector<N, T>
     where

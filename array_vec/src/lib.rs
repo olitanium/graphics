@@ -48,7 +48,6 @@ pub struct PushWithError;
 error_boilerplate!(PushWithError);
 
 impl<T, const N: usize> ArrayVec<T, N> {
-    #[must_use]
     #[inline]
     pub const fn new() -> Self {
         Self {

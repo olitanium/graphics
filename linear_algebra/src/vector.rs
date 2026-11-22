@@ -197,7 +197,6 @@ impl<const N: usize> Vector<N, VectorPreferredFloat> {
     /// Shortcut the normalisation process and assert that the given vector's
     /// magnitude is `1.0`. The vector must be have a magnitude of `1.0`, or
     /// this will break future optimisations.
-    #[must_use]
     #[inline]
     pub const fn new_normal_unchecked(
         input: [VectorPreferredFloat; N],
@@ -208,14 +207,12 @@ impl<const N: usize> Vector<N, VectorPreferredFloat> {
     /// Check whether each of the vector's components are on or very close to
     /// zero.
     #[inline]
-    #[must_use]
     pub const fn is_zero(&self) -> bool {
         array_maths::is_zero(self.inner())
     }
 
     /// Find the length of the vector.
     #[inline]
-    #[must_use]
     pub fn magnitude(self) -> VectorPreferredFloat {
         self.magnitude_sq().sqrt()
     }
@@ -233,7 +230,6 @@ impl<const N: usize> Vector<N, VectorPreferredFloat> {
     }
 
     /// Try to normalize a vector, returning `None` if the vector is zero.
-    #[must_use]
     #[inline]
     pub const fn try_normalize(self) -> Option<UnitVector<N, VectorPreferredFloat>> {
         let one_len = self.inverse_magnitude();
@@ -243,7 +239,6 @@ impl<const N: usize> Vector<N, VectorPreferredFloat> {
     }
 
     /// Change the size of the vector, filling in the gaps with `0.0`.
-    #[must_use]
     #[inline]
     pub const fn truncate<const M: usize>(self) -> Vector<M, VectorPreferredFloat> {
         let array = array::from_fn(const |index| self.0.get(index).copied().unwrap_or(0.0));
@@ -251,8 +246,8 @@ impl<const N: usize> Vector<N, VectorPreferredFloat> {
     }
 
     /// Reflect the incoming ray `self` about a normal.
-    #[must_use]
     #[inline]
+    #[must_use = "returns a new `Vector`, rather than modifying the original"]
     pub const fn reflect(self, normal: UnitVector<N, VectorPreferredFloat>) -> Self
     where
         Self: [const] Clone,
@@ -285,15 +280,12 @@ impl<const N: usize> Vector<N, VectorPreferredFloat> {
 
 impl<const N: usize, T> Vector<N, T> {
     /// Create a new vector with a length given by the array input.
-    #[must_use]
     #[inline]
     pub const fn new(input: [T; N]) -> Self {
         Self(input)
     }
 
     /// Destructure the vector and return the inner array, of length `N`.
-    #[must_use]
-    #[inline]
     pub const fn into_inner(self) -> [T; N]
     where
         Self: [const] Destruct,
@@ -303,8 +295,6 @@ impl<const N: usize, T> Vector<N, T> {
     }
 
     /// Get a reference to the inner array.
-    #[must_use]
-    #[inline]
     pub const fn inner(&self) -> &[T; N] {
         &self.0
     }
@@ -312,7 +302,6 @@ impl<const N: usize, T> Vector<N, T> {
     /// Safely get a particular index into the vector, returning None if out of
     /// bounds.
     #[inline]
-    #[must_use]
     pub const fn get<I>(&self, index: I) -> Option<&<I as SliceIndex<[T]>>::Output>
     where
         I: [const] SliceIndex<[T]>,
@@ -321,7 +310,6 @@ impl<const N: usize, T> Vector<N, T> {
     }
 
     /// Get a mutable reference to the inner array.
-    #[must_use]
     #[inline]
     pub const fn inner_mut(&mut self) -> &mut [T; N] {
         &mut self.0
@@ -339,8 +327,8 @@ impl<const N: usize, T> Vector<N, T> {
     }
 
     /// Perform an elementwise function to each in the vector.
-    #[must_use]
     #[inline]
+    #[must_use = "returns a new `Vector`, rather than modifying the original"]
     pub const fn map<F>(self, op: F) -> Self
     where
         // from `array::map`
@@ -353,7 +341,6 @@ impl<const N: usize, T> Vector<N, T> {
 
     /// Find the square of the magnitude of the vector. This is more performant
     /// that using `Vector::magnitude` followed by squaring.
-    #[must_use]
     #[inline]
     pub const fn magnitude_sq(self) -> T
     where
@@ -374,7 +361,6 @@ impl<const N: usize, T> Vector<N, T> {
     ///   the length of the other.
     /// - others...
     #[inline]
-    #[must_use]
     pub const fn dot(self, rhs: Self) -> T
     where
         T: [const] Add<Output = T> + [const] Mul<Output = T> + [const] Default,
@@ -386,7 +372,7 @@ impl<const N: usize, T> Vector<N, T> {
 
     /// Scale a vector by a given scalar.
     #[inline]
-    #[must_use]
+    #[must_use = "returns a new `Vector`, rather than modifying the original"]
     pub const fn scale<U>(self, scalar: U) -> Self
     where
         T: [const] Mul<U, Output = T>,
@@ -402,7 +388,7 @@ impl<const N: usize, T> Vector<N, T> {
     /// Multiply each element of the vector with it's corresponding element in
     /// the other.
     #[inline]
-    #[must_use]
+    #[must_use = "returns a new `Vector`, rather than modifying the original"]
     pub const fn elem_wise_mul(self, other: Self) -> Self
     where
         T: [const] Mul<Output = T>,
@@ -415,7 +401,7 @@ impl<const N: usize, T> Vector<N, T> {
     /// Divide each element of the vector with it's corresponding element in
     /// the other.
     #[inline]
-    #[must_use]
+    #[must_use = "returns a new `Vector`, rather than modifying the original"]
     pub const fn elem_wise_div(self, other: Self) -> Self
     where
         T: [const] Div<Output = T>,
@@ -431,7 +417,7 @@ impl Vector<3, VectorPreferredFloat> {
     /// perpendicular to both, with a magnitude scaled by how perpendular the
     /// vectors are.
     #[inline]
-    #[must_use]
+    #[must_use = "returns a new `Vector`, rather than modifying the original"]
     pub const fn cross(self, rhs: Self) -> Self {
         let [lhs0, lhs1, lhs2] = self.into_inner();
         let [rhs0, rhs1, rhs2] = rhs.into_inner();
@@ -446,7 +432,6 @@ impl Vector<3, VectorPreferredFloat> {
     /// Returns the original vector with a trailing `1.0`, for use in
     /// homogeneous contexts.
     #[inline]
-    #[must_use]
     pub const fn homogeneous(self) -> Vector<4, VectorPreferredFloat> {
         let [this0, this1, this2] = self.into_inner();
         vector![this0, this1, this2, 1.0]

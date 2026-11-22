@@ -6,10 +6,10 @@ use geometry::{Pose, Transform as _, TransformBy as _};
 use graphics::linear_algebra::{Matrix, UnitVector, Vector, vector};
 use graphics::texture::{FlatTexture, Image, NewImageError, TextureHasBuilder as _};
 use graphics::types::ElementArrayElem;
-use russimp::Matrix4x4;
-use russimp::material::{Material as RussMaterial, PropertyTypeInfo, TextureType};
-use russimp::node::Node;
-use russimp::scene::{PostProcess, Scene};
+use russimp_ng::Matrix4x4;
+use russimp_ng::material::{Material as RussMaterial, PropertyTypeInfo, TextureType};
+use russimp_ng::node::Node;
+use russimp_ng::scene::{PostProcess, Scene};
 use utils::error_boilerplate;
 
 use super::material::Material;
@@ -20,6 +20,7 @@ use crate::modelling::extended_vertex::IncompleteVertex;
 #[derive(Debug, Clone)]
 #[non_exhaustive]
 pub enum ImportError {
+    BrokenInvariant,
     FileInsteadOfDir {
         path: PathBuf,
     },
@@ -39,11 +40,19 @@ pub enum ImportError {
     DuplicateProperty {
         dir: PathBuf,
     },
-    ShouldNotOccur,
     ElementArrayOverflow {
         which: &'static str,
         index_asked: usize,
         actual_len: usize,
+    },
+    MeshMissing {
+        mesh_id: u32,
+    },
+    MaterialMissing {
+        material_id: u32,
+    },
+    ParseMaterial {
+        err: Rc<ParseMaterialError>,
     },
 }
 
@@ -111,7 +120,7 @@ fn process_node<V>(
     scene: &Scene,
     node: &Node,
     dir: &Path,
-    current_mat: &mut HashMap<u32, Result<Rc<Material>, Rc<ParseMaterialError>>>,
+    current_mat: &mut HashMap<u32, Result<Rc<Material>, ImportError>>,
     accum_transform: Pose,
     load_tangent_space: bool,
 ) -> Result<Vec<MeshBuilder<V>>, ImportError>
@@ -125,8 +134,12 @@ where
     let mut curr_meshes =
         node.meshes
             .iter()
+            .copied()
             .map(|mesh_id| {
-                let mesh = &scene.meshes[*mesh_id as usize];
+                let mesh = &scene
+                    .meshes
+                    .get(mesh_id as usize)
+                    .ok_or(ImportError::MeshMissing { mesh_id })?;
 
                 let positions: Vec<Vector<3>> = mesh
                     .vertices
@@ -137,7 +150,7 @@ where
                 let textures: Vec<Vector<2>> = mesh
                     .texture_coords
                     .first()
-                    .ok_or(ImportError::ShouldNotOccur)?
+                    .ok_or(ImportError::BrokenInvariant)?
                     .as_ref()
                     .ok_or_else(|| ImportError::NoTexCoords { dir: dir.into() })?
                     .iter()
@@ -178,7 +191,7 @@ where
                     opt_value.map_or(Ok(None), |vector| {
                         vector
                             .get(index)
-                            .map_or_else(|| Err(vector.len()), |value| Ok(Some(value)))
+                            .map_or(Err(vector.len()), |value| Ok(Some(value)))
                     })
                 }
 
@@ -236,9 +249,17 @@ where
 
                 let mat = current_mat
                     .entry(mesh.material_index)
-                    .or_insert_with_key(|key| parse_material(&scene.materials[*key as usize], dir))
-                    .clone()
-                    .unwrap_or_default();
+                    .or_insert_with_key(|key| {
+                        let material = scene.materials.get(*key as usize);
+                        material.map_or_else(
+                            || Err(ImportError::MaterialMissing { material_id: *key }),
+                            |material| {
+                                parse_material(material, dir)
+                                    .map_err(|err| ImportError::ParseMaterial { err })
+                            },
+                        )
+                    })
+                    .clone()?;
 
                 let mut builder = MeshBuilder::new().material(mat);
                 builder.extend_triangle(mesh_buffer);

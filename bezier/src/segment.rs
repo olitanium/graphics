@@ -6,7 +6,6 @@ use utils::error_boilerplate;
 pub struct BezierSegment<const DIMS: usize, const N: usize>([Vector<DIMS>; N]);
 
 impl<const DIMS: usize, const N: usize> BezierSegment<DIMS, N> {
-    #[must_use]
     pub const fn new(control: [Vector<DIMS>; N]) -> Self {
         Self(control)
     }

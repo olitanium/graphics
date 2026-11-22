@@ -2,8 +2,8 @@ mod shadow;
 pub use shadow::{Group as ShadowGroup, SHADOW_SHADER_MAX_LIGHTS};
 mod mesh;
 pub use mesh::{DrawError as MeshDrawError, Mesh, MeshBuilder};
-// mod import;
-// pub use import::{ImportError, ParseMaterialError};
+mod import;
+pub use import::{ImportError, ParseMaterialError};
 
 mod skeleton;
 pub use skeleton::{Bone, BoneBuilder, Builder as SkeletonBuilder, Skeleton, SkeletonBoneIndex};
@@ -17,8 +17,6 @@ pub use camera::{
     ManualPoseFlexible,
     Projection as CameraProjection,
 };
-
-// pub mod geometry;
 
 pub mod lighting;
 

@@ -4,6 +4,7 @@
 #![feature(const_destruct)]
 #![feature(const_closures)]
 #![feature(const_array)]
+#![feature(const_option_ops)]
 
 mod lerp;
 mod orientation;

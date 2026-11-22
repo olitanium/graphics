@@ -6,6 +6,7 @@
 
 == Can Do Now
 - Const derive for many types
+- Environment config with default
 - Texture Parameters
   - Depth buffer can choose to select the appropriate compare function.
 - Deferred Shading SSAO.
@@ -13,7 +14,7 @@
 - VecOne periodically when appropriate, to remove unwraps
 - Movement Vectors available in Shaders
 - impl VertexHasTangent for others
-- Renderbuffer Objects (like textures for Framebuffer attachments. Might cause issues for shadows because they are unreadable)
+- Renderbuffer Objects
 - Multisample FBs
 - `UniformName` trait work
   - Light uniform location cacheing without strings

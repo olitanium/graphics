@@ -46,6 +46,10 @@ where
 ///
 /// Undefined behavior if `test(&lower) != Ordering::Less` and
 /// `test(&upper) != Ordering::Greater`.
+#[expect(
+    clippy::module_name_repetitions,
+    reason = "Will spin off into another crate when used"
+)]
 pub fn binary_search_unchecked<T, F, O>(
     mut lower: T,
     mut upper: T,

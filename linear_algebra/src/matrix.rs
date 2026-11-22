@@ -1,6 +1,7 @@
 //! module for defining and storing matrix and methods.
 
 use core::fmt::{self, Debug};
+use core::marker::Destruct;
 use core::ops::{self, Index, IndexMut};
 use core::{gca, iter};
 
@@ -49,7 +50,7 @@ impl<const R: usize, const C: usize> PartialEq for Matrix<R, C> {
 const impl<const R: usize, const C: usize> Default for Matrix<R, C> {
     #[inline]
     fn default() -> Self {
-        Self::identity()
+        Self::IDENTITY
     }
 }
 
@@ -64,6 +65,7 @@ impl<const R: usize, const C: usize> Debug for Matrix<R, C> {
 }
 
 impl<const R: usize, const C: usize> Matrix<R, C> {
+    pub const IDENTITY: Self = Self::identity();
     #[expect(
         dead_code,
         reason = "bug, this is used but the warning comes up because of gca"
@@ -76,7 +78,6 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     /// The column major nature of the constructor means that visually the
     /// `Matrix`, when written as arrays in code, will look transposed.
     #[inline]
-    #[must_use]
     pub const fn from_col_major(input: [[VectorPreferredFloat; R]; C]) -> Self {
         Self(input)
     }
@@ -90,31 +91,26 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     ///
     /// Avoid using this function with literals until the function is `const`.
     #[inline]
-    #[must_use]
     pub fn from_row_major(input: [[VectorPreferredFloat; C]; R]) -> Self {
         Matrix::from_col_major(input).transpose()
     }
 
     #[inline]
-    #[must_use]
     pub fn new_from_slice(input: &[[VectorPreferredFloat; R]]) -> Option<Self> {
         Some(Self(input.try_into().ok()?))
     }
 
     #[inline]
-    #[must_use]
     pub const fn zeros() -> Self {
         Self::from_col_major([[0.0; R]; C])
     }
 
     #[inline]
-    #[must_use]
     pub const fn into_inner(self) -> [[VectorPreferredFloat; R]; C] {
         self.0
     }
 
     #[inline]
-    #[must_use]
     pub const fn inner(&self) -> &[[VectorPreferredFloat; R]; C] {
         &self.0
     }
@@ -124,7 +120,6 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
         &mut self.0
     }
 
-    #[must_use]
     pub const fn col_flattened(&self) -> &[VectorPreferredFloat] {
         self.0.as_flattened()
     }
@@ -144,7 +139,6 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     #[inline]
-    #[must_use]
     pub const fn col_major(&self) -> [VectorPreferredFloat; gca!(Self::NUM_COMP)] {
         // let mut x = ArrayVec::new();
         // self.col_flattened().iter().copied().collect_into(&mut x);
@@ -159,7 +153,6 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     #[inline]
-    #[must_use]
     pub const fn col_major_mut(&mut self) -> [[&mut VectorPreferredFloat; R]; C] {
         self.0.each_mut().map(<[_; _]>::each_mut)
     }
@@ -172,7 +165,6 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
         self.0.get_mut(index)
     }
 
-    #[must_use]
     pub const fn get(&self, (row, col): (usize, usize)) -> Option<VectorPreferredFloat> {
         let vec = self.col(col)?;
         vec.get(row).copied()
@@ -193,7 +185,6 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     #[inline]
-    #[must_use]
     pub fn row_major(&self) -> [VectorPreferredFloat; gca!(Self::NUM_COMP)] {
         let mut x = ArrayVec::new();
         self.row_iter().flatten().collect_into(&mut x);
@@ -201,8 +192,7 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     #[inline]
-    #[must_use]
-    pub const fn identity() -> Self {
+    const fn identity() -> Self {
         let mut output = Self::zeros();
 
         let mut i = 0;
@@ -216,7 +206,6 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     #[inline]
-    #[must_use]
     pub fn transpose(self) -> Matrix<C, R> {
         let array = self
             .row_iter()
@@ -227,7 +216,6 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     #[inline]
-    #[must_use]
     pub fn truncate<const R2: usize, const C2: usize>(self) -> Matrix<R2, C2> {
         let x = self
             .into_inner()
@@ -242,13 +230,14 @@ impl<const R: usize, const C: usize> Matrix<R, C> {
     }
 
     /// Map each element of the matrix with an operation.
-    #[must_use]
     #[inline]
-    pub fn map<F>(mut self, op: F) -> Self
+    #[must_use = "returns a new `Matrix`, rather than modifying the original"]
+    pub const fn map<F>(mut self, op: F) -> Self
     where
-        F: Fn(VectorPreferredFloat) -> VectorPreferredFloat,
+        F: [const] Destruct,
+        F: [const] Fn(VectorPreferredFloat) -> VectorPreferredFloat,
     {
-        let x = self.inner_mut().map(|vec| vec.map(&op));
+        let x = self.inner_mut().map(const |vec| vec.map(&op));
         Self::from_col_major(x)
     }
 }
@@ -299,7 +288,7 @@ macro_rules! impl_ops {
 impl_ops!(Add::add);
 impl_ops!(Sub::sub);
 
-impl<const R: usize, const C: usize> Index<(usize, usize)> for Matrix<R, C> {
+const impl<const R: usize, const C: usize> Index<(usize, usize)> for Matrix<R, C> {
     type Output = VectorPreferredFloat;
 
     /// # Panics
@@ -312,7 +301,7 @@ impl<const R: usize, const C: usize> Index<(usize, usize)> for Matrix<R, C> {
     }
 }
 
-impl<const R: usize, const C: usize> IndexMut<(usize, usize)> for Matrix<R, C> {
+const impl<const R: usize, const C: usize> IndexMut<(usize, usize)> for Matrix<R, C> {
     /// # Panics
     /// Will panic is the index is out of bounds.
     #[inline]
@@ -323,7 +312,7 @@ impl<const R: usize, const C: usize> IndexMut<(usize, usize)> for Matrix<R, C> {
     }
 }
 
-impl<const R: usize> From<Vector<R, VectorPreferredFloat>> for Matrix<R, 1> {
+const impl<const R: usize> From<Vector<R, VectorPreferredFloat>> for Matrix<R, 1> {
     #[inline]
     fn from(value: Vector<R, VectorPreferredFloat>) -> Self {
         Self::from_col_major([value.into_inner()])
@@ -332,7 +321,6 @@ impl<const R: usize> From<Vector<R, VectorPreferredFloat>> for Matrix<R, 1> {
 
 impl Matrix<2, 2> {
     /// Calculate the determinant of the matrix.
-    #[must_use]
     #[inline]
     pub const fn determinant(&self) -> VectorPreferredFloat {
         let [[a, c], [b, d]] = self.0;
@@ -344,7 +332,6 @@ impl Matrix<2, 2> {
 impl Matrix<3, 3> {
     /// Calculate the determinant of the matrix.
     #[inline]
-    #[must_use]
     #[expect(
         clippy::many_single_char_names,
         reason = "alphabetical order by row major"
@@ -371,7 +358,6 @@ impl Matrix<3, 3> {
 impl Matrix<4, 4> {
     /// Create a matrix to scale a 3 dimensional homogeneous vector (i.e. a
     /// `Vector<4>` where `x[3] == 1.0`).
-    #[must_use]
     #[inline]
     pub const fn transform_scale(
         sx: VectorPreferredFloat,
@@ -389,7 +375,6 @@ impl Matrix<4, 4> {
     /// Create a matrix to translate a 3 dimensional homogeneous vector (i.e. a
     /// `Vector<4>` where `x[3] == 1.0`).
     #[inline]
-    #[must_use]
     pub const fn transform_translate(vec: Vector<3, VectorPreferredFloat>) -> Self {
         // let mut matrix = Self::identity();
         // let &mut [_, _, _, [ref mut x, ref mut y, ref mut z, _]] =
@@ -413,7 +398,6 @@ impl Matrix<4, 4> {
     /// `Vector<4>` where `x[3] == 1.0`) into a perspective cube, with maximums
     /// at +/- 1.0 on `x[0]`, `x[1]` and `x[2]`.
     #[inline]
-    #[must_use]
     pub fn transform_perspective(
         fov: VectorPreferredFloat,
         aspect: VectorPreferredFloat,
@@ -432,7 +416,6 @@ impl Matrix<4, 4> {
     /// Create a matrix to embed a vector within a given width, height, near and
     /// far into a cube +/- 1.0 on x, y.
     #[inline]
-    #[must_use]
     pub const fn transform_orthogonal(
         width: VectorPreferredFloat,
         height: VectorPreferredFloat,

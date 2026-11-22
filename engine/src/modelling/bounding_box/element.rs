@@ -306,7 +306,7 @@ where
                 .set_uniform(&c"colour", &chosen_colour)
                 .map_err(DrawRecursiveError::SetUniform)?;
             active_shader
-                .set_uniform(&c"model", &Matrix::<4, 4>::identity())
+                .set_uniform(&c"model", &Matrix::<4, 4>::IDENTITY)
                 .map_err(DrawRecursiveError::SetUniform)?;
 
             vertex_array

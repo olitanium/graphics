@@ -23,7 +23,6 @@ impl<const N: usize> CompactUnitVector<N>
     /// Normalize a `Vector<N>` and return a `CompactUnitVector<N>` if possible.
     ///
     /// Returns None if the `Vector` is a zero-vector.
-    #[must_use]
     #[inline]
     #[expect(clippy::missing_const_for_fn, reason = "it cannot be const")]
     pub fn try_normalize(vec: Vector<N, VectorPreferredFloat>) -> Option<Self> {
@@ -31,7 +30,6 @@ impl<const N: usize> CompactUnitVector<N>
     }
 
     /// Convert a `UnitVector` into a `CompactUnitVector`.
-    #[must_use]
     #[inline]
     pub fn from_unit_vector(uvec: UnitVector<N, VectorPreferredFloat>) -> Self {
         #[inline]
@@ -93,7 +91,6 @@ impl<const N: usize> CompactUnitVector<N>
     }
 
     /// recover a `UnitVector` which has N components, from this `CompactUnit`.
-    #[must_use]
     #[inline]
     pub fn unit(self) -> UnitVector<N, VectorPreferredFloat> {
         let mut as_float = self.0.map(|x| {

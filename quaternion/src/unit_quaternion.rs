@@ -12,8 +12,6 @@ pub struct UnitQuaternion(Quaternion);
 impl UnitQuaternion {
     pub const IDENTITY: Self = Self(Quaternion::IDENTITY);
 
-    #[must_use]
-    #[inline]
     pub const fn normalize_quaternion(input: Quaternion) -> Self {
         let one_magnitude = input.inverse_magnitude();
         let quaternion = input.scale(one_magnitude);
@@ -23,16 +21,14 @@ impl UnitQuaternion {
 
     /// Access the inner quaternion. Most operations are performed on the
     /// `Quaternion` rather than the `UnitQuaternion`.
-    #[must_use]
-    #[inline]
     pub const fn q(self) -> Quaternion {
         self.0
     }
 
     /// Get the inverse of the `UnitQuaternion`, which for UQs is also a
     /// `UnitQuaternion`.
-    #[must_use]
     #[inline]
+    #[must_use = "returns a new `UnitQuaternion`, rather than modifying the original"]
     pub const fn inverse(self) -> Self {
         Self(self.0.conjugate())
     }
@@ -41,7 +37,6 @@ impl UnitQuaternion {
     ///
     /// Matrix must be a pure rotation matrix.
     /// courtesy of [this](http://marc-b-reynolds.github.io/quaternions/2017/08/08/QuatRotMatrix.html).
-    #[must_use]
     #[inline]
     pub const fn from_matrix(mat: Matrix<3, 3>) -> Self {
         #[rustfmt::ignore]
@@ -89,14 +84,14 @@ impl UnitQuaternion {
     }
 }
 
-impl Default for UnitQuaternion {
+const impl Default for UnitQuaternion {
     #[inline]
     fn default() -> Self {
         Self(Quaternion::IDENTITY)
     }
 }
 
-impl ops::Neg for UnitQuaternion {
+const impl ops::Neg for UnitQuaternion {
     type Output = Self;
 
     #[inline]

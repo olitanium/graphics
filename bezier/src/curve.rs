@@ -18,7 +18,6 @@ impl<const DIMS: usize, const N: usize> Default for BezierCurve<DIMS, N> {
 }
 
 impl<const DIMS: usize, const N: usize> BezierCurve<DIMS, N> {
-    #[must_use]
     pub const fn new() -> Self {
         Self { segments: vec![] }
     }

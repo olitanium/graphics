@@ -11,7 +11,6 @@ pub struct VertexBuffer<V: Vertex> {
 }
 
 impl<V: Vertex> VertexBuffer<V> {
-    #[must_use]
     pub fn new(vertices: Vec<V>) -> Self {
         let id = {
             let mut id = 0;

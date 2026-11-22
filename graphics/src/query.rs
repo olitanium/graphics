@@ -12,18 +12,24 @@ pub struct HasDrawnQuery<D: Draw + ?Sized> {
 }
 
 impl<D: Draw> HasDrawnQuery<D> {
-    #[must_use]
-    pub fn new(name: usize, target: D) -> Box<Self> {
+    pub fn new(name: usize, target: D) -> Self {
         let query = {
             let mut value = 0;
             gl_call! {gl::GenQueries(1, &raw mut value) };
             Query::new(value)
         };
-        Box::new(Self {
+        Self {
             name,
             query,
             target,
-        })
+        }
+    }
+
+    pub fn new_dyn<'a>(name: usize, target: D) -> Box<dyn Draw + 'a>
+    where
+        D: 'a,
+    {
+        Box::new(Self::new(name, target))
     }
 }
 
@@ -64,7 +70,6 @@ impl Drop for Query {
 }
 
 impl Query {
-    #[must_use]
     pub fn answer(self) -> bool {
         self.answer_ref()
     }

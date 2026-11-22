@@ -51,11 +51,9 @@ macro_rules! permute {
 /// from [here](https://inria.hal.science/inria-00072100/document).
 #[inline]
 #[expect(clippy::missing_panics_doc, reason = "will be fixed")]
-#[must_use]
 pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
     /// calculate a three dimensional determinant as features in [here](https://inria.hal.science/inria-00072100/document).
     #[inline]
-    #[must_use]
     fn three_dimension_determinant(a: Vector<3>, b: Vector<3>, c: Vector<3>, d: Vector<3>) -> f32 {
         let [xa, ya, za] = a.into_inner();
         let [xb, yb, zb] = b.into_inner();
@@ -70,13 +68,11 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
     }
 
     #[inline]
-    #[must_use]
     fn make_determinants(one: Triangle<3>, two: Triangle<3>) -> [f32; 3] {
         let [p2, q2, r2] = two;
         one.map(|elem| three_dimension_determinant(p2, q2, r2, elem))
     }
 
-    #[must_use]
     #[inline]
     fn make_determinants_signorzero(one: Triangle<3>, two: Triangle<3>) -> [SignOrZero; 3] {
         make_determinants(one, two).map(SignOrZero::new)
@@ -90,7 +86,6 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
     }
 
     #[inline]
-    #[must_use]
     const fn swap_qr(triangle: Triangle<3>) -> Triangle<3> {
         let [p, q, r] = triangle;
 
@@ -102,7 +97,6 @@ pub fn intersect3(one: Triangle<3>, two: Triangle<3>) -> bool {
         clippy::match_same_arms,
         reason = "better clarity on what each combination does"
     )]
-    #[must_use]
     fn determiant_crossing(one: Triangle<3>, two: Triangle<3>) -> CrossType {
         use SignOrZero as S;
         match make_determinants_signorzero(one, two) {
@@ -281,7 +275,6 @@ fn embed_three_to_two(one: Triangle<3>, two: Triangle<3>) -> Option<(Triangle<2>
 }
 
 #[inline]
-#[must_use]
 /// 2D triangle intersection.
 pub fn intersect2(one: Triangle<2>, two: Triangle<2>) -> bool {
     use SignOrZero as S;

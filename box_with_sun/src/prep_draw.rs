@@ -48,7 +48,7 @@ impl State {
             &self.sun_duplicate_light,
             vec![self.player.get_pair_model()],
         );
-        out.push(HasDrawnQuery::new(0, player_illuminates));
+        out.push(HasDrawnQuery::new_dyn(0, player_illuminates));
 
         out.push(SkyBoxGroup::new(
             opengl_shaders::skybox_hdr(),

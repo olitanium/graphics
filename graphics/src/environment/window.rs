@@ -120,7 +120,7 @@ pub struct Builder<G> {
     mouse_fix_to_centre: bool,
     title: String,
     raw_motion: bool,
-    windowed: bool,
+    full_screen: bool,
 }
 
 impl Default for Builder<MissingGlfw> {
@@ -132,7 +132,7 @@ impl Default for Builder<MissingGlfw> {
             mouse_fix_to_centre: false,
             title: String::new(),
             raw_motion: false,
-            windowed: true,
+            full_screen: false,
         }
     }
 }
@@ -159,7 +159,7 @@ impl<G> Builder<G> {
 
     builder!(raw_motion: bool);
 
-    builder!(windowed: bool);
+    builder!(full_screen: bool);
 }
 
 #[derive(Debug)]
@@ -169,21 +169,23 @@ error_boilerplate!(GlfwError);
 impl Builder<HasGlfw<'_>> {
     pub(crate) fn build(self) -> Result<Window, GlfwError> {
         // Create a windowed mode window and its OpenGL context
-        let (glfw_window, events) = self
-            .maker
-            .0
-            .create_window(
-                self.dims.0,
-                self.dims.1,
-                &self.title,
-                if self.windowed {
-                    glfw::WindowMode::Windowed
-                } else {
-                    // TODO: Fullscreen
-                    todo!("Full Screen not yet supported")
-                },
-            )
-            .ok_or(GlfwError)?;
+        let glfw_token = &mut *self.maker.0;
+        let (glfw_window, events) = glfw_token.with_primary_monitor(|glfw_token, monitor| {
+            glfw_token
+                .create_window(
+                    self.dims.0,
+                    self.dims.1,
+                    &self.title,
+                    if self.full_screen
+                        && let Some(monitor) = monitor
+                    {
+                        glfw::WindowMode::FullScreen(monitor)
+                    } else {
+                        glfw::WindowMode::Windowed
+                    },
+                )
+                .ok_or(GlfwError)
+        })?;
         Ok(make_window(&self, glfw_window, events))
     }
 }

@@ -14,8 +14,7 @@ pub struct Sclerp {
 }
 
 impl Sclerp {
-    #[must_use]
-    pub fn new(
+    pub const fn new(
         from: UnitDualQuaternion,
         to: UnitDualQuaternion,
         duration: f32,
@@ -63,8 +62,7 @@ impl Sclerp {
         }
     }
 
-    #[must_use]
-    pub fn get(self, time: f32) -> UnitDualQuaternion {
+    pub const fn get(&self, time: f32) -> UnitDualQuaternion {
         let time = time / self.duration;
 
         // let second_part_scalar = (0.5 * time * self.theta).cos();

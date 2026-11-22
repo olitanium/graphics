@@ -55,9 +55,9 @@ pub trait TexBuilder {
 pub trait TexBuilderCanBuild<const N: usize> {
     type Output: Texture;
 
-    #[must_use]
+    #[must_use = "returns a new `TexBuilder`, rather than modifying the original"]
     fn min_filter(self, min_filter: Minification) -> Self;
-    #[must_use]
+    #[must_use = "returns a new `TexBuilder`, rather than modifying the original"]
     fn mag_filter(self, mag_filter: Magnification) -> Self;
     fn build(self) -> Self::Output;
 }

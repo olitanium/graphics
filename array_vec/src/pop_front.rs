@@ -11,7 +11,6 @@ pub struct ArrayVecPopFront<T, const N: usize> {
 }
 
 impl<T, const N: usize> ArrayVecPopFront<T, N> {
-    #[must_use]
     #[inline]
     pub const fn new(val: [T; N]) -> Self
     where
@@ -25,20 +24,17 @@ impl<T, const N: usize> ArrayVecPopFront<T, N> {
         }
     }
 
-    #[must_use]
     #[inline]
     pub const fn as_slice(&self) -> &[T] {
         // SAFETY: `front` gives guaranteed front of the array.
         unsafe { self.value[self.front..self.end].assume_init_ref() }
     }
 
-    #[must_use]
     #[inline]
     pub const fn left(&self) -> usize {
         self.end - self.front
     }
 
-    #[must_use]
     #[inline]
     pub const fn as_mut_slice(&mut self) -> &mut [T] {
         let slice = self.value.get_mut(self.front..self.end).unwrap_or_default();
@@ -48,7 +44,6 @@ impl<T, const N: usize> ArrayVecPopFront<T, N> {
     }
 
     #[inline]
-    #[must_use]
     pub const fn pop_front(&mut self) -> Option<T> {
         if self.front >= self.end {
             return None;

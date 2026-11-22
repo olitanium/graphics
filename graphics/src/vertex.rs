@@ -8,7 +8,6 @@ pub trait Vertex: Copy + 'static {
     #[rustc_always_gca]
     const ELEMENT_COUNT: usize;
 
-    #[must_use]
     fn stride() -> usize {
         mem::size_of::<Self>()
     }
