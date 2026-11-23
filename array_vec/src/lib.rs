@@ -30,6 +30,8 @@ pub use iterators::{IntoIter, Iter, IterMut};
 pub use pop_front::ArrayVecPopFront;
 use utils::error_boilerplate;
 
+/// In-place (for example, on-stack) growable vector, with a maximum size `N`.
+/// Deref's to `[T]`, where most of it's methods come from.
 pub struct ArrayVec<T, const N: usize> {
     len: usize,
     array: [MaybeUninit<T>; N],
@@ -37,17 +39,23 @@ pub struct ArrayVec<T, const N: usize> {
 
 #[derive(Debug)]
 #[non_exhaustive]
+/// Error returned from the `ArrayVec::try_push` method.
 pub enum TryPushError {
+    /// The closure returned `None`.
     ReturnedNone,
+    /// The `ArrayVec` has no spare capacity.
     NoSpace,
 }
 error_boilerplate!(TryPushError);
 
+/// Error returned from `ArrayVec::push_with` indicating that there is no spare
+/// capacity.
 #[derive(Debug)]
 pub struct PushWithError;
 error_boilerplate!(PushWithError);
 
 impl<T, const N: usize> ArrayVec<T, N> {
+    /// Create a new empty `ArrayVec`.
     #[inline]
     pub const fn new() -> Self {
         Self {
@@ -56,6 +64,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
     }
 
+    /// Create a new, full, `ArrayVec`.
     #[inline]
     pub const fn from_array(array: [T; N]) -> Self {
         Self {
@@ -64,6 +73,9 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
     }
 
+    /// Test the length of the `ArrayVec`, and only call the closure if there is
+    /// space to insert the element. The closure returns an `Option<T>`, and
+    /// will not insert any elements if the result is `None`.
     pub const fn try_push_with<F>(&mut self, mut func: F) -> Result<&mut T, TryPushError>
     where
         Option<T>: [const] Destruct,
@@ -82,6 +94,8 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
     }
 
+    /// Test the length of the `ArrayVec`, and only call the closure if there is
+    /// space to insert the element.
     pub const fn push_with<F>(&mut self, mut func: F) -> Result<&mut T, PushWithError>
     where
         F: [const] FnMut() -> T + [const] Destruct,
@@ -96,8 +110,8 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
     }
 
-    /// Push a value, returning a mutable reference if successful, or the
-    /// original value if unsuccessful.
+    /// Push a value, returning a mutable reference if successful, or an errow
+    /// with the original value if unsuccessful.
     #[inline]
     pub const fn push(&mut self, elem: T) -> Result<&mut T, T> {
         if let Some(dest) = self.array.get_mut(self.len) {
@@ -110,6 +124,8 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
     }
 
+    /// Collect an array (of any size) into a new `ArrayVec`, dropping any
+    /// overflowing elements if the input is too long.
     pub const fn const_collect<const M: usize>(array: [T; M]) -> Self
     where
         T: [const] Destruct,
@@ -121,9 +137,12 @@ impl<T, const N: usize> ArrayVec<T, N> {
         out
     }
 
+    /// Pop off and return the last element of the list - the most recent one
+    /// pushed.
     pub const fn pop(&mut self) -> Option<T> {
         // for security, replaces with zeroes to obscure previous values
-        // `wrapping_sub` means `self.len == 0 => get_mut(usize::MAX) => None`
+        // `wrapping_sub` means if `self.len == 0` then `get_mut(usize::MAX) ==
+        // None`
         let output = mem::replace(
             self.array.get_mut(self.len.wrapping_sub(1))?,
             const { MaybeUninit::zeroed() },
@@ -135,6 +154,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
         Some(unsafe { output.assume_init() })
     }
 
+    /// Get contents as slice.
     pub const fn as_slice(&self) -> &[T] {
         // SAFETY: self.len always points one past the end of the valid array,
         // so it is safe to both `get_unchecked` and `assume_init_ref`
@@ -143,6 +163,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
         unsafe { slice.assume_init_ref() }
     }
 
+    /// Get contents as mutable slice.
     pub const fn as_mut_slice(&mut self) -> &mut [T] {
         // SAFETY: self.len always points one past the end of the valid array,
         // so it is safe to both `get_unchecked` and `assume_init_ref`
@@ -156,12 +177,16 @@ impl<T, const N: usize> ArrayVec<T, N> {
         let array = mem::replace(&mut self.array, [const { MaybeUninit::uninit() }; N]);
         #[expect(
             clippy::mem_forget,
-            reason = "each component has been extracted, so the array must not be allowed to drop"
+            reason = "each component has been extracted, so the array does not need to be \
+                      dropped. Adding this forget means we don't need `Self: [const] Destruct`"
         )]
         mem::forget(self);
         (len, array)
     }
 
+    /// Try to turn an `ArrayVec` into a regular array. This will fail (and the
+    /// original `ArrayVec` returned) if there is a size mismatch.
+    #[inline]
     pub const fn try_into_array(self) -> Result<[T; N], TryFromErr<T, N>> {
         let (len, array) = self.into_raw_parts();
 
@@ -176,6 +201,8 @@ impl<T, const N: usize> ArrayVec<T, N> {
         }
     }
 
+    /// Turn an `ArrayVec` into an array, using a closure to fill in the gaps.
+    #[inline]
     pub const fn into_array_with<F>(mut self, mut gaps: F) -> [T; N]
     where
         F: [const] FnMut() -> T + [const] Destruct,
@@ -197,6 +224,7 @@ impl<T, const N: usize> ArrayVec<T, N> {
         unsafe { out.try_into_array().unwrap_unchecked() }
     }
 
+    #[inline]
     pub fn map<U, F>(self, f: F) -> ArrayVec<U, N>
     where
         F: FnMut(T) -> U,

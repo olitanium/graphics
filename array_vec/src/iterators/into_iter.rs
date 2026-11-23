@@ -4,6 +4,7 @@ impl<T, const N: usize> IntoIterator for ArrayVec<T, N> {
     type IntoIter = IntoIter<T, N>;
     type Item = T;
 
+    #[inline]
     fn into_iter(self) -> Self::IntoIter {
         // get_iter(self)
         let inner = ArrayVecPopFront::from_array_vec(self);
@@ -11,7 +12,7 @@ impl<T, const N: usize> IntoIterator for ArrayVec<T, N> {
     }
 }
 
-/// `IntoIter` for `ArrayVec`.
+/// Owned iterator over `ArrayVec`.
 pub struct IntoIter<T, const N: usize> {
     inner: ArrayVecPopFront<T, N>,
 }
@@ -24,6 +25,7 @@ const impl<T, const N: usize> Iterator for IntoIter<T, N> {
         self.inner.pop_front()
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         let leftover = self.inner.left();
         (leftover, Some(leftover))
