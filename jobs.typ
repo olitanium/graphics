@@ -6,7 +6,6 @@
 
 == Can Do Now
 - Const derive for many types
-- Environment config with default
 - Texture Parameters
   - Depth buffer can choose to select the appropriate compare function.
 - Deferred Shading SSAO.
@@ -21,7 +20,7 @@
 - BoneAnimation don't store poses, store ScLERPS
 - Camera ManualPose use Pose
 - Camera ManualPose split into two structs
-- ~ShaderProgram generics Vertex, Model and `Extra`~
+- #strike[ShaderProgram generics Vertex, Model and `Extra`]
   - Shadow Lights can then be generic over model type
 - Import
   - Model auto-generated normals smooth option

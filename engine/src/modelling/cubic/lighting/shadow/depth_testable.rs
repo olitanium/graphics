@@ -10,6 +10,8 @@ use crate::modelling::cubic::{CalculatedAnimation, SimpleCubicDrawError, Skeleto
 use crate::modelling::{SimpleCubic, SkeletonCubic};
 use crate::opengl_shaders;
 
+/// Trait to provide the methods for drawing the model onto a depth buffer. This
+/// is useful for lights which cast a shadow.
 pub trait DepthTestable {
     type Transform;
     type Model: Model + 'static;
