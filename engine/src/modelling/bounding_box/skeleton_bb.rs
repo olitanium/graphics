@@ -8,7 +8,7 @@ use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
 use graphics::texture::FlatTexture;
 use graphics::vertex_array::VertexArray;
-use utils::error_boilerplate;
+use utils::{VecOne, error_boilerplate};
 
 // use crate::modelling::bounding_box::collision::TempModelTransform;
 use crate::modelling::bounding_box::element::DrawRecursiveError;
@@ -195,12 +195,12 @@ where
         target_transform: &T::Transform<'_>,
         target_vertex_transform: &T::VertexTransform<'_>,
         mut alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>
+    ) -> Option<VecOne<([Self::Vertex; 3], [T::Vertex; 3])>>
     where
         T: Collision + ?Sized,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
     {
-        let out = self
+        let iter = self
             .per_bone
             .iter()
             .enumerate()
@@ -232,10 +232,9 @@ where
                     },
                 )
             })
-            .flatten()
-            .collect::<Vec<_>>();
+            .flatten();
 
-        if out.is_empty() { None } else { Some(out) }
+        VecOne::try_from_iter(iter)
     }
 }
 

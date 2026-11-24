@@ -157,6 +157,10 @@ impl DefaultFramebuffer {
             texture: RefCell::default(),
         }
     }
+
+    pub(crate) const fn resize(&mut self, size: (TexDim, TexDim)) {
+        self.size = size;
+    }
 }
 
 impl Default for DefaultFramebuffer {

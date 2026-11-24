@@ -33,7 +33,7 @@ impl Window {
     }
 
     pub(crate) fn window_resized(&self) -> bool {
-        self.resized.get()
+        self.resized.replace(false)
     }
 
     pub(crate) fn should_close(&self) -> bool {
@@ -44,8 +44,14 @@ impl Window {
         self.os_handle.swap_buffers();
     }
 
-    pub(crate) fn poll_events(&self) -> Vec<Event<'_>> {
+    pub(crate) fn poll_events(&mut self) -> Vec<Event<'_>> {
         let mut event_buffer = Vec::new();
+
+        if self.window_resized() {
+            let size = self.size();
+            event_buffer.push(Event::WindowResize(size));
+            self.default_framebuffer.resize(size);
+        }
 
         let mouse = Event::Mouse {
             buttons: self.mouse.get_buttons_depressed(),
@@ -53,10 +59,6 @@ impl Window {
             delta: self.mouse.get_delta(),
         };
         event_buffer.push(mouse);
-
-        if self.window_resized() {
-            event_buffer.push(Event::WindowResize(self.size()));
-        }
 
         let keyboard = Event::Keyboard {
             keys: self.keyboard.get_depressed_keys(),

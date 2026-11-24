@@ -1,5 +1,5 @@
 use geometry::{Pose, Transform as _, TransformBy as _};
-use utils::error_boilerplate;
+use utils::{VecOne, error_boilerplate};
 
 use crate::entity::EntityInner;
 use crate::modelling::cubic::SkeletalAnimation;
@@ -8,7 +8,7 @@ use crate::modelling::{CubicVertex, Skeleton};
 
 #[derive(Debug, Clone)]
 pub struct CalculatedAnimation {
-    pub(crate) poses: Vec<Pose>,
+    pub(crate) poses: VecOne<Pose>,
     pub(crate) signature: u64,
 }
 
@@ -54,10 +54,7 @@ impl CalculatedAnimation {
     }
 
     pub fn root(&self) -> Pose {
-        *self
-            .poses
-            .first()
-            .expect("should always be one pose, the root")
+        *self.poses.first()
     }
 }
 
@@ -125,12 +122,12 @@ impl<'a> AnimationUnit<'a> {
         }
     }
 
-    pub(crate) fn calculate_animation(self, root: Pose) -> (Vec<PoseAndInverseBindPose>, u64) {
+    pub(crate) fn calculate_animation(self, root: Pose) -> (VecOne<PoseAndInverseBindPose>, u64) {
         if let Some((animation, time)) = self.animation {
-            let mut poses = vec![PoseAndInverseBindPose {
+            let mut poses = VecOne::new(PoseAndInverseBindPose {
                 pose: root,
                 inverse_bind_pose: Pose::IDENTITY,
-            }];
+            });
 
             for (index, bone) in self.skeleton.iter_non_root() {
                 // NOTE: all bone parents are above it in the heirarchy, so we
@@ -156,13 +153,13 @@ impl<'a> AnimationUnit<'a> {
             (poses, self.skeleton.signature())
         } else {
             (
-                vec![
+                VecOne::new_clone(
                     PoseAndInverseBindPose {
                         pose: root,
                         inverse_bind_pose: Pose::IDENTITY,
-                    };
-                    self.skeleton.len_incl_root()
-                ],
+                    },
+                    self.skeleton.len_incl_root(),
+                ),
                 self.skeleton.signature(),
             )
         }
@@ -176,26 +173,22 @@ pub struct PoseAndInverseBindPose {
 }
 
 impl PoseAndInverseBindPose {
-    pub(crate) fn process_vec(this: Vec<Self>) -> Vec<Pose> {
-        this.into_iter()
-            .map(
-                |Self {
-                     pose,
-                     inverse_bind_pose,
-                 }| pose.transform(inverse_bind_pose),
-            )
-            .collect()
+    pub(crate) fn process_vec(this: VecOne<Self>) -> VecOne<Pose> {
+        this.map(
+            |Self {
+                 pose,
+                 inverse_bind_pose,
+             }| pose.transform(inverse_bind_pose),
+        )
     }
 
-    pub(crate) fn process_vec_with_deviation(this: Vec<Self>, deviation: Pose) -> Vec<Pose> {
-        this.into_iter()
-            .map(
-                |Self {
-                     pose,
-                     inverse_bind_pose,
-                 }| deviation.transform(pose).transform(inverse_bind_pose),
-            )
-            .collect()
+    pub(crate) fn process_vec_with_deviation(this: VecOne<Self>, deviation: Pose) -> VecOne<Pose> {
+        this.map(
+            |Self {
+                 pose,
+                 inverse_bind_pose,
+             }| deviation.transform(pose).transform(inverse_bind_pose),
+        )
     }
 }
 

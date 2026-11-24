@@ -98,8 +98,10 @@ impl Skeleton {
         // self.bones.iter().map(|bone| bone.parent).collect()
     }
 
-    pub(crate) const fn len_incl_root(&self) -> usize {
-        self.bones.len() + 1
+    pub(crate) const fn len_incl_root(&self) -> NonZeroUsize {
+        // SAFETY: `self.bones.len() <= isize::MAX` so `isize::MAX + 1 <
+        // usize::MAX` so no wrapping
+        unsafe { NonZeroUsize::new_unchecked(self.bones.len() + 1) }
     }
 
     pub(crate) fn iter_non_root(&self) -> impl Iterator<Item = (NonZeroUsize, &Bone)> {

@@ -141,7 +141,7 @@ mod test {
 
     #[test]
     fn many() {
-        let mut max = 0.0;
+        let mut max = f32::NEG_INFINITY;
         for x in -10..10 {
             for y in -10..10 {
                 for z in -10..10 {
@@ -169,7 +169,7 @@ mod test {
                             let diff_vec = normal_usual - normal_roundtrip;
 
                             for diff in diff_vec {
-                                max = cmp::max_by(max, diff, VectorPreferredFloat::total_cmp);
+                                max = cmp::max_by(max, diff.abs(), VectorPreferredFloat::total_cmp);
                             }
                         }
                     }
@@ -177,6 +177,6 @@ mod test {
             }
         }
 
-        // TODO: this test does nothing
+        assert!(max < 0.000_1);
     }
 }

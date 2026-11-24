@@ -7,7 +7,7 @@ use graphics::framebuffer::ActiveFramebuffer;
 use graphics::framebuffer::traits::FramebufferWithDepth;
 use graphics::linear_algebra::Vector;
 use graphics::{ActiveShaderProgram, Model};
-use utils::error_boilerplate;
+use utils::{VecOne, error_boilerplate};
 
 use crate::modelling::cubic::lighting::simple::ListLights;
 use crate::modelling::cubic::{
@@ -600,28 +600,30 @@ where
         target_transform: &Other::Transform<'_>,
         target_vertex_transform: &Other::VertexTransform<'_>,
         mut alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [Other::Vertex; 3])>>
+    ) -> Option<VecOne<([Self::Vertex; 3], [Other::Vertex; 3])>>
     where
         Other: Collision + ?Sized,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, Other::FuncInputs, &mut Other::Meta) -> bool,
     {
-        let mut out = Vec::new();
-        self.zip_calculated_animation_get_index(self_transform)
-            .filter_map(|(x, y, opt_z, t)| opt_z.map(|z| (x, y, z, t)))
-            .flat_map(|(index, model, bbox, animation)| {
-                bbox.collides(
-                    &model.box_transform(animation),
-                    &model.vertex_transform(animation),
-                    target,
-                    target_transform,
-                    target_vertex_transform,
-                    |x, y, z, t| alter_meta((index.inner_clone(), x), y, z, t),
-                )
-                .unwrap_or_default()
-            })
-            .collect_into(&mut out);
+        // let mut out = Vec::new();
+        VecOne::try_from_iter(
+            self.zip_calculated_animation_get_index(self_transform)
+                .filter_map(|(x, y, opt_z, t)| opt_z.map(|z| (x, y, z, t)))
+                .filter_map(|(index, model, bbox, animation)| {
+                    bbox.collides(
+                        &model.box_transform(animation),
+                        &model.vertex_transform(animation),
+                        target,
+                        target_transform,
+                        target_vertex_transform,
+                        |x, y, z, t| alter_meta((index.inner_clone(), x), y, z, t),
+                    )
+                })
+                .flatten(),
+        )
+        //.collect_into(&mut out);
 
-        if out.is_empty() { None } else { Some(out) }
+        // if out.is_empty() { None } else { Some(out) }
     }
 }
 

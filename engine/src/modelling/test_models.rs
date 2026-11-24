@@ -227,7 +227,7 @@ pub fn tail_with_bone(max_len: u8) -> impl Iterator<Item = [IncompleteVertex<3>;
 }
 
 // num_bones does not include the root bone.
-pub fn tail_animation(num_bones: u8) -> (Skeleton, SkeletonBoneIndex, SkeletalAnimation) {
+fn tail_animation(num_bones: u8) -> (Skeleton, SkeletonBoneIndex, SkeletalAnimation) {
     let mut tail_wag = BoneAnimation::new();
     tail_wag
         .push(

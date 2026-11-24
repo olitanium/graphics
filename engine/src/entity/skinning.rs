@@ -1,6 +1,7 @@
 use core::iter;
 
 use graphics::linear_algebra::Vector;
+use utils::VecOne;
 
 use crate::entity::physics::Physics;
 use crate::entity::{EntityInner, Mass, SimplePhysics, ToAggregateEntity};
@@ -98,7 +99,7 @@ impl<TThis> Collision for SkinningEntity<TThis> {
         target_transform: &T::Transform<'_>,
         target_vertex_transform: &T::VertexTransform<'_>,
         alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>
+    ) -> Option<VecOne<([Self::Vertex; 3], [T::Vertex; 3])>>
     where
         T: Collision + ?Sized,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,

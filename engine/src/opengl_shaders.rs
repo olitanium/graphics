@@ -99,6 +99,23 @@ make_included! {
 }
 
 make_included! {
+    ShaderProgram<SkinningCubic, (), 0, FlatTexture>,
+    farspot_light_depth_skinning,
+    "shaders/depth_testing/farspot_light_depth/farspot_light_skinning_quat_depth.vert",
+    "shaders/depth_testing/farspot_light_depth/farspot_light_depth.frag",
+    cull_face: CullFace::FrontFace,
+}
+
+make_included! {
+    ShaderProgram<SkinningCubic, (), 0, CubeMap>,
+    point_depth_skinning,
+    "shaders/depth_testing/point_light_depth/point_light_skinning_quat_depth.vert",
+    "shaders/depth_testing/point_light_depth/point_light_depth.frag",
+    "shaders/depth_testing/point_light_depth/point_light_depth.geom",
+    cull_face: CullFace::FrontFace,
+}
+
+make_included! {
     ShaderProgram<SkeletonCubic, (), 0, FlatTexture>,
     farspot_light_depth_skeleton,
     "shaders/depth_testing/farspot_light_depth/farspot_light_depth.vert",

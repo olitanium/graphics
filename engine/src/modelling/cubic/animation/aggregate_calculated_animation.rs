@@ -1,5 +1,5 @@
 use geometry::{Pose, Transform as _};
-use utils::error_boilerplate;
+use utils::{VecOne, error_boilerplate};
 
 use crate::entity::AggregateModelIndex;
 use crate::modelling::Skeleton;
@@ -16,7 +16,7 @@ use crate::modelling::cubic::animation::{
 
 #[derive(Debug, Clone)]
 pub struct AggregateCalcAnim {
-    pub(crate) vec: Vec<CalculatedAnimation>,
+    pub(crate) vec: VecOne<CalculatedAnimation>,
 }
 
 #[derive(Debug)]
@@ -24,7 +24,7 @@ pub struct AggregateCalcAnim {
 pub struct AggregateCalcAnimBuilder<'a> {
     // Invariant: all animation units can only point to those before themselves.
     // this is enforced by the `push` method
-    units: Vec<AnimationUnit<'a>>,
+    units: VecOne<AnimationUnit<'a>>,
 }
 
 impl AggregateCalcAnim {
@@ -41,7 +41,7 @@ impl AggregateCalcAnim {
     }
 
     pub fn root(&self) -> &CalculatedAnimation {
-        self.vec.first().expect("always as root pose")
+        self.vec.first()
     }
 }
 
@@ -61,7 +61,9 @@ impl<'a> AggregateCalcAnimBuilder<'a> {
         root_animation: Option<(&'a SkeletalAnimation, f32)>,
     ) -> Result<Self, SignaturesDoNotMatchError> {
         let unit = AnimationUnit::new(None, root_pose, root_skeleton, root_animation)?;
-        Ok(Self { units: vec![unit] })
+        Ok(Self {
+            units: VecOne::new(unit),
+        })
     }
 }
 
@@ -103,10 +105,14 @@ impl<'a> AggregateCalcAnimBuilder<'a> {
 }
 
 impl AggregateCalcAnimBuilder<'_> {
-    fn get_world_positions(self) -> Vec<(Vec<PoseAndInverseBindPose>, u64)> {
-        let mut output: Vec<(Vec<PoseAndInverseBindPose>, u64)> = Vec::new();
+    fn get_world_positions(self) -> VecOne<(VecOne<PoseAndInverseBindPose>, u64)> {
+        let (first, iter) = self.units.into_first_and_iter();
+        let first_transform = first.local_transform;
+        let first_poses = first.calculate_animation(first_transform);
 
-        for unit in self.units {
+        let mut output: VecOne<(VecOne<PoseAndInverseBindPose>, u64)> = VecOne::new(first_poses);
+
+        for unit in iter {
             let root = if let Some(parent) = &unit.parent {
                 let parent_setup = output.get(parent.index.index).expect(
                     "invariant, parent should exist earlier in the list than the descendent",
@@ -159,34 +165,28 @@ impl AggregateCalcAnimBuilder<'_> {
 
         let deviation = pose.transform(fixed_pose.inverse());
 
-        let vec = world_positions
-            .into_iter()
-            .map(|(vec, opt_signature)| {
-                let poses = PoseAndInverseBindPose::process_vec_with_deviation(vec, deviation);
+        let vec = world_positions.map(|(vec, opt_signature)| {
+            let poses = PoseAndInverseBindPose::process_vec_with_deviation(vec, deviation);
 
-                CalculatedAnimation {
-                    poses,
-                    signature: opt_signature,
-                }
-            })
-            .collect();
+            CalculatedAnimation {
+                poses,
+                signature: opt_signature,
+            }
+        });
 
         Ok(AggregateCalcAnim { vec })
     }
 
     pub fn build(self) -> AggregateCalcAnim {
         let world_positions = self.get_world_positions();
-        let vec = world_positions
-            .into_iter()
-            .map(|(vec, opt_signature)| {
-                let poses = PoseAndInverseBindPose::process_vec(vec);
+        let vec = world_positions.map(|(vec, opt_signature)| {
+            let poses = PoseAndInverseBindPose::process_vec(vec);
 
-                CalculatedAnimation {
-                    poses,
-                    signature: opt_signature,
-                }
-            })
-            .collect();
+            CalculatedAnimation {
+                poses,
+                signature: opt_signature,
+            }
+        });
         AggregateCalcAnim { vec }
     }
 }

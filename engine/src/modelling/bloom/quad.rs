@@ -1,6 +1,7 @@
 pub use graphics::framebuffer::Builder;
 use graphics::framebuffer::Framebuffer;
 use graphics::framebuffer::attachments::WithoutExtra;
+use graphics::framebuffer::traits::FramebufferInternals as _;
 use graphics::types::TexDim;
 
 #[derive(Debug)]
@@ -32,5 +33,6 @@ impl Bloom {
     // TODO: resize
     pub fn resize(&mut self, size: (TexDim, TexDim)) {
         self.framebuffer_x.resize(size);
+        eprintln!("bloom: {:?}", self.framebuffer_x.size());
     }
 }

@@ -1,5 +1,4 @@
 use geometry::{Pose, PoseSclerp};
-use infinite_window::InfiniteWindowIter;
 use utils::error_boilerplate;
 
 #[derive(Debug, Clone)]
@@ -69,46 +68,15 @@ impl BoneAnimation {
                 ],
                 Some(duration),
             ) => {
-                // OLD =============
                 #[expect(clippy::modulo_arithmetic, reason = "duration never negative")]
                 let local_time = time % duration;
-                let [&(start_time, start_pose), &(mut end_time, end_pose)] =
-                    InfiniteWindowIter::new(slice)
-                        .find(|&[&(start_time, _), &(end_time, _)]| {
-                            let between = start_time <= local_time && local_time < end_time;
-
-                            let is_in_overlap = end_time == 0.0;
-
-                            between || is_in_overlap
-                        })
-                        .expect("TODO: remove once test below passes");
-                end_time = if end_time == 0.0 { duration } else { end_time };
-                // END OLD
-
-                let [
-                    (new_start_time, new_start_pose),
-                    (new_end_time, new_end_pose),
-                ] = slice
+                let [(start_time, start_pose), (end_time, end_pose)] = slice
                     .array_windows()
                     .find(|&&[(start_time, _), (end_time, _)]| {
                         start_time <= local_time && local_time < end_time
                     })
                     .copied()
                     .unwrap_or([(last_start, last_pose), (duration, first_pose)]);
-
-                // DEBUG TO CLEAN
-                #[expect(clippy::float_cmp, reason = "no arithmetic")]
-                #[expect(clippy::dbg_macro, reason = "testing new method")]
-                if new_start_time == start_time
-                    && new_start_pose == start_pose
-                    && new_end_pose == end_pose
-                    && new_end_time == end_time
-                {
-                    dbg!("tests pass");
-                } else {
-                    dbg!("tests fails, fix");
-                }
-                // END DEBUG
 
                 let sclerp = PoseSclerp::new(start_pose, end_pose, end_time - start_time, true);
                 sclerp.get_pose(local_time - start_time)

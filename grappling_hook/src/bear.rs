@@ -3,6 +3,7 @@ use engine::entity::{EntityInner, ToAggregateEntity};
 use engine::geometry::Pose;
 use engine::modelling::cubic::SimpleCubic;
 use engine::modelling::{Collision, SkeletonCubic};
+use utils::VecOne;
 
 pub struct Bear {
     pub inner: SimpleEntity<()>,
@@ -23,7 +24,7 @@ impl Collision for Bear {
         target_transform: &T::Transform<'_>,
         target_vertex_transform: &T::VertexTransform<'_>,
         alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>
+    ) -> Option<VecOne<([Self::Vertex; 3], [T::Vertex; 3])>>
     where
         T: Collision + ?Sized,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,

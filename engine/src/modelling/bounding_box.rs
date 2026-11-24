@@ -30,6 +30,7 @@ pub use skeleton_bb::{
 
 pub mod collision;
 pub use collision::{Collision, no_alter_meta};
+use utils::VecOne;
 
 // pub use crate::modelling::bounding_box::collision::TempModelTransform;
 use crate::modelling::extended_vertex::ExtendedVertex;
@@ -38,7 +39,7 @@ use crate::modelling::{CubicVertex, SimpleVertex, SkeletonCubic, Volume};
 #[derive(Debug)]
 pub struct BoundingBox<V: ExtendedVertex, T> {
     triangles: Vec<[V; 3]>,
-    inner: Vec<Element<V, T>>,
+    inner: VecOne<Element<V, T>>,
 }
 
 impl<V: ExtendedVertex, T> BoundingBox<V, T> {
@@ -64,7 +65,7 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
 
         Self {
             triangles: self.triangles,
-            inner: vec![elem],
+            inner: VecOne::new(elem),
         }
     }
 
@@ -73,9 +74,7 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
     }
 
     fn root_element(&self) -> &Element<V, T> {
-        self.inner
-            .last()
-            .expect("guaranteed at least one element, or the BB create function would return None")
+        self.inner.last()
     }
 
     #[expect(clippy::allow_attributes, reason = "bleh")]
@@ -127,7 +126,7 @@ impl<V: ExtendedVertex, T> BoundingBox<V, T> {
 
         Some(Self {
             triangles,
-            inner: accumulator,
+            inner: VecOne::try_from_vec(accumulator)?,
         })
     }
 
@@ -172,7 +171,7 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBox<V, T> {
         rhs_pose: &P2,
         rhs_vertex_transform: &<V2 as ExtendedVertex>::PreferredTransform<'_>,
         mut alter_meta: F,
-    ) -> Option<Vec<([V; 3], [V2; 3])>>
+    ) -> Option<VecOne<([V; 3], [V2; 3])>>
     where
         V2: ExtendedVertex<LEN = 3>,
         F: FnMut(&mut T, &mut U) -> bool,
@@ -193,11 +192,7 @@ impl<V: ExtendedVertex<LEN = 3>, T> BoundingBox<V, T> {
             &mut output,
         );
 
-        if output.is_empty() {
-            None
-        } else {
-            Some(output)
-        }
+        VecOne::try_from_vec(output)
     }
 }
 
@@ -276,7 +271,7 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, TThis> {
         target_vertex_transform: &<BoundingBox<V, T> as Collision>::VertexTransform<'_>,
         mut alter_meta: F,
     ) -> Option<
-        Vec<(
+        VecOne<(
             [Self::Vertex; 3],
             [<BoundingBox<V, T> as Collision>::Vertex; 3],
         )>,
@@ -304,7 +299,7 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, TThis> {
         target_transform: &T::Transform<'_>,
         target_vertex_transform: &T::VertexTransform<'_>,
         mut alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>
+    ) -> Option<VecOne<([Self::Vertex; 3], [T::Vertex; 3])>>
     where
         T: Collision + ?Sized,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool,
@@ -320,7 +315,7 @@ impl<VThis: CubicVertex, TThis> Collision for BoundingBox<VThis, TThis> {
                     alter_meta((), self_meta, target_input, target_meta)
                 },
             )
-            .map(|is_vec| is_vec.into_iter().map(|(a, b)| (b, a)).collect())
+            .map(|is_vec| is_vec.map(|(a, b)| (b, a)))
     }
 }
 

@@ -58,6 +58,8 @@ macro_rules! make_uf {
         }
 
         impl $name {
+            pub const ZERO: Self = Self { inner: 0 };
+
             from_float!(from_f32, f32, $inner);
 
             from_float!(from_f64, f64, $inner);

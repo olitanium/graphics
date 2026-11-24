@@ -6,7 +6,13 @@ use graphics::texture::{CubeMap, FlatTexture};
 use graphics::{ActiveShaderProgram, Model, ShaderProgram};
 
 use crate::geometry::Pose;
-use crate::modelling::cubic::{CalculatedAnimation, SimpleCubicDrawError, SkeletonCubicDrawError};
+use crate::modelling::cubic::{
+    CalculatedAnimation,
+    SimpleCubicDrawError,
+    SkeletonCubicDrawError,
+    SkinningCubic,
+    SkinningCubicDrawError,
+};
 use crate::modelling::{SimpleCubic, SkeletonCubic};
 use crate::opengl_shaders;
 
@@ -80,5 +86,31 @@ impl DepthTestable for SimpleCubic {
         D: FramebufferWithDepth<0>,
     {
         self.draw(active_shader, active_framebuffer, *transform)
+    }
+}
+
+impl DepthTestable for SkinningCubic {
+    type Error = SkinningCubicDrawError;
+    type Model = Self;
+    type Transform = CalculatedAnimation;
+
+    fn get_shader_point() -> &'static ShaderProgram<Self::Model, (), 0, CubeMap> {
+        opengl_shaders::point_depth_skinning()
+    }
+
+    fn get_shader_farspot() -> &'static ShaderProgram<Self::Model, (), 0, FlatTexture> {
+        opengl_shaders::farspot_light_depth_skinning()
+    }
+
+    fn draw_depth<'a, D>(
+        &'a self,
+        transform: &Self::Transform,
+        active_shader: &mut ActiveShaderProgram<'_, '_, 'a, Self::Model, (), D::Tex, 0>,
+        active_framebuffer: &mut ActiveFramebuffer<'_, '_, 0, D>,
+    ) -> Result<(), Self::Error>
+    where
+        D: FramebufferWithDepth<0>,
+    {
+        self.draw(active_shader, active_framebuffer, transform)
     }
 }

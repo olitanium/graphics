@@ -1,3 +1,5 @@
+use utils::VecOne;
+
 use crate::modelling::{BoundingBox, CubicVertex, ExtendedVertex};
 
 pub trait Collision {
@@ -17,7 +19,7 @@ pub trait Collision {
         target_vertex_transform: &<BoundingBox<V, T> as Collision>::VertexTransform<'_>,
         mut alter_meta: F,
     ) -> Option<
-        Vec<(
+        VecOne<(
             [Self::Vertex; 3],
             [<BoundingBox<V, T> as Collision>::Vertex; 3],
         )>,
@@ -46,7 +48,7 @@ pub trait Collision {
         target_transform: &T::Transform<'_>,
         target_vertex_transform: &T::VertexTransform<'_>,
         alter_meta: F,
-    ) -> Option<Vec<([Self::Vertex; 3], [T::Vertex; 3])>>
+    ) -> Option<VecOne<([Self::Vertex; 3], [T::Vertex; 3])>>
     where
         T: Collision + ?Sized,
         F: FnMut(Self::FuncInputs, &mut Self::Meta, T::FuncInputs, &mut T::Meta) -> bool;
